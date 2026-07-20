@@ -366,7 +366,8 @@ jobs:
         # is smoke-verified too.
         if: steps.secrets.outputs.ready == 'true' && github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
         env:
-          SMOKE_URL: ${{ vars.PUBLIC_SITE_URL }}
+          # The site's Cloudflare Pages URL (serves the production build), not the apex.
+          SMOKE_URL: ${{ vars.SMOKE_URL }}
           EXPECTED_COMMIT: ${{ github.sha }}
           EXPECTED_APP_VERSION: ${{ steps.target.outputs.version }}
         run: |

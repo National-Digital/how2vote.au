@@ -222,7 +222,7 @@ are injected into `wrangler.toml` from the variables below at deploy time.
 | `CF_D1_PREVIEW_DATABASE_ID` | Preview research database id. |
 | `CF_KV_RESEARCH_NONCES_ID` | Production nonce KV namespace id. |
 | `CF_KV_RESEARCH_NONCES_PREVIEW_ID` | Preview nonce KV namespace id. |
-| `PUBLIC_SITE_URL` | Canonical site URL; also the post-deploy smoke-test target. |
+| `SMOKE_URL` | Post-deploy smoke-test target — the site's Cloudflare Pages URL (e.g. `https://<project>.pages.dev`). |
 | `PUBLIC_CONTACT_FORM_ID` / `PUBLIC_FEEDBACK_FORM_ID` | Formspree form ids for the contact and feedback forms. |
 | `PUBLIC_TURNSTILE_SITE_KEY` | Cloudflare Turnstile site key for the contact/feedback forms. |
 | `PUBLIC_TURNSTILE_RESEARCH_SITE_KEY` | Cloudflare Turnstile site key for the survey (a separate widget from the forms one; its secret is the `TURNSTILE_RESEARCH_SECRET` Pages secret). |

@@ -149,7 +149,7 @@ enforced by `scripts/check-infra-config.mjs`:
   fetches nothing).
 - **Variables** (same page, *Variables* tab): `CLOUDFLARE_ACCOUNT_ID`, `CF_D1_DATABASE_ID`,
   `CF_D1_PREVIEW_DATABASE_ID`, `CF_KV_RESEARCH_NONCES_ID`, `CF_KV_RESEARCH_NONCES_PREVIEW_ID`,
-  `PUBLIC_SITE_URL`, `PUBLIC_CONTACT_FORM_ID`, `PUBLIC_FEEDBACK_FORM_ID`, `PUBLIC_TURNSTILE_SITE_KEY`,
+  `SMOKE_URL`, `PUBLIC_CONTACT_FORM_ID`, `PUBLIC_FEEDBACK_FORM_ID`, `PUBLIC_TURNSTILE_SITE_KEY`,
   and `PUBLIC_TURNSTILE_RESEARCH_SITE_KEY`.
 - **Cloudflare Pages project secrets** (not GitHub — set with `wrangler pages secret put`):
   `RESEARCH_TOKEN_SECRET` and `TURNSTILE_RESEARCH_SECRET`.
