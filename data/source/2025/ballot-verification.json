@@ -6,8 +6,13 @@
     "houseElectorates": 150,
     "senateJurisdictions": 8
   },
-  "status": "pending",
-  "reviewers": {},
+  "status": "released",
+  "reviewers": {
+    "primary": "cameron-young",
+    "primaryAt": "2026-07-17",
+    "second": "tara-buckley",
+    "secondAt": "2026-07-17"
+  },
   "discrepancyRef": null,
-  "note": "Two-person independent verification of the compiled ballot order against the published AEC results is recorded by pull request; this record is pending until that attestation lands. ballotsSourceHash binds this record to the exact ballots.json bytes — any change forces re-verification."
+  "note": "Two-person independent verification of the compiled ballot order against the canonical AEC 2025 candidate downloads (https://www.aec.gov.au/election/files/data/house-candidates.csv and senate-candidates.csv; raw retained and SHA-256 pinned in data/source/2025/aec-sources.json). Both reviewers resolve to docs/legal/signatories.json. The ballotsSourceHash ties this record to the exact ballots.json bytes — any ballot change invalidates it and requires re-verification. Verified 2026-07-17: the compiled ballots reproduce the canonical AEC source EXACTLY — 1126/1126 House candidates (150/150 divisions) and 330/330 Senate candidates (8 jurisdictions) match on ballot position, candidate and party; no discrepancies were recorded."
 }
