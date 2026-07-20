@@ -21,6 +21,11 @@
       "date": "2026-07-20",
       "change": "Public-release staging baseline. The compliance registers ship in a pending state: per-election ballot-order verification and the control/product-boundary sign-offs each land by pull request so the public record carries the attestations, not assertions.",
       "affectedControls": []
+    },
+    {
+      "date": "2026-07-20",
+      "change": "2019 ballot-order verification released: two-person review of the compiled ballot order against the published AEC results (cameron-young, tara-buckley).",
+      "affectedControls": ["control-11"]
     }
   ],
   "nextMandatoryReviewDate": "2027-07-15",
