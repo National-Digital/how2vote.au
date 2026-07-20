@@ -1,7 +1,7 @@
 {
   "electionId": "next",
   "status": "pending",
-  "note": "No candidates nominated: this upcoming-parliament comparison ships with no ballot (ballotStatus pending). Ballot verification applies once the AEC declares nominations.",
+  "note": "No candidates nominated: this upcoming-parliament comparison ships with no ballot (ballotStatus pending), so AEC ballot-order verification applies only once nominations are declared. The provisional content it does ship — the question set and the current-parliament party mapping used for the comparison — had a two-person review on 2026-07-20 (cameron-young, tara-buckley), recorded in docs/legal/legal-review.json.",
   "house": {
     "count": 0
   },
