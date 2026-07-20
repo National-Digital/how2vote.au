@@ -36,6 +36,11 @@
       "date": "2026-07-20",
       "change": "2025 ballot-order verification released: two-person review of the compiled 2025 ballot order against the published AEC results (cameron-young, tara-buckley).",
       "affectedControls": ["control-11"]
+    },
+    {
+      "date": "2026-07-20",
+      "change": "Next-election provisional comparison content reviewed: two-person review (cameron-young, tara-buckley) of the current-parliament question set and the party mapping used for the upcoming-election comparison. No AEC ballot exists yet, so ballot-order verification for the next election remains pending until nominations are declared.",
+      "affectedControls": ["control-6", "control-13"]
     }
   ],
   "nextMandatoryReviewDate": "2027-07-15",
