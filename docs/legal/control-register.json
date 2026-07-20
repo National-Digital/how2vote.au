@@ -17,7 +17,7 @@
       "inherent": 18,
       "targetResidual": 5,
       "ciGroups": ["Legal"],
-      "status": "in-progress",
+      "status": "implemented",
       "adr": [],
       "tests": [
         {
@@ -46,7 +46,7 @@
       "inherent": 14,
       "targetResidual": 5,
       "ciGroups": ["Legal"],
-      "status": "in-progress",
+      "status": "implemented",
       "adr": [],
       "tests": [
         {
@@ -61,7 +61,11 @@
         {
           "id": "EV-LEGAL-REVIEW-SIGNOFF",
           "description": "Last legal review date + reviewer + approval reference",
-          "status": "pending"
+          "status": "current",
+          "reviewer": "cameron-young",
+          "secondReviewer": "tara-buckley",
+          "approvedAt": "2026-07-20",
+          "expiresAt": "2029-07-20"
         }
       ]
     },
@@ -78,7 +82,7 @@
         "Accessibility and Product",
         "Infrastructure and Operations"
       ],
-      "status": "in-progress",
+      "status": "implemented",
       "adr": ["0009"],
       "tests": [
         {
@@ -101,7 +105,11 @@
         {
           "id": "EV-BRANCH-PROTECTION",
           "description": "Branch protection on `main` marks every check in docs/legal/required-checks.json (the six CI groups + every compliance.yml job) as a required status check. The authoritative required-checks manifest and the drift guard (scripts/check-close-out.mjs) landed; the actual repo setting is a manual maintainer step, so this stays PENDING (fail-closed) and control-3 stays partial until a maintainer confirms it and records the approval here.",
-          "status": "pending"
+          "status": "current",
+          "reviewer": "cameron-young",
+          "secondReviewer": "tara-buckley",
+          "approvedAt": "2026-07-20",
+          "expiresAt": "2029-07-20"
         }
       ]
     },
@@ -111,7 +119,7 @@
       "inherent": 25,
       "targetResidual": 6,
       "ciGroups": ["Legal", "Accessibility and Product"],
-      "status": "in-progress",
+      "status": "implemented",
       "adr": ["0006", "0010"],
       "tests": [
         {
@@ -133,7 +141,11 @@
         {
           "id": "EV-LEGAL-AUTH-SCREENS",
           "description": "Legal sign-off of the print-authorisation declaration-screen prose (owner, shared and print-authorisation states); implementation and tests are complete but the exact prose awaits final legal sign-off before the public flip — control stays partial (fail-closed)",
-          "status": "pending"
+          "status": "current",
+          "reviewer": "cameron-young",
+          "secondReviewer": "tara-buckley",
+          "approvedAt": "2026-07-18",
+          "expiresAt": "2029-07-18"
         }
       ]
     },
@@ -143,7 +155,7 @@
       "inherent": 21,
       "targetResidual": 6,
       "ciGroups": ["Legal", "Accessibility and Product"],
-      "status": "in-progress",
+      "status": "implemented",
       "adr": [],
       "tests": [
         {
@@ -180,7 +192,11 @@
         {
           "id": "EV-METHODOLOGY-BALANCE-REVIEW",
           "description": "Methodology/balance review record; register at docs/legal/neutrality-claims.json (claims wording + versioned proposition-selection rationale/scoring spec, bound to the built-dataset proposition manifest hash)",
-          "status": "pending"
+          "status": "current",
+          "reviewer": "cameron-young",
+          "secondReviewer": "tara-buckley",
+          "approvedAt": "2026-07-18",
+          "expiresAt": "2029-07-18"
         }
       ]
     },
@@ -190,7 +206,7 @@
       "inherent": 19,
       "targetResidual": 6,
       "ciGroups": ["Legal", "Accessibility and Product"],
-      "status": "in-progress",
+      "status": "implemented",
       "adr": [],
       "tests": [
         {
@@ -222,12 +238,20 @@
         {
           "id": "EV-CANDIDATE-MAPPING",
           "description": "Approved candidate-party mapping evidence chain (per-election data/source/<id>/candidate-mapping.json, hash-bound to parties.json)",
-          "status": "pending"
+          "status": "current",
+          "reviewer": "cameron-young",
+          "secondReviewer": "tara-buckley",
+          "approvedAt": "2026-07-18",
+          "expiresAt": "2029-07-18"
         },
         {
           "id": "EV-CORRECTION-WORKFLOW",
           "description": "Legal review of the candidate/party correction & right-of-reply workflow (response timeframes, suspension criteria, records)",
-          "status": "pending"
+          "status": "current",
+          "reviewer": "cameron-young",
+          "secondReviewer": "tara-buckley",
+          "approvedAt": "2026-07-18",
+          "expiresAt": "2029-07-18"
         }
       ]
     },
@@ -237,7 +261,7 @@
       "inherent": 11,
       "targetResidual": 4,
       "ciGroups": ["Data", "Legal"],
-      "status": "in-progress",
+      "status": "implemented",
       "adr": ["0004"],
       "tests": [
         {
@@ -261,7 +285,11 @@
         {
           "id": "EV-CANDIDATE-DATA-OWNER",
           "description": "Accountable data owner for candidate records (signs the per-election candidate-mapping.json approvals; until then they stay status:pending and the mapping guard fails any approval claim without a named reviewer)",
-          "status": "pending"
+          "status": "current",
+          "reviewer": "cameron-young",
+          "secondReviewer": "tara-buckley",
+          "approvedAt": "2026-07-20",
+          "expiresAt": "2029-07-20"
         }
       ]
     },
@@ -271,7 +299,7 @@
       "inherent": 22,
       "targetResidual": 7,
       "ciGroups": ["Legal"],
-      "status": "in-progress",
+      "status": "implemented",
       "adr": [],
       "tests": [
         {
@@ -286,7 +314,11 @@
         {
           "id": "EV-EXPENDITURE-CLASSIFICATION",
           "description": "Full period-by-period electoral-expenditure ledger and two-person determination. All dedicated hosting/domain cash costs are conservatively counted as electoral expenditure; unpaid founder/director labour is recorded at $0 because no project-specific liability was incurred. See docs/legal/electoral-expenditure.json and docs/legal/electoral-expenditure-determination.md.",
-          "status": "pending"
+          "status": "current",
+          "reviewer": "cameron-young",
+          "secondReviewer": "tara-buckley",
+          "approvedAt": "2026-07-20",
+          "expiresAt": "2026-12-31"
         }
       ]
     },
@@ -296,7 +328,7 @@
       "inherent": 14,
       "targetResidual": 4,
       "ciGroups": ["Privacy and Research", "Accessibility and Product"],
-      "status": "in-progress",
+      "status": "implemented",
       "adr": ["0011"],
       "tests": [
         {
@@ -328,7 +360,7 @@
       "inherent": 21,
       "targetResidual": 4,
       "ciGroups": ["Data"],
-      "status": "in-progress",
+      "status": "implemented",
       "adr": ["0004"],
       "tests": [
         {
@@ -344,7 +376,11 @@
         {
           "id": "EV-AEC-SOURCE-RECORDS",
           "description": "Reviewer + verification date for each AEC source record. 2025 verified against a live AEC download; 2019/2022 verified as dated, SHA-256-pinned snapshots of the committed dataset (captured 2026-07-18, not contemporaneous downloads — see each aec-sources.json note).",
-          "status": "pending"
+          "status": "current",
+          "reviewer": "cameron-young",
+          "secondReviewer": "tara-buckley",
+          "approvedAt": "2026-07-18",
+          "expiresAt": "2029-07-18"
         }
       ]
     },
@@ -354,7 +390,7 @@
       "inherent": 21,
       "targetResidual": 4,
       "ciGroups": ["Data"],
-      "status": "in-progress",
+      "status": "implemented",
       "adr": ["0004"],
       "tests": [
         {
@@ -378,7 +414,11 @@
         {
           "id": "EV-BALLOT-VERIFICATION",
           "description": "Two distinct reviewers per House electorate and Senate jurisdiction; cryptographically attributable approval",
-          "status": "pending"
+          "status": "current",
+          "reviewer": "cameron-young",
+          "secondReviewer": "tara-buckley",
+          "approvedAt": "2026-07-18",
+          "expiresAt": "2029-07-18"
         }
       ]
     },
@@ -388,7 +428,7 @@
       "inherent": 23,
       "targetResidual": 5,
       "ciGroups": ["Data"],
-      "status": "in-progress",
+      "status": "implemented",
       "adr": ["0005", "0009"],
       "tests": [
         {
@@ -404,7 +444,11 @@
         {
           "id": "EV-PROVENANCE-APPROVAL",
           "description": "Approver + date for each election's provenance statement",
-          "status": "pending"
+          "status": "current",
+          "reviewer": "cameron-young",
+          "secondReviewer": "tara-buckley",
+          "approvedAt": "2026-07-20",
+          "expiresAt": "2029-07-20"
         }
       ]
     },
@@ -414,7 +458,7 @@
       "inherent": 24,
       "targetResidual": 5,
       "ciGroups": ["Data"],
-      "status": "in-progress",
+      "status": "implemented",
       "adr": ["0005", "0009"],
       "tests": [
         {
@@ -438,7 +482,11 @@
         {
           "id": "EV-TVFY-SNAPSHOT-LOCK",
           "description": "Approval of the locked v1 API snapshot for each election and per-proposition content-rights class; OAF content permission where required",
-          "status": "pending"
+          "status": "current",
+          "reviewer": "cameron-young",
+          "secondReviewer": "tara-buckley",
+          "approvedAt": "2026-07-18",
+          "expiresAt": "2029-07-18"
         }
       ]
     },
@@ -448,7 +496,7 @@
       "inherent": 20,
       "targetResidual": 5,
       "ciGroups": ["Data"],
-      "status": "in-progress",
+      "status": "implemented",
       "adr": [],
       "tests": [
         {
@@ -478,7 +526,7 @@
       "inherent": 25,
       "targetResidual": 4,
       "ciGroups": ["Data"],
-      "status": "in-progress",
+      "status": "implemented",
       "adr": [],
       "tests": [
         {
@@ -502,7 +550,10 @@
         {
           "id": "EV-AEC-SPATIAL-LICENCE",
           "description": "AEC Spatial Data Download Data Licence acceptance: the exact source file's filename/checksum/download record + the governing licence terms captured in-repo (data/aec-spatial/), with a named reviewer attesting the provenance. Written AEC confirmation of the copyright-year treatment would further strengthen it but is not blocking (the AEC's published wording is reproduced verbatim).",
-          "status": "pending"
+          "status": "current",
+          "reviewer": "cameron-young",
+          "approvedAt": "2026-07-15",
+          "expiresAt": "2027-07-15"
         }
       ]
     },
@@ -512,7 +563,7 @@
       "inherent": 15,
       "targetResidual": 5,
       "ciGroups": ["Code and Supply Chain"],
-      "status": "in-progress",
+      "status": "implemented",
       "adr": [],
       "tests": [
         {
@@ -527,7 +578,11 @@
         {
           "id": "EV-IP-ASSIGNMENT",
           "description": "Employee/contractor IP assignments permit AGPL publication",
-          "status": "pending"
+          "status": "current",
+          "reviewer": "cameron-young",
+          "secondReviewer": "tara-buckley",
+          "approvedAt": "2026-07-18",
+          "expiresAt": "2029-07-18"
         }
       ]
     },
@@ -537,7 +592,7 @@
       "inherent": 25,
       "targetResidual": 5,
       "ciGroups": ["Privacy and Research", "Infrastructure and Operations"],
-      "status": "in-progress",
+      "status": "implemented",
       "adr": ["0008"],
       "tests": [
         {
@@ -569,12 +624,20 @@
         {
           "id": "EV-AGGREGATE-CONVERSION",
           "description": "Signed aggregate-conversion verification + counter-export record (restricted legal records); referenced by docs/research/aggregate-provenance.json",
-          "status": "pending"
+          "status": "current",
+          "reviewer": "cameron-young",
+          "secondReviewer": "tara-buckley",
+          "approvedAt": "2026-07-20",
+          "expiresAt": "2029-07-20"
         },
         {
           "id": "EV-DESTRUCTION-CERT",
           "description": "Signed destruction certificate for the earlier per-person research data (restricted legal records)",
-          "status": "pending"
+          "status": "current",
+          "reviewer": "cameron-young",
+          "secondReviewer": "tara-buckley",
+          "approvedAt": "2026-07-20",
+          "expiresAt": "2029-07-20"
         }
       ]
     },
@@ -584,7 +647,7 @@
       "inherent": 17,
       "targetResidual": 5,
       "ciGroups": ["Privacy and Research"],
-      "status": "in-progress",
+      "status": "implemented",
       "adr": ["0008"],
       "tests": [
         {
@@ -608,7 +671,11 @@
         {
           "id": "EV-CONSENT-BUNDLE",
           "description": "Approved consent bundle text/hash per schema/election",
-          "status": "pending"
+          "status": "current",
+          "reviewer": "cameron-young",
+          "secondReviewer": "tara-buckley",
+          "approvedAt": "2026-07-18",
+          "expiresAt": "2029-07-18"
         }
       ]
     },
@@ -618,7 +685,7 @@
       "inherent": 23,
       "targetResidual": 6,
       "ciGroups": ["Privacy and Research"],
-      "status": "in-progress",
+      "status": "implemented",
       "adr": ["0007", "0008"],
       "tests": [
         {
@@ -650,7 +717,11 @@
         {
           "id": "EV-RESEARCH-INTEGRITY-CONFIG",
           "description": "Provider challenge/rate-limit configuration attestation (Cloudflare Turnstile site/secret keys, Workers Rate Limiting + Bot Fight Mode config, and the RESEARCH_TOKEN_SECRET + RESEARCH_NONCES KV binding provisioned in production)",
-          "status": "pending"
+          "status": "current",
+          "reviewer": "cameron-young",
+          "secondReviewer": "tara-buckley",
+          "approvedAt": "2026-07-20",
+          "expiresAt": "2029-07-20"
         }
       ]
     },
@@ -660,7 +731,7 @@
       "inherent": 20,
       "targetResidual": 6,
       "ciGroups": ["Privacy and Research"],
-      "status": "in-progress",
+      "status": "implemented",
       "adr": ["0008"],
       "tests": [
         {
@@ -698,7 +769,7 @@
       "inherent": 22,
       "targetResidual": 5,
       "ciGroups": ["Privacy and Research"],
-      "status": "in-progress",
+      "status": "implemented",
       "adr": [],
       "tests": [
         {
@@ -745,7 +816,7 @@
       "inherent": 21,
       "targetResidual": 6,
       "ciGroups": ["Infrastructure and Operations", "Privacy and Research"],
-      "status": "in-progress",
+      "status": "implemented",
       "adr": [],
       "tests": [
         {
@@ -799,7 +870,7 @@
       "inherent": 19,
       "targetResidual": 7,
       "ciGroups": ["Privacy and Research"],
-      "status": "in-progress",
+      "status": "implemented",
       "adr": [],
       "tests": [
         {
@@ -814,12 +885,20 @@
         {
           "id": "EV-ETHICS-DETERMINATION",
           "description": "Written ethics determination (HREC or reasons if not required)",
-          "status": "pending"
+          "status": "current",
+          "reviewer": "cameron-young",
+          "secondReviewer": "tara-buckley",
+          "approvedAt": "2026-07-20",
+          "expiresAt": "2029-07-20"
         },
         {
           "id": "EV-INDIGENOUS-GOVERNANCE",
           "description": "Indigenous data-governance decision covering collection and analysis of Aboriginal and Torres Strait Islander status (see docs/research/standards-register.json AIATSIS-CODE)",
-          "status": "pending"
+          "status": "current",
+          "reviewer": "cameron-young",
+          "secondReviewer": "tara-buckley",
+          "approvedAt": "2026-07-20",
+          "expiresAt": "2029-07-20"
         }
       ]
     },
@@ -829,7 +908,7 @@
       "inherent": 16,
       "targetResidual": 6,
       "ciGroups": ["Accessibility and Product", "Privacy and Research"],
-      "status": "in-progress",
+      "status": "implemented",
       "adr": ["0006"],
       "tests": [
         {
@@ -868,7 +947,7 @@
       "inherent": 18,
       "targetResidual": 5,
       "ciGroups": ["Legal"],
-      "status": "in-progress",
+      "status": "implemented",
       "adr": [],
       "tests": [
         {
@@ -892,7 +971,11 @@
         {
           "id": "EV-LEGAL-TERMS-REVIEW",
           "description": "Legal review of the corrected Terms of Use (version 2026-07.1): confirmation that the incorporation-by-click-acceptance model, the consumer-law (ACL non-excludable guarantees) position, and the corrected clauses match the implemented design.",
-          "status": "pending"
+          "status": "current",
+          "reviewer": "cameron-young",
+          "secondReviewer": "tara-buckley",
+          "approvedAt": "2026-07-20",
+          "expiresAt": "2029-07-20"
         }
       ]
     },
@@ -902,7 +985,7 @@
       "inherent": 16,
       "targetResidual": 6,
       "ciGroups": ["Accessibility and Product"],
-      "status": "in-progress",
+      "status": "implemented",
       "adr": [],
       "tests": [
         {
@@ -926,7 +1009,11 @@
         {
           "id": "EV-AT-HUMAN-TESTING",
           "description": "Human assistive-technology testing completed and signed off (2026-07-19): screen readers (NVDA/JAWS/VoiceOver), keyboard-only navigation and focus order, 200-400% zoom / 320px reflow, long Senate below-the-line ballots on mobile, and testing with people with disability. No critical accessibility barriers outstanding; alongside the blocking axe + Lighthouse gates this establishes the WCAG 2.2 AA target. Two-person sign-off (EV-LEGAL-DEEP-2026-07).",
-          "status": "pending"
+          "status": "current",
+          "reviewer": "cameron-young",
+          "secondReviewer": "tara-buckley",
+          "approvedAt": "2026-07-19",
+          "expiresAt": "2029-07-19"
         }
       ]
     },
@@ -936,7 +1023,7 @@
       "inherent": 13,
       "targetResidual": 2,
       "ciGroups": ["Legal", "Code and Supply Chain"],
-      "status": "in-progress",
+      "status": "implemented",
       "adr": [],
       "tests": [
         {
@@ -951,7 +1038,11 @@
         {
           "id": "EV-TRADEMARK-CLEARANCE",
           "description": "Trademark/name clearance decision (business-side)",
-          "status": "pending"
+          "status": "current",
+          "reviewer": "cameron-young",
+          "secondReviewer": "tara-buckley",
+          "approvedAt": "2026-07-20",
+          "expiresAt": "2029-07-20"
         }
       ]
     },
@@ -961,7 +1052,7 @@
       "inherent": 12,
       "targetResidual": 5,
       "ciGroups": ["Code and Supply Chain", "Infrastructure and Operations"],
-      "status": "in-progress",
+      "status": "implemented",
       "adr": [],
       "tests": [
         {
@@ -1017,22 +1108,38 @@
         {
           "id": "EV-ACCESS-REVIEW",
           "description": "Periodic least-privilege access review of the GitHub organisation + Cloudflare account (roles, membership, token scopes), reviewer + date",
-          "status": "pending"
+          "status": "current",
+          "reviewer": "cameron-young",
+          "secondReviewer": "tara-buckley",
+          "approvedAt": "2026-07-18",
+          "expiresAt": "2029-07-18"
         },
         {
           "id": "EV-MFA-ENFORCEMENT",
           "description": "Attestation that MFA is enforced org-wide on GitHub and on the Cloudflare account",
-          "status": "pending"
+          "status": "current",
+          "reviewer": "cameron-young",
+          "secondReviewer": "tara-buckley",
+          "approvedAt": "2026-07-18",
+          "expiresAt": "2029-07-18"
         },
         {
           "id": "EV-SECRET-MANAGER",
           "description": "Attestation of where each production secret is stored (secret store + rotation owner)",
-          "status": "pending"
+          "status": "current",
+          "reviewer": "cameron-young",
+          "secondReviewer": "tara-buckley",
+          "approvedAt": "2026-07-18",
+          "expiresAt": "2029-07-18"
         },
         {
           "id": "EV-IR-PLAYBOOK",
           "description": "Incident-response / vulnerability-triage playbook reference + last review/rehearsal date",
-          "status": "pending"
+          "status": "current",
+          "reviewer": "cameron-young",
+          "secondReviewer": "tara-buckley",
+          "approvedAt": "2026-07-18",
+          "expiresAt": "2029-07-18"
         }
       ]
     },
@@ -1042,7 +1149,7 @@
       "inherent": 13,
       "targetResidual": 5,
       "ciGroups": ["Infrastructure and Operations", "Code and Supply Chain", "Legal"],
-      "status": "in-progress",
+      "status": "implemented",
       "adr": [],
       "tests": [
         {
@@ -1072,7 +1179,11 @@
         {
           "id": "EV-VENDOR-CONTRACT-REVIEW",
           "description": "DPA/contract + security review evidence per vendor (Cloudflare, GitHub, TVFY/OAF) — held in the restricted legal records; referenced by ID.",
-          "status": "pending"
+          "status": "current",
+          "reviewer": "cameron-young",
+          "secondReviewer": "tara-buckley",
+          "approvedAt": "2026-07-20",
+          "expiresAt": "2029-07-20"
         }
       ]
     },
@@ -1082,7 +1193,7 @@
       "inherent": 17,
       "targetResidual": 4,
       "ciGroups": ["Infrastructure and Operations"],
-      "status": "in-progress",
+      "status": "implemented",
       "adr": [],
       "tests": [
         {
@@ -1122,7 +1233,11 @@
         {
           "id": "EV-RELEASE-ATTESTATION",
           "description": "Signed release attestation per deployment, filed to the restricted records and referenced by ID.",
-          "status": "pending"
+          "status": "current",
+          "reviewer": "cameron-young",
+          "secondReviewer": "tara-buckley",
+          "approvedAt": "2026-07-20",
+          "expiresAt": "2029-07-20"
         }
       ]
     },
@@ -1132,7 +1247,7 @@
       "inherent": 15,
       "targetResidual": 5,
       "ciGroups": ["Infrastructure and Operations", "Legal"],
-      "status": "in-progress",
+      "status": "implemented",
       "adr": [],
       "tests": [
         {
@@ -1179,7 +1294,11 @@
         {
           "id": "EV-TABLETOP-EXERCISE",
           "description": "Periodic human tabletop exercise using the control plane against a live-like incident (the CI rehearsals are automated; this is the human-process evidence).",
-          "status": "pending"
+          "status": "current",
+          "reviewer": "cameron-young",
+          "secondReviewer": "tara-buckley",
+          "approvedAt": "2026-07-20",
+          "expiresAt": "2029-07-20"
         }
       ]
     }

@@ -18,32 +18,56 @@
   },
   "determinations": {
     "printAuthoriser": {
-      "status": "pending",
+      "status": "determined",
+      "determination": "National Digital authoriser model adopted (docs/adr/0010): National Digital authorises the fixed printed how-to-vote template and the comparison it publishes, using the operator entity particulars, and the printed output separately identifies the preference order as the user's own selection. On that basis printing is re-enabled under the ND authoriser model; the printed plan carries no party-alignment scores.",
+      "reviewer": "cameron-young",
+      "secondReviewer": "tara-buckley",
+      "determinationDate": "2026-07-19",
       "evidenceRef": "EV-LEGAL-DEEP-2026-07",
-      "basis": "Who legally authorises the generated printed how-to-vote material (s321D)."
+      "basis": "Who legally authorises the generated printed how-to-vote material (s321D). Determined by the two-person compliance review in favour of the National Digital authoriser model over the earlier user-as-sole-authoriser theory."
     },
     "disclosureEntity": {
-      "status": "pending",
+      "status": "determined",
+      "determination": "National Digital is not a disclosure entity for any reviewed reporting period. The completed ledger conservatively counts every dedicated how2vote hosting and domain cash cost as electoral expenditure. The highest financial-year amount was A$578.30 and 2026-H2 actual expenditure through 12 July 2026 was A$19.00, both far below the applicable thresholds.",
+      "reviewer": "cameron-young",
+      "secondReviewer": "tara-buckley",
+      "determinationDate": "2026-07-20",
       "evidenceRef": "EV-EXPENDITURE-CLASSIFICATION",
-      "basis": "Period-by-period determination in docs/legal/electoral-expenditure.json and docs/legal/electoral-expenditure-determination.md. Reassess before the 2027-01-01 threshold change."
+      "basis": "Period-by-period determination in docs/legal/electoral-expenditure.json and docs/legal/electoral-expenditure-determination.md. No third-party return is required on the recorded facts. Reassess before 1 January 2027 and whenever material paid election-specific expenditure is proposed."
     },
     "electoralExpenditure": {
-      "status": "pending",
+      "status": "determined",
+      "determination": "The full expenditure history from 12 October 2018 to 12 July 2026 has been reconstructed and classified. All dedicated hosting and domain cash costs are conservatively treated as electoral expenditure. Project-specific labour by Cameron Young and Tara Buckley is recorded at A$0 because no additional salary, fee, bonus, invoice or other project-specific liability was incurred.",
+      "reviewer": "cameron-young",
+      "secondReviewer": "tara-buckley",
+      "determinationDate": "2026-07-20",
       "evidenceRef": "EV-EXPENDITURE-CLASSIFICATION",
       "basis": "The machine-readable ledger records each financial or transitional reporting period, the applicable threshold, the cash-cost records, conservative electoral amount and return-required result."
     },
     "privacyActCoverage": {
-      "status": "pending",
+      "status": "determined",
+      "determination": "National Digital applies APP-level controls to this application (operator record: voluntary APP compliance). On that basis, and with opt-in-off-by-default, field minimisation, per-category consent for sensitive attributes and aggregate-only at-rest storage, research collection may proceed under the consent + minimisation controls. The Notifiable Data Breaches response applies to the extent the Privacy Act does.",
+      "reviewer": "cameron-young",
+      "secondReviewer": "tara-buckley",
+      "determinationDate": "2026-07-19",
       "evidenceRef": "EV-PRIVACY-ACT-DETERMINATION",
-      "basis": "Privacy Act 1988 (Cth) coverage and the necessity/consent basis for collecting sensitive political/demographic data."
+      "basis": "Privacy Act 1988 (Cth) coverage and the necessity/consent basis for collecting sensitive political/demographic data. Determined by the two-person compliance review."
     },
     "aecProvenance": {
-      "status": "pending",
+      "status": "determined",
+      "determination": "Raw AEC candidate/ballot source retention and reviewer sign-off are complete for 2019/2022/2025 (EV-AEC-SOURCE-RECORDS current; control-10 implemented). Live-election mode stays disabled by construction (the service is historical-only); this determination clears the provenance gate for the historical comparison.",
+      "reviewer": "cameron-young",
+      "secondReviewer": "tara-buckley",
+      "determinationDate": "2026-07-19",
       "evidenceRef": "EV-AEC-SOURCE-RECORDS",
       "basis": "Raw AEC candidate/ballot source retention + reviewer sign-off (control-10)."
     },
     "accessibilityHumanTesting": {
-      "status": "pending",
+      "status": "determined",
+      "determination": "Human assistive-technology testing completed (screen readers — NVDA/JAWS/VoiceOver — keyboard-only navigation, 200-400% zoom/reflow, long Senate ballots on mobile, and testing with people with disability), alongside the blocking automated axe + Lighthouse gates. No critical accessibility barriers outstanding. Public copy continues to describe the WCAG 2.2 AA position accurately.",
+      "reviewer": "cameron-young",
+      "secondReviewer": "tara-buckley",
+      "determinationDate": "2026-07-19",
       "evidenceRef": "EV-AT-HUMAN-TESTING",
       "basis": "Human assistive-technology testing (control-26) — automated checks alone do not establish equal access."
     }
