@@ -120,7 +120,7 @@ Attacker floods the endpoint, fabricates party slugs, or tries to inject via fie
 | Control | Status |
 |---------|--------|
 | Aggregate-only storage — no per-person row exists at rest | [code, test-pinned] |
-| Raw answer vector/weights never transmitted (derived on device, payload v3) | [code, e2e-pinned] |
+| Raw answer vector/weights never transmitted (derived on device, payload v1) | [code, e2e-pinned] |
 | Key rule: sensitive dimensions national-only; opinion never beside sensitive × sub-national | [code, test-pinned] |
 | No IP / cookie / device id / token stored; `CF-Connecting-IP` never read | [code] |
 | Electorate on a separate, keyless request; geography an incrementing integer | [code] |

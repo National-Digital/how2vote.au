@@ -36,7 +36,7 @@ generator's per-cohort k-anonymity suppression is exact by construction, and coh
 be silently combined. The published StatsFile (schema v3, per-cohort boards, no combined view
 when more than one cohort exists) is unchanged; the insights UI is untouched.
 
-**The raw answer vector never leaves the device** (payload v3 — see the version note below).
+**The raw answer vector never leaves the device** (payload v1 — see the version note below).
 The client computes the top-party match with the same engine that renders the comparison
 (`topPartyMatch`, `packages/engine`) and reduces each answered proposition to a stance
 (agree / neutral / disagree). The payload carries only: election, timetable (public facts),
