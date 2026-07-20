@@ -26,6 +26,11 @@
       "date": "2026-07-20",
       "change": "2019 ballot-order verification released: two-person review of the compiled ballot order against the published AEC results (cameron-young, tara-buckley).",
       "affectedControls": ["control-11"]
+    },
+    {
+      "date": "2026-07-20",
+      "change": "2022 ballot-order verification released: two-person review of the compiled 2022 ballot order against the published AEC results (cameron-young, tara-buckley).",
+      "affectedControls": ["control-11"]
     }
   ],
   "nextMandatoryReviewDate": "2027-07-15",
