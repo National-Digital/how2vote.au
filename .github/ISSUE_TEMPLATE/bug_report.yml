@@ -1,0 +1,45 @@
+name: Bug report
+description: Something in the app or data is wrong or broken
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for reporting a bug. **Do not report security vulnerabilities here** — see
+        [SECURITY.md](../blob/main/SECURITY.md).
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened?
+      description: What did you see, and what did you expect instead?
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      placeholder: |
+        1. Go to …
+        2. Answer …
+        3. See …
+    validations:
+      required: true
+  - type: input
+    id: election
+    attributes:
+      label: Election / electorate (if relevant)
+      placeholder: "2025, Bennelong"
+  - type: input
+    id: environment
+    attributes:
+      label: Device & browser
+      placeholder: "iPhone 15, Safari 17 / Windows, Firefox 128"
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: Before submitting
+      options:
+        - label: This is not a security vulnerability (those go through SECURITY.md)
+          required: true
+        - label: I searched existing issues and this is not a duplicate
+          required: true

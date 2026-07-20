@@ -1,0 +1,18 @@
+#!/bin/sh
+# Auto-append a DCO Signed-off-by trailer to every commit (idempotent).
+#
+# This satisfies the repo's DCO check (.github/workflows/dco.yml) locally so commits
+# never land unsigned. Shared across all linked worktrees via the common .git dir.
+# Uses interpret-trailers so it is a no-op when a Signed-off-by is already present.
+
+name=$(git config user.name)
+email=$(git config user.email)
+
+# Only sign off when we have a valid identity; otherwise leave the message untouched
+# and let the normal commit path surface the missing-identity error.
+[ -n "$name" ] && [ -n "$email" ] || exit 0
+
+git interpret-trailers \
+  --if-exists doNothing \
+  --trailer "Signed-off-by: $name <$email>" \
+  --in-place "$1"

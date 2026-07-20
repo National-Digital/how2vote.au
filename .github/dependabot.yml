@@ -1,0 +1,45 @@
+version: 2
+
+# Security-only posture (ADR-0016). The codebase is deliberately frozen between elections and may go
+# untouched for 3+ years, so routine version churn is OFF and only security fixes flow.
+#
+#   open-pull-requests-limit: 0  →  disables Dependabot VERSION updates (no routine minor/patch/major
+#   bumps). Dependabot SECURITY updates are a separate, repo-level feature and are UNAFFECTED by this
+#   limit — they must be enabled once in repo Settings → Advanced Security → "Dependabot security
+#   updates" (a maintainer-once step, like the branch-protection toggles tracked in
+#   docs/legal/required-checks.json). Security PRs are reviewed by a human and
+#   NEVER auto-merged: an unattended "security" merge is itself the npm supply-chain-worm delivery
+#   vector. The `ignore` rules below also apply to security updates, holding majors that would break
+#   the pinned toolchain.
+updates:
+  # JS dependencies across the pnpm workspace (Dependabot reads pnpm-lock.yaml from the root).
+  - package-ecosystem: npm
+    directory: "/"
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 0
+    ignore:
+      # Hold the TypeScript 7 (native "tsgo" compiler) major until typescript-eslint
+      # (peer `typescript: >=4.8.4 <6.1.0`) and SvelteKit (peer `^5.3.3 || ^6.0.0`)
+      # declare `typescript: ^7` support. Bumping breaks lint + web typecheck today.
+      # 6.x security patches still flow. Revisit at the ADR-0016 re-review.
+      - dependency-name: "typescript"
+        update-types: ["version-update:semver-major"]
+      # Keep @types/node's major pinned to the Node runtime major in .nvmrc.
+      # An isolated types-26 bump while the runtime is Node 24 describes APIs that
+      # aren't present at runtime. Only move this major when we move Node itself.
+      - dependency-name: "@types/node"
+        update-types: ["version-update:semver-major"]
+    labels:
+      - dependencies
+
+  # GitHub Actions are SHA-pinned for reproducibility; routine bumps are off, security advisories
+  # still flow (and are reviewed, not auto-merged).
+  - package-ecosystem: github-actions
+    directory: "/"
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 0
+    labels:
+      - dependencies
+      - github-actions

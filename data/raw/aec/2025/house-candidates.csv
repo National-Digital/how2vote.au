@@ -1,0 +1,1127 @@
+state,division,ballotPosition,surname,ballotGivenName,partyBallotName
+ACT,Bean,1,LAMERTON,David,Liberal
+ACT,Bean,2,PRICE,Jessie,Independent
+ACT,Bean,3,CARTER,Sam,Australian Greens
+ACT,Bean,4,SMITH,David,Australian Labor Party
+ACT,Canberra,1,MUDFORD,Isabel,Australian Greens
+ACT,Canberra,2,LIDDICOAT,Mary-Jane,HEART Party
+ACT,Canberra,3,MILES,Claire,Independent
+ACT,Canberra,4,ROCHE,Will,Liberal
+ACT,Canberra,5,PAYNE,Alicia,Australian Labor Party
+ACT,Canberra,6,McTAGGART,Teresa,AJP
+ACT,Fenner,1,OLATUNBOSUN,Bola,Liberal
+ACT,Fenner,2,KIKKERT,Elizabeth,Family First
+ACT,Fenner,3,LEIGH,Andrew,Australian Labor Party
+ACT,Fenner,4,HUNTERFORD,Dani,Australian Greens
+NSW,Banks,1,TARUSTE,Allan,Trumpet of Patriots
+NSW,Banks,2,NICOL,Todd,Pauline Hanson's One Nation
+NSW,Banks,3,PEARCE,Phillip,Australian Democrats
+NSW,Banks,4,MOMIRCEVSKI,Marika,Libertarian
+NSW,Banks,5,HANNA,Natalie,The Greens
+NSW,Banks,6,SOON,Zhi,Labor
+NSW,Banks,7,COLEMAN,David,Liberal
+NSW,Banks,8,COYNE,John,Independent
+NSW,Barton,1,KOLHATKAR,Vinay,Libertarian
+NSW,Barton,2,NICOLIS,Christos,Pauline Hanson's One Nation
+NSW,Barton,3,AMBIHAIPAHAR,Ash,Labor
+NSW,Barton,4,DOUSKOU,Fiona,Liberal
+NSW,Barton,5,BAHSA,Manal,The Greens
+NSW,Barton,6,PAMBRIS,Thomas,Trumpet of Patriots
+NSW,Bennelong,1,YUNG,Scott,Liberal
+NSW,Bennelong,2,DEVINE,Barry,HEART Party
+NSW,Bennelong,3,NALBANDIAN,Robert,Trumpet of Patriots
+NSW,Bennelong,4,LAXALE,Jerome,Labor
+NSW,Bennelong,5,HART,Adam,The Greens
+NSW,Bennelong,6,CHAN,Eric,Family First
+NSW,Bennelong,7,BENNETT,Craig,Pauline Hanson's One Nation
+NSW,Bennelong,8,AUGUST,John,FUSION | Planet Rescue | Whistleblower Protection | Innovation
+NSW,Berowra,1,COUSINS,Martin,The Greens
+NSW,Berowra,2,MATTINSON,Gerald,Pauline Hanson's One Nation
+NSW,Berowra,3,KOSCHINSKI,Benson,Labor
+NSW,Berowra,4,WOODWARD,Roger,Independent
+NSW,Berowra,5,CLARKE,Brendan Michael,FUSION | Planet Rescue | Whistleblower Protection | Innovation
+NSW,Berowra,6,BROWN,Tina,Independent
+NSW,Berowra,7,BASTIAN,Stephen,Trumpet of Patriots
+NSW,Berowra,8,LEESER,Julian,Liberal
+NSW,Blaxland,1,NGUYEN,Courtney,Liberal
+NSW,Blaxland,2,CLARE,Jason,Labor
+NSW,Blaxland,3,KLIEVENS,Mitchell,Pauline Hanson's One Nation
+NSW,Blaxland,4,SAKR,Omar,The Greens
+NSW,Blaxland,5,LUO,Mike,Libertarian
+NSW,Blaxland,6,DI GIROLAMO,Jennifer,Family First
+NSW,Blaxland,7,OUF,Ahmed,Independent
+NSW,Bradfield,1,GUNNING,Samuel Joseph,Libertarian
+NSW,Bradfield,2,SINGH,Harjit,The Greens
+NSW,Bradfield,3,YIN,Andy,Independent
+NSW,Bradfield,4,McCALLUM,Louise,Labor
+NSW,Bradfield,5,MANTON,John,Pauline Hanson's One Nation
+NSW,Bradfield,6,KAPTERIAN,Gisele,Liberal
+NSW,Bradfield,7,BOELE,Nicolette,Independent
+NSW,Bradfield,8,MULLIGAN,Rosemary,Trumpet of Patriots
+NSW,Calare,1,HUGHES,Jennifer,Pauline Hanson's One Nation
+NSW,Calare,2,RAYE,Sue,Legalise Cannabis Party
+NSW,Calare,3,HOOK,Kate,Independent
+NSW,Calare,4,O'LEARY,Vicki Elizabeth,Trumpet of Patriots
+NSW,Calare,5,PARKER,Ben,The Greens
+NSW,Calare,6,HAZELTON,Ross Angus,Family First
+NSW,Calare,7,GEE,Andrew,Independent
+NSW,Calare,8,LESAGE,Jase,"Shooters, Fishers and Farmers Party"
+NSW,Calare,9,CUNNINGHAM,Julie,Labor
+NSW,Calare,10,FARRAWAY,Sam,The Nationals
+NSW,Chifley,1,GREEN,Jamie,Family First
+NSW,Chifley,2,BURNS,Leigh,Independent
+NSW,Chifley,3,SINGH,Sukhjinder Pal,The Greens
+NSW,Chifley,4,HUSIC,Ed,Labor
+NSW,Chifley,5,GREEN,Allan,Liberal
+NSW,Chifley,6,NIKOLIC,Tony,Pauline Hanson's One Nation
+NSW,Chifley,7,ARCHER,Ryan,Trumpet of Patriots
+NSW,Chifley,8,LAXMANALAL,Rohan,Animal Justice Party
+NSW,Cook,1,FULLER,Natalie,Family First
+NSW,Cook,2,KENNEDY,Simon,Liberal
+NSW,Cook,3,HAMMOND,Sharon,Trumpet of Patriots
+NSW,Cook,4,EARLE,Simon,Labor
+NSW,Cook,5,MOORE,Martin,The Greens
+NSW,Cook,6,PRESTON,Mark,Pauline Hanson's One Nation
+NSW,Cowper,1,VIGORS,Greg,Labor
+NSW,Cowper,2,DALEY,Zeke,Independent
+NSW,Cowper,3,MATHEW,Megan,Legalise Cannabis Party
+NSW,Cowper,4,SHANNON,Geoffrey,Trumpet of Patriots
+NSW,Cowper,5,CONAGHAN,Pat,The Nationals
+NSW,Cowper,6,TEMPLETON,Paul,Libertarian
+NSW,Cowper,7,JACKEL,Peter,Family First
+NSW,Cowper,8,FIREFLY,Wendy,The Greens
+NSW,Cowper,9,HEISE,Caz,Independent
+NSW,Cowper,10,MARLOW,Geoffrey,FUSION | Planet Rescue | Whistleblower Protection | Innovation
+NSW,Cowper,11,WALSH,Chris,Pauline Hanson's One Nation
+NSW,Cunningham,1,BYRNES,Alison,Labor
+NSW,Cunningham,2,GARNAUT-MILLER,Alexis,Citizens Party
+NSW,Cunningham,3,IVANEZA,Amanda,Liberal
+NSW,Cunningham,4,FULLER,John,Pauline Hanson's One Nation
+NSW,Cunningham,5,LAVERS,Tim,Animal Justice Party
+NSW,Cunningham,6,WHITTAKER,Jess,The Greens
+NSW,Dobell,1,COOPER,Simon George,The Greens
+NSW,Dobell,2,SMALL,Brendan,Liberal
+NSW,Dobell,3,STEVENSON,Martin,Pauline Hanson's One Nation
+NSW,Dobell,4,TAWAF,Anthony,Trumpet of Patriots
+NSW,Dobell,5,CLAYDON,Tim,Legalise Cannabis Party
+NSW,Dobell,6,MURPHY,Patrick,Animal Justice Party
+NSW,Dobell,7,CHALIK,Isaac,Libertarian
+NSW,Dobell,8,McBRIDE,Emma,Labor
+NSW,Eden-Monaro,1,THALER,Andrew Evan,Independent
+NSW,Eden-Monaro,2,COX,Wade Ewart,Trumpet of Patriots
+NSW,Eden-Monaro,3,BUCHANAN,Fraser,HEART Party
+NSW,Eden-Monaro,4,van der PLAAT,Jo,Liberal
+NSW,Eden-Monaro,5,FISHER,Brian,Independent
+NSW,Eden-Monaro,6,McBAIN,Kristy,Labor
+NSW,Eden-Monaro,7,GOWARD,Emma,The Greens
+NSW,Eden-Monaro,8,GRAHAM,Richard,Pauline Hanson's One Nation
+NSW,Farrer,1,LEY,Sussan,Liberal
+NSW,Farrer,2,HYDE,Glen,Labor
+NSW,Farrer,3,MILTHORPE,Michelle,Independent
+NSW,Farrer,4,HENDRIE,Richard August,The Greens
+NSW,Farrer,5,HICKS,Emma,Pauline Hanson's One Nation
+NSW,Farrer,6,SINCLAIR,Peter,"Shooters, Fishers and Farmers Party"
+NSW,Farrer,7,O'REILLY,David,Gerard Rennick People First
+NSW,Farrer,8,SCRIVEN,Rebecca,Family First
+NSW,Farrer,9,HARGRAVES,Tanya,Trumpet of Patriots
+NSW,Fowler,1,ATHAVLE,Jared,Family First
+NSW,Fowler,2,TEY,Victor,Libertarian
+NSW,Fowler,3,LE,Dai,Independent
+NSW,Fowler,4,HOWARD,Avery Jacob,The Greens
+NSW,Fowler,5,MARGOS,Tony,Pauline Hanson's One Nation
+NSW,Fowler,6,LE,Tu,Labor
+NSW,Fowler,7,SINGHA,Vivek,Liberal
+NSW,Gilmore,1,PHILLIPS,Fiona,Labor
+NSW,Gilmore,2,DEZARNAULDS,Kate,Independent
+NSW,Gilmore,3,WISE,Melissa,Trumpet of Patriots
+NSW,Gilmore,4,KILLIAN,Debbie,The Greens
+NSW,Gilmore,5,BROWN,Graham,Family First
+NSW,Gilmore,6,CONSTANCE,Andrew,Liberal
+NSW,Gilmore,7,HAWKE,John,Pauline Hanson's One Nation
+NSW,Gilmore,8,CARLE,Adrian Richard,Legalise Cannabis Party
+NSW,Grayndler,1,SMITH,Rodney,Pauline Hanson's One Nation
+NSW,Grayndler,2,SMALLBONE,David,Liberal
+NSW,Grayndler,3,BURRELL,Cheri Rae,Trumpet of Patriots
+NSW,Grayndler,4,THOMAS,Hannah,The Greens
+NSW,Grayndler,5,ALBANESE,Anthony,Labor
+NSW,Grayndler,6,BRADBURY,David,Independent
+NSW,Greenway,1,STUCKEY,Robert,Independent
+NSW,Greenway,2,REX,Mark,Libertarian
+NSW,Greenway,3,SUBRAMANIAN,Palaniappan,The Greens
+NSW,Greenway,4,VIRK,Rattan,Liberal
+NSW,Greenway,5,ROWLAND,Michelle,Labor
+NSW,Greenway,6,MULLIGAN,Justin,Trumpet of Patriots
+NSW,Greenway,7,SWANN,Edwin,Pauline Hanson's One Nation
+NSW,Hughes,1,MONCRIEFF,David,Labor
+NSW,Hughes,2,DYSON,Catherine Elizabeth,The Greens
+NSW,Hughes,3,SINOSIC,Elvis,Libertarian
+NSW,Hughes,4,SCARFONE,Alex,Trumpet of Patriots
+NSW,Hughes,5,MARSH,Nathaniel David,Family First
+NSW,Hughes,6,WARE,Jenny,Liberal
+NSW,Hughes,7,MILLER,David A W,Citizens Party
+NSW,Hughes,8,SWINBOURN,Deborah,Pauline Hanson's One Nation
+NSW,Hume,1,TAYLOR,Angus,Liberal
+NSW,Hume,2,SEIDEL,Bryan,Family First
+NSW,Hume,3,REES,Adrian,Libertarian
+NSW,Hume,4,BRUCE,Steve,The Greens
+NSW,Hume,5,DUCKER,Helen,Pauline Hanson's One Nation
+NSW,Hume,6,WOZNIAK,Troy,Trumpet of Patriots
+NSW,Hume,7,HUANG,Thomas,Labor
+NSW,Hume,8,McLEAN,Peter,Independent
+NSW,Hunter,1,BONDS,Stuart,Pauline Hanson's One Nation
+NSW,Hunter,2,GILROY,Sue,The Nationals
+NSW,Hunter,3,FENWICK,Andrew David,Legalise Cannabis Party
+NSW,Hunter,4,DAVIES,Victoria,Animal Justice Party
+NSW,Hunter,5,FARRELLY,Paul,Family First
+NSW,Hunter,6,BODDAN,Kyle,"Shooters, Fishers and Farmers Party"
+NSW,Hunter,7,WRIGHTSON,Suellen,Trumpet of Patriots
+NSW,Hunter,8,REPACHOLI,Dan,Labor
+NSW,Hunter,9,STOKES,Louise,The Greens
+NSW,Kingsford Smith,1,JELIC,Mark,Pauline Hanson's One Nation
+NSW,Kingsford Smith,2,THISTLETHWAITE,Matt,Labor
+NSW,Kingsford Smith,3,COLE,Brad,Liberal
+NSW,Kingsford Smith,4,PARKER,Elsa,Independent
+NSW,Kingsford Smith,5,BROWN,Keiron,The Greens
+NSW,Lindsay,1,McINTOSH,Melissa,Liberal
+NSW,Lindsay,2,EMMANUEL,Antony Victor,Family First
+NSW,Lindsay,3,HALLEY,Carl,"Shooters, Fishers and Farmers Party"
+NSW,Lindsay,4,SALEAM,Jim,Independent
+NSW,Lindsay,5,BLAZI,Vanessa,Animal Justice Party
+NSW,Lindsay,6,BUCKLEY,Christopher,Pauline Hanson's One Nation
+NSW,Lindsay,7,PALMER,Michelle,HEART Party
+NSW,Lindsay,8,McALLISTER,Aaron David,The Greens
+NSW,Lindsay,9,McLEAN,Hollie,Labor
+NSW,Lindsay,10,O'CONNOR,Joseph,Trumpet of Patriots
+NSW,Lyne,1,FERRIER,Tom,The Greens
+NSW,Lyne,2,WILSON,Digby,Labor
+NSW,Lyne,3,CHARSLEY,Cathy,Trumpet of Patriots
+NSW,Lyne,4,HUGHES,Colin,Pauline Hanson's One Nation
+NSW,Lyne,5,PENFOLD,Alison,The Nationals
+NSW,Lyne,6,MILLER,Jeremy,Independent
+NSW,Lyne,7,MASTERS,David,Family First
+NSW,Lyne,8,MANLEY,Keys,Legalise Cannabis Party
+NSW,Lyne,9,BURKE,Stephen John,Citizens Party
+NSW,Lyne,10,HORNSHAW,Mark Alexander,Libertarian
+NSW,Macarthur,1,SCOTT,Frankie,The Greens
+NSW,Macarthur,2,PALMER,Edward,FUSION | Planet Rescue | Whistleblower Protection | Innovation
+NSW,Macarthur,3,FREELANDER,Mike,Labor
+NSW,Macarthur,4,HARVEY,Connie,Libertarian
+NSW,Macarthur,5,GROGAN,Gregory,Pauline Hanson's One Nation
+NSW,Macarthur,6,PAUDEL,Binod,Liberal
+NSW,Macarthur,7,CHARLESWORTH,Graham Ernest,Family First
+NSW,Mackellar,1,COTTON,Lisa,Independent
+NSW,Mackellar,2,HAYMAN,Brad,Pauline Hanson's One Nation
+NSW,Mackellar,3,HRNJAK,Ethan,The Greens
+NSW,Mackellar,4,ADDISON,Justin,Libertarian
+NSW,Mackellar,5,ROBERTSON,Amber,Trumpet of Patriots
+NSW,Mackellar,6,BROWN,James,Liberal
+NSW,Mackellar,7,SINGH,Mandeep,Independent
+NSW,Mackellar,8,SCAMPS,Sophie,Independent
+NSW,Mackellar,9,QUINN,Jeffrey,Labor
+NSW,Macquarie,1,JACOBSON,Matthew,Pauline Hanson's One Nation
+NSW,Macquarie,2,CREED,Mike,Liberal
+NSW,Macquarie,3,DE LIMA,Joaquim Eduardo,Libertarian
+NSW,Macquarie,4,MORGAN,Terry,The Greens
+NSW,Macquarie,5,TEMPLEMAN,Susan,Labor
+NSW,Macquarie,6,BOWEN,Roger Gerard,Family First
+NSW,McMahon,1,JANICSKA,Melissa,Pauline Hanson's One Nation
+NSW,McMahon,2,LAZAR,Carmen,Liberal
+NSW,McMahon,3,BOWEN,Chris,Labor
+NSW,McMahon,4,CAMENZULI,Matthew,Independent
+NSW,McMahon,5,HAMMOND,Ben,The Greens
+NSW,Mitchell,1,SPEECHLY,Ben,The Greens
+NSW,Mitchell,2,HAWKE,Alex,Liberal
+NSW,Mitchell,3,McCREANOR,Brendan,Pauline Hanson's One Nation
+NSW,Mitchell,4,BIRCAN,Dilvan,Labor
+NSW,Mitchell,5,CROCKER,Mark,Trumpet of Patriots
+NSW,New England,1,JOYCE,Barnaby,The Nationals
+NSW,New England,2,WALES,Wendy,The Greens
+NSW,New England,3,LEDGER,Natasha,Independent
+NSW,New England,4,HUGHES,Laura,Labor
+NSW,New England,5,MASTERS,Holly,Family First
+NSW,New England,6,JUCHAU,Todd Charles,Trumpet of Patriots
+NSW,New England,7,LARKHAM,Brent,Pauline Hanson's One Nation
+NSW,Newcastle,1,STEFANAC,Jennifer,Trumpet of Patriots
+NSW,Newcastle,2,O'BRIEN,Steve,Socialist Alliance
+NSW,Newcastle,3,McCABE,Charlotte,The Greens
+NSW,Newcastle,4,McPHEE,Asarri,Liberal
+NSW,Newcastle,5,CLAYDON,Sharon,Labor
+NSW,Newcastle,6,BRIGGS,Jason,Family First
+NSW,Newcastle,7,CREECH,Robert,
+NSW,Newcastle,8,HEYNE,Phillip,Pauline Hanson's One Nation
+NSW,Page,1,WELLS,Richard,Independent
+NSW,Page,2,PIKE,Donna Lee,Trumpet of Patriots
+NSW,Page,3,BACKHOUS,Wendy,Labor
+NSW,Page,4,HOGAN,Kevin,The Nationals
+NSW,Page,5,BAKER,Jennifer,Citizens Party
+NSW,Page,6,ROBINSON,Luke,The Greens
+NSW,Page,7,WILLIAMS,Brenton,Libertarian
+NSW,Page,8,GRADY,Andrew,Family First
+NSW,Page,9,COLLESS,Jordan,Independent
+NSW,Page,10,NOTTLE,Peter,Pauline Hanson's One Nation
+NSW,Page,11,PIANCA,Josh,"Shooters, Fishers and Farmers Party"
+NSW,Parkes,1,CARTER,Mark,Pauline Hanson's One Nation
+NSW,Parkes,2,POPE,Stephen,"Shooters, Fishers and Farmers Party"
+NSW,Parkes,3,FRAIL,Trish,The Greens
+NSW,Parkes,4,VAN DER STEEN,Petrus,Trumpet of Patriots
+NSW,Parkes,5,WILSON,Bob,Indigenous - Aboriginal Party of Australia
+NSW,Parkes,6,FELL,Nathan,Labor
+NSW,Parkes,7,CHAFFEY,Jamie,The Nationals
+NSW,Parkes,8,DAVEY,Maurice,Family First
+NSW,Parkes,9,HOWE,Stuart,Independent
+NSW,Parkes,10,EDWARDS,Sally,Libertarian
+NSW,Parramatta,1,LOKE,Ganesh,Trumpet of Patriots
+NSW,Parramatta,2,SOMERSON,Ben,Libertarian
+NSW,Parramatta,3,TILLY,Liz,The Greens
+NSW,Parramatta,4,QUINN,Tanya-lee,Independent
+NSW,Parramatta,5,CHARLTON,Andrew,Labor
+NSW,Parramatta,6,MALINI,Maa,Independent
+NSW,Parramatta,7,MULLENS,Katie,Liberal
+NSW,Parramatta,8,MATZEN,Nicholas,Pauline Hanson's One Nation
+NSW,Paterson,1,HOLDING,Rod,Independent
+NSW,Paterson,2,SWANSON,Meryl,Labor
+NSW,Paterson,3,WITHER,Arnon,Pauline Hanson's One Nation
+NSW,Paterson,4,PENFOLD,Philip,Independent
+NSW,Paterson,5,JOHNS,Paul,The Greens
+NSW,Paterson,6,ANTCLIFF,Laurence,Liberal
+NSW,Paterson,7,BRIGGS,Sandra Lyn,Family First
+NSW,Paterson,8,SCOTT,April Maree,Independent
+NSW,Paterson,9,ARENA,Peter N,Trumpet of Patriots
+NSW,Paterson,10,DRYDEN,Daniel,Legalise Cannabis Party
+NSW,Reid,1,SOMERVILLE,Joanna,The Greens
+NSW,Reid,2,CHUNG,Grange,Liberal
+NSW,Reid,3,SARIKAYA,David,Trumpet of Patriots
+NSW,Reid,4,INGROUILLE,Gina,Pauline Hanson's One Nation
+NSW,Reid,5,SITOU,Sally,Labor
+NSW,Reid,6,MEAD,Clinton,Libertarian
+NSW,Reid,7,COMMERFORD,Steven,Independent
+NSW,Richmond,1,NOLAN,Mandy,The Greens
+NSW,Richmond,2,ELLIOT,Justine,Labor
+NSW,Richmond,3,LOUGHREY,Kevin,Independent
+NSW,Richmond,4,MYE,Ian,Pauline Hanson's One Nation
+NSW,Richmond,5,McMAHON,Vivian Mac,Legalise Cannabis Party
+NSW,Richmond,6,PETERKIN,Phillip Byron,Trumpet of Patriots
+NSW,Richmond,7,HONE,Kimberly,The Nationals
+NSW,Richmond,8,WILLIS,Ian Cherry,Libertarian
+NSW,Richmond,9,McKENZIE,James Ian,Independent
+NSW,Richmond,10,CURTIN,Richard,Gerard Rennick People First
+NSW,Riverina,1,CRAIG,Mark,Pauline Hanson's One Nation
+NSW,Riverina,2,GREGORY,Desiree,"Shooters, Fishers and Farmers Party"
+NSW,Riverina,3,BURGE,Mark,Family First
+NSW,Riverina,4,BAIKIE,Barbara,Independent
+NSW,Riverina,5,JEFFRESON,Mark,Labor
+NSW,Riverina,6,HARDWICK,Grant,Independent
+NSW,Riverina,7,FOLEY,Richard,Citizens Party
+NSW,Riverina,8,VALXORI,Pheonix,The Greens
+NSW,Riverina,9,GOODEN,James,Independent
+NSW,Riverina,10,DAVIS,Jake,Independent
+NSW,Riverina,11,McCORMACK,Michael,The Nationals
+NSW,Riverina,12,ROLFE,Jenny,Independent
+NSW,Riverina,13,ONLEY,Christine,Libertarian
+NSW,Robertson,1,LLOYD,Matt,Pauline Hanson's One Nation
+NSW,Robertson,2,WALLACE,Cheryl,The Greens
+NSW,Robertson,3,WICKS,Lucy,Liberal
+NSW,Robertson,4,LILLICRAP,Tom,Legalise Cannabis Party
+NSW,Robertson,5,BELLAMY,Lisa,Independent
+NSW,Robertson,6,BORG,David,Trumpet of Patriots
+NSW,Robertson,7,REID,Gordon,Labor
+NSW,Shortland,1,ROBERTSON,Geoffrey Mark,Libertarian
+NSW,Shortland,2,PHEILS,James,Independent
+NSW,Shortland,3,CONROY,Pat,Labor
+NSW,Shortland,4,REED,Barry,Pauline Hanson's One Nation
+NSW,Shortland,5,DI GIROLAMO,Pietro,Family First
+NSW,Shortland,6,KING,Emma,Liberal
+NSW,Shortland,7,DOYLE,Therese,The Greens
+NSW,Sydney,1,PLIBERSEK,Tanya,Labor
+NSW,Sydney,2,EVANS,Rachel,Socialist Alliance
+NSW,Sydney,3,XU,Alex,Liberal
+NSW,Sydney,4,TORBARAC,Vedran,Pauline Hanson's One Nation
+NSW,Sydney,5,VELEZ,Luc,The Greens
+NSW,Warringah,1,STEGGALL,Zali,Independent
+NSW,Warringah,2,VARGHESE-FELL,Celine,Labor
+NSW,Warringah,3,ROSE,Anthony,Trumpet of Patriots
+NSW,Warringah,4,SPRATT,David Michael,Independent
+NSW,Warringah,5,McLEOD,Sean,Libertarian
+NSW,Warringah,6,WRIGHT,Gavin,Pauline Hanson's One Nation
+NSW,Warringah,7,ROGERS,Jaimee,Liberal
+NSW,Warringah,8,HARVEY,Bonnie,The Greens
+NSW,Watson,1,BURKE,Tony,Labor
+NSW,Watson,2,HADCHITI,Vanessa,Libertarian
+NSW,Watson,3,BASYOUNY,Ziad,Independent
+NSW,Watson,4,KHAN,Zain,Independent
+NSW,Watson,5,TREVENA,Elisha,Pauline Hanson's One Nation
+NSW,Watson,6,ALAM,Zakir,Liberal
+NSW,Watson,7,MANNAH,John,Family First
+NSW,Watson,8,BREWER,Jocelyn,The Greens
+NSW,Watson,9,KOUKOULIS,John,Trumpet of Patriots
+NSW,Wentworth,1,RICHMOND,Michael,Independent
+NSW,Wentworth,2,WARD,Nick,The Greens
+NSW,Wentworth,3,STERNHELL,James,Pauline Hanson's One Nation
+NSW,Wentworth,4,KNOX,Ro,Liberal
+NSW,Wentworth,5,PEAKE,Savanna,Labor
+NSW,Wentworth,6,SPENDER,Allegra,Independent
+NSW,Werriwa,1,CASTLE,Janet Rebecca,The Greens
+NSW,Werriwa,2,STANLEY,Anne Maree,Labor
+NSW,Werriwa,3,BALESTRI,Jacob,Family First
+NSW,Werriwa,4,DAOUD,Jamal,Independent
+NSW,Werriwa,5,KAYAL,Sam,Liberal
+NSW,Werriwa,6,MURPHY,Andrew Charles,Legalise Cannabis Party
+NSW,Werriwa,7,CIMERA,Ian,Pauline Hanson's One Nation
+NSW,Werriwa,8,McGLONE,Shannon Grant,Trumpet of Patriots
+NSW,Werriwa,9,NOIOSI,Gemma,Libertarian
+NSW,Whitlam,1,DIXON,Jamie,The Greens
+NSW,Whitlam,2,SMITH,Nathaniel,Liberal
+NSW,Whitlam,3,BRITTON,Ben,Independent
+NSW,Whitlam,4,CUDA,Angelo,Trumpet of Patriots
+NSW,Whitlam,5,COUSINS,Sharon,Pauline Hanson's One Nation
+NSW,Whitlam,6,KHOURY,Raymond,Libertarian
+NSW,Whitlam,7,HINTON,Cheryl Ann,Citizens Party
+NSW,Whitlam,8,MOYLAN,Paddy,Independent
+NSW,Whitlam,9,BERRY,Carol,Labor
+NSW,Whitlam,10,BUTTERFIELD,Glenn,Independent
+NT,Lingiari,1,SCRYMGOUR,Marion,Australian Labor Party (Northern Territory) Branch
+NT,Lingiari,2,FLYNN,Peter,Citizens Party
+NT,Lingiari,3,TOMLINS,Chris,Indigenous - Aboriginal Party of Australia
+NT,Lingiari,4,McFARLAND,Blair,Australian Greens
+NT,Lingiari,5,BAIRAMIS,Sakellarios,Pauline Hanson's One Nation
+NT,Lingiari,6,SIEBERT,Lisa,NT CLP
+NT,Solomon,1,PARRY,Jonathan,Australian Greens
+NT,Solomon,2,BAYLISS,Lisa,NT CLP
+NT,Solomon,3,CRAKER,Benjamin,Pauline Hanson's One Nation
+NT,Solomon,4,SCOTT,Phil,Independent
+NT,Solomon,5,KRISTO,Brian,Citizens Party
+NT,Solomon,6,DAVIES,Janey,Independent
+NT,Solomon,7,GOSLING,Luke John,Australian Labor Party (Northern Territory) Branch
+QLD,Blair,1,MUTZELBURG,Carl,LNP
+QLD,Blair,2,BULL,Anthony,Libertarian
+QLD,Blair,3,CHADWICK,Kathryn,Gerard Rennick People First
+QLD,Blair,4,LOWERY,Angela,Animal Justice Party
+QLD,Blair,5,McDONALD,Edward,Trumpet of Patriots
+QLD,Blair,6,NEUMANN,Shayne,Australian Labor Party
+QLD,Blair,7,PURDON,John Frederick,Family First
+QLD,Blair,8,TONER,Paul,The Greens
+QLD,Blair,9,HOPKINS,Anthony,Legalise Cannabis Party
+QLD,Blair,10,KROSS,Brendan,Pauline Hanson's One Nation
+QLD,Bonner,1,DOVEY,Ross,Family First
+QLD,Bonner,2,BHASIN,Shalini,Libertarian
+QLD,Bonner,3,VASTA,Ross,LNP
+QLD,Bonner,4,HILL,Craig,Legalise Cannabis Party
+QLD,Bonner,5,LI,Wen,The Greens
+QLD,Bonner,6,WRIGHT,David,Trumpet of Patriots
+QLD,Bonner,7,de WINTER,Christopher,Pauline Hanson's One Nation
+QLD,Bonner,8,COOK,Kara,Australian Labor Party
+QLD,Bowman,1,BROWN,Darcy,Australian Labor Party
+QLD,Bowman,2,TODD,David,Family First
+QLD,Bowman,3,HOLLOWAY,Shaun,Independent
+QLD,Bowman,4,KNIGHT,Matthew,Pauline Hanson's One Nation
+QLD,Bowman,5,WILLIAMSON,Gary,Trumpet of Patriots
+QLD,Bowman,6,PIKE,Henry,LNP
+QLD,Bowman,7,LOCKHART,Kristie,The Greens
+QLD,Brisbane,1,WOOD,Cheryl,Pauline Hanson's One Nation
+QLD,Brisbane,2,JARRETT,Madonna,Australian Labor Party
+QLD,Brisbane,3,SANDS,Kirsten,Family First
+QLD,Brisbane,4,BATES,Stephen,The Greens
+QLD,Brisbane,5,EVANS,Trevor,LNP
+QLD,Brisbane,6,THIELE,Brian William,Trumpet of Patriots
+QLD,Brisbane,7,WHEELER,Joseph,Gerard Rennick People First
+QLD,Brisbane,8,BLACKWOOD,Rachael,FUSION | Planet Rescue | Whistleblower Protection | Innovation
+QLD,Capricornia,1,MAWSON,Emily,Australian Labor Party
+QLD,Capricornia,2,ANDREW,Stephen,Trumpet of Patriots
+QLD,Capricornia,3,KEMPTON,Cheryl,Pauline Hanson's One Nation
+QLD,Capricornia,4,HISLOP,Kerri,Family First
+QLD,Capricornia,5,LANDRY,Michelle,LNP
+QLD,Capricornia,6,JONES,Mick,The Greens
+QLD,Dawson,1,LOCKYER,Michael,Trumpet of Patriots
+QLD,Dawson,2,BEAUMONT,Alexander John,Gerard Rennick People First
+QLD,Dawson,3,NICKSON,Amanda,Family First
+QLD,Dawson,4,WILLCOX,Andrew,LNP
+QLD,Dawson,5,BROWN,Darren,Pauline Hanson's One Nation
+QLD,Dawson,6,CREEN,Paula,The Greens
+QLD,Dawson,7,WALLACE,Neil,Australian Labor Party
+QLD,Dickson,1,HEWETT,Suniti,Family First
+QLD,Dickson,2,FRANCE,Ali,Australian Labor Party
+QLD,Dickson,3,BATTEN,Vinnie,The Greens
+QLD,Dickson,4,STEVENSON,Joel,Pauline Hanson's One Nation
+QLD,Dickson,5,DUTTON,Peter,LNP
+QLD,Dickson,6,JESSOP,Michael,Trumpet of Patriots
+QLD,Dickson,7,SMITH,Ellie,Independent
+QLD,Dickson,8,ZALOUDEK,David,Legalise Cannabis Party
+QLD,Dickson,9,BROHMAN,Maureen,Animal Justice Party
+QLD,Fadden,1,PUKALLUS,Dennis,Citizens Party
+QLD,Fadden,2,DEL FABBRO,Letitia,Australian Labor Party
+QLD,Fadden,3,MUIR,Nick,Pauline Hanson's One Nation
+QLD,Fadden,4,O'BRIEN,Nathan,Trumpet of Patriots
+QLD,Fadden,5,BROOKER,Stewart,Independent
+QLD,Fadden,6,STIMSON,Andrew,The Greens
+QLD,Fadden,7,MARTIN,Patricia,Family First
+QLD,Fadden,8,CALDWELL,Cameron,LNP
+QLD,Fadden,9,ARMFIELD,John,Gerard Rennick People First
+QLD,Fairfax,1,MARSH,Beatrice,Pauline Hanson's One Nation
+QLD,Fairfax,2,WIIG,Francine,Independent
+QLD,Fairfax,3,SANDERSON,Rhys,Family First
+QLD,Fairfax,4,ETHERIDGE,Sue,The Greens
+QLD,Fairfax,5,McQUEEN,Naomi,Australian Labor Party
+QLD,Fairfax,6,McKEOWN,Paul,Independent
+QLD,Fairfax,7,O'BRIEN,Ted,LNP
+QLD,Fairfax,8,RYZY,Gregory,Trumpet of Patriots
+QLD,Fisher,1,JONES,Keryn,Independent
+QLD,Fisher,2,WELLS,Renay,The Greens
+QLD,Fisher,3,WALLACE,Andrew,LNP
+QLD,Fisher,4,FRICOT,Denis,Trumpet of Patriots
+QLD,Fisher,5,LAKEY,Morrison,Australian Labor Party
+QLD,Fisher,6,PIDGEON,James,Gerard Rennick People First
+QLD,Fisher,7,BOLITHO,Bronwen,Family First
+QLD,Fisher,8,KELLY,Benjamin,Pauline Hanson's One Nation
+QLD,Flynn,1,ANDERSON,John,Independent
+QLD,Flynn,2,MADELL,Helen,Australian Labor Party
+QLD,Flynn,3,ZUNKER,Peter,Trumpet of Patriots
+QLD,Flynn,4,DORIAN,Peter,Family First
+QLD,Flynn,5,BAMBRICK,Paul,The Greens
+QLD,Flynn,6,PRICE,Lance,Gerard Rennick People First
+QLD,Flynn,7,SCOTT,Duncan,Independent
+QLD,Flynn,8,BOYCE,Colin,LNP
+QLD,Flynn,9,HARRIS,David,Pauline Hanson's One Nation
+QLD,Forde,1,POP,Corneliu,Family First
+QLD,Forde,2,Van MANEN,Bert,LNP
+QLD,Forde,3,PETERSEN,Kirsty,The Greens
+QLD,Forde,4,HISCOCK,Jacob,Trumpet of Patriots
+QLD,Forde,5,HOLZBERGER,Rowan,Australian Labor Party
+QLD,Forde,6,de HOMBRE,Alf,Citizens Party
+QLD,Forde,7,GREAVES,Chris,Independent
+QLD,Forde,8,LAMBERT,Matthew,Pauline Hanson's One Nation
+QLD,Griffith,1,CHANDLER-MATHER,Max,The Greens
+QLD,Griffith,2,BELL,Lindsay,Pauline Hanson's One Nation
+QLD,Griffith,3,COFFEY,Renee,Australian Labor Party
+QLD,Griffith,4,HUNT,Dion,Gerard Rennick People First
+QLD,Griffith,5,CAMPBELL,Andrea,Family First
+QLD,Griffith,6,BISHOP,Anthony,LNP
+QLD,Griffith,7,HAYES,Aaron,Trumpet of Patriots
+QLD,Groom,1,HOLT,Suzie,Independent
+QLD,Groom,2,KONZ,Rebecca,Pauline Hanson's One Nation
+QLD,Groom,3,TODD,Alexandra,Family First
+QLD,Groom,4,NELLIGAN,Alyce,The Greens
+QLD,Groom,5,HAMILTON,Garth,LNP
+QLD,Groom,6,SMOLENSKI,Kirstie,Independent
+QLD,Groom,7,MARR,Jamie,Trumpet of Patriots
+QLD,Groom,8,EDWARDS,Richard,Australian Labor Party
+QLD,Herbert,1,THOMPSON,Phillip,LNP
+QLD,Herbert,2,BREWSTER,Martin,Trumpet of Patriots
+QLD,Herbert,3,COLE,Felicity,Gerard Rennick People First
+QLD,Herbert,4,ANDREW,Edwina,Australian Labor Party
+QLD,Herbert,5,EVANS,Chris,The Greens
+QLD,Herbert,6,ROSER,Felicity,Family First
+QLD,Herbert,7,MacDONALD,Ross,Pauline Hanson's One Nation
+QLD,Herbert,8,CASSON,Darryn,Katter's Australian Party (KAP)
+QLD,Hinkler,1,McLEAN,Andrew,The Greens
+QLD,Hinkler,2,BATT,David,LNP
+QLD,Hinkler,3,O'BRIEN,Michael,Independent
+QLD,Hinkler,4,MEARS,Trish,Australian Labor Party
+QLD,Hinkler,5,PETRUS,Kerry,Family First
+QLD,Hinkler,6,CARMAN,Tyler,Pauline Hanson's One Nation
+QLD,Hinkler,7,BLOHBERGER,Robert,Trumpet of Patriots
+QLD,Kennedy,1,SWAINE,Annette,LNP
+QLD,Kennedy,2,CLARE,Steven,Independent
+QLD,Kennedy,3,STANFORD,Carole,The Greens
+QLD,Kennedy,4,LUSH,Douglas,Family First
+QLD,Kennedy,5,HARRIS,Kate,Pauline Hanson's One Nation
+QLD,Kennedy,6,WINN,Sharon,Australian Labor Party
+QLD,Kennedy,7,WESTCOTT,Mark,Trumpet of Patriots
+QLD,Kennedy,8,KATTER,Bob,Katter's Australian Party (KAP)
+QLD,Leichhardt,1,DANIELS,Nicholas James Nigel,Legalise Cannabis Party
+QLD,Leichhardt,2,HICKS,Robert,Pauline Hanson's One Nation
+QLD,Leichhardt,3,RUSSELL,Lloyd,Libertarian
+QLD,Leichhardt,4,COLLINS,Daniel,Katter's Australian Party (KAP)
+QLD,Leichhardt,5,SMITH,Matt,Australian Labor Party
+QLD,Leichhardt,6,SEARLE,Les,Family First
+QLD,Leichhardt,7,NEAL,Jeremy,LNP
+QLD,Leichhardt,8,MILLER,Norman,Independent
+QLD,Leichhardt,9,MUSUMECI,Phillip,The Greens
+QLD,Leichhardt,10,DOWLING,Greg Ian,Trumpet of Patriots
+QLD,Lilley,1,MORRISON,Joshua,Trumpet of Patriots
+QLD,Lilley,2,WELLS,Anika,Australian Labor Party
+QLD,Lilley,3,STEVENS,Melissa,The Greens
+QLD,Lilley,4,DENARO,Alan,Family First
+QLD,Lilley,5,McKAY,Michelle,Pauline Hanson's One Nation
+QLD,Lilley,6,WASHINGTON,Kimberley,LNP
+QLD,Longman,1,YOUNG,Terry,LNP
+QLD,Longman,2,HEARNE,Malachi Brogden,Family First
+QLD,Longman,3,DOUGLAS,Rhiannyn,Australian Labor Party
+QLD,Longman,4,WOOD,Benjamin,Trumpet of Patriots
+QLD,Longman,5,McCASKER,Peter,Pauline Hanson's One Nation
+QLD,Longman,6,UNVERZAGT,Gabrielle,The Greens
+QLD,Maranoa,1,DRAPER,Rod,Gerard Rennick People First
+QLD,Maranoa,2,LITTLEPROUD,David,LNP
+QLD,Maranoa,3,JOHNSTON,Elizabeth,The Greens
+QLD,Maranoa,4,OFFERDAHL,Michael,Libertarian
+QLD,Maranoa,5,WHITTLE,John Matthew,Family First
+QLD,Maranoa,6,NEWMAN,Alex,Australian Labor Party
+QLD,Maranoa,7,CUMES,Jonathan Allen,Trumpet of Patriots
+QLD,Maranoa,8,DUNCAN,Sharon,Pauline Hanson's One Nation
+QLD,McPherson,1,MURRAY-BARTLETT,Erchana,Independent
+QLD,McPherson,2,REBELLO,Leon,LNP
+QLD,McPherson,3,FAYE,Michelle,Independent
+QLD,McPherson,4,CRESWICK,Max,Trumpet of Patriots
+QLD,McPherson,5,HORSBURGH,Jennifer,Animal Justice Party
+QLD,McPherson,6,KENNEALY,Amanda,The Greens
+QLD,McPherson,7,ATTIIG,Zyion,Pauline Hanson's One Nation
+QLD,McPherson,8,BIGGS,Gary,Libertarian
+QLD,McPherson,9,KNIPE,Jeff,Legalise Cannabis Party
+QLD,McPherson,10,PRICE,Alice,Australian Labor Party
+QLD,McPherson,11,HATZIKALIMNIOS,Harry,Gerard Rennick People First
+QLD,McPherson,12,TESTER,Neena,Family First
+QLD,Moncrieff,1,ARROWSMITH,Nicole,Independent
+QLD,Moncrieff,2,WELD ALI,Waddah,Independent
+QLD,Moncrieff,3,SPAIN,Sally,The Greens
+QLD,Moncrieff,4,BELL,Angie,LNP
+QLD,Moncrieff,5,WADSWORTH,Glen,Pauline Hanson's One Nation
+QLD,Moncrieff,6,FEA,Ruth,Family First
+QLD,Moncrieff,7,SZORKOVSZKY,Natasha Anne,Gerard Rennick People First
+QLD,Moncrieff,8,STUART,Blair,Australian Labor Party
+QLD,Moncrieff,9,NAICKER,Vic,Trumpet of Patriots
+QLD,Moreton,1,JULIUS,Christian John,Trumpet of Patriots
+QLD,Moreton,2,CAMPBELL,Julie-Ann,Australian Labor Party
+QLD,Moreton,3,HOOPER,Max,Citizens Party
+QLD,Moreton,4,BILLING,Natarsha,Gerard Rennick People First
+QLD,Moreton,5,KELLER,Melinda,Family First
+QLD,Moreton,6,SWINDON,Henry,LNP
+QLD,Moreton,7,NAJI,Remah,The Greens
+QLD,Moreton,8,SPORK,Grant,Pauline Hanson's One Nation
+QLD,Oxley,1,DICK,Milton,Australian Labor Party
+QLD,Oxley,2,BAKER,Darren,Pauline Hanson's One Nation
+QLD,Oxley,3,HEAD,Mike,
+QLD,Oxley,4,MAGUIRE,Mark,Trumpet of Patriots
+QLD,Oxley,5,BURNS,Kevin,LNP
+QLD,Oxley,6,HOLT,Brandan,The Greens
+QLD,Oxley,7,TENTO,William,Family First
+QLD,Petrie,1,MENSINK,Ryan,Trumpet of Patriots
+QLD,Petrie,2,SHIRES,Nicole,Pauline Hanson's One Nation
+QLD,Petrie,3,COMER,Emma,Australian Labor Party
+QLD,Petrie,4,HOWARTH,Luke,LNP
+QLD,Petrie,5,PAUL,Nikil,The Greens
+QLD,Petrie,6,HALL,Sharan,Family First
+QLD,Rankin,1,ORDISH,Carol,Family First
+QLD,Rankin,2,HUDSON,Lana,Gerard Rennick People First
+QLD,Rankin,3,DARWEN,Paul,LNP
+QLD,Rankin,4,RIETHMULLER,Joshua,The Greens
+QLD,Rankin,5,CHALMERS,Jim,Australian Labor Party
+QLD,Rankin,6,BAINBRIDGE,Alex,Socialist Alliance
+QLD,Rankin,7,LENTZ,Kyle,Pauline Hanson's One Nation
+QLD,Rankin,8,LINDBOM,Janet,Trumpet of Patriots
+QLD,Ryan,1,GALLEHAWK,Donna,Family First
+QLD,Ryan,2,HACK,Rebecca,Australian Labor Party
+QLD,Ryan,3,MASTERTON,Gina,FUSION | Planet Rescue | Whistleblower Protection | Innovation
+QLD,Ryan,4,WATSON-BROWN,Elizabeth,The Greens
+QLD,Ryan,5,FORREST,Maggie,LNP
+QLD,Ryan,6,DE LAPP,N,Gerard Rennick People First
+QLD,Ryan,7,HUNT,Ryan,Trumpet of Patriots
+QLD,Ryan,8,ELSOM,Robbie,Pauline Hanson's One Nation
+QLD,Wide Bay,1,KENNINGALE,Kirsti,Family First
+QLD,Wide Bay,2,CHALMERS,Elliott,Australian Labor Party
+QLD,Wide Bay,3,BURGESS,Chad,Pauline Hanson's One Nation
+QLD,Wide Bay,4,O'BRIEN,Llew,LNP
+QLD,Wide Bay,5,IDDON,Casey,Independent
+QLD,Wide Bay,6,BUHSE,Emma,The Greens
+QLD,Wide Bay,7,PENNICOTT,Gabrial,Trumpet of Patriots
+QLD,Wright,1,DAVIS,Natalie,Pauline Hanson's One Nation
+QLD,Wright,2,THOMPSON,Nicole,The Greens
+QLD,Wright,3,ROSE,Julie,Family First
+QLD,Wright,4,THOMPSON,Scott,Trumpet of Patriots
+QLD,Wright,5,BUCHHOLZ,Scott,LNP
+QLD,Wright,6,McCREADIE,Pam,Australian Labor Party
+QLD,Wright,7,SNYMAN,Chloe Leeanne,Animal Justice Party
+QLD,Wright,8,McGUINESS,Justin,Gerard Rennick People First
+SA,Adelaide,1,PENGILLEY,Lionel,Animal Justice Party
+SA,Adelaide,2,GEORGANAS,Steve,Australian Labor Party
+SA,Adelaide,3,MARKS,Steve,Trumpet of Patriots
+SA,Adelaide,4,MONTI,Mat,The Greens
+SA,Adelaide,5,McMILLAN,Matthew,FUSION | Planet Rescue | Whistleblower Protection | Innovation
+SA,Adelaide,6,SIZE,Riley,Pauline Hanson's One Nation
+SA,Adelaide,7,GRANTHAM,Amy,Liberal
+SA,Barker,1,PASIN,Tony,Liberal
+SA,Barker,2,HILLAM,Rosa,Independent
+SA,Barker,3,PIETZSCH,Jonathan,National Party
+SA,Barker,4,ROTHE,James,Australian Labor Party
+SA,Barker,5,TROETH,Jennifer,Pauline Hanson's One Nation
+SA,Barker,6,BROHIER,Michael,Family First
+SA,Barker,7,PENNO,Ian,Independent
+SA,Barker,8,JAMESON,Robert,Trumpet of Patriots
+SA,Barker,9,SUMNER,Major Moogy,The Greens
+SA,Barker,10,SCHOLES,Cody,Independent
+SA,Boothby,1,HUSSEY,Nicole,Trumpet of Patriots
+SA,Boothby,2,PRIOR,Samuel,Family First
+SA,Boothby,3,SCOTT,Tonya,Pauline Hanson's One Nation
+SA,Boothby,4,MILLER-FROST,Louise,Australian Labor Party
+SA,Boothby,5,WELLS,Joanna,The Greens
+SA,Boothby,6,FLINT,Nicolle,Liberal
+SA,Grey,1,BORDA,Peter,National Party
+SA,Grey,2,TURTON,Brandon,Pauline Hanson's One Nation
+SA,Grey,3,BOLTON,Karin,Australian Labor Party
+SA,Grey,4,EVANS,Kylie,Family First
+SA,Grey,5,KUSS,Anita,Independent
+SA,Grey,6,HARDWICK-FRANCO,Kathryn,The Greens
+SA,Grey,7,VENNING,Tom,Liberal
+SA,Grey,8,BAIS,Laury Hendrik,Trumpet of Patriots
+SA,Hindmarsh,1,TOWNSEND,Andrew,Trumpet of Patriots
+SA,Hindmarsh,2,ALOE,Adrien,FUSION | Planet Rescue | Whistleblower Protection | Innovation
+SA,Hindmarsh,3,TENNIKOFF,Alex,Family First
+SA,Hindmarsh,4,DeANGELIS,Rocco,Pauline Hanson's One Nation
+SA,Hindmarsh,5,LEHMANN,Chris,Liberal
+SA,Hindmarsh,6,PASTRO,Matt,Animal Justice Party
+SA,Hindmarsh,7,HALL-EVANS,Jake,Independent
+SA,Hindmarsh,8,BUTLER,Mark,Australian Labor Party
+SA,Hindmarsh,9,WRIGHT,Matthew,The Greens
+SA,Kingston,1,RISHWORTH,Amanda,Australian Labor Party
+SA,Kingston,2,SKRLJ,Nathan,Pauline Hanson's One Nation
+SA,Kingston,3,PHOTAKIS,John,The Greens
+SA,Kingston,4,RISHWORTH,Jim,Liberal
+SA,Kingston,5,PRICE,Steven,Family First
+SA,Kingston,6,JACKSON,Russell Patrick,Trumpet of Patriots
+SA,Kingston,7,LIU,Bin,Animal Justice Party
+SA,Makin,1,RUSSELL,Geoff,Animal Justice Party
+SA,Makin,2,MOORE,Samuel,The Greens
+SA,Makin,3,NANCARROW,Sue,Family First
+SA,Makin,4,ALDRIDGE,Mark,Trumpet of Patriots
+SA,Makin,5,DEW-FENNELL,Alison,Pauline Hanson's One Nation
+SA,Makin,6,HANNA,Amelie,FUSION | Planet Rescue | Whistleblower Protection | Innovation
+SA,Makin,7,ZAGLADOV,Irena,Liberal
+SA,Makin,8,ZAPPIA,Tony,Australian Labor Party
+SA,Mayo,1,BASIC,Zane,Liberal
+SA,Mayo,2,SHARKIE,Rebekha,Centre Alliance
+SA,Mayo,3,DAWSON-SCOTT,Genevieve,The Greens
+SA,Mayo,4,HACKETT,Ben,Family First
+SA,Mayo,5,BELL,Marisa,Australian Labor Party
+SA,Mayo,6,HEWETT,Rebecca,Pauline Hanson's One Nation
+SA,Mayo,7,BIDWELL,Simeon Trump,Trumpet of Patriots
+SA,Spence,1,SKINNER,Luke,The Greens
+SA,Spence,2,WILD,Daniel,Liberal
+SA,Spence,3,SMITH,Miranda Joyce,Animal Justice Party
+SA,Spence,4,HANTON,Kym,Independent
+SA,Spence,5,BURNELL,Matt,Australian Labor Party
+SA,Spence,6,BOTHE,Darryl,Pauline Hanson's One Nation
+SA,Spence,7,MORRELL,Paul Michael,Trumpet of Patriots
+SA,Spence,8,BENNETT,John William,Family First
+SA,Sturt,1,CLUTTERHAM,Claire,Australian Labor Party
+SA,Sturt,2,MERVIN JOSHUA,,Family First
+SA,Sturt,3,STEVENS,James,Liberal
+SA,Sturt,4,COOPER,Verity,Independent
+SA,Sturt,5,BOGATEC,Peter,Pauline Hanson's One Nation
+SA,Sturt,6,DUFFIELD,Nicholas,Trumpet of Patriots
+SA,Sturt,7,McCUSKER,Katie,The Greens
+TAS,Bass,1,TEESDALE,Jess,Australian Labor Party
+TAS,Bass,2,LARNER,Caroline,Citizens Party
+TAS,Bass,3,ARCHER,Bridget Kathleen,Liberal
+TAS,Bass,4,POTTER,Jordan,Pauline Hanson's One Nation
+TAS,Bass,5,McLENNAN,Charlene,The Greens
+TAS,Bass,6,RAZAY,George,Independent
+TAS,Bass,7,BROOMHALL,Ray,Trumpet of Patriots
+TAS,Braddon,1,KENNEY,Stephen John,Trumpet of Patriots
+TAS,Braddon,2,MORROW,Erin,The Greens
+TAS,Braddon,3,METHORST,Christopher,Pauline Hanson's One Nation
+TAS,Braddon,4,URQUHART,Anne,Australian Labor Party
+TAS,Braddon,5,MARTIN,Adam,Independent
+TAS,Braddon,6,HINGSTON,Mal,Liberal
+TAS,Clark,1,WILKIE,Andrew,Independent
+TAS,Clark,2,SHELLEY,Janet,The Greens
+TAS,Clark,3,DI FLORIO,Marilena,Liberal
+TAS,Clark,4,HECK,Heidi,Australian Labor Party
+TAS,Clark,5,GRIGGS,Cathy,Pauline Hanson's One Nation
+TAS,Franklin,1,GARVIN,Josh,Liberal
+TAS,Franklin,2,GEORGE,Peter,Independent
+TAS,Franklin,3,BLOMELEY,Brendan,Independent
+TAS,Franklin,4,POPESCU,Stefan,Pauline Hanson's One Nation
+TAS,Franklin,5,FITZGERALD,Owen,The Greens
+TAS,Franklin,6,COLLINS,Julie,Australian Labor Party
+TAS,Lyons,1,GRAHAM,Sarah,Trumpet of Patriots
+TAS,Lyons,2,PHIBBS,Michael,Citizens Party
+TAS,Lyons,3,ALLAN,Alistair,The Greens
+TAS,Lyons,4,BOWER,Susie,Liberal
+TAS,Lyons,5,BROADBY,Shaun,Pauline Hanson's One Nation
+TAS,Lyons,6,OFFORD,Angela,Independent
+TAS,Lyons,7,DI FALCO,Carlo,"Shooters, Fishers and Farmers Party"
+TAS,Lyons,8,WHITE,Rebecca,Australian Labor Party
+VIC,Aston,1,CICCHIELLO,Manny,Liberal
+VIC,Aston,2,DOYLE,Mary,Australian Labor Party
+VIC,Aston,3,MANNERS,Craig,Family First
+VIC,Aston,4,WILLIAMS,Andrew,Independent
+VIC,Aston,5,FAWCETT,David,Libertarian
+VIC,Aston,6,GRONDMAN,Mark,Independent
+VIC,Aston,7,STEEN,Reuben,The Greens
+VIC,Aston,8,De WACHT,John,Pauline Hanson's One Nation
+VIC,Aston,9,DESVEAUX,Steve,Trumpet of Patriots
+VIC,Ballarat,1,DORAN,Paula,Liberal
+VIC,Ballarat,2,BARNES,John,The Greens
+VIC,Ballarat,3,PRYSE-SMITH,Terri,Pauline Hanson's One Nation
+VIC,Ballarat,4,KING,Catherine,Australian Labor Party
+VIC,Ballarat,5,PARKER,Luke,Independent
+VIC,Ballarat,6,REDFERN,Ryan,Libertarian
+VIC,Ballarat,7,HARKNESS,Ian Maxwell,Family First
+VIC,Bendigo,1,KEETELAAR,Evelyn,Family First
+VIC,Bendigo,2,BARNETT-DACEY,Avery,The Greens
+VIC,Bendigo,3,FREEMAN,Heather,Pauline Hanson's One Nation
+VIC,Bendigo,4,CHESTERS,Lisa,Australian Labor Party
+VIC,Bendigo,5,LETHLEAN,Andrew,The Nationals
+VIC,Bendigo,6,BANSEMER,Matt,Libertarian
+VIC,Bendigo,7,TYLER,Rohan,Victorian Socialists
+VIC,Bendigo,8,VINCENT,David,Independent
+VIC,Bendigo,9,TAYLOR,Wayne,Legalise Cannabis Party
+VIC,Bendigo,10,EVANS,Matt,Liberal
+VIC,Bruce,1,COLECCHIA,Bianca,Pauline Hanson's One Nation
+VIC,Bruce,2,GARAD,Rhonda,The Greens
+VIC,Bruce,3,HILL,Julian,Australian Labor Party
+VIC,Bruce,4,SKROBO,Christine,Libertarian
+VIC,Bruce,5,SAFI,Zahid,Liberal
+VIC,Bruce,6,ANDERSON,Samuel James,Trumpet of Patriots
+VIC,Bruce,7,LOUTH,Andrew,Legalise Cannabis Party
+VIC,Bruce,8,BIRCHALL,Wendy,Family First
+VIC,Calwell,1,MOORE,Carly,Independent
+VIC,Calwell,2,BENGTSSON,Maria,Family First
+VIC,Calwell,3,DEL ROSARIO-MAKRIDIS,Gianni,Legalise Cannabis Party
+VIC,Calwell,4,MOSLIH,Samim,Independent
+VIC,Calwell,5,TOMA,Luay,Pauline Hanson's One Nation
+VIC,Calwell,6,YOUHANA,Joseph,Independent
+VIC,Calwell,7,GARCHA,Ravneet Kaur,The Greens
+VIC,Calwell,8,ISSA,Assaad,Trumpet of Patriots
+VIC,Calwell,9,ABDO,Basem,Australian Labor Party
+VIC,Calwell,10,PEACH,Morgan,
+VIC,Calwell,11,HAWLI,Bassima,Citizens Party
+VIC,Calwell,12,RAGUPATHY,Ravi,Independent
+VIC,Calwell,13,GHANI,Usman,Liberal
+VIC,Casey,1,COURTIS,Phillip,Trumpet of Patriots
+VIC,Casey,2,LIVORI,Ambere,Pauline Hanson's One Nation
+VIC,Casey,3,BOND,Chloe,Animal Justice Party
+VIC,Casey,4,NEBAUER,Dan,Family First
+VIC,Casey,5,BLAIR,Merran,The Greens
+VIC,Casey,6,OAKLEY,Naomi,Australian Labor Party
+VIC,Casey,7,FERRES MILES,Claire,Independent
+VIC,Casey,8,VIOLI,Aaron,Liberal
+VIC,Chisholm,1,RANDALL,Tim,The Greens
+VIC,Chisholm,2,ONG,Gary,Family First
+VIC,Chisholm,3,LIVORI,Guy,Pauline Hanson's One Nation
+VIC,Chisholm,4,ALLEN,Katie,Liberal
+VIC,Chisholm,5,McSHANE,Christine,Trumpet of Patriots
+VIC,Chisholm,6,GARLAND,Carina,Australian Labor Party
+VIC,Chisholm,7,DAVIES,Kath,Independent
+VIC,Cooper,1,TURNER,William,Pauline Hanson's One Nation
+VIC,Cooper,2,KEARNEY,Ged,Australian Labor Party
+VIC,Cooper,3,BURNETT,Tara,The Greens
+VIC,Cooper,4,TODHUNTER,Stewart,Liberal
+VIC,Cooper,5,LARKIN,Kath,Victorian Socialists
+VIC,Cooper,6,STOLZENBERG,Donna,Legalise Cannabis Party
+VIC,Corangamite,1,LOCKHART,Kate,Independent
+VIC,Corangamite,2,JACKSON,James,Trumpet of Patriots
+VIC,Corangamite,3,BARKER,Paul,Libertarian
+VIC,Corangamite,4,POPE,Mitch,The Greens
+VIC,Corangamite,5,SEABROOK,Colin,Pauline Hanson's One Nation
+VIC,Corangamite,6,COKER,Libby,Australian Labor Party
+VIC,Corangamite,7,MACKENZIE,Harley,Legalise Cannabis Party
+VIC,Corangamite,8,DUNSTAN,Darcy,Liberal
+VIC,Corio,1,HELMAN,Adam,Pauline Hanson's One Nation
+VIC,Corio,2,HATHWAY,Sarah,Socialist Alliance
+VIC,Corio,3,DE LORENZO,John,Independent
+VIC,Corio,4,FLYNN,Emilie,The Greens
+VIC,Corio,5,BULLER,Darren,Liberal
+VIC,Corio,6,MARLES,Richard,Australian Labor Party
+VIC,Deakin,1,GREGG,Matt,Australian Labor Party
+VIC,Deakin,2,SUKKAR,Michael,Liberal
+VIC,Deakin,3,NESS,Jess,Independent
+VIC,Deakin,4,COOKE,Anne,Pauline Hanson's One Nation
+VIC,Deakin,5,GRIFFITH-JONES,Richard,Family First
+VIC,Deakin,6,MILLS,Amy,The Greens
+VIC,Deakin,7,WILDE,Milton,Trumpet of Patriots
+VIC,Deakin,8,VANDERMEER,Will,Libertarian
+VIC,Dunkley,1,CONROY,Nathan,Liberal
+VIC,Dunkley,2,THURLEY,Robert,Independent
+VIC,Dunkley,3,DAVIS,Jessica,Pauline Hanson's One Nation
+VIC,Dunkley,4,NICHOLES,Peter,Family First
+VIC,Dunkley,5,MABER,Matt,The Greens
+VIC,Dunkley,6,GATLEY,Andrew,FUSION | Planet Rescue | Whistleblower Protection | Innovation
+VIC,Dunkley,7,BELYEA,Jodie,Australian Labor Party
+VIC,Dunkley,8,ABBOTT,Lisa,Legalise Cannabis Party
+VIC,Flinders,1,SMART,Jason,Trumpet of Patriots
+VIC,Flinders,2,SMITH,Ben,Independent
+VIC,Flinders,3,McKENZIE,Zoe,Liberal
+VIC,Flinders,4,BROWN,Mike,Pauline Hanson's One Nation
+VIC,Flinders,5,TOSCANO,Joseph,Independent
+VIC,Flinders,6,RACE,Sarah,Australian Labor Party
+VIC,Flinders,7,FROGLEY,Adam,The Greens
+VIC,Fraser,1,RANCIE,Rob,Family First
+VIC,Fraser,2,TRUONG,Huong,The Greens
+VIC,Fraser,3,ROZARIO,George,Pauline Hanson's One Nation
+VIC,Fraser,4,PATEL,Satish,Liberal
+VIC,Fraser,5,DUFF,Jasmine,Victorian Socialists
+VIC,Fraser,6,MULINO,Daniel,Australian Labor Party
+VIC,Gellibrand,1,WATTS,Tim,Australian Labor Party
+VIC,Gellibrand,2,BENNETT,Stephen,Pauline Hanson's One Nation
+VIC,Gellibrand,3,REESON,Ben,Liberal
+VIC,Gellibrand,4,KRISHNA PANDI,Ponraj,The Greens
+VIC,Gellibrand,5,GARCIA,Jo,Family First
+VIC,Gippsland,1,STEPHENS,Sonny,Australian Labor Party
+VIC,Gippsland,2,HANSFORD,Gregory,Pauline Hanson's One Nation
+VIC,Gippsland,3,HINE,Rochelle,The Greens
+VIC,Gippsland,4,CHESTER,Darren,The Nationals
+VIC,Gippsland,5,WILSON,Simon,Libertarian
+VIC,Goldstein,1,WILLIAMS,Vicki Jane,Trumpet of Patriots
+VIC,Goldstein,2,GADANI,Nildhara,Australian Labor Party
+VIC,Goldstein,3,SEGAL,David,Libertarian
+VIC,Goldstein,4,GALLI-McROSTIE,Alana,The Greens
+VIC,Goldstein,5,GARDINER,Leon,Pauline Hanson's One Nation
+VIC,Goldstein,6,DANIEL,Zoe,Independent
+VIC,Goldstein,7,WILSON,Tim,Liberal
+VIC,Gorton,1,MENTA,Xavier,Legalise Cannabis Party
+VIC,Gorton,2,McCATHIE,Rob,Libertarian
+VIC,Gorton,3,JORDAN-BAIRD,Alice,Australian Labor Party
+VIC,Gorton,4,ASHTON,Kathrine,Family First
+VIC,Gorton,5,FLETCHER,John,Liberal
+VIC,Gorton,6,REID,Alan,Pauline Hanson's One Nation
+VIC,Gorton,7,HUYNH,Thuc Bao,The Greens
+VIC,Hawke,1,MILUTINOVIC,Melanie,Family First
+VIC,Hawke,2,STARBUCK,Devon,Legalise Cannabis Party
+VIC,Hawke,3,NEWMAN,Sarah,The Greens
+VIC,Hawke,4,ADIN-JAMES,Fiona,Animal Justice Party
+VIC,Hawke,5,RAE,Sam,Australian Labor Party
+VIC,Hawke,6,COTTOM,Simmone,Liberal
+VIC,Hawke,7,KATSELIS,Matthew,Pauline Hanson's One Nation
+VIC,Holt,1,FOREMAN,Shane,Family First
+VIC,Holt,2,TIWARI,Payal,The Greens
+VIC,Holt,3,HAMMOND,Trevor,Pauline Hanson's One Nation
+VIC,Holt,4,AICKIN,Riley,Legalise Cannabis Party
+VIC,Holt,5,FERNANDO,Cassandra,Australian Labor Party
+VIC,Holt,6,SAMUEL,Annette,Liberal
+VIC,Hotham,1,VAINORAS,Tony,Citizens Party
+VIC,Hotham,2,BARRY,Martin,The Greens
+VIC,Hotham,3,FOGARTY,Stuart,Pauline Hanson's One Nation
+VIC,Hotham,4,BROWN,Mark,Family First
+VIC,Hotham,5,O'NEIL,Clare,Australian Labor Party
+VIC,Hotham,6,MATHARU,Harmick Singh,Liberal
+VIC,Indi,1,HAINES,Helen,Independent
+VIC,Indi,2,BRIDGES,Mitch,Australian Labor Party
+VIC,Indi,3,TRENERY,James,Liberal
+VIC,Indi,4,THOMAS,Athol,Pauline Hanson's One Nation
+VIC,Indi,5,REGAN,Alysia,The Greens
+VIC,Indi,6,QUILTY,Tim,Libertarian
+VIC,Indi,7,WHITE,Michael,Family First
+VIC,Indi,8,HOWMAN,Ben,Legalise Cannabis Party
+VIC,Indi,9,McFARLANE,Mark,Independent
+VIC,Isaacs,1,DREYFUS,Mark,Australian Labor Party
+VIC,Isaacs,2,KIRWAN,Matthew,The Greens
+VIC,Isaacs,3,HARMSE,Audrey,Family First
+VIC,Isaacs,4,OTTEY,Fiona,Liberal
+VIC,Isaacs,5,McMAHON,Geoff,Pauline Hanson's One Nation
+VIC,Jagajaga,1,MOHAMED,Abdi,Independent
+VIC,Jagajaga,2,RANCIE,Rae,Family First
+VIC,Jagajaga,3,PARR,Chris,Liberal
+VIC,Jagajaga,4,SANDFORD,Jy,The Greens
+VIC,Jagajaga,5,KEARNEY,Chris,Independent
+VIC,Jagajaga,6,RALPH,Leslie,Pauline Hanson's One Nation
+VIC,Jagajaga,7,THWAITES,Kate,Australian Labor Party
+VIC,Kooyong,1,PEPPARD,Richard,Libertarian
+VIC,Kooyong,2,HAMER,Amelia,Liberal
+VIC,Kooyong,3,CARTER,Jackie,The Greens
+VIC,Kooyong,4,BRACHE,Camille,Pauline Hanson's One Nation
+VIC,Kooyong,5,VADER,David,Trumpet of Patriots
+VIC,Kooyong,6,RYAN,Monique,Independent
+VIC,Kooyong,7,CROSBY,Clive,Australian Labor Party
+VIC,La Trobe,1,HARDIMAN,Gregory Thomas,Trumpet of Patriots
+VIC,La Trobe,2,SPRINGFIELD,Jeff,Australian Labor Party
+VIC,La Trobe,3,MALHOTRA,Ron,Family First
+VIC,La Trobe,4,WOOD,Jason,Liberal
+VIC,La Trobe,5,LONGMUIR,Jamie,The Greens
+VIC,La Trobe,6,PANETTA,Leo,Pauline Hanson's One Nation
+VIC,Lalor,1,PARRIS,Owen,The Greens
+VIC,Lalor,2,RYAN,Joanne,Australian Labor Party
+VIC,Lalor,3,EMERSON,Matthew,Family First
+VIC,Lalor,4,OOSTHUIZEN,Jason,Pauline Hanson's One Nation
+VIC,Lalor,5,D'SILVA,Mira,Liberal
+VIC,Lalor,6,MOINUDDIN,Aijaz,Independent
+VIC,Lalor,7,BARCATTA,Patrizia,Libertarian
+VIC,Macnamara,1,BURNS,Josh,Australian Labor Party
+VIC,Macnamara,2,RUBIN,Sean,Pauline Hanson's One Nation
+VIC,Macnamara,3,SEMMENS,Sonya,The Greens
+VIC,Macnamara,4,SAULO,Benson,Liberal
+VIC,Macnamara,5,ABELMAN,Michael,Libertarian
+VIC,Macnamara,6,MYERS,JB,Independent
+VIC,Mallee,1,ROWAN,Nicole,The Greens
+VIC,Mallee,2,WEBSTER,Anne,The Nationals
+VIC,Mallee,3,LAHY,Chris,Citizens Party
+VIC,Mallee,4,VEITCH,Adam Troy,Trumpet of Patriots
+VIC,Mallee,5,OLSEN,Greg,Australian Labor Party
+VIC,Mallee,6,WILLIAMS,Vaughan,Pauline Hanson's One Nation
+VIC,Mallee,7,BARRY,Jeff,Libertarian
+VIC,Mallee,8,GRAY,Ashleigh,Family First
+VIC,Maribyrnong,1,WILLIAMS,James,The Greens
+VIC,Maribyrnong,2,BRISKEY,Jo,Australian Labor Party
+VIC,Maribyrnong,3,BEDDOE,Tim,Liberal
+VIC,Maribyrnong,4,CASEY,Alannah,Pauline Hanson's One Nation
+VIC,McEwen,1,ANTONIOU,Ali,Gerard Rennick People First
+VIC,McEwen,2,FORREST,Tom,Legalise Cannabis Party
+VIC,McEwen,3,VALENCIA,Julio G,Family First
+VIC,McEwen,4,McRAE McLEOD,Marley,The Greens
+VIC,McEwen,5,NICOLOSI,Chloe,Animal Justice Party
+VIC,McEwen,6,JOHNSON,Jeremy,Pauline Hanson's One Nation
+VIC,McEwen,7,McCLINTOCK,Jason,Liberal
+VIC,McEwen,8,McGRATH,Erin,FUSION | Planet Rescue | Whistleblower Protection | Innovation
+VIC,McEwen,9,MITCHELL,Rob,Australian Labor Party
+VIC,Melbourne,1,CASEY,Melanie,Pauline Hanson's One Nation
+VIC,Melbourne,2,WITTY,Sarah,Australian Labor Party
+VIC,Melbourne,3,SMITH,Tim,Independent
+VIC,Melbourne,4,KOUTOUFIDES,Anthony,Independent
+VIC,Melbourne,5,BANDT,Adam,The Greens
+VIC,Melbourne,6,HUANG,Helen,FUSION | Planet Rescue | Whistleblower Protection | Innovation
+VIC,Melbourne,7,HUNT,Steph,Liberal
+VIC,Menzies,1,PALIOURAS,Amanda,Trumpet of Patriots
+VIC,Menzies,2,PHEASANT,Bill,The Greens
+VIC,Menzies,3,WOLAHAN,Keith,Liberal
+VIC,Menzies,4,YEE,Stella,Independent
+VIC,Menzies,5,UTOYO,Joshua,Libertarian
+VIC,Menzies,6,SEELEY,Ann,Family First
+VIC,Menzies,7,NG,Gabriel,Australian Labor Party
+VIC,Menzies,8,EDWARDS-SCOTT,Jhett,Pauline Hanson's One Nation
+VIC,Monash,1,ROBINSON,Kuljeet Kaur,Pauline Hanson's One Nation
+VIC,Monash,2,FLETCHER,Tully,Australian Labor Party
+VIC,Monash,3,BROADBENT,Russell,Independent
+VIC,Monash,4,ALDRED,Mary,Liberal
+VIC,Monash,5,LEONARD,Deb,Independent
+VIC,Monash,6,DETHLEFS,Geoff,Family First
+VIC,Monash,7,O'REILLY,David,Legalise Cannabis Party
+VIC,Monash,8,STEELE,Terence,The Greens
+VIC,Monash,9,WEHBE,Alex,Trumpet of Patriots
+VIC,Nicholls,1,TRAVERS,Kim,Australian Labor Party
+VIC,Nicholls,2,BACHELOR,Paul Edward,Family First
+VIC,Nicholls,3,FLOYD,Glenn Francis,Trumpet of Patriots
+VIC,Nicholls,4,TYRRELL,Aaron,Pauline Hanson's One Nation
+VIC,Nicholls,5,BIRRELL,Sam,The Nationals
+VIC,Nicholls,6,DAVY,Jeff,Citizens Party
+VIC,Nicholls,7,EADE,Shelby,The Greens
+VIC,Scullin,1,BUCCIANTI,Adriana,Trumpet of Patriots
+VIC,Scullin,2,BELL,Cassandra,Family First
+VIC,Scullin,3,HASSAN,Omar,Victorian Socialists
+VIC,Scullin,4,TSOUTSOULIS,Arthur,Pauline Hanson's One Nation
+VIC,Scullin,5,SANGARYA,Loki,The Greens
+VIC,Scullin,6,TAGGAR,Rohit,Liberal
+VIC,Scullin,7,GILES,Andrew,Australian Labor Party
+VIC,Scullin,8,van BREE,Ursula,Gerard Rennick People First
+VIC,Wannon,1,DYSON,Alex,Independent
+VIC,Wannon,2,ELMES,Lee-Ann,Family First
+VIC,Wannon,3,GAZZARD,Kate,The Greens
+VIC,Wannon,4,MCCAMISH,Julie Ann,Trumpet of Patriots
+VIC,Wannon,5,SWAN,Robbie,Legalise Cannabis Party
+VIC,Wannon,6,CURTAIN,Leo,Pauline Hanson's One Nation
+VIC,Wannon,7,TEHAN,Dan,Liberal
+VIC,Wannon,8,MACKENZIE,Fiona,Australian Labor Party
+VIC,Wannon,9,ATKINSON,Bernadine,Independent
+VIC,Wills,1,BOLTON,Sue,Socialist Alliance
+VIC,Wills,2,KHALIL,Peter,Australian Labor Party
+VIC,Wills,3,KIDNEY,Jeff,Liberal
+VIC,Wills,4,GLOVER,Margee,Legalise Cannabis Party
+VIC,Wills,5,MILLER,Owen,FUSION | Planet Rescue | Whistleblower Protection | Innovation
+VIC,Wills,6,RATNAM,Samantha,The Greens
+VIC,Wills,7,VERSTEEGEN,Rachel,Libertarian
+VIC,Wills,8,STEVENS,Bruce,Pauline Hanson's One Nation
+WA,Brand,1,FREEMAN,Jody,The Greens (WA) Inc
+WA,Brand,2,BOX,Stephen,Pauline Hanson's One Nation
+WA,Brand,3,KING,Madeleine,Australian Labor Party
+WA,Brand,4,MATTERS,Jim,Legalise Cannabis Party
+WA,Brand,5,MOODY,Claire,Liberal
+WA,Bullwinkel,1,MAYES,Trevor,Pauline Hanson's One Nation
+WA,Bullwinkel,2,HOLTEN,Les,Australian Christians
+WA,Bullwinkel,3,YOUNG,Penelope Rose,Legalise Cannabis Party
+WA,Bullwinkel,4,MORAN,Matt,Liberal
+WA,Bullwinkel,5,COOK,Trish,Australian Labor Party
+WA,Bullwinkel,6,DAVIES,Mia,The Nationals
+WA,Bullwinkel,7,BISHOP,Abbey,The Greens (WA) Inc
+WA,Burt,1,IERARDI,Liz,Pauline Hanson's One Nation
+WA,Burt,2,AYRES,Sean,Liberal
+WA,Burt,3,ABDUL RAZAK,Adam,The Greens (WA) Inc
+WA,Burt,4,KEOGH,Matt,Australian Labor Party
+WA,Burt,5,CARUSO,Fiona,Legalise Cannabis Party
+WA,Burt,6,VADAKKEDATHU,Alvin Mathew,Australian Christians
+WA,Burt,7,TEWATIA,Ashok Kumar,Independent
+WA,Canning,1,HASTIE,Andrew,Liberal
+WA,Canning,2,BOVE,Fernando,Pauline Hanson's One Nation
+WA,Canning,3,CAHILL,Jordan,The Greens (WA) Inc
+WA,Canning,4,CAREY,John Raymond,Citizens Party
+WA,Canning,5,GULLAN,Paul,Legalise Cannabis Party
+WA,Canning,6,GOOLD,Jarrad,Australian Labor Party
+WA,Cowan,1,ADENIYI,Felicia,Liberal
+WA,Cowan,2,SMITH,Charles,Trumpet of Patriots
+WA,Cowan,3,BELL,John,Legalise Cannabis Party
+WA,Cowan,4,COUNT,Matthew,The Greens (WA) Inc
+WA,Cowan,5,YATES,Bradley,Pauline Hanson's One Nation
+WA,Cowan,6,McDONALD,Wade,Independent
+WA,Cowan,7,D'COSTA,Wesley,Australian Christians
+WA,Cowan,8,ALY,Anne,Australian Labor Party
+WA,Curtin,1,WHITE,Tom,Liberal
+WA,Curtin,2,HEMSLEY,Kitty,The Greens (WA) Inc
+WA,Curtin,3,CHANEY,Kate,Independent
+WA,Curtin,4,IRONSIDE,Alexander,Pauline Hanson's One Nation
+WA,Curtin,5,MULHOLLAND,Fred,Legalise Cannabis Party
+WA,Curtin,6,KO,Viktor Andrew,Australian Labor Party
+WA,Durack,1,PRICE,Melissa,Liberal
+WA,Durack,2,WRIGHT,Kat,Legalise Cannabis Party
+WA,Durack,3,KEMPTON,Bailey,The Nationals
+WA,Durack,4,BERRY,Mark,Pauline Hanson's One Nation
+WA,Durack,5,HUNTER,Jason,Indigenous - Aboriginal Party of Australia
+WA,Durack,6,KORNAAT,Maarten,Trumpet of Patriots
+WA,Durack,7,WHEATLAND,Karen,Australian Labor Party
+WA,Durack,8,STURCKE,Brendan,The Greens (WA) Inc
+WA,Durack,9,HARRIS,Eugenie Margaret,Australian Christians
+WA,Forrest,1,DOWDING,Tabitha,Australian Labor Party
+WA,Forrest,2,CHAPMAN,Sue,Independent
+WA,Forrest,3,BEARDMAN,Georgia,The Greens (WA) Inc
+WA,Forrest,4,van der MEY,Paul,Pauline Hanson's One Nation
+WA,Forrest,5,GREENLAND,Peter,Trumpet of Patriots
+WA,Forrest,6,PARSONS,Cam,The Nationals
+WA,Forrest,7,PEET,Aaron,Legalise Cannabis Party
+WA,Forrest,8,SMALL,Ben,Liberal
+WA,Fremantle,1,HULETT,Kate,Independent
+WA,Fremantle,2,BIRD,John Alexander,Citizens Party
+WA,Fremantle,3,WILSON,Josh,Australian Labor Party
+WA,Fremantle,4,WARNE,Amy,The Greens (WA) Inc
+WA,Fremantle,5,MARSTON,Tait,Liberal
+WA,Fremantle,6,MARRINER,Hannah,Pauline Hanson's One Nation
+WA,Fremantle,7,LAST,Joshua,Socialist Alliance
+WA,Hasluck,1,LAWRENCE,Tania,Australian Labor Party
+WA,Hasluck,2,DEETH,Adrian,Pauline Hanson's One Nation
+WA,Hasluck,3,KELLY,Dawn Michelle,The Great Australian Party
+WA,Hasluck,4,KINGSTON,David,Australian Christians
+WA,Hasluck,5,MATSON,Tamica,The Greens (WA) Inc
+WA,Hasluck,6,GOODE,David,Liberal
+WA,Hasluck,7,TREASURE,Leo,Legalise Cannabis Party
+WA,Moore,1,GOODENOUGH,Ian,
+WA,Moore,2,FRENCH,Tom,Australian Labor Party
+WA,Moore,3,BARTON,Nathan,Independent
+WA,Moore,4,BARTLEY,Trevor Alan,Australian Christians
+WA,Moore,5,FIMOGNARI,Paul,Pauline Hanson's One Nation
+WA,Moore,6,McCARTHY,Scott,The Greens (WA) Inc
+WA,Moore,7,CONNELLY,Vince,Liberal
+WA,Moore,8,RENNICK,Christopher,Trumpet of Patriots
+WA,O'Connor,1,CAMERON,Lindsay,Trumpet of Patriots
+WA,O'Connor,2,WATSON,Giz,The Greens (WA) Inc
+WA,O'Connor,3,TEMPRA,Heidi,The Nationals
+WA,O'Connor,4,ARNATT,Philip,Legalise Cannabis Party
+WA,O'Connor,5,WILSON,Rick,Liberal
+WA,O'Connor,6,MOIR,Darren,Australian Labor Party
+WA,O'Connor,7,JOHNSTON,Gemma,Pauline Hanson's One Nation
+WA,O'Connor,8,KINGSFORD,Deonne,Australian Christians
+WA,Pearce,1,D'ALONZO,Nicholas,The Greens (WA) Inc
+WA,Pearce,2,GRANADOS RANGEL,Ramon,Legalise Cannabis Party
+WA,Pearce,3,MONTGOMERY,Vanessa,Australian Christians
+WA,Pearce,4,NORBERGER,Jan,Liberal
+WA,Pearce,5,ROBERTS,Tracey,Australian Labor Party
+WA,Pearce,6,BURTON,John,Pauline Hanson's One Nation
+WA,Perth,1,HALLIFAX,Peter,Pauline Hanson's One Nation
+WA,Perth,2,PANAIA,Susanna,Liberal
+WA,Perth,3,GREER,Sophie,The Greens (WA) Inc
+WA,Perth,4,GORMAN,Patrick,Australian Labor Party
+WA,Swan,1,STAER,Mark,Australian Christians
+WA,Swan,2,MASCARENHAS,Zaneta,Australian Labor Party
+WA,Swan,3,UINK,Clint,The Greens (WA) Inc
+WA,Swan,4,LEECH,Shelley,Legalise Cannabis Party
+WA,Swan,5,HALLEY,Michael,Pauline Hanson's One Nation
+WA,Swan,6,FELS,Mic,Liberal
+WA,Tangney,1,HAYWARD,Eric,The Greens (WA) Inc
+WA,Tangney,2,ONG,Howard,Liberal
+WA,Tangney,3,LESLIE,Phillip Raymond,Legalise Cannabis Party
+WA,Tangney,4,KEFALINOS,Steve,Pauline Hanson's One Nation
+WA,Tangney,5,LIM,Sam,Australian Labor Party
+WA,Tangney,6,RAI,James,Australian Christians

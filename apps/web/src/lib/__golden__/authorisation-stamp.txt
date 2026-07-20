@@ -1,0 +1,10 @@
+# s321D print authorisation stamp — formatAuthorisation() (National Digital authoriser model)
+# See docs/adr/0010.
+
+## Stamp printed on the how-to-vote plan
+Authorised by General Consulting Services Pty Ltd as trustee for the Australian Business Trust, trading as National Digital, Gold Coast, Queensland. Preference order selected by the user.
+
+## Preference-source notice (printed separately): Preference order selected by the user.
+
+## Site-wide operator authorisation (org.ts AUTHORISATION — the online form)
+Authorised by General Consulting Services Pty Ltd as trustee for the Australian Business Trust, trading as National Digital, Gold Coast, Queensland.

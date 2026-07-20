@@ -1,0 +1,178 @@
+{
+  "state": "ACT",
+  "electorate": "Bean",
+  "house": [
+    {
+      "position": 1,
+      "candidate": "LAMERTON, David",
+      "party": "Liberal",
+      "division": "Bean",
+      "partyKey": "liberal_party"
+    },
+    {
+      "position": 2,
+      "candidate": "PRICE, Jessie",
+      "party": "Independent",
+      "division": "Bean",
+      "partyKey": null
+    },
+    {
+      "position": 3,
+      "candidate": "CARTER, Sam",
+      "party": "Australian Greens",
+      "division": "Bean",
+      "partyKey": "australian_greens"
+    },
+    {
+      "position": 4,
+      "candidate": "SMITH, David",
+      "party": "Australian Labor Party",
+      "division": "Bean",
+      "partyKey": "australian_labor_party"
+    }
+  ],
+  "senate": [
+    {
+      "position": 1,
+      "group": "A",
+      "candidate": "HOLGATE, James",
+      "party": "Sustainable Australia Party - Universal Basic Income",
+      "partyKey": null
+    },
+    {
+      "position": 2,
+      "group": "A",
+      "candidate": "HAYDON, John",
+      "party": "Sustainable Australia Party - Universal Basic Income",
+      "partyKey": null
+    },
+    {
+      "position": 1,
+      "group": "B",
+      "candidate": "POCOCK, David",
+      "party": "David Pocock",
+      "partyKey": "senator_david_pocock"
+    },
+    {
+      "position": 2,
+      "group": "B",
+      "candidate": "VARDY, Hannah",
+      "party": "David Pocock",
+      "partyKey": "senator_david_pocock"
+    },
+    {
+      "position": 1,
+      "group": "C",
+      "candidate": "SOXSMITH, Robyn",
+      "party": "Animal Justice Party",
+      "partyKey": null
+    },
+    {
+      "position": 2,
+      "group": "C",
+      "candidate": "KUDRYCZ, Walter",
+      "party": "Animal Justice Party",
+      "partyKey": null
+    },
+    {
+      "position": 1,
+      "group": "D",
+      "candidate": "GALLAGHER, Katy",
+      "party": "Australian Labor Party",
+      "partyKey": "australian_labor_party"
+    },
+    {
+      "position": 2,
+      "group": "D",
+      "candidate": "OH, Janaline",
+      "party": "Australian Labor Party",
+      "partyKey": "australian_labor_party"
+    },
+    {
+      "position": 1,
+      "group": "E",
+      "candidate": "VADAKKEDATHU, Jacob",
+      "party": "Liberal",
+      "partyKey": "liberal_party"
+    },
+    {
+      "position": 2,
+      "group": "E",
+      "candidate": "LEE, Hayune",
+      "party": "Liberal",
+      "partyKey": "liberal_party"
+    },
+    {
+      "position": 1,
+      "group": "F",
+      "candidate": "SEARSON-PRAKAASH, Elise",
+      "party": "HEART Party",
+      "partyKey": null
+    },
+    {
+      "position": 2,
+      "group": "F",
+      "candidate": "BROWN, Martin",
+      "party": "Libertarian",
+      "partyKey": null
+    },
+    {
+      "position": 1,
+      "group": "G",
+      "candidate": "HOBBS, Christina",
+      "party": "Australian Greens",
+      "partyKey": "australian_greens"
+    },
+    {
+      "position": 2,
+      "group": "G",
+      "candidate": "ROCKE, Jo",
+      "party": "Australian Greens",
+      "partyKey": "australian_greens"
+    }
+  ],
+  "senateAboveLine": [
+    {
+      "group": "A",
+      "party": "Sustainable Australia Party - Universal Basic Income",
+      "partyKey": null,
+      "candidates": 2
+    },
+    {
+      "group": "B",
+      "party": "David Pocock",
+      "partyKey": "senator_david_pocock",
+      "candidates": 2
+    },
+    {
+      "group": "C",
+      "party": "Animal Justice Party",
+      "partyKey": null,
+      "candidates": 2
+    },
+    {
+      "group": "D",
+      "party": "Australian Labor Party",
+      "partyKey": "australian_labor_party",
+      "candidates": 2
+    },
+    {
+      "group": "E",
+      "party": "Liberal",
+      "partyKey": "liberal_party",
+      "candidates": 2
+    },
+    {
+      "group": "F",
+      "party": "HEART Party",
+      "partyKey": null,
+      "candidates": 2
+    },
+    {
+      "group": "G",
+      "party": "Australian Greens",
+      "partyKey": "australian_greens",
+      "candidates": 2
+    }
+  ]
+}

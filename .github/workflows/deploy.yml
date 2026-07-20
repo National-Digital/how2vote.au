@@ -1,0 +1,515 @@
+name: Deploy
+
+# Build the SvelteKit static site and deploy it to Cloudflare Pages, with
+# isolated PR previews torn down on close. There is no edge Worker: the build
+# already carries its security _headers and per-page CSP <meta> tags.
+#
+# push to main -> production deploy (branch "main", the live site
+# how2vote.au)
+# pull_request opened/ -> isolated preview at
+# synchronize/ https://pr-<number>.how2vote-au.pages.dev
+# reopened (built with PUBLIC_NOINDEX=1 so previews carry a
+# robots noindex and are never indexed)
+# pull_request closed -> tear down that PR's preview (delete every deployment
+# on the pr-<number> branch) so stale previews don't
+# accumulate.
+#
+# Requires secret CLOUDFLARE_API_TOKEN and variable CLOUDFLARE_ACCOUNT_ID (an
+# account id is not sensitive — it appears in every dashboard URL). Both jobs
+# skip gracefully (green, not red) until those are configured.
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    types: [opened, synchronize, reopened, closed]
+  schedule:
+    # Every 6 hours: rebuild + redeploy so the public research dashboard data
+    # (apps/web/static/stats/*.json) is regenerated from D1. Adjust cadence as survey volume grows.
+    - cron: "0 */6 * * *"
+  workflow_dispatch:
+
+# Least privilege at the workflow level — PR preview jobs execute PR-authored build code, so the
+# default token is read-only. The jobs that genuinely need write elevate it per-job below.
+permissions:
+  contents: read
+
+concurrency:
+  # PR previews share one group per ref so a fresh push supersedes the in-flight
+  # preview (cancel-in-progress below). Production promotions (push / schedule /
+  # workflow_dispatch to main, and PR-close teardowns) get a UNIQUE group per run
+  # so they never share the single pending slot — and therefore never cancel one
+  # another. GitHub's concurrency queue keeps only ONE pending run per group, so a
+  # shared production group silently drops a superseded deploy when two merges to
+  # main land seconds apart. The tag/release step below is idempotent under the
+  # rare concurrent promotion this allows.
+  group: deploy-${{ (github.event_name == 'pull_request' && github.event.action != 'closed') && github.ref || format('{0}-{1}', github.ref, github.run_id) }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' && github.event.action != 'closed' }}
+
+env:
+  CF_PAGES_PROJECT: how2vote-au
+
+jobs:
+  deploy:
+    name: Build & deploy
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    permissions:
+      contents: write # push the release tag + create the GitHub release on main
+      pull-requests: write # upsert the preview-URL comment
+    # Everything except a PR close — those go to the cleanup job below.
+    if: github.event_name != 'pull_request' || github.event.action != 'closed'
+    steps:
+      # Presence check only; the value is never printed. Passed via env so the
+      # secret is never interpolated into the rendered shell script.
+      - name: Check deploy secrets are configured
+        id: secrets
+        env:
+          CF_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CF_ACCOUNT: ${{ vars.CLOUDFLARE_ACCOUNT_ID }}
+        run: |
+          if [ -n "$CF_TOKEN" ] && [ -n "$CF_ACCOUNT" ]; then
+            echo "ready=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "ready=false" >> "$GITHUB_OUTPUT"
+            echo "::warning::Cloudflare Pages deploy secrets not set — skipping deploy."
+          fi
+
+      - name: Checkout repository
+        if: steps.secrets.outputs.ready == 'true'
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7
+        with:
+          fetch-depth: 0 # full history + tags so scripts/next-version.mjs can read the latest v-tag
+
+      - name: Enable Corepack
+        if: steps.secrets.outputs.ready == 'true'
+        run: corepack enable
+
+      - name: Setup Node.js
+        if: steps.secrets.outputs.ready == 'true'
+        uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e # v6
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+
+      - name: Install dependencies
+        if: steps.secrets.outputs.ready == 'true'
+        run: pnpm install --frozen-lockfile
+
+      - name: Resolve deploy target & version
+        id: target
+        if: steps.secrets.outputs.ready == 'true'
+        env:
+          # PR title on previews; the merge commit subject on main (a squash merge's subject IS the
+          # PR title). Both drive scripts/next-version.mjs.
+          PR_TITLE: ${{ github.event.pull_request.title }}
+        run: |
+          NEXT=$(node scripts/next-version.mjs "${PR_TITLE:-$(git log -1 --pretty=%s)}")
+          if [ "${{ github.event_name }}" = "pull_request" ]; then
+            echo "branch=pr-${{ github.event.pull_request.number }}" >> "$GITHUB_OUTPUT"
+            echo "noindex=1" >> "$GITHUB_OUTPUT"
+            echo "version=${NEXT}-pr${{ github.event.pull_request.number }}" >> "$GITHUB_OUTPUT"
+          else
+            echo "branch=main" >> "$GITHUB_OUTPUT"
+            echo "noindex=" >> "$GITHUB_OUTPUT"
+            echo "version=${NEXT}" >> "$GITHUB_OUTPUT"
+          fi
+          echo "Resolved version: ${NEXT}"
+
+      - name: Build
+        if: steps.secrets.outputs.ready == 'true'
+        run: pnpm build
+        env:
+          # Injected into kit.version.name (svelte.config.js) -> $app/environment `version` and the
+          # service-worker cache name. Computed above from the conventional-commit type.
+          APP_VERSION: ${{ steps.target.outputs.version }}
+          # Empty on production; "1" on previews -> robots noindex (see +layout.svelte).
+          PUBLIC_NOINDEX: ${{ steps.target.outputs.noindex }}
+          # Formspree form IDs baked into the static bundle (PUBLIC_ vars, read via
+          # $env/dynamic/public). Not secret, so they live in repo variables; unset -> the
+          # Feedback widget and Contact form render as "not configured".
+          PUBLIC_FEEDBACK_FORM_ID: ${{ vars.PUBLIC_FEEDBACK_FORM_ID }}
+          PUBLIC_CONTACT_FORM_ID: ${{ vars.PUBLIC_CONTACT_FORM_ID }}
+          # Cloudflare Turnstile site keys — two SEPARATE widgets. Public (they ship in the client),
+          # so like the form IDs they live in repo variables; an unset key -> that path posts without
+          # a token, disabling its Turnstile for that build.
+          #  - PUBLIC_TURNSTILE_SITE_KEY: the contact/feedback forms; matching secret lives only on Formspree.
+          #  - PUBLIC_TURNSTILE_RESEARCH_SITE_KEY: the survey; matching secret is the TURNSTILE_RESEARCH_SECRET
+          #    Pages secret, verified server-side at /api/research/token.
+          PUBLIC_TURNSTILE_SITE_KEY: ${{ vars.PUBLIC_TURNSTILE_SITE_KEY }}
+          PUBLIC_TURNSTILE_RESEARCH_SITE_KEY: ${{ vars.PUBLIC_TURNSTILE_RESEARCH_SITE_KEY }}
+
+      - name: Verify production infra config (fail-closed)
+        # FAIL CLOSED before anything ships: every required production id (D1 database id, KV namespace
+        # id, account id) must be present and NOT a placeholder, and any configured preview id must
+        # differ from its production counterpart (preview data isolation). A missing/placeholder id
+        # fails the deploy — never a warn-and-continue. Runs on every non-preview promotion to the
+        # production branch — push to main AND the 6-hourly schedule / workflow_dispatch, all of which
+        # deploy branch "main" — so a scheduled/dispatched deploy can never skip the fail-closed infra
+        # gate. PR previews carry their own preview ids and are excluded.
+        if: steps.secrets.outputs.ready == 'true' && github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
+        env:
+          CLOUDFLARE_ACCOUNT_ID: ${{ vars.CLOUDFLARE_ACCOUNT_ID }}
+          CF_D1_DATABASE_ID: ${{ vars.CF_D1_DATABASE_ID }}
+          CF_KV_RESEARCH_NONCES_ID: ${{ vars.CF_KV_RESEARCH_NONCES_ID }}
+          CF_D1_NONCES_DATABASE_ID: ${{ vars.CF_D1_NONCES_DATABASE_ID }}
+          CF_D1_PREVIEW_DATABASE_ID: ${{ vars.CF_D1_PREVIEW_DATABASE_ID }}
+          CF_KV_RESEARCH_NONCES_PREVIEW_ID: ${{ vars.CF_KV_RESEARCH_NONCES_PREVIEW_ID }}
+          CF_D1_NONCES_PREVIEW_DATABASE_ID: ${{ vars.CF_D1_NONCES_PREVIEW_DATABASE_ID }}
+        run: node scripts/check-infra-config.mjs --deploy
+
+      - name: Apply D1 migrations (production research DB)
+        # Keep the research D1 schema in sync from the checked-in migrations (apps/web/migrations)
+        # before stats are read and the new build goes live. Runs only for non-preview builds so PR
+        # previews never migrate the production database. The database_id is injected from the
+        # CF_D1_DATABASE_ID variable at runtime and never committed (public repo) — wrangler.toml
+        # keeps a placeholder. Uses the D1-scoped token (not the Pages deploy token) and skips
+        # cleanly if the D1 token/id are unset.
+        if: steps.secrets.outputs.ready == 'true' && github.event_name != 'pull_request'
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CF_D1_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ vars.CLOUDFLARE_ACCOUNT_ID }}
+          CF_D1_DATABASE_ID: ${{ vars.CF_D1_DATABASE_ID }}
+        run: |
+          if [ -z "$CLOUDFLARE_API_TOKEN" ] || [ -z "$CF_D1_DATABASE_ID" ]; then
+            # Fail closed on a PRODUCTION deploy (main): missing infrastructure credentials must not
+            # let a build promote without its research DB migrated (deep legal review 2026-07-19, §7).
+            # A non-production non-PR trigger may still skip cleanly.
+            if [ "$GITHUB_REF" = "refs/heads/main" ]; then
+              echo "::error::CF_D1_API_TOKEN or CF_D1_DATABASE_ID not set on a production deploy — refusing to promote without applying D1 migrations."
+              exit 1
+            fi
+            echo "::warning::CF_D1_API_TOKEN or CF_D1_DATABASE_ID not set — skipping D1 migrations (non-production)."
+            exit 0
+          fi
+          # Inject the id into the placeholder binding for this run only (never committed).
+          sed -i "s|REPLACE_WITH_D1_DATABASE_ID|${CF_D1_DATABASE_ID}|" apps/web/wrangler.toml
+          pnpm exec wrangler d1 migrations apply how2vote-research --remote --config apps/web/wrangler.toml
+
+      - name: Verify production research schema is aggregate-only
+        # Fail-closed deploy gate: after migrations are applied, read the live D1 table list and
+        # refuse to promote if any table sits outside the aggregate allowlist (a resurrected
+        # per-person table, an ad-hoc export table, etc.). Skips cleanly only when D1 creds are
+        # unset (same condition as the migration step); an empty table list is treated as
+        # "could not verify" and fails. See scripts/check-aggregate-only.mjs (--live-tables).
+        if: steps.secrets.outputs.ready == 'true' && github.event_name != 'pull_request'
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CF_D1_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ vars.CLOUDFLARE_ACCOUNT_ID }}
+          CF_D1_DATABASE_ID: ${{ vars.CF_D1_DATABASE_ID }}
+        run: |
+          if [ -z "$CLOUDFLARE_API_TOKEN" ] || [ -z "$CF_D1_DATABASE_ID" ]; then
+            # Fail closed on a PRODUCTION deploy (main): the live aggregate-only schema must be
+            # verifiable before promoting (deep legal review 2026-07-19, §7).
+            if [ "$GITHUB_REF" = "refs/heads/main" ]; then
+              echo "::error::CF_D1_API_TOKEN or CF_D1_DATABASE_ID not set on a production deploy — cannot verify the live research schema is aggregate-only."
+              exit 1
+            fi
+            echo "::warning::CF_D1_API_TOKEN or CF_D1_DATABASE_ID not set — skipping live schema check (non-production)."
+            exit 0
+          fi
+          sed -i "s|REPLACE_WITH_D1_DATABASE_ID|${CF_D1_DATABASE_ID}|" apps/web/wrangler.toml
+          tables=$(pnpm exec wrangler d1 execute how2vote-research --remote --json \
+            --config apps/web/wrangler.toml \
+            --command "SELECT name FROM sqlite_master WHERE type='table'" \
+            | node -e "let s='';process.stdin.on('data',d=>s+=d).on('end',()=>{const j=JSON.parse(s);const r=(Array.isArray(j)?j:[j]).flatMap(x=>x.results||[]);process.stdout.write(r.map(t=>t.name).join(','))})")
+          echo "Live research tables: ${tables:-<none>}"
+          node scripts/check-aggregate-only.mjs --live-tables "$tables"
+
+      - name: Verify applied migrations match the checksum registry
+        # Fail-closed deploy gate: after migrations are applied, read the set of migrations the live
+        # database records as applied (the d1_migrations bookkeeping table) and refuse to promote if it
+        # drifts from infra/providers/cloudflare/migration-registry.json — an unpinned migration on the
+        # live DB, or a pinned one that never applied, fails the deploy. Skips cleanly only when D1
+        # creds are unset (same condition as the migration step); an empty applied list fails closed.
+        if: steps.secrets.outputs.ready == 'true' && github.event_name != 'pull_request'
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CF_D1_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ vars.CLOUDFLARE_ACCOUNT_ID }}
+          CF_D1_DATABASE_ID: ${{ vars.CF_D1_DATABASE_ID }}
+        run: |
+          if [ -z "$CLOUDFLARE_API_TOKEN" ] || [ -z "$CF_D1_DATABASE_ID" ]; then
+            # Fail closed on a PRODUCTION deploy (main): the applied-migration set must be verifiable
+            # against the checksum registry before promoting (deep legal review 2026-07-19, §7).
+            if [ "$GITHUB_REF" = "refs/heads/main" ]; then
+              echo "::error::CF_D1_API_TOKEN or CF_D1_DATABASE_ID not set on a production deploy — cannot verify applied migrations match the registry."
+              exit 1
+            fi
+            echo "::warning::CF_D1_API_TOKEN or CF_D1_DATABASE_ID not set — skipping applied-migration check (non-production)."
+            exit 0
+          fi
+          sed -i "s|REPLACE_WITH_D1_DATABASE_ID|${CF_D1_DATABASE_ID}|" apps/web/wrangler.toml
+          applied=$(pnpm exec wrangler d1 execute how2vote-research --remote --json \
+            --config apps/web/wrangler.toml \
+            --command "SELECT name FROM d1_migrations" \
+            | node -e "let s='';process.stdin.on('data',d=>s+=d).on('end',()=>{const j=JSON.parse(s);const r=(Array.isArray(j)?j:[j]).flatMap(x=>x.results||[]);process.stdout.write(r.map(t=>t.name).join(','))})")
+          echo "Applied migrations: ${applied:-<none>}"
+          node scripts/check-migration-registry.mjs --applied "$applied"
+
+      - name: Regenerate research dashboard stats from D1
+        # Reads the research D1 database via its HTTP API and writes the suppressed, aggregate
+        # per-election stats (stats/<id>.json + stats/index.json) into the built site (ADR-0007).
+        # With no D1 credentials it emits "not enough responses yet" files, so this never blocks a
+        # deploy. Runs after the build, so the freshly generated files are copied into the
+        # already-built output rather than relying on the static copy.
+        if: steps.secrets.outputs.ready == 'true'
+        run: |
+          pnpm data:stats
+          mkdir -p apps/web/build/stats
+          cp apps/web/static/stats/*.json apps/web/build/stats/
+        env:
+          # One account-id repo variable feeds both the deploy and the stats script; the stats
+          # generator reads it as CF_ACCOUNT_ID, so map the shared CLOUDFLARE_ACCOUNT_ID into it.
+          CF_ACCOUNT_ID: ${{ vars.CLOUDFLARE_ACCOUNT_ID }}
+          CF_D1_DATABASE_ID: ${{ vars.CF_D1_DATABASE_ID }}
+          CF_D1_API_TOKEN: ${{ secrets.CF_D1_API_TOKEN }}
+
+      - name: Generate + verify release manifest
+        # Bind this deploy to the exact versions/hashes that make it lawful and emit it into the
+        # served output at /release-manifest.json. Public-stat binding (publicStatsHash) is
+        # now emitted from the freshly regenerated stats files above.
+        #
+        # A PUBLIC promotion (push/schedule/dispatch to the production branch) runs the fail-closed
+        # "historical-demo" release profile (docs/legal/release-profiles.json): a release is BLOCKED
+        # while any legally-material control (print authorisation, ballot/mapping verification, public
+        # privacy representations, source/data licensing, operator identity, publicly-operational
+        # security controls) is incomplete. PR PREVIEWS are isolated, noindex, non-public builds for
+        # review, so they verify in draft mode (pending controls allowed) — otherwise the profile would
+        # turn every PR red before the programme's external evidence has landed. Flip the production
+        # arm to --mode production once every control is implemented/verified.
+        if: steps.secrets.outputs.ready == 'true'
+        env:
+          APP_VERSION: ${{ steps.target.outputs.version }}
+          IS_PRODUCTION: ${{ github.event_name != 'pull_request' && github.ref == 'refs/heads/main' }}
+        run: |
+          node scripts/build-release-manifest.mjs --out apps/web/build/release-manifest.json
+          if [ "$IS_PRODUCTION" = "true" ]; then
+            node scripts/check-release-manifest.mjs apps/web/build/release-manifest.json --profile historical-demo
+          else
+            node scripts/check-release-manifest.mjs apps/web/build/release-manifest.json --mode draft
+          fi
+
+      - name: Dependency vulnerability gate
+        # Block promotion on any high/critical dependency vulnerability that lacks a signed,
+        # unexpired risk acceptance in docs/legal/security-register.json. Fail-closed.
+        if: steps.secrets.outputs.ready == 'true'
+        run: node scripts/check-vuln-gate.mjs
+
+      - name: Assert research integrity secrets are provisioned (fail-closed, production only)
+        # The token + Turnstile layers are inert when their secrets are unset (acceptToken returns true;
+        # the challenge verifier falls back to AllowAll), which is fine for previews/local but a silent
+        # fail-open in production: a misprovision would disable single-use token enforcement and bot
+        # verification invisibly. The endpoints themselves now also refuse production submissions when
+        # these are missing (fail closed), but assert here too so a misprovision fails the deploy loudly
+        # rather than shipping a fail-closed-but-broken research surface. Skips cleanly if the Pages
+        # secret list cannot be read only on a non-production trigger; on main it fails closed.
+        if: steps.secrets.outputs.ready == 'true' && github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ vars.CLOUDFLARE_ACCOUNT_ID }}
+        run: |
+          set -euo pipefail
+          if ! secrets=$(cd apps/web && pnpm exec wrangler pages secret list --project-name "$CF_PAGES_PROJECT" 2>/dev/null); then
+            echo "::error::Could not list Cloudflare Pages secrets — cannot confirm the research integrity secrets are provisioned."
+            exit 1
+          fi
+          missing=""
+          for secret in RESEARCH_TOKEN_SECRET TURNSTILE_RESEARCH_SECRET; do
+            if ! echo "$secrets" | grep -q "$secret"; then
+              missing="$missing $secret"
+            fi
+          done
+          if [ -n "$missing" ]; then
+            echo "::error::Missing production secret(s):$missing — the research token/Turnstile layer would fail open. Set each with: wrangler pages secret put <NAME>"
+            exit 1
+          fi
+          echo "Research integrity secrets (RESEARCH_TOKEN_SECRET, TURNSTILE_RESEARCH_SECRET) are provisioned."
+
+      - name: Inject D1 + KV ids into wrangler.toml for the Pages deploy
+        # The functions ship with their bindings only if the real ids replace the committed
+        # placeholders. Injected here for this run only (never committed); both are required on a
+        # production deploy (the infra-config gate above already fails closed if either is absent).
+        if: steps.secrets.outputs.ready == 'true' && github.event_name != 'pull_request'
+        env:
+          CF_D1_DATABASE_ID: ${{ vars.CF_D1_DATABASE_ID }}
+          CF_D1_NONCES_DATABASE_ID: ${{ vars.CF_D1_NONCES_DATABASE_ID }}
+          CF_KV_RESEARCH_NONCES_ID: ${{ vars.CF_KV_RESEARCH_NONCES_ID }}
+        run: |
+          set -euo pipefail
+          if [ -n "$CF_D1_DATABASE_ID" ]; then
+            sed -i "s|REPLACE_WITH_D1_DATABASE_ID|${CF_D1_DATABASE_ID}|" apps/web/wrangler.toml
+          fi
+          # Atomic nonce store — its OWN dedicated D1 id. The placeholder is distinct
+          # (REPLACE_WITH_NONCES_D1_DATABASE_ID), so the RESEARCH_DB sed above never touches it.
+          if [ -n "$CF_D1_NONCES_DATABASE_ID" ]; then
+            sed -i "s|REPLACE_WITH_NONCES_D1_DATABASE_ID|${CF_D1_NONCES_DATABASE_ID}|" apps/web/wrangler.toml
+          fi
+          if [ -n "$CF_KV_RESEARCH_NONCES_ID" ]; then
+            sed -i "s|REPLACE_WITH_KV_NAMESPACE_ID|${CF_KV_RESEARCH_NONCES_ID}|" apps/web/wrangler.toml
+          fi
+
+      - name: Deploy to Cloudflare Pages
+        if: steps.secrets.outputs.ready == 'true'
+        run: node scripts/deploy-cloudflare-pages.mjs
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ vars.CLOUDFLARE_ACCOUNT_ID }}
+          CF_PAGES_BRANCH: ${{ steps.target.outputs.branch }}
+
+      - name: Post-deploy live smoke (block promotion on drift)
+        # After the site is live, verify the HTTP surface: the deployed /release-manifest.json is
+        # present and pins the commit/version just built (a stale deploy fails), the governance
+        # kill-switch surface is reachable, and — when the research Functions are live (SMOKE_RESEARCH)
+        # — the ingestion route replies uniformly (204, no body). SKIPS cleanly when SMOKE_URL is unset
+        # (mirrors scripts/verify-aec-archive.mjs); FAILS on real drift when a target is present. Runs on
+        # every non-preview promotion (push + schedule + dispatch), not just push, so a scheduled deploy
+        # is smoke-verified too.
+        if: steps.secrets.outputs.ready == 'true' && github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
+        env:
+          SMOKE_URL: ${{ vars.PUBLIC_SITE_URL }}
+          EXPECTED_COMMIT: ${{ github.sha }}
+          EXPECTED_APP_VERSION: ${{ steps.target.outputs.version }}
+        run: |
+          # Bind the live control-plane assertion to the exact state we just built, so the deployed
+          # kill-switch state is checked at the live surface (not the local checkout) and a stale
+          # control plane on the served manifest fails closed.
+          EXPECTED_CONTROL_PLANE_INTEGRITY=$(node -e "process.stdout.write((require('./apps/web/build/release-manifest.json').governance||{}).controlPlaneIntegrity||'')")
+          export EXPECTED_CONTROL_PLANE_INTEGRITY
+          node scripts/smoke-live.mjs
+
+      - name: Comment preview URL on the PR
+        if: steps.secrets.outputs.ready == 'true' && github.event_name == 'pull_request'
+        uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9
+        with:
+          script: |
+            const url = `https://pr-${context.issue.number}.${process.env.CF_PAGES_PROJECT}.pages.dev`;
+            const marker = '<!-- cf-pages-preview -->';
+            const body = `${marker}\n### ⚡ Cloudflare Pages preview\n\nThis PR is deployed (\`noindex\`) at:\n\n**${url}**\n\n_Updated for commit ${context.sha.slice(0, 7)}._`;
+            const { data: comments } = await github.rest.issues.listComments({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+            });
+            const existing = comments.find(c => c.body?.includes(marker));
+            if (existing) {
+              await github.rest.issues.updateComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                comment_id: existing.id,
+                body,
+              });
+            } else {
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: context.issue.number,
+                body,
+              });
+            }
+
+      # On a production deploy (push to main), tag the released version and cut a GitHub release
+      # with auto-generated notes. Idempotent: skips cleanly if the version couldn't be resolved,
+      # if the tag already exists (a re-run), or if a CONCURRENT production deploy — which the
+      # per-run concurrency groups above now allow — created the tag/release first. The remote is
+      # the source of truth, so we never fail the deploy on an "already exists" race.
+      - name: Tag + GitHub release
+        if: steps.secrets.outputs.ready == 'true' && github.event_name == 'push' && github.ref == 'refs/heads/main'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          VERSION: ${{ steps.target.outputs.version }}
+        run: |
+          [ -z "$VERSION" ] && { echo "No version resolved — skipping."; exit 0; }
+          V="v${VERSION}"
+          # Fetch the remote tag first — a concurrent promotion may already have published it, and
+          # rev-parse against the local checkout alone wouldn't see it.
+          git fetch --quiet origin "refs/tags/$V:refs/tags/$V" 2>/dev/null || true
+          if git rev-parse -q --verify "refs/tags/$V" >/dev/null 2>&1; then
+            echo "Tag $V already exists — skipping tag/release."
+            exit 0
+          fi
+          git tag "$V"
+          # A concurrent deploy can still win the push between our check and here; treat a rejected
+          # push (tag already on the remote) as success rather than failing the promotion.
+          if ! git push origin "$V" 2>push.err; then
+            if grep -qiE 'already exists|rejected|non-fast-forward|failed to push' push.err; then
+              echo "Tag $V was pushed by a concurrent deploy — skipping release."
+              exit 0
+            fi
+            cat push.err >&2
+            exit 1
+          fi
+          # We won the tag push, so we own the release. Tolerate a pre-existing one in case a
+          # concurrent run cut it in the same window.
+          if ! gh release create "$V" --title "$V" --generate-notes 2>release.err; then
+            if grep -qiE 'already exists|already_exists' release.err; then
+              echo "Release $V already exists — treating as success."
+              exit 0
+            fi
+            cat release.err >&2
+            exit 1
+          fi
+
+  cleanup:
+    name: Tear down preview
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: read # actions/checkout needs repo read (a permissions block defaults every unlisted scope to none)
+      pull-requests: write # update the teardown comment
+    # Only when a PR is closed (merged or not) — deletes that PR's preview.
+    if: github.event_name == 'pull_request' && github.event.action == 'closed'
+    steps:
+      - name: Check deploy secrets are configured
+        id: secrets
+        env:
+          CF_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CF_ACCOUNT: ${{ vars.CLOUDFLARE_ACCOUNT_ID }}
+        run: |
+          if [ -n "$CF_TOKEN" ] && [ -n "$CF_ACCOUNT" ]; then
+            echo "ready=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "ready=false" >> "$GITHUB_OUTPUT"
+            echo "::warning::Cloudflare Pages deploy secrets not set — skipping preview teardown."
+          fi
+
+      - name: Checkout repository
+        if: steps.secrets.outputs.ready == 'true'
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7
+
+      - name: Setup Node.js
+        if: steps.secrets.outputs.ready == 'true'
+        uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e # v6
+        with:
+          node-version-file: .nvmrc
+
+      # The script uses only Node's global fetch (no dependencies), so there is
+      # deliberately no `pnpm install` here — teardown stays fast.
+      - name: Delete Cloudflare Pages preview
+        if: steps.secrets.outputs.ready == 'true'
+        run: node scripts/cleanup-cloudflare-preview.mjs
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ vars.CLOUDFLARE_ACCOUNT_ID }}
+          CF_PAGES_BRANCH: pr-${{ github.event.pull_request.number }}
+
+      - name: Update the preview comment
+        if: steps.secrets.outputs.ready == 'true'
+        uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9
+        with:
+          script: |
+            const marker = '<!-- cf-pages-preview -->';
+            const body = `${marker}\n### ⚡ Cloudflare Pages preview\n\nThe preview for this PR has been torn down (PR ${context.payload.pull_request.merged ? 'merged' : 'closed'}).`;
+            const { data: comments } = await github.rest.issues.listComments({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+            });
+            const existing = comments.find(c => c.body?.includes(marker));
+            if (existing) {
+              await github.rest.issues.updateComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                comment_id: existing.id,
+                body,
+              });
+            }

@@ -1,0 +1,22 @@
+# Gitleaks configuration. The CI "Secret scan" job (.github/workflows/ci.yml) runs
+# `gitleaks git --log-opts=--all`, scanning the full history of every ref, so a secret committed to
+# any branch — not just the current tip — fails the build. This file extends the built-in default
+# ruleset with a single, documented allowlist for one value that is public by design.
+title = "how2vote gitleaks config"
+
+[extend]
+useDefault = true
+
+# The Google reCAPTCHA v3 *site* key is public by design: it is embedded in the client bundle,
+# served to every visitor, and domain-restricted, so exposing it is safe. Only the matching *secret*
+# key is sensitive, and that lives solely on Formspree — never in this repo. This exact value appears
+# in early `.env.example` history (the working tree now uses a placeholder); because it is a
+# high-entropy string, the default generic-api-key rule flags it as a false positive. We allowlist
+# the one known value rather than excluding the `.env.example` path, so example files are still
+# scanned for any genuinely secret material.
+[allowlist]
+description = "Public reCAPTCHA v3 site key (client-side, domain-locked; retained in git history)"
+regexTarget = "line"
+regexes = [
+  '''6LeN2U8tAAAAAOBXIIa5De5K1VfTpeavkqWmP7Py''',
+]

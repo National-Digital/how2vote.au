@@ -1,0 +1,26 @@
+{
+  "generatedFrom": "docs/legal/signatories.json",
+  "note": "GENERATED — do not edit. Public projection of the compliance signatory registry (publicProfile: true only). Run `node scripts/generate-signatories-public.mjs --write` after editing the registry.",
+  "signatories": [
+    {
+      "id": "cameron-young",
+      "legalName": "Cameron Young",
+      "jobTitle": "Chief Executive Officer",
+      "org": "National Digital",
+      "sameAs": [
+        "https://github.com/x5hwuk7nc6jsudcc",
+        "https://www.linkedin.com/in/thecameronyoung/"
+      ]
+    },
+    {
+      "id": "tara-buckley",
+      "legalName": "Tara Buckley",
+      "jobTitle": "Chief Operating Officer",
+      "org": "National Digital",
+      "sameAs": [
+        "https://github.com/Tarrah102",
+        "https://www.linkedin.com/in/taradbuckley/"
+      ]
+    }
+  ]
+}

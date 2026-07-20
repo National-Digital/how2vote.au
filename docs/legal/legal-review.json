@@ -1,0 +1,41 @@
+{
+  "schemaVersion": 1,
+  "lastReviewDate": "2026-07-20",
+  "reviewer": "cameron-young — Australian legal practitioner (National Digital)",
+  "approvalRef": "public-release-staging-2026-07-20",
+  "legislationCompilation": "Commonwealth Electoral Act 1918 (Cth), current compilation as at 2026-07-15",
+  "aecGuidanceVersion": "AEC authorisation + Spatial Data Download Data Licence guidance as at 2026-07-15",
+  "fundingDisclosureRuleset": "pre-2027 regime; transitional rules operating from 2026-07-01",
+  "privacyResearchStandards": {
+    "app": "OAIC Australian Privacy Principles Guidelines",
+    "research": "ABS quality/confidentiality; National Statement on Ethical Conduct in Human Research 2025; AIATSIS Code of Ethics"
+  },
+  "electionsCovered": ["next", "2019", "2022", "2025"],
+  "dataSchemasCovered": {
+    "snapshot": 2,
+    "methodology": "2026.1",
+    "compliancePolicy": "2026.2"
+  },
+  "changeLog": [
+    {
+      "date": "2026-07-20",
+      "change": "Public-release staging baseline. The compliance registers ship in a pending state: per-election ballot-order verification and the control/product-boundary sign-offs each land by pull request so the public record carries the attestations, not assertions.",
+      "affectedControls": []
+    }
+  ],
+  "nextMandatoryReviewDate": "2027-07-15",
+  "knownCommencementDates": [
+    {
+      "date": "2026-07-01",
+      "description": "Funding & disclosure transitional rules commence (AEC FAD reform)",
+      "affectedControls": ["control-8", "control-2"]
+    },
+    {
+      "date": "2027-01-01",
+      "description": "Principal funding & disclosure reforms commence (AEC FAD reform)",
+      "affectedControls": ["control-8", "control-2"]
+    }
+  ],
+  "affectedControls": ["control-8", "control-2"],
+  "status": "current"
+}

@@ -1,0 +1,14 @@
+{
+  "schemaVersion": 1,
+  "electionId": "2025",
+  "partiesSourceHash": "fcf0942f419bb2057b135aafc6c40c151805cebbc00269a07ce396543152bfac",
+  "coverage": {
+    "parties": 19,
+    "independents": 33,
+    "noRecordNames": 16
+  },
+  "status": "approved",
+  "reviewer": "cameron-young",
+  "reviewedAt": "2026-07-17",
+  "note": "Approval of the candidate↔party mapping for 2025 (parties.json: aecName/alias→key + the noRecord acknowledgement list). partiesSourceHash ties this record to the exact parties.json bytes — any mapping change invalidates it and forces re-review (fail-closed). Signed off 2026-07-17 by the accountable candidate-data owner (reviewer resolves to docs/legal/signatories.json); the party labels were verified against the official AEC 2025 first-preferences source (1126/1126 identical) as part of the ballot verification."
+}

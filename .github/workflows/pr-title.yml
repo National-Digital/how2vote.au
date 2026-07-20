@@ -1,0 +1,37 @@
+name: PR title
+
+# Verifies the pull-request title is a Conventional Commit (see CONTRIBUTING.md). On a squash merge
+# the PR title becomes the commit subject on main, and scripts/next-version.mjs reads that subject to
+# suggest the next release version — so a non-conventional title silently defaults the version bump.
+# This check catches it at PR time. Self-contained: no third-party actions, just the event payload.
+#
+# `edited` is included so fixing the title re-runs the check without needing a new push.
+
+on:
+  pull_request:
+    types: [opened, edited, reopened]
+
+permissions:
+  contents: read
+
+jobs:
+  lint-title:
+    name: Check title
+    runs-on: ubuntu-latest
+    steps:
+      - name: Verify Conventional Commit title
+        env:
+          TITLE: ${{ github.event.pull_request.title }}
+        run: |
+          set -euo pipefail
+          # Conventional Commits: type(optional scope)(optional !): subject
+          # Types mirror CONTRIBUTING.md / the standard set; `!` marks a breaking change.
+          types='feat|fix|docs|chore|perf|refactor|test|build|ci|style|revert'
+          pattern="^($types)(\([a-z0-9./-]+\))?(!)?: .+"
+          printf 'PR title: %s\n' "$TITLE"
+          if printf '%s' "$TITLE" | grep -qE "$pattern"; then
+            echo "ok — title is a Conventional Commit"
+          else
+            echo "::error::PR title is not a Conventional Commit. Use '<type>[optional scope]: <subject>', e.g. 'feat(web): add glossary page'. Allowed types: ${types//|/, }. See CONTRIBUTING.md."
+            exit 1
+          fi

@@ -1,0 +1,6 @@
+{
+  "schemaVersion": 1,
+  "updated": "2026-07-16",
+  "note": "Correction / right-of-reply runtime suspension list. When a candidate's party mapping or its alignment figure is disputed and flagged for correction, add an entry here: the runtime (apps/web card) reads this file and SUSPENDS showing that party's alignment for the named election — the disputed figure is withdrawn (shown as 'under review') rather than left standing while the correction is assessed. This is the simple, data-driven lever ahead of the fuller governance control plane; it composes with the global EXPORTS_ENABLED kill switch in apps/web/src/lib/governance.ts. Structure and referential integrity are enforced by scripts/check-candidate-corrections.mjs (each partyKey must exist in that election's party registry). Empty means nothing is currently suspended.",
+  "suspensions": []
+}

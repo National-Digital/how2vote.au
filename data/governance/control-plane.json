@@ -1,0 +1,26 @@
+{
+  "schemaVersion": 1,
+  "updated": "2026-07-19",
+  "note": "Signed, fail-closed runtime kill-switch control plane. Each entry SUSPENDS a capability at a scope so the runtime REFUSES it without a code change: global scopes (research | publication | printing | decoding) or a specific election | chamber | electorate | ballot | mapping | proposition | map. Edit the `suspensions` list, then run `pnpm control-plane:generate` to re-sign — the `integrity` digest is checked at build (scripts/check-control-plane.mjs, blocking) and re-verified synchronously at runtime (apps/web/src/lib/governance), which refuses EVERYTHING if it does not match. Each entry carries who/when/why (by, flaggedAt, reason) for the audit trail; a lifted suspension keeps an audited RESTORE record (liftedAt/liftedBy) rather than being deleted. This subsumes data/corrections/suspensions.json (the `mapping` scope). Empty (or fully-lifted) `suspensions` means nothing is currently withdrawn. The `printing` and `research` global suspensions below were the constrained product boundary from the 2026-07-19 deep legal review; both were LIFTED on 2026-07-19 (RESTORE records) once the two-person compliance review signed off the print-authoriser and Privacy-Act determinations (data/legal/product-boundary.json, EV-LEGAL-DEEP-2026-07). They are kept as audited RESTORE records rather than deleted.",
+  "suspensions": [
+    {
+      "scope": "printing",
+      "reason": "Constrained product boundary (deep legal review 2026-07-19): the printed how-to-vote authoriser identity and s321D particulars were not yet safely determined. Withdrew printing until the National Digital authoriser model was signed off. See data/legal/product-boundary.json and docs/adr/0010.",
+      "by": "National Digital compliance",
+      "flaggedAt": "2026-07-19",
+      "ref": "EV-LEGAL-DEEP-2026-07",
+      "liftedAt": "2026-07-19",
+      "liftedBy": "cameron-young + tara-buckley (two-person sign-off; printAuthoriser determination made — National Digital authoriser model)"
+    },
+    {
+      "scope": "research",
+      "reason": "Constrained product boundary (deep legal review 2026-07-19): the optional research survey collects sensitive political/demographic data. Withdrew collection until the Privacy-Act coverage / necessity / per-category-consent controls were signed off. See data/legal/product-boundary.json and docs/adr/0010.",
+      "by": "National Digital compliance",
+      "flaggedAt": "2026-07-19",
+      "ref": "EV-LEGAL-DEEP-2026-07",
+      "liftedAt": "2026-07-19",
+      "liftedBy": "cameron-young + tara-buckley (two-person sign-off; privacyActCoverage determination made — APP-level controls apply, consent + minimisation in place)"
+    }
+  ],
+  "integrity": "sha256-0dc5e51346360839b286a1fe4a4bf97e0dae9a0ef4aed2807afb223488ea151c"
+}

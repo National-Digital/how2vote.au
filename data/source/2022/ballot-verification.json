@@ -1,0 +1,13 @@
+{
+  "schemaVersion": 1,
+  "electionId": "2022",
+  "ballotsSourceHash": "92c18818fec17000c84dbad9b2476b233740c726cfc327df21282122901102ab",
+  "coverage": {
+    "houseElectorates": 151,
+    "senateJurisdictions": 8
+  },
+  "status": "pending",
+  "reviewers": {},
+  "discrepancyRef": null,
+  "note": "Two-person independent verification of the compiled ballot order against the published AEC results is recorded by pull request; this record is pending until that attestation lands. ballotsSourceHash binds this record to the exact ballots.json bytes — any change forces re-verification."
+}

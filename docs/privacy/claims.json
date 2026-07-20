@@ -1,0 +1,83 @@
+{
+  "schemaVersion": 1,
+  "description": "Privacy claims register. Each entry is a specific privacy CLAIM shown to users, mapped to the control that substantiates it, the CI test IDs that prove it, the external-evidence IDs, an approver + expiry, and a FALLBACK wording. The privacy policy page renders each claim's EFFECTIVE wording from the generated projection (apps/web/src/lib/privacy/privacy-claims.generated.json): a claim shows its substantiated wording only while it is BACKED AND CURRENT — approval unexpired, every referenced test passing in the control register, and no referenced evidence expired. Otherwise it FAILS CLOSED to the hedged fallback wording, so a claim can never appear on the page unless it is currently substantiated. Referenced external evidence may be PENDING (that keeps the issue partial) but pending does not force the fallback; an EXPIRED approval or evidence does. Generated + drift-gated by scripts/generate-privacy-claims.mjs; structure validated by scripts/check-privacy-claims.mjs.",
+  "claims": [
+    {
+      "id": "PC-DERIVE-ON-DEVICE",
+      "substantiatedWording": "Your individual quiz answers and importance weights never leave your device — only a party match and a per-proposition agree/neutral/disagree stance, worked out on your device, are sent.",
+      "fallbackWording": "How your research contribution is processed is described in the sections below; see “What is collected if you opt in”.",
+      "substantiatingControl": "The client reduces the raw answer vector to a match + stances on device and transmits only the allowlisted, device-derived fields (apps/web/src/lib/research/transport-policy.ts projectAllowlisted, wired into survey.ts). The raw vector/weights never reach the wire; each proposition is projected to {id, stance}. Proven on the wire by the network-interception e2e.",
+      "tests": ["research-transport-policy", "research-transport-e2e"],
+      "evidence": ["EV-DEIDENTIFICATION-ASSESSMENT"],
+      "approver": "Cameron (National Digital)",
+      "approvedAt": "2026-07-16",
+      "expiresAt": "2027-07-16"
+    },
+    {
+      "id": "PC-AGGREGATE-ONLY",
+      "substantiatedWording": "Contributions are stored only as additions to aggregate group counts; no individual research record is created or stored.",
+      "fallbackWording": "How research contributions are stored is described below under “Aggregate-only storage and residual risk”.",
+      "substantiatingControl": "The store holds only cohort-keyed aggregate counters; the committed schema (migration 0001) creates no per-person table and is aggregate-only (scripts/check-aggregate-only.mjs, ADR-0008).",
+      "tests": ["privacy-aggregate-only"],
+      "evidence": ["EV-DEIDENTIFICATION-ASSESSMENT"],
+      "approver": "Cameron (National Digital)",
+      "approvedAt": "2026-07-16",
+      "expiresAt": "2027-07-16"
+    },
+    {
+      "id": "PC-NO-IDENTIFIERS",
+      "substantiatedWording": "A contribution carries no name, email address, phone number, IP address, cookie or device identifier.",
+      "fallbackWording": "The identifiers a contribution does not contain are listed below under “What is never collected”.",
+      "substantiatingControl": "The transmitted-field allowlist admits no identifier (transport-policy.ts), the endpoints never read CF-Connecting-IP or the user agent, and no identifier or personal-data field may reach a log (scripts/check-forbidden-log-fields.mjs, PIA §6).",
+      "tests": ["research-transport-policy", "forbidden-log-fields"],
+      "evidence": ["EV-DEIDENTIFICATION-ASSESSMENT"],
+      "approver": "Cameron (National Digital)",
+      "approvedAt": "2026-07-16",
+      "expiresAt": "2027-07-16"
+    },
+    {
+      "id": "PC-TLS-NO-STORE",
+      "substantiatedWording": "Research contributions are sent only over an encrypted (HTTPS) connection with caching disabled, and only a fixed allowlisted set of fields is ever transmitted.",
+      "fallbackWording": "Research contributions are sent to our same-origin server over your browser's connection; see the sections below.",
+      "substantiatingControl": "Every research POST is issued through transportInit() with cache 'no-store' and credentials 'omit' over the same-origin (HTTPS) endpoint; the edge forces HTTPS + HSTS and does not cache the ingestion routes (infra/providers/cloudflare/transport-policy.json). The field allowlist is fail-closed.",
+      "tests": ["research-transport-policy", "research-transport-e2e"],
+      "evidence": ["EV-PROVIDER-DPA"],
+      "approver": "Cameron (National Digital)",
+      "approvedAt": "2026-07-16",
+      "expiresAt": "2027-07-16"
+    },
+    {
+      "id": "PC-NO-REQUEST-LOGGING",
+      "substantiatedWording": "The research endpoints never read your IP address or user agent, and never log the request body or full address of your contribution.",
+      "fallbackWording": "How the research request is handled is described below under “Hosting, security and technical logs”.",
+      "substantiatingControl": "The ingestion Pages Functions read no IP/user-agent/forwarding header and emit no logging or error reporting of any part of the request; the static transport scan and the forbidden-log-field scan enforce this, and the edge is configured not to log request bodies (infra transport policy).",
+      "tests": ["research-transport-policy", "forbidden-log-fields"],
+      "evidence": ["EV-PROVIDER-DPA"],
+      "approver": "Cameron (National Digital)",
+      "approvedAt": "2026-07-16",
+      "expiresAt": "2027-07-16"
+    },
+    {
+      "id": "PC-ELECTORATE-SEPARATE",
+      "substantiatedWording": "Your electorate is sent as its own separate request and kept only as a running count, never paired with any result or survey answer.",
+      "fallbackWording": "How electorate is handled is described below under “How electorate is handled separately”.",
+      "substantiatingControl": "The electorate travels on the separate /api/research/geography request (its own token/nonce) and is stored only as an integer tally in geography_count that shares no key with any research counter (survey.ts, geography.ts, transport-policy.ts allowlist).",
+      "tests": ["research-transport-policy", "research-transport-e2e", "privacy-aggregate-only"],
+      "evidence": ["EV-DEIDENTIFICATION-ASSESSMENT"],
+      "approver": "Cameron (National Digital)",
+      "approvedAt": "2026-07-16",
+      "expiresAt": "2027-07-16"
+    },
+    {
+      "id": "PC-K-THRESHOLD",
+      "substantiatedWording": "Published research suppresses any group with fewer than 10 contributions.",
+      "fallbackWording": "How published research results are protected is described below under “Research retention and publication”.",
+      "substantiatingControl": "Public stats are k-suppressed at the database/view layer (HAVING SUM(n) >= 10, k = MIN_CELL) with complementary suppression against differencing; the generator reads only the allowlisted views and no Pages Function serves the counters (scripts/check-public-stat-release.mjs, stats.ts).",
+      "tests": ["privacy-k-threshold-disclosure", "stats-disclosure-control"],
+      "evidence": ["EV-DEIDENTIFICATION-ASSESSMENT"],
+      "approver": "Cameron (National Digital)",
+      "approvedAt": "2026-07-16",
+      "expiresAt": "2027-07-16"
+    }
+  ]
+}

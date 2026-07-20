@@ -1,0 +1,13 @@
+{
+  "schemaVersion": 1,
+  "electionId": "2019",
+  "ballotsSourceHash": "d70c1ab8b53d1f06dbbda2feb72a40555e095f104a4e4909808af4c015dbaba9",
+  "coverage": {
+    "houseElectorates": 151,
+    "senateJurisdictions": 8
+  },
+  "status": "pending",
+  "reviewers": {},
+  "discrepancyRef": null,
+  "note": "Two-person independent verification of the compiled ballot order against the published AEC results is recorded by pull request; this record is pending until that attestation lands. ballotsSourceHash binds this record to the exact ballots.json bytes — any change forces re-verification."
+}

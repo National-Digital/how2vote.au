@@ -1,0 +1,36 @@
+packages:
+  - "packages/*"
+  - "apps/*"
+
+onlyBuiltDependencies:
+  - esbuild
+  - sharp
+  - workerd
+
+overrides:
+  cookie@<0.7.0: ">=0.7.0"
+  # postcss and es-module-lexer are pinned to these known-good patches as a supply-chain caution
+  # (avoid auto-adopting the very newest transitive patches). NOTE: no repo-wide `minimumReleaseAge`
+  # gate is enabled — with the current lockfile pnpm rejects several recently-published entries
+  # (eslint, mapshaper, …), so turning it on needs the lockfile to settle or those pinned first.
+  postcss: 8.5.16
+  es-module-lexer: 2.3.0
+  # file-type < 21.3.1 has an infinite-loop DoS in its ASF parser on malformed input
+  # (GHSA-5v7r-6r5c-r473). Only reached transitively via mapshaper -> @ngageoint/geopackage
+  # in the dev-only maps toolchain, and never fed untrusted audio, but forced to the patched
+  # line to keep the dependency tree clean.
+  file-type@>=13.0.0 <21.3.1: ">=21.3.1"
+  # adm-zip < 0.6.0 lets a crafted ZIP trigger a 4GB memory allocation (GHSA-xcpc-8h2w-3j85, high).
+  # Only reached transitively via mapshaper in the dev-only maps toolchain, where it unzips official
+  # AEC shapefiles a maintainer fetches (never attacker-controlled input) and never ships to the
+  # client. mapshaper still pins adm-zip@^0.5.9 (excludes the fix), so forced to the patched line —
+  # a durable fix rather than an expiring risk acceptance (docs/legal/security-register.json).
+  adm-zip@<0.6.0: ">=0.6.0"
+
+allowBuilds:
+  # mapshaper optionals for formats we don't use (sqlite/msgpack); never build their natives.
+  better-sqlite3: false
+  esbuild: true
+  msgpackr-extract: false
+  sharp: true
+  workerd: true

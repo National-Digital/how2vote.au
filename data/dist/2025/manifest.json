@@ -1,0 +1,22 @@
+{
+  "checksum": "8d082fe3caa5b9258e7a49cf447d90fb522729932515662068f6c0f0c59d4f76",
+  "dataVersion": "2025-03-28",
+  "methodologyVersion": "2026.1",
+  "compliancePolicyVersion": "2026.2",
+  "snapshotVersion": 1,
+  "attribution": "Vote data © They Vote For You (OpenAustralia Foundation), ODbL",
+  "builtFrom": "They Vote For You (ODbL) + Australian Electoral Commission nominations",
+  "provenance": {
+    "basis": "primary-source-reconstruction",
+    "retrievedAt": "2026-07-15T06:30:43.598Z",
+    "effectiveAsAt": "2025-03-28",
+    "statement": "Party positions reflect the parliamentary voting record as at 2025-03-28. The source data was retrieved from the They Vote For You API on 2026-07-15 — a dated retrospective snapshot, not a contemporaneous election-day capture."
+  },
+  "counts": {
+    "questions": 50,
+    "parties": 52,
+    "house": 1126,
+    "senate": 330,
+    "electorates": 150
+  }
+}

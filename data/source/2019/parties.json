@@ -1,0 +1,195 @@
+{
+  "parties": [
+    {
+      "key": "australian_labor_party",
+      "displayName": "Australian Labor Party",
+      "aecName": "Australian Labor Party",
+      "aliases": [],
+      "kind": "party"
+    },
+    {
+      "key": "australian_democrats",
+      "displayName": "Australian Democrats",
+      "aecName": "Australian Democrats",
+      "aliases": [],
+      "kind": "party"
+    },
+    {
+      "key": "australian_greens",
+      "displayName": "The Greens",
+      "aecName": "The Greens",
+      "aliases": [],
+      "kind": "party"
+    },
+    {
+      "key": "robert_oakeshott_mp",
+      "displayName": "Robert OAKESHOTT",
+      "aecName": "OAKESHOTT, Robert",
+      "aliases": [],
+      "kind": "independent"
+    },
+    {
+      "key": "andrew_wilkie_mp",
+      "displayName": "Andrew WILKIE",
+      "aecName": "WILKIE, Andrew",
+      "aliases": [],
+      "kind": "independent"
+    },
+    {
+      "key": "liberal_democratic_party",
+      "displayName": "Liberal Democrats",
+      "aecName": "Liberal Democrats",
+      "aliases": [],
+      "kind": "party"
+    },
+    {
+      "key": "liberal_party",
+      "displayName": "Liberal",
+      "aecName": "Liberal",
+      "aliases": [],
+      "kind": "party"
+    },
+    {
+      "key": "derryn_hinchs_justice_party",
+      "displayName": "Derryn Hinch's Justice Party",
+      "aecName": "Derryn Hinch's Justice Party",
+      "aliases": [],
+      "kind": "party"
+    },
+    {
+      "key": "pauline_hansons_one_nation_party",
+      "displayName": "Pauline Hanson's One Nation",
+      "aecName": "Pauline Hanson's One Nation",
+      "aliases": [],
+      "kind": "party"
+    },
+    {
+      "key": "liberal_national_party",
+      "displayName": "Liberal National Party of Queensland",
+      "aecName": "Liberal National Party of Queensland",
+      "aliases": [],
+      "kind": "party"
+    },
+    {
+      "key": "national_party",
+      "displayName": "The Nationals",
+      "aecName": "The Nationals",
+      "aliases": [],
+      "kind": "party"
+    },
+    {
+      "key": "country_liberal_party",
+      "displayName": "Country Liberals (NT)",
+      "aecName": "Country Liberals (NT)",
+      "aliases": [],
+      "kind": "party"
+    },
+    {
+      "key": "katters_australian_party",
+      "displayName": "Katter's Australian Party (KAP)",
+      "aecName": "Katter's Australian Party (KAP)",
+      "aliases": [],
+      "kind": "party"
+    },
+    {
+      "key": "australian_conservatives",
+      "displayName": "Australian Conservatives",
+      "aecName": "Australian Conservatives",
+      "aliases": [],
+      "kind": "party"
+    },
+    {
+      "key": "united_australia_party",
+      "displayName": "United Australia Party",
+      "aecName": "United Australia Party",
+      "aliases": [],
+      "kind": "party"
+    },
+    {
+      "key": "senator_fraser_anning",
+      "displayName": "Fraser Anning's Conservative National Party",
+      "aecName": "Fraser Anning's Conservative National Party",
+      "aliases": [],
+      "kind": "independent"
+    },
+    {
+      "key": "julia_banks_mp",
+      "displayName": "Julia BANKS",
+      "aecName": "BANKS, Julia",
+      "aliases": [],
+      "kind": "independent"
+    },
+    {
+      "key": "kerryn_phelps_mp",
+      "displayName": "Kerryn PHELPS",
+      "aecName": "PHELPS, Kerryn",
+      "aliases": [],
+      "kind": "independent"
+    },
+    {
+      "key": "senator_jacqui_lambie",
+      "displayName": "Jacqui Lambie Network",
+      "aecName": "Jacqui Lambie Network",
+      "aliases": [],
+      "kind": "independent"
+    },
+    {
+      "key": "x_senator_amanda_murphy",
+      "displayName": "Amanda MURPHY",
+      "aecName": "MURPHY, Amanda",
+      "aliases": [],
+      "kind": "independent"
+    },
+    {
+      "key": "x_australian_progressives",
+      "displayName": "Australian Progressives",
+      "aecName": "Australian Progressives",
+      "aliases": [],
+      "kind": "party"
+    }
+  ],
+  "merges": [],
+  "noRecord": [
+    "Affordable Housing Party",
+    "Animal Justice Party",
+    "Australia First Party",
+    "Australian Better Families",
+    "Australian Christians",
+    "Australian People's Party",
+    "Australian Workers Party",
+    "Centre Alliance",
+    "Child Protection Party",
+    "Christian Democratic Party (Fred Nile Group)",
+    "Citizens Electoral Council",
+    "Climate Action! Immigration Action! Accountable Politicians!",
+    "Democratic Labour Party",
+    "Health Australia Party",
+    "Help End Marijuana Prohibition (HEMP) Party",
+    "Independent",
+    "Independents For Climate Action Now",
+    "Involuntary Medication Objectors (Vaccination/Fluoride) Party",
+    "Labour DLP",
+    "Love Australia or Leave",
+    "Non-Custodial Parents Party (Equal Parenting)",
+    "Pirate Party",
+    "Reason Australia",
+    "Republican Party of Australia",
+    "Rise Up Australia Party",
+    "Science Party",
+    "Secular Party of Australia",
+    "Seniors United Party of Australia",
+    "Shooters, Fishers and Farmers",
+    "Socialist Alliance",
+    "Socialist Equality Party",
+    "Sustainable Australia",
+    "The Australian Mental Health Party",
+    "The Great Australian Party",
+    "The Small Business Party",
+    "The Together Party",
+    "The Women's Party",
+    "VOTEFLUX.ORG | Upgrade Democracy!",
+    "Victorian Socialists",
+    "Western Australia Party",
+    "Yellow Vest Australia"
+  ]
+}

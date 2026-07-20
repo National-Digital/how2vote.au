@@ -1,0 +1,46 @@
+{
+  "name": "@how2vote/data-pipeline",
+  "version": "0.0.0",
+  "private": true,
+  "license": "AGPL-3.0-or-later",
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    }
+  },
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "test": "vitest run",
+    "fetch:tvfy": "tsx src/bin/fetch-tvfy.ts",
+    "compile": "tsx src/bin/compile.ts",
+    "fetch:aec": "tsx src/bin/fetch-aec.ts",
+    "snapshot:fetch": "tsx src/bin/snapshot-fetch.ts",
+    "snapshot:lock": "tsx src/bin/snapshot-lock.ts",
+    "snapshot:divisions": "tsx src/bin/snapshot-divisions.ts",
+    "snapshot:sync": "tsx src/bin/snapshot-sync.ts",
+    "maps:build": "tsx src/bin/build-maps.ts",
+    "migrate": "tsx src/bin/migrate.ts",
+    "dataset:build": "tsx src/bin/build-dataset.ts",
+    "validate": "tsx src/bin/validate.ts",
+    "stats:generate": "tsx src/bin/generate-stats.ts"
+  },
+  "dependencies": {
+    "@how2vote/data-schema": "workspace:*",
+    "@how2vote/engine": "workspace:*",
+    "zod": "^4.4.3"
+  },
+  "devDependencies": {
+    "@types/node": "^24.13.3",
+    "mapshaper": "0.7.44",
+    "tsx": "^4.23.0",
+    "vitest": "^4.1.10"
+  }
+}

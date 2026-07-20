@@ -1,0 +1,380 @@
+{
+  "state": "ACT",
+  "electorate": "Bean",
+  "house": [
+    {
+      "state": "ACT",
+      "candidate": "FAULKNER, Therese",
+      "party": "Australian Progressives",
+      "position": 1,
+      "partyKey": "x_australian_progressives",
+      "score": 52,
+      "band": "matched",
+      "suspended": false,
+      "division": "Bean"
+    },
+    {
+      "state": "ACT",
+      "candidate": "CHRISTIE, Jamie",
+      "party": "Independent",
+      "position": 2,
+      "partyKey": null,
+      "score": -1,
+      "band": "no-data",
+      "suspended": false,
+      "division": "Bean"
+    },
+    {
+      "state": "ACT",
+      "candidate": "RUSHTON, Ben",
+      "party": "The Great Australian Party",
+      "position": 3,
+      "partyKey": null,
+      "score": -1,
+      "band": "no-data",
+      "suspended": false,
+      "division": "Bean"
+    },
+    {
+      "state": "ACT",
+      "candidate": "DONNELLY, Matt",
+      "party": "Liberal Democrats",
+      "position": 4,
+      "partyKey": "liberal_democratic_party",
+      "score": 52,
+      "band": "matched",
+      "suspended": false,
+      "division": "Bean"
+    },
+    {
+      "state": "ACT",
+      "candidate": "HANLEY, Tony",
+      "party": "United Australia Party",
+      "position": 5,
+      "partyKey": "united_australia_party",
+      "score": 47,
+      "band": "low",
+      "suspended": false,
+      "division": "Bean"
+    },
+    {
+      "state": "ACT",
+      "candidate": "COCKS, Ed",
+      "party": "Liberal",
+      "position": 6,
+      "partyKey": "liberal_party",
+      "score": 49,
+      "band": "low",
+      "suspended": false,
+      "division": "Bean"
+    },
+    {
+      "state": "ACT",
+      "candidate": "SMITH, David",
+      "party": "Australian Labor Party",
+      "position": 7,
+      "partyKey": "australian_labor_party",
+      "score": 59,
+      "band": "matched",
+      "suspended": false,
+      "division": "Bean"
+    },
+    {
+      "state": "ACT",
+      "candidate": "DAVIS, Johnathan",
+      "party": "The Greens",
+      "position": 8,
+      "partyKey": "australian_greens",
+      "score": 48,
+      "band": "low",
+      "suspended": false,
+      "division": "Bean"
+    }
+  ],
+  "senate": [
+    {
+      "state": "ACT",
+      "candidate": "SESELJA, Zed",
+      "party": "Liberal",
+      "position": 1,
+      "partyKey": "liberal_party",
+      "score": 49,
+      "band": "low",
+      "suspended": false,
+      "group": "A"
+    },
+    {
+      "state": "ACT",
+      "candidate": "GUNNING, Robert",
+      "party": "Liberal",
+      "position": 2,
+      "partyKey": "liberal_party",
+      "score": 49,
+      "band": "low",
+      "suspended": false,
+      "group": "A"
+    },
+    {
+      "state": "ACT",
+      "candidate": "KYBURZ, Penny",
+      "party": "The Greens",
+      "position": 1,
+      "partyKey": "australian_greens",
+      "score": 48,
+      "band": "low",
+      "suspended": false,
+      "group": "B"
+    },
+    {
+      "state": "ACT",
+      "candidate": "DAVIDSON, Emma",
+      "party": "The Greens",
+      "position": 2,
+      "partyKey": "australian_greens",
+      "score": 48,
+      "band": "low",
+      "suspended": false,
+      "group": "B"
+    },
+    {
+      "state": "ACT",
+      "candidate": "PESEC, Anthony",
+      "party": "",
+      "position": 1,
+      "partyKey": null,
+      "score": -1,
+      "band": "no-data",
+      "suspended": false,
+      "group": "C"
+    },
+    {
+      "state": "ACT",
+      "candidate": "KENT, Gary",
+      "party": "",
+      "position": 2,
+      "partyKey": null,
+      "score": -1,
+      "band": "no-data",
+      "suspended": false,
+      "group": "C"
+    },
+    {
+      "state": "ACT",
+      "candidate": "VAN DUREN, Shane",
+      "party": "Fraser Anning's Conservative National Party",
+      "position": 1,
+      "partyKey": "senator_fraser_anning",
+      "score": 57,
+      "band": "matched",
+      "suspended": false,
+      "group": "D"
+    },
+    {
+      "state": "ACT",
+      "candidate": "BIRKETT, Scott",
+      "party": "Fraser Anning's Conservative National Party",
+      "position": 2,
+      "partyKey": "senator_fraser_anning",
+      "score": 57,
+      "band": "matched",
+      "suspended": false,
+      "group": "D"
+    },
+    {
+      "state": "ACT",
+      "candidate": "WALTER, Peter",
+      "party": "United Australia Party",
+      "position": 1,
+      "partyKey": "united_australia_party",
+      "score": 47,
+      "band": "low",
+      "suspended": false,
+      "group": "E"
+    },
+    {
+      "state": "ACT",
+      "candidate": "HODGSON, Rebecah Elen",
+      "party": "United Australia Party",
+      "position": 2,
+      "partyKey": "united_australia_party",
+      "score": 47,
+      "band": "low",
+      "suspended": false,
+      "group": "E"
+    },
+    {
+      "state": "ACT",
+      "candidate": "HAYDON, John",
+      "party": "Sustainable Australia",
+      "position": 1,
+      "partyKey": null,
+      "score": -1,
+      "band": "no-data",
+      "suspended": false,
+      "group": "F"
+    },
+    {
+      "state": "ACT",
+      "candidate": "ANGEL, Joy",
+      "party": "Sustainable Australia",
+      "position": 2,
+      "partyKey": null,
+      "score": -1,
+      "band": "no-data",
+      "suspended": false,
+      "group": "F"
+    },
+    {
+      "state": "ACT",
+      "candidate": "GALLAGHER, Katy",
+      "party": "Australian Labor Party",
+      "position": 1,
+      "partyKey": "australian_labor_party",
+      "score": 59,
+      "band": "matched",
+      "suspended": false,
+      "group": "G"
+    },
+    {
+      "state": "ACT",
+      "candidate": "WAITES, Nancy",
+      "party": "Australian Labor Party",
+      "position": 2,
+      "partyKey": "australian_labor_party",
+      "score": 59,
+      "band": "matched",
+      "suspended": false,
+      "group": "G"
+    },
+    {
+      "state": "ACT",
+      "candidate": "HOUSTON, Nick",
+      "party": "Independent",
+      "position": 1,
+      "partyKey": null,
+      "score": -1,
+      "band": "no-data",
+      "suspended": false,
+      "group": "UG"
+    },
+    {
+      "state": "ACT",
+      "candidate": "COWTON, Gary",
+      "party": "Independent",
+      "position": 2,
+      "partyKey": null,
+      "score": -1,
+      "band": "no-data",
+      "suspended": false,
+      "group": "UG"
+    },
+    {
+      "state": "ACT",
+      "candidate": "KIM, David",
+      "party": "Christian Democratic Party (Fred Nile Group)",
+      "position": 3,
+      "partyKey": null,
+      "score": -1,
+      "band": "no-data",
+      "suspended": false,
+      "group": "UG"
+    }
+  ],
+  "senateAboveLine": [
+    {
+      "state": "ACT",
+      "group": "A",
+      "party": "Liberal",
+      "partyKey": "liberal_party",
+      "score": 49,
+      "band": "low",
+      "suspended": false,
+      "candidates": 2
+    },
+    {
+      "state": "ACT",
+      "group": "B",
+      "party": "The Greens",
+      "partyKey": "australian_greens",
+      "score": 48,
+      "band": "low",
+      "suspended": false,
+      "candidates": 2
+    },
+    {
+      "state": "ACT",
+      "group": "C",
+      "party": "",
+      "partyKey": null,
+      "score": -1,
+      "band": "no-data",
+      "suspended": false,
+      "candidates": 2
+    },
+    {
+      "state": "ACT",
+      "group": "D",
+      "party": "Fraser Anning's Conservative National Party",
+      "partyKey": "senator_fraser_anning",
+      "score": 57,
+      "band": "matched",
+      "suspended": false,
+      "candidates": 2
+    },
+    {
+      "state": "ACT",
+      "group": "E",
+      "party": "United Australia Party",
+      "partyKey": "united_australia_party",
+      "score": 47,
+      "band": "low",
+      "suspended": false,
+      "candidates": 2
+    },
+    {
+      "state": "ACT",
+      "group": "F",
+      "party": "Sustainable Australia",
+      "partyKey": null,
+      "score": -1,
+      "band": "no-data",
+      "suspended": false,
+      "candidates": 2
+    },
+    {
+      "state": "ACT",
+      "group": "G",
+      "party": "Australian Labor Party",
+      "partyKey": "australian_labor_party",
+      "score": 59,
+      "band": "matched",
+      "suspended": false,
+      "candidates": 2
+    }
+  ],
+  "percentages": {
+    "andrew_wilkie_mp": 49,
+    "australian_conservatives": 30,
+    "australian_democrats": 87,
+    "australian_greens": 48,
+    "australian_labor_party": 59,
+    "country_liberal_party": 54,
+    "derryn_hinchs_justice_party": 82,
+    "julia_banks_mp": 89,
+    "katters_australian_party": 50,
+    "kerryn_phelps_mp": 94,
+    "liberal_democratic_party": 52,
+    "liberal_national_party": 50,
+    "liberal_party": 49,
+    "national_party": 50,
+    "pauline_hansons_one_nation_party": 46,
+    "robert_oakeshott_mp": 48,
+    "senator_fraser_anning": 57,
+    "senator_jacqui_lambie": 12,
+    "united_australia_party": 47,
+    "x_australian_progressives": 52,
+    "x_senator_amanda_murphy": 48
+  },
+  "dataVersion": "2019-05-09",
+  "attribution": "Vote data © They Vote For You (OpenAustralia Foundation), ODbL"
+}

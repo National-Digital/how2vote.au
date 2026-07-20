@@ -1,0 +1,11 @@
+{
+  "electionId": "next",
+  "status": "pending",
+  "note": "No candidates nominated: this upcoming-parliament comparison ships with no ballot (ballotStatus pending). Ballot verification applies once the AEC declares nominations.",
+  "house": {
+    "count": 0
+  },
+  "senate": {
+    "count": 0
+  }
+}

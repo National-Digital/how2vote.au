@@ -1,0 +1,140 @@
+{
+  "schemaVersion": 1,
+  "description": "De-identification register (PIA §3/§5). The machine-readable record of what the optional research contribution collects, how each field is de-identified or aggregated before/at storage, the geography scope it is held at, the minimum-group-size (k) suppression applied on publication, and its retention. Bound to the deployed research payload schema version so a schema change forces a re-assessment. Validated fail-closed by scripts/check-privacy-claims.mjs and cross-checked against RESEARCH_SCHEMA_VERSION (apps/web/src/lib/research/consent.ts), SENSITIVE_DIMENSIONS (apps/web/src/lib/survey.ts) and MIN_CELL (packages/data-pipeline/src/stats.ts). The external de-identification assessment that classifies the published aggregates as non-personal is EV-DEIDENTIFICATION-ASSESSMENT (pending) — the control stays partial until it is signed.",
+  "boundSchemaVersion": 1,
+  "kThreshold": 10,
+  "retentionModel": "aggregate-only-indefinite",
+  "retentionNote": "The store holds only genuinely aggregated group counts (not personal information), so there is no fixed maximum period; aggregates are reviewed after each federal election and retired on a purpose basis (docs/privacy/retention.md; ADR-0008). No timestamp finer than a calendar quarter is stored anywhere.",
+  "coreControls": [
+    {
+      "id": "derive-on-device",
+      "description": "The raw ~50-item answer vector and importance weights are reduced to a top-party match and a per-proposition agree/neutral/disagree stance ON THE DEVICE; the raw vector never leaves the browser. Only the derived values are transmitted (transport allowlist).",
+      "enforcedBy": ["research-transport-policy", "research-transport-e2e"]
+    },
+    {
+      "id": "aggregate-only-storage",
+      "description": "Each contribution is tallied into cohort-keyed aggregate counters via an atomic UPSERT; no per-person row exists at rest, and nothing records that a batch's increments came from one request (no delta log, no insertion-order key, no shared token).",
+      "enforcedBy": ["privacy-aggregate-only"]
+    },
+    {
+      "id": "separated-geography",
+      "description": "The electorate is split onto its own unlinkable request (/api/research/geography) and held only as a running integer tally; no counter pairs an electorate with any result or survey answer.",
+      "enforcedBy": ["research-transport-policy", "research-transport-e2e"]
+    },
+    {
+      "id": "sensitive-national-only-key-rule",
+      "description": "No counter keys an opinion value (party match / stance) together with a sensitive attribute AND a sub-national geography; sensitive dimensions are stored national-only (state key '').",
+      "enforcedBy": ["privacy-k-threshold-disclosure", "stats-disclosure-control"]
+    },
+    {
+      "id": "k-suppression-on-publication",
+      "description": "Published aggregates are k-suppressed at the database/view layer (HAVING SUM(n) >= k, k = 10), with complementary suppression against national/state differencing and no electorate-level result.",
+      "enforcedBy": ["privacy-k-threshold-disclosure", "stats-disclosure-control"]
+    }
+  ],
+  "fields": [
+    {
+      "name": "match",
+      "collected": true,
+      "source": "device-derived",
+      "sensitivity": "opinion",
+      "aggregation": "counter",
+      "geographyScope": "national-and-state",
+      "note": "Top-party match derived on device (never a raw answer vector). Party-by-demographic counters keep sensitive dimensions national-only."
+    },
+    {
+      "name": "propositions.stance",
+      "collected": true,
+      "source": "device-derived",
+      "sensitivity": "opinion",
+      "aggregation": "counter",
+      "geographyScope": "national",
+      "note": "Per-answered-proposition agree/neutral/disagree only — never the raw label, points value or importance weight."
+    },
+    {
+      "name": "state",
+      "collected": true,
+      "source": "user-provided",
+      "sensitivity": "quasi-identifier",
+      "aggregation": "counter-key",
+      "geographyScope": "state",
+      "note": "State/territory only; never the electorate (that is split onto the geography endpoint)."
+    },
+    {
+      "name": "electorate",
+      "collected": true,
+      "source": "user-provided",
+      "sensitivity": "quasi-identifier",
+      "aggregation": "running-count",
+      "geographyScope": "electorate",
+      "endpoint": "/api/research/geography",
+      "note": "Sent as its own unlinkable request; stored only as an incrementing tally with nothing attached (no result, no survey answer, no date)."
+    },
+    {
+      "name": "demographics",
+      "collected": true,
+      "source": "user-provided-optional",
+      "sensitivity": "mixed",
+      "aggregation": "counter",
+      "geographyScope": "national-or-state-per-key-rule",
+      "note": "Allowlisted categorical values only (survey.ts DEMOGRAPHIC_OPTIONS); every item has a prefer-not-to-say option; sensitive dimensions (SENSITIVE_DIMENSIONS) are stored national-only.",
+      "sensitiveDimensions": [
+        "union_member",
+        "birthplace",
+        "language",
+        "indigenous",
+        "religion",
+        "attendance",
+        "orientation",
+        "politics_scale",
+        "party_id",
+        "past_vote",
+        "vote_intention",
+        "vote_next"
+      ]
+    },
+    {
+      "name": "consentVersion",
+      "collected": true,
+      "source": "app-derived",
+      "sensitivity": "non-personal",
+      "aggregation": "counter",
+      "geographyScope": "none",
+      "note": "Recorded in aggregate (consent_count) so the exact notice consented to is known; a payload without a valid consent version is dropped."
+    },
+    {
+      "name": "collectionPeriod",
+      "collected": true,
+      "source": "server-derived",
+      "sensitivity": "non-personal",
+      "aggregation": "counter",
+      "geographyScope": "none",
+      "note": "Calendar quarter only (AEST). No timestamp finer than a quarter is stored anywhere; no per-request date is parsed."
+    }
+  ],
+  "neverCollected": [
+    "raw answer vector",
+    "importance weights",
+    "name",
+    "email address",
+    "phone number",
+    "street address",
+    "precise date of birth",
+    "IP address",
+    "advertising identifier",
+    "cookie identifier",
+    "device fingerprint",
+    "preference order",
+    "per-record token or code"
+  ],
+  "approver": "Cameron (National Digital)",
+  "approvedAt": "2026-07-16",
+  "expiresAt": "2027-07-16",
+  "evidence": [
+    {
+      "id": "EV-DEIDENTIFICATION-ASSESSMENT",
+      "description": "External de-identification assessment tied to the deployed schema version: confirmation that derive-on-device + the national-only key rule + k=10 cell suppression + complementary/differencing controls render the collected data and published aggregates non-personal. Implementation and tests are complete; the control stays partial (fail-closed) until this assessment is signed.",
+      "status": "pending"
+    }
+  ]
+}

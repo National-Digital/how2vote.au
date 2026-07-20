@@ -1,0 +1,177 @@
+#!/usr/bin/env node
+/**
+ * @fileoverview Generate the vendor network allowlist from the third-party services registry
+ * — the vendor / third-party control framework.
+ *
+ * The registry (apps/web/src/lib/privacy/third-party-services.json) is the single source of truth for
+ * every external service the project loads or contacts. Several artefacts are DERIVED from it and must
+ * never be hand-maintained:
+ *   - the browser Content-Security-Policy host lists (connect-src / script-src / img-src / frame-src),
+ *     which the CSP in svelte.config.js already merges in via csp.js at build time;
+ *   - the network allowlist — every host any part of the project may contact (browser + build/server);
+ *   - the privacy policy's provider table (rendered from the registry in +page.svelte).
+ *
+ * This generator emits the machine-readable projection of those facts to
+ * apps/web/src/lib/privacy/vendor-allowlist.generated.json, which the vendor guard
+ * (scripts/check-vendor-registry.mjs) consumes to prove no prod code contacts an unregistered host.
+ * `--write` rewrites it; `--check` (default, run in CI) fails if the committed file has drifted from
+ * what the registry would produce — the same drift-gate pattern as generate-license-data.mjs.
+ *
+ * The pure renderers are exported for unit tests; the fs/CLI plumbing only runs when executed directly.
+ *
+ * Usage:
+ *   node scripts/generate-vendor-allowlist.mjs            # check (fail on drift)
+ *   node scripts/generate-vendor-allowlist.mjs --write    # regenerate from the registry
+ */
+
+import { readFileSync, writeFileSync } from "node:fs";
+import { fileURLToPath } from "node:url";
+
+/** CSP directives whose host lists are a pure function of the registry. */
+export const CSP_DIRECTIVES = ["connect-src", "script-src", "img-src", "frame-src"];
+
+/** Sort + de-duplicate a list of strings, case-insensitively but stable, for deterministic output. */
+function uniqSorted(values) {
+  return [...new Set(values)].sort((a, b) =>
+    String(a).localeCompare(String(b), "en", { sensitivity: "base" }),
+  );
+}
+
+/**
+ * Extract the host (authority) from a CSP source or URL, preserving a wildcard label.
+ * "https://*.google-analytics.com" -> "*.google-analytics.com"; "https://www.google.com/recaptcha/"
+ * -> "www.google.com". Returns null for keyword tokens ('self', 'none', data:, etc.).
+ * @param {unknown} source
+ * @returns {string | null}
+ */
+export function hostFromSource(source) {
+  if (typeof source !== "string") return null;
+  const m = /^https?:\/\/([^/]+)/i.exec(source.trim());
+  return m ? m[1] : null;
+}
+
+/** Per-directive host lists contributed by the browser services (deterministic). */
+export function deriveCsp(registry) {
+  const services = Array.isArray(registry?.services) ? registry.services : [];
+  /** @type {Record<string, string[]>} */
+  const out = {};
+  for (const directive of CSP_DIRECTIVES) {
+    const hosts = [];
+    for (const service of services) {
+      for (const source of service?.csp?.[directive] ?? []) {
+        const host = hostFromSource(source);
+        if (host) hosts.push(host);
+      }
+    }
+    out[directive] = uniqSorted(hosts);
+  }
+  return out;
+}
+
+/** Distinct hosts the browser may contact (union of all service CSP directives). */
+export function deriveBrowserHosts(registry) {
+  const csp = deriveCsp(registry);
+  return uniqSorted(Object.values(csp).flat());
+}
+
+/** Distinct hosts the build/server tooling contacts (infrastructure vendors' egressHosts). */
+export function deriveInfrastructureHosts(registry) {
+  const infra = Array.isArray(registry?.infrastructure) ? registry.infrastructure : [];
+  return uniqSorted(infra.flatMap((v) => (Array.isArray(v?.egressHosts) ? v.egressHosts : [])));
+}
+
+/** The full network allowlist: every host any part of the project may contact. */
+export function deriveNetworkAllowlist(registry) {
+  return uniqSorted([...deriveBrowserHosts(registry), ...deriveInfrastructureHosts(registry)]);
+}
+
+/** Provider table rows (browser + infrastructure) for the privacy policy, alphabetical by name. */
+export function deriveProviders(registry) {
+  const services = Array.isArray(registry?.services) ? registry.services : [];
+  const infra = Array.isArray(registry?.infrastructure) ? registry.infrastructure : [];
+  const rows = [
+    ...services.map((s) => ({
+      id: s.id,
+      name: s.name,
+      provider: s.provider,
+      surface: "browser",
+      dataLocation: s.dataLocation,
+      contractStatus: null,
+    })),
+    ...infra.map((s) => ({
+      id: s.id,
+      name: s.name,
+      provider: s.provider,
+      surface: "infrastructure",
+      dataLocation: s.dataLocation,
+      contractStatus: s?.contract?.status ?? null,
+    })),
+  ];
+  return rows.sort((a, b) => String(a.name).localeCompare(String(b.name), "en"));
+}
+
+/** Build the derived document (pure). */
+export function render(registry) {
+  return {
+    generated: "DO NOT EDIT — generated by scripts/generate-vendor-allowlist.mjs.",
+    source: "apps/web/src/lib/privacy/third-party-services.json",
+    registryVersion: registry?.version ?? null,
+    csp: deriveCsp(registry),
+    browserHosts: deriveBrowserHosts(registry),
+    infrastructureHosts: deriveInfrastructureHosts(registry),
+    networkAllowlist: deriveNetworkAllowlist(registry),
+    providers: deriveProviders(registry),
+  };
+}
+
+/** Serialize deterministically (matches the committed file byte-for-byte). */
+export function renderJson(registry) {
+  return `${JSON.stringify(render(registry), null, 2)}\n`;
+}
+
+/* c8 ignore start -- CLI/fs plumbing, exercised via CI not unit tests */
+const REGISTRY = new URL("../apps/web/src/lib/privacy/third-party-services.json", import.meta.url);
+const OUT = new URL("../apps/web/src/lib/privacy/vendor-allowlist.generated.json", import.meta.url);
+
+function main() {
+  const write = process.argv.includes("--write");
+  let registry;
+  try {
+    registry = JSON.parse(readFileSync(REGISTRY, "utf8"));
+  } catch (err) {
+    console.error(`::error::vendor-allowlist: cannot read registry: ${err.message}`);
+    process.exit(1);
+    return;
+  }
+  const next = renderJson(registry);
+  if (write) {
+    writeFileSync(OUT, next);
+    console.info(
+      "vendor-allowlist.generated.json regenerated from the third-party services registry",
+    );
+    return;
+  }
+  let existing;
+  try {
+    existing = readFileSync(OUT, "utf8");
+  } catch (err) {
+    console.error(
+      `::error::vendor-allowlist: cannot read generated file (${err.message}) — run \`pnpm vendor:generate\``,
+    );
+    process.exit(1);
+    return;
+  }
+  if (next !== existing) {
+    console.error(
+      "::error::vendor-allowlist: vendor-allowlist.generated.json is out of date with the registry — run `pnpm vendor:generate`",
+    );
+    process.exit(1);
+    return;
+  }
+  console.info("vendor-allowlist.generated.json is in sync with the third-party services registry");
+}
+
+if (process.argv[1] && fileURLToPath(import.meta.url) === process.argv[1]) {
+  main();
+}
+/* c8 ignore stop */

@@ -1,0 +1,122 @@
+{
+  "schemaVersion": 1,
+  "updated": "2026-07-17",
+  "noticeVersion": "2026.1",
+  "notes": "Machine-readable rights register. Single source of truth for the licence, copyright, attribution and redistribution terms of every upstream data source, and the mapping from each committed data domain to its rights class. LICENSE-DATA.md is generated from this file and drift-gated (scripts/generate-license-data.mjs --check). This register holds only non-confidential rights metadata — no contracts and no personal data. Per-source content hashes and reviewer sign-off live in the per-source provenance records, not here, so this register stays stable across data refreshes.",
+  "rightsClasses": [
+    {
+      "id": "tvfy-odbl",
+      "name": "They Vote For You parliamentary vote data",
+      "source": "They Vote For You",
+      "sourceOrg": "OpenAustralia Foundation",
+      "sourceUrl": "https://theyvoteforyou.org.au/api/v1",
+      "licence": {
+        "spdxId": "ODbL-1.0",
+        "name": "Open Database Licence v1.0",
+        "url": "https://opendatacommons.org/licenses/odbl/1-0/"
+      },
+      "copyright": "© OpenAustralia Foundation",
+      "attribution": "Vote data © They Vote For You (OpenAustralia Foundation), ODbL",
+      "redistribution": "permitted",
+      "modification": "permitted",
+      "shareAlike": true,
+      "attributionRequired": true,
+      "licenceStatus": "current",
+      "notes": "Derivative Database of They Vote For You, made available under the ODbL to the extent the OpenAustralia Foundation has rights in it. The only vote-data source is the They Vote For You API v1. No OpenAustralia.org API data (member, senator or electoral-division lists, CC BY-SA 2.5) is used anywhere in this project. No external web archive is used as a data source."
+    },
+    {
+      "id": "aec-boundary-spatial",
+      "name": "AEC federal electoral boundary geometry",
+      "source": "AEC federal electoral boundary GIS",
+      "sourceOrg": "Australian Electoral Commission",
+      "sourceUrl": "https://www.aec.gov.au/Electorates/gis/gis_datadownload.htm",
+      "licence": {
+        "spdxId": "LicenseRef-AEC-Spatial-Data-Download",
+        "name": "AEC Spatial Data Download Data Licence",
+        "url": "https://www.aec.gov.au/Electorates/gis/"
+      },
+      "copyright": "© Commonwealth of Australia (Australian Electoral Commission)",
+      "attribution": "Boundaries © Commonwealth of Australia (Australian Electoral Commission)",
+      "redistribution": "restricted",
+      "modification": "restricted",
+      "shareAlike": false,
+      "attributionRequired": true,
+      "licenceStatus": "current",
+      "evidenceId": "EV-AEC-SPATIAL-LICENCE",
+      "noticeRef": "data/aec-spatial/source-record.json",
+      "notes": "The AEC publishes its federal boundary GIS under the AEC Spatial Data Download Data Licence (not CC BY 4.0 — the earlier CC-BY assertion was incorrect and is withdrawn). This app is a Derivative Product (the boundaries were reprojected to Australian Albers, simplified, and remote external territories omitted), so the full prescribed AEC derivative-product notice must be displayed wherever the geometry is shown — see data/aec-spatial/source-record.json for that notice. The source archive is pinned by SHA-256 and its licence captured; a named reviewer has attested the provenance (2026-07-15), so the licence determination is settled. Copyright year is taken verbatim from the accepted licence wording (2026), not the boundary year (see the source record's copyrightYearNote). Redistribution of the raw AEC data is restricted; only the derivative geometry is published. Outstanding control work (not licence status): render the notice adjacent to every rendered map and confirm a byte-identical reproducible rebuild."
+    },
+    {
+      "id": "aec-candidate-data",
+      "name": "AEC candidate, ballot and electorate data",
+      "source": "AEC candidate, ballot and electorate publications",
+      "sourceOrg": "Australian Electoral Commission",
+      "sourceUrl": "https://www.aec.gov.au/",
+      "licence": {
+        "spdxId": "CC-BY-4.0",
+        "name": "Creative Commons Attribution 4.0 International",
+        "url": "https://creativecommons.org/licenses/by/4.0/"
+      },
+      "copyright": "© Commonwealth of Australia (Australian Electoral Commission)",
+      "attribution": "Candidate and electorate data © Commonwealth of Australia (Australian Electoral Commission)",
+      "redistribution": "permitted",
+      "modification": "permitted",
+      "shareAlike": false,
+      "attributionRequired": true,
+      "licenceStatus": "current",
+      "evidenceId": "EV-AEC-SOURCE-RECORDS",
+      "notes": "Creative Commons Attribution 4.0 International (CC BY 4.0) pursuant to the AEC website-wide copyright notice (https://www.aec.gov.au/footer/copyright.htm). Applies to AEC-produced candidate, party, polling-place and election-results CSV data unless a particular file states otherwise. EXCLUDES AEC maps / electoral-boundary GIS + shapefiles (expressly not CC BY 4.0 — subject to the separate AEC Spatial Data Download Data Licence, see the aec-boundary-spatial class), AEC logos, the Commonwealth Coat of Arms, and third-party content. The 2025 candidate/ballot/electorate CSVs are retrieved from the canonical aec.gov.au downloads (https://www.aec.gov.au/election/fe25/downloads-statistics.htm), retained in-repo, SHA-256 pinned and verified to reproduce ballots.json exactly (see data/source/2025/aec-sources.json)."
+    },
+    {
+      "id": "how2vote-aggregates",
+      "name": "how2vote.au research aggregates",
+      "source": "how2vote.au aggregate research counters",
+      "sourceOrg": "National Digital",
+      "sourceUrl": "https://how2vote.au",
+      "licence": {
+        "spdxId": "NONE",
+        "name": "No data licence (project-owned aggregates)",
+        "url": null
+      },
+      "copyright": "© National Digital",
+      "attribution": "Aggregate research data © National Digital",
+      "redistribution": "restricted",
+      "modification": "restricted",
+      "shareAlike": false,
+      "attributionRequired": false,
+      "licenceStatus": "current",
+      "notes": "Counters-only aggregate research data authored by the project (no upstream licence). It carries no open-data licence and is deliberately excluded from the ODbL vote dataset (see apps/web/src/lib/structured-data.ts)."
+    }
+  ],
+  "domains": [
+    {
+      "id": "vote-positions",
+      "description": "Per-party parliamentary voting positions and derived question data",
+      "rightsClass": "tvfy-odbl",
+      "sources": ["data/source/*/questions.json", "data/source/*/parties.json", "data/snapshots/tvfy/**"],
+      "outputs": ["data/dist/*/dataset.json (questions, parties)"]
+    },
+    {
+      "id": "candidate-ballots",
+      "description": "Candidate ballot order, nominations and electorate lists",
+      "rightsClass": "aec-candidate-data",
+      "sources": ["data/source/*/ballots.json"],
+      "outputs": ["data/dist/*/dataset.json (ballots)"]
+    },
+    {
+      "id": "boundary-geometry",
+      "description": "Simplified electoral boundary map geometry",
+      "rightsClass": "aec-boundary-spatial",
+      "sources": ["data/raw/boundaries/** (gitignored raw AEC GIS)"],
+      "outputs": ["apps/web/static/maps/*/*.json"]
+    },
+    {
+      "id": "research-aggregates",
+      "description": "Aggregate research counters published on the Insights dashboards",
+      "rightsClass": "how2vote-aggregates",
+      "sources": ["Cloudflare D1 aggregate counters"],
+      "outputs": ["public statistics releases"]
+    }
+  ],
+  "odblDomains": ["vote-positions"]
+}

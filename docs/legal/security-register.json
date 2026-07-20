@@ -1,0 +1,178 @@
+{
+  "schemaVersion": 1,
+  "updated": "2026-07-20",
+  "issue": "control-28",
+  "notes": "Machine-readable security controls + evidence register. Each control names the code control that enforces it (enforcedBy → a scripts/check-*.mjs guard or an e2e suite) and/or the external evidence that substantiates it (evidence → an EV id in the restricted corporate security file; PENDING where not yet filed). The public security wording in SECURITY.md is GENERATED from the publicStatement fields here (scripts/generate-security-md.mjs, drift-gated) so it can never overstate what is actually enforced. Validated by scripts/check-security-register.mjs (blocking, fail-closed): any evidence marked current needs a reviewer + approval date + a future expiry; expired evidence fails. Holds non-sensitive IDs/dates only — never secrets, credentials or personal data.",
+  "vulnerabilityPolicy": {
+    "blockSeverities": ["high", "critical"],
+    "requiresSignedRiskAcceptance": true,
+    "note": "A dependency vulnerability at high or critical severity blocks deployment (scripts/check-vuln-gate.mjs, run in deploy.yml before promotion). The only way past is a signed, time-limited risk acceptance for that exact advisory recorded in riskAcceptances[] below: it must name an approver, an acceptance date and a future expiry. An expired or missing acceptance fails closed — the deploy is blocked, never silently allowed."
+  },
+  "riskAcceptances": [],
+  "forbiddenLogFields": [
+    "ip",
+    "ipAddress",
+    "cfConnectingIp",
+    "cf-connecting-ip",
+    "x-forwarded-for",
+    "cookie",
+    "userAgent",
+    "user-agent",
+    "email",
+    "address",
+    "latitude",
+    "longitude",
+    "electorate",
+    "postcode",
+    "deviceId",
+    "fingerprint",
+    "payload",
+    "contribution",
+    "rawAnswers"
+  ],
+  "forbiddenLogScope": ["apps/web/functions", "apps/web/src"],
+  "requiredResponseHeaders": [
+    "Strict-Transport-Security",
+    "X-Content-Type-Options: nosniff",
+    "X-Frame-Options: DENY",
+    "Referrer-Policy",
+    "Cross-Origin-Opener-Policy",
+    "Permissions-Policy",
+    "frame-ancestors 'none'"
+  ],
+  "controls": [
+    {
+      "id": "SEC-LEAST-PRIVILEGE",
+      "title": "Least-privilege access to production infrastructure and CI",
+      "category": "access-control",
+      "status": "implemented",
+      "publicStatement": "Access to production infrastructure and the deployment pipeline follows the principle of least privilege. GitHub Actions workflows request the minimum token scopes they need (they default to read-only and widen only where a job must write), and human access to the hosting and data platforms is limited to the roles required and reviewed periodically.",
+      "enforcedBy": ["scripts/check-security-config.mjs"],
+      "evidence": {
+        "id": "EV-ACCESS-REVIEW",
+        "description": "Periodic least-privilege access review of the GitHub organisation and Cloudflare account (roles, membership, token scopes), with a reviewer and date.",
+        "status": "current",
+        "reviewer": "cameron-young",
+        "secondReviewer": "tara-buckley",
+        "approvedAt": "2026-07-18",
+        "expiresAt": "2029-07-18"
+      }
+    },
+    {
+      "id": "SEC-MFA",
+      "title": "Multi-factor authentication on all privileged accounts",
+      "category": "authentication",
+      "status": "external-evidence",
+      "publicStatement": "Multi-factor authentication is required for the accounts that can change the source, the infrastructure or the published data.",
+      "enforcedBy": [],
+      "evidence": {
+        "id": "EV-MFA-ENFORCEMENT",
+        "description": "Attestation that MFA is enforced organisation-wide on GitHub and on the Cloudflare account, with a reviewer and date.",
+        "status": "current",
+        "reviewer": "cameron-young",
+        "secondReviewer": "tara-buckley",
+        "approvedAt": "2026-07-18",
+        "expiresAt": "2029-07-18"
+      }
+    },
+    {
+      "id": "SEC-SECRET-MANAGER",
+      "title": "Secrets held in a managed secret store, never in source",
+      "category": "secrets",
+      "status": "implemented",
+      "publicStatement": "Deployment credentials and other secrets are held in the platform secret stores (GitHub Actions secrets and Cloudflare), referenced by name at build and deploy time. No secret is committed to the repository, and the code is scanned for accidentally-committed secrets across its full history.",
+      "enforcedBy": ["scripts/check-security-config.mjs"],
+      "evidence": {
+        "id": "EV-SECRET-MANAGER",
+        "description": "Attestation of where each production secret is stored (secret store + rotation owner), with a reviewer and date.",
+        "status": "current",
+        "reviewer": "cameron-young",
+        "secondReviewer": "tara-buckley",
+        "approvedAt": "2026-07-18",
+        "expiresAt": "2029-07-18"
+      }
+    },
+    {
+      "id": "SEC-SECRET-SCAN",
+      "title": "Full-history secret scanning on every branch",
+      "category": "secrets",
+      "status": "implemented",
+      "publicStatement": "Every push and pull request is scanned for secrets across the repository's entire git history and all branches, so a credential committed anywhere fails the build rather than reaching production.",
+      "enforcedBy": ["scripts/check-security-config.mjs"],
+      "evidence": {
+        "id": "EV-SECRET-SCAN",
+        "description": "Not required — the control is fully enforced in code (the gitleaks CI job scans all refs and the config guard asserts it stays that way).",
+        "status": "not-required"
+      }
+    },
+    {
+      "id": "SEC-DEP-SCANNING",
+      "title": "Static code scanning and dependency review",
+      "category": "supply-chain",
+      "status": "partial",
+      "publicStatement": "The codebase is configured for automated static security analysis (CodeQL) and pull-request dependency review that blocks a new dependency carrying a known high or critical vulnerability. These GitHub features require a public repository, so their workflows are visibility-gated and self-activate the moment the repository is made public.",
+      "enforcedBy": ["scripts/check-security-config.mjs"],
+      "evidence": {
+        "id": "EV-CODE-SCANNING",
+        "description": "Not required while private — the workflows are committed and gate on repository visibility; they run automatically on the public flip. Confirmation that they run green post-flip is captured at release.",
+        "status": "not-required"
+      }
+    },
+    {
+      "id": "SEC-VULN-GATE",
+      "title": "Deployment blocked on high/critical dependency vulnerabilities",
+      "category": "vulnerability-management",
+      "status": "implemented",
+      "publicStatement": "A dependency vulnerability at high or critical severity blocks deployment. The block can only be waived by a signed, time-limited risk acceptance recorded in the security register; an expired or missing acceptance fails closed.",
+      "enforcedBy": ["scripts/check-vuln-gate.mjs"],
+      "evidence": {
+        "id": "EV-VULN-GATE",
+        "description": "Not required — the gate is fully enforced in code (pnpm audit cross-checked against the signed risk-acceptance register at deploy).",
+        "status": "not-required"
+      }
+    },
+    {
+      "id": "SEC-TRANSPORT-HEADERS",
+      "title": "Transport security and hardened response headers",
+      "category": "network",
+      "status": "implemented",
+      "publicStatement": "The site is served over HTTPS only, with HTTP Strict Transport Security, a strict Content-Security-Policy, anti-clickjacking (frame-ancestors 'none'), MIME-sniffing protection, a strict referrer policy and a locked-down permissions policy applied to every response.",
+      "enforcedBy": ["scripts/check-security-config.mjs", "apps/web/e2e/security-headers.spec.ts"],
+      "evidence": {
+        "id": "EV-TRANSPORT-HEADERS",
+        "description": "Not required — enforced in code (the committed security headers, the build-time CSP, the config guard and the header/CSP end-to-end test).",
+        "status": "not-required"
+      }
+    },
+    {
+      "id": "SEC-LOG-HYGIENE",
+      "title": "No identifiers or personal data in logs",
+      "category": "logging",
+      "status": "implemented",
+      "publicStatement": "The research endpoint records no telemetry and logs nothing about a request. Application logging is scanned so that identifiers and personal data (such as IP addresses, user agents, precise location, electorate or the raw contribution) can never be written to a log.",
+      "enforcedBy": ["scripts/check-forbidden-log-fields.mjs"],
+      "evidence": {
+        "id": "EV-LOG-HYGIENE",
+        "description": "Not required — enforced in code (the forbidden-log-field scan over the runtime source).",
+        "status": "not-required"
+      }
+    },
+    {
+      "id": "SEC-INCIDENT-RESPONSE",
+      "title": "Vulnerability disclosure and incident response",
+      "category": "governance",
+      "status": "implemented",
+      "publicStatement": "There is a private vulnerability disclosure channel (GitHub security advisories, mirrored at /.well-known/security.txt) and a documented process for triaging and responding to reports and incidents.",
+      "enforcedBy": [],
+      "evidence": {
+        "id": "EV-IR-PLAYBOOK",
+        "description": "Incident-response / vulnerability-triage playbook reference and its last rehearsal or review date, with a reviewer.",
+        "status": "current",
+        "reviewer": "cameron-young",
+        "secondReviewer": "tara-buckley",
+        "approvedAt": "2026-07-18",
+        "expiresAt": "2029-07-18"
+      }
+    }
+  ]
+}

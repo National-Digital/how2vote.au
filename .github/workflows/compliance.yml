@@ -1,0 +1,577 @@
+name: Compliance
+
+# Blocking legal-compliance gates. The control
+# register (docs/legal/control-register.json) is the fail-closed backbone: it maps
+# every legal requirement to CI test IDs and evidence IDs. The six CI groups below
+# start thin — each currently asserts the register is structurally sound for its
+# scope — and accrete their real jobs as later PRs land. Every group should be a
+# required status check in branch protection.
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  schedule:
+    # Weekly, so legal-review freshness / commencement-date gates catch a stale
+    # production branch even when no data change lands.
+    - cron: "0 0 * * 1"
+
+concurrency:
+  # Include the event name so a push to main never cancels the weekly scheduled run (the freshness /
+  # commencement-date gates must still fire on their own cadence).
+  group: compliance-${{ github.event_name }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  control-register:
+    name: Control register (fail-closed)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7
+      - run: corepack enable
+      - uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e # v6
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - name: Validate control register
+        run: pnpm compliance:check
+      - name: Control-register guard tests
+        run: npx vitest run --config vitest.scripts.config.js scripts/check-control-register.test.mjs
+
+  accessibility:
+    # the "Accessibility and Product" group graduates to a BLOCKING job. The axe
+    # serious/critical gate + the broadened a11y coverage (keyboard/focus order/focus-visible, ARIA,
+    # colour-contrast, forced-colours, 400% zoom reflow, the long Senate below-the-line ballot, the
+    # consent forms, the accessible anti-abuse path and the printed s321D authorisation stamp in
+    # reading order) run as a required check here, and Lighthouse's accessibility category is gated
+    # (performance stays informational). Human assistive-technology testing is recorded as
+    # EV-AT-HUMAN-TESTING in the control register.
+    name: CI group (Accessibility and Product)
+    needs: control-register
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7
+      - run: corepack enable
+      - uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e # v6
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - name: Validate CI group "Accessibility and Product"
+        run: node scripts/check-control-register.mjs --group "Accessibility and Product"
+      - name: Build workspace (topological)
+        # Warm the build so Playwright's `pnpm build && pnpm preview` webServer starts within its
+        # timeout (mirrors the electoral-output / age-gate / local-privacy jobs).
+        run: pnpm build
+      - name: Install Playwright browser
+        run: pnpm --filter @how2vote/web exec playwright install --with-deps chromium
+      - name: Accessibility suite — axe serious/critical gate + broadened coverage
+        run: pnpm --filter @how2vote/web exec playwright test a11y
+      - name: Lighthouse — accessibility category BLOCKING, performance informational
+        # No continue-on-error: lighthouserc.json asserts categories:accessibility at "error" (blocking)
+        # and performance/best-practices/seo at "warn" (informational), so only an accessibility
+        # regression fails this step. Run from apps/web (lighthouserc.json's staticDistDir "build" is
+        # relative to it). Fetched via `pnpm dlx` at a PINNED version rather than a devDependency: adding
+        # @lhci/cli to the workspace pulls a large transitive tree (incl. a vulnerable `tmp`) into the
+        # audited lockfile, which the fail-closed vuln gate rightly blocks. A version-pinned dlx for a
+        # CI-only tool is the better trade — it never reaches the shipped app or the audited lockfile.
+        working-directory: apps/web
+        run: pnpm dlx @lhci/cli@0.14.0 autorun
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
+        if: failure()
+        with:
+          name: playwright-report-accessibility
+          path: apps/web/playwright-report
+          retention-days: 7
+
+  data:
+    name: CI group (Data)
+    needs: control-register
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7
+      - uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e # v6
+        with:
+          node-version-file: .nvmrc
+      - name: Validate CI group "Data"
+        run: node scripts/check-control-register.mjs --group "Data"
+      - name: No web-archive usage
+        run: node scripts/check-no-archive.mjs
+      - name: Two-person ballot verification records
+        run: node scripts/check-ballot-verification.mjs
+      - name: Compliance signatory registry (reviewer attestation resolves)
+        run: node scripts/check-signatories.mjs
+      - name: Public signatory projection in sync (drift-gated)
+        run: node scripts/generate-signatories-public.mjs
+      - name: Rights-domain separation register
+        run: node scripts/check-rights-domain.mjs
+      - name: Per-proposition content-rights matrix (locked snapshots)
+        run: node scripts/check-proposition-rights.mjs
+      - name: LICENSE-DATA.md matches the rights register
+        run: node scripts/generate-license-data.mjs
+      - name: AEC candidate/ballot/electorate provenance
+        run: node scripts/check-aec-provenance.mjs
+      - name: AEC spatial licence + derivative-product notice
+        run: node scripts/check-aec-spatial.mjs
+      - name: AEC derivative-product notice shown next to every map
+        run: node scripts/check-map-notice.mjs
+      # Candidate data is minimised — no home address / DOB / personal contact may ever appear in a
+      # ballot record.
+      - name: Candidate data minimisation
+        run: node scripts/check-candidate-minimisation.mjs
+      # Candidate↔party mapping approval bound to parties.json; an approval claim needs a named owner,
+      # any mapping change forces re-review.
+      - name: Candidate/party mapping approval
+        run: node scripts/check-candidate-mapping.mjs
+
+  privacy-research:
+    name: CI group (Privacy and Research)
+    needs: control-register
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7
+      - uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e # v6
+        with:
+          node-version-file: .nvmrc
+      - name: Validate CI group "Privacy and Research"
+        run: node scripts/check-control-register.mjs --group "Privacy and Research"
+      # Research store is aggregate-only: source scan + committed-migration schema replay +
+      # public aggregate-provenance record. The production-schema allowlist half
+      # runs at deploy (deploy.yml) with live D1 credentials.
+      - name: Aggregate-only research store
+        run: node scripts/check-aggregate-only.mjs
+      # Research ethics + statistical practice: standards register (ABS quality/confidentiality,
+      # National Statement 2025, AIATSIS where Indigenous status is collected) mapped to controls +
+      # evidence; prefer-not-to-say on every sensitive item; research never a condition of core use;
+      # sample-size/non-representativeness warnings on Insights; consent/terms copy bound. The ethics
+      # + Indigenous-governance determinations are recorded in the control register (fail-closed).
+      - name: Research ethics + statistical practice
+        run: node scripts/check-research-ethics.mjs
+      # Age-first gate: the research ingestion path never imports the gate, the gate stores an
+      # eligibility bit only (no age/date-of-birth, no transmission), and the root layout keeps the
+      # fail-closed guard wired. The behavioural proof is the age-gate Playwright job.
+      - name: Age-first gate isolation + wiring
+        run: node scripts/check-age-gate.mjs
+      # Signed election registry matches the datasets (party/proposition allowlists); drift-gated
+      # like generate-license-data / generate-vendor-allowlist.
+      - name: Research election registry matches datasets
+        run: node scripts/generate-research-registry.mjs
+      # Research-ingestion integrity + server-enforced consent: signed-registry integrity digest,
+      # integrity-alert record, fail-closed stat-regen wiring, and single-source consent version.
+      # The token/nonce/challenge behaviour is covered by the app unit suites.
+      - name: Research-ingestion integrity + server-enforced consent
+        run: node scripts/check-research-integrity.mjs
+      # Public k-threshold + disclosure control: the published stats are k-suppressed at the DB view
+      # layer (migration 0006, HAVING SUM(n) >= MIN_CELL — never post-hoc JS filtering); the generator
+      # reads only those allowlisted views; no Pages Function serves the counters; every committed
+      # release file carries an immutable release block bound into the release manifest
+      # (publicStatsHash); a new v_public_ cross-tab needs review. Complementary/differencing
+      # suppression is proven by the stats.ts unit suite.
+      - name: Public k-threshold + disclosure control
+        run: node scripts/check-public-stat-release.mjs
+      # Local-device clear-all completeness: the "clear all my how2vote data" sweep covers EVERY
+      # localStorage/sessionStorage key (the "how2vote:" namespace) and EVERY service-worker cache (the
+      # "how2vote-" namespace), so no store can escape the wipe; fail-closed on an unresolvable key.
+      # The share-copy warning + clean-session + decoder-fuzz behaviour is the e2e job below.
+      - name: Local-device clear-all completeness
+        run: node scripts/check-clear-all.mjs
+      # Privacy policy generated from tested controls: the claims register + de-identification register
+      # are well-formed and bound (schema version, k-threshold == MIN_CELL, sensitive dimensions), every
+      # claim's test/evidence reference resolves, the privacy page renders the generated projection, and
+      # the projection is drift-gated — a claim shows its substantiated wording only while backed and
+      # current, else fails closed to the fallback.
+      - name: Privacy claims + de-identification registers
+        run: |
+          node scripts/check-privacy-claims.mjs
+          node scripts/generate-privacy-claims.mjs
+      # Research ingestion transport policy static scan: no IP/UA/forwarding-header read, no request
+      # body/URL logging on the ingestion Functions, the client routed through transportInit (no-store +
+      # field allowlist), and the code transport policy consistent with the committed edge policy
+      # (infra/providers/cloudflare/transport-policy.json).
+      - name: Research transport policy static scan
+        run: node scripts/check-research-transport.mjs
+
+  legal:
+    name: CI group (Legal)
+    needs: control-register
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7
+        with:
+          # Full history so the legal-review data-change gate can diff against the PR base.
+          fetch-depth: 0
+      - uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e # v6
+        with:
+          node-version-file: .nvmrc
+      - name: Validate CI group "Legal"
+        run: node scripts/check-control-register.mjs --group "Legal"
+      - name: One authoritative operator record
+        run: node scripts/check-operator-identity.mjs
+      - name: Legal-review freshness / commencement / data-change gates
+        env:
+          LEGAL_REVIEW_BASE: ${{ github.event.pull_request.base.sha }}
+        run: node scripts/check-legal-review.mjs
+      - name: Trademark + brand guidelines
+        run: node scripts/check-brand-trademark.mjs
+      - name: Electoral expenditure register
+        run: node scripts/check-expenditure-register.mjs
+      # Machine-readable product boundary (deep legal review 2026-07-19): the externally-determined
+      # legal state (printMode, researchEnabled, candidateScorePlacement, determinations) is well-formed,
+      # current, and AGREES with the signed runtime control plane (a declared boundary that is not
+      # actually enforced fails closed). This job installs no dev deps, so only the plain-node guard runs
+      # here; its fail-closed unit test (scripts/check-product-boundary.test.mjs) runs in the main
+      # `pnpm test` job alongside the other scripts/*.test.mjs suites.
+      - name: Product boundary signed + consistent with control plane
+        run: node scripts/check-product-boundary.mjs
+      # Neutrality claims register + methodology binding: banned absolute/recommendation/preselection
+      # copy, register↔methodology-page wording, and the proposition-selection hash/version binding.
+      # The monochrome-palette arm runs in the web build (neutrality:check).
+      - name: Neutrality claims + methodology binding
+        run: node scripts/check-neutrality-claims.mjs
+      # Public copy carries no categorical / quasi-legal wording unless a current, evidence-backed
+      # permit in docs/legal/absolute-claims.json allows it. Unit test runs in the main `pnpm test`.
+      - name: Absolute-claims register + banned-wording gate
+        run: node scripts/check-absolute-claims.mjs
+      # Versioned Terms incorporation + internal consistency: version bound leaf↔registry↔page, an
+      # immutable content-addressed hash per version (a version's text cannot silently change), the
+      # corrected clauses bound verbatim, a negation-aware contradiction/obsolete-copy lint, and the
+      # acceptance store + gated surfaces (card + survey) wired to fail closed. The pure
+      # verdict/helper unit test runs in the main test job (scripts/check-terms.test.mjs).
+      - name: Terms incorporation + consistency
+        run: node scripts/check-terms.mjs
+
+  electoral-output:
+    # This control spans two groups (Legal · Accessibility and Product). The mandatory user-authored
+    # s321D print authorisation and the shared-readonly / owner-capability invariants are proven by
+    # the blocking legal-electoral-output Playwright suite (print-to-PDF + DOM/network interception),
+    # backed by the print-auth stamp-format unit test. ADR 0010.
+    name: CI group (Legal · Accessibility and Product) — electoral output
+    needs: control-register
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7
+      - run: corepack enable
+      - uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e # v6
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - name: Validate the owning CI groups
+        run: |
+          node scripts/check-control-register.mjs --group "Legal"
+          node scripts/check-control-register.mjs --group "Accessibility and Product"
+      - name: Build workspace (topological)
+        run: pnpm build
+      - name: s321D stamp-format unit test
+        run: pnpm --filter @how2vote/web exec vitest run src/lib/print-auth.test.ts
+      - name: Install Playwright browser
+        run: pnpm --filter @how2vote/web exec playwright install --with-deps chromium
+      - name: Electoral-output suite — print authorisation + shared-readonly
+        run: pnpm --filter @how2vote/web exec playwright test legal-electoral-output
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
+        if: failure()
+        with:
+          name: playwright-report-electoral-output
+          path: apps/web/playwright-report
+          retention-days: 7
+
+  code-supply-chain:
+    name: CI group (Code and Supply Chain)
+    needs: control-register
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7
+      - uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e # v6
+        with:
+          node-version-file: .nvmrc
+      - name: Validate CI group "Code and Supply Chain"
+        run: node scripts/check-control-register.mjs --group "Code and Supply Chain"
+      # AGPL corresponding-source: action-pinning + SBOM validity + deployed-source link.
+      - name: Supply-chain integrity
+        run: node scripts/check-supply-chain.mjs
+      # Security controls + evidence register: structure + fail-closed evidence.
+      - name: Security evidence register
+        run: node scripts/check-security-register.mjs
+      # Public security wording in SECURITY.md is generated from the register — fail on drift.
+      - name: SECURITY.md matches the security register
+        run: node scripts/generate-security-md.mjs
+      # No identifier / personal-data field may reach a log in the runtime source.
+      - name: Forbidden-log-field scan
+        run: node scripts/check-forbidden-log-fields.mjs
+      # Vendor network allowlist / CSP / provider table are generated from the registry; fail on drift.
+      - name: Vendor allowlist drift gate
+        run: node scripts/generate-vendor-allowlist.mjs
+
+  infra:
+    name: CI group (Infrastructure and Operations)
+    needs: control-register
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7
+      - run: corepack enable
+      - uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e # v6
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+      # Vitest (for the guard unit tests below) needs the workspace deps; the other steps here are
+      # dependency-free Node but a single install keeps the job self-contained.
+      - run: pnpm install --frozen-lockfile
+      - name: Validate CI group "Infrastructure and Operations"
+        run: node scripts/check-control-register.mjs --group "Infrastructure and Operations"
+      # IaC/config policy: hardened response headers, visibility-gated code scanning + dependency
+      # review, full-history secret scan, and least-privilege workflow permissions.
+      - name: Security config policy
+        run: node scripts/check-security-config.mjs
+      # Deploy-blocking vuln gate: high/critical audit findings need a signed, unexpired risk
+      # acceptance in the security register. Run here too so a new advisory is caught pre-deploy.
+      - name: Dependency vulnerability gate
+        run: |
+          corepack enable
+          node scripts/check-vuln-gate.mjs
+      # Vendor / third-party control framework: vendor-control completeness, review-date freshness
+      # (overdue/expired fails), accessible anti-abuse, cost-completeness, and no prod code reaching an
+      # unregistered host.
+      - name: Vendor / third-party control framework
+        run: node scripts/check-vendor-registry.mjs
+      # Prove the release manifest generator works and its recorded hashes match the on-disk
+      # artefacts (draft mode; the production/no-pending gate runs at deploy).
+      - name: Build + verify release manifest (draft)
+        run: |
+          node scripts/build-release-manifest.mjs --out release-manifest.json
+          node scripts/check-release-manifest.mjs release-manifest.json --mode draft
+      # Production Cloudflare config is public-repo-safe: the committed wrangler.toml carries only
+      # placeholders + secret references, never a live id or a secret value. The deploy-mode
+      # fail-closed half (required ids present, preview isolated) runs at promotion in deploy.yml.
+      - name: Infra config guard — committed config is placeholder-only
+        run: node scripts/check-infra-config.mjs
+      # Every D1 migration is pinned by SHA-256 in the migration registry; fail on drift.
+      - name: Migration checksum registry drift gate
+        run: node scripts/check-migration-registry.mjs
+      # Guard unit tests for the new infra/deploy assurance (placeholder-ID, checksum-drift, live smoke).
+      - name: Infra/deploy guard unit tests
+        run: |
+          npx vitest run --config vitest.scripts.config.js \
+            scripts/check-infra-config.test.mjs \
+            scripts/check-migration-registry.test.mjs \
+            scripts/smoke-live.test.mjs \
+            scripts/check-release-manifest.test.mjs
+      # Post-deploy live smoke SKIPS cleanly with no live target (SMOKE_URL unset), so CI stays green;
+      # it FAILS on real drift when a target is present (runs for real in deploy.yml after promotion).
+      - name: Post-deploy live smoke (skips with no live target)
+        run: node scripts/smoke-live.mjs
+      # Signed runtime kill-switch control plane: the committed control plane's
+      # integrity digest matches its body (drift-gated) and every suspension names a REAL target, so a
+      # mistyped selector can never silently fail to suspend. Fail-closed and blocking.
+      - name: Control plane signed + selectors valid
+        run: |
+          node scripts/generate-control-plane.mjs
+          node scripts/check-control-plane.mjs
+      # Blocking incident rehearsals + guard/publication unit tests for the control plane:
+      # each scope refuses its capability AND restore reverts, and a tampered/unsigned plane fails
+      # closed. `svelte-kit sync` first so the apps/web rehearsal suite resolves./.svelte-kit/tsconfig.
+      - name: Control-plane rehearsals + guards
+        run: |
+          pnpm --filter @how2vote/web exec svelte-kit sync
+          npx vitest run --config vitest.scripts.config.js scripts/check-control-plane.test.mjs
+          pnpm --filter @how2vote/web exec vitest run \
+            src/lib/governance/control-plane.test.ts \
+            src/lib/governance/sha256.test.ts
+          pnpm --filter @how2vote/data-pipeline exec vitest run src/control-plane.test.ts
+
+  age-gate:
+    # This control spans two groups (Privacy and Research · Accessibility and Product). The age-first
+    # eligibility gate — it precedes any quiz state, the under-18 path clears state and blocks the
+    # save/share/print routes, and the eligibility answer never hits the network — is proven at the
+    # real surface by the blocking age-gate Playwright suite, backed by the static isolation guard in
+    # the Privacy-and-Research group above. ADR 0011.
+    name: CI group (Privacy and Research · Accessibility and Product) — age-first gate
+    needs: control-register
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7
+      - run: corepack enable
+      - uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e # v6
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - name: Validate the owning CI groups
+        run: |
+          node scripts/check-control-register.mjs --group "Privacy and Research"
+          node scripts/check-control-register.mjs --group "Accessibility and Product"
+      - name: Age-gate isolation guard unit test
+        run: npx vitest run --config vitest.scripts.config.js scripts/check-age-gate.test.mjs
+      - name: Build workspace (topological)
+        # Warm the build so Playwright's `pnpm build && pnpm preview` webServer starts within its
+        # 120s timeout (mirrors the electoral-output job + the main E2E job; without it the cold
+        # monorepo build can exceed the webServer timeout and the suite fails to start).
+        run: pnpm build
+      - name: Install Playwright browser
+        run: pnpm --filter @how2vote/web exec playwright install --with-deps chromium
+      - name: Age-gate suite — gate precedes state + under-18 block + no network
+        run: pnpm --filter @how2vote/web exec playwright test age-gate
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
+        if: failure()
+        with:
+          name: playwright-report-age-gate
+          path: apps/web/playwright-report
+          retention-days: 7
+
+  candidate-distinction:
+    # This control spans two groups (Legal · Accessibility and Product). Every alignment figure is the
+    # candidate's PARTY's recorded voting — never the individual's personal view — single-sourced from
+    # apps/web/src/lib/candidate-alignment.ts; independents never get an inferred number; a disputed
+    # alignment is suspended fail-closed via a data-driven correction list the runtime reads.
+    name: CI group (Legal · Accessibility and Product) — candidate/party distinction
+    needs: control-register
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7
+      - run: corepack enable
+      - uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e # v6
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - name: Validate the owning CI groups
+        run: |
+          node scripts/check-control-register.mjs --group "Legal"
+          node scripts/check-control-register.mjs --group "Accessibility and Product"
+      # Static wiring: the distinction is single-sourced and can't be bypassed.
+      - name: Candidate/party distinction wiring
+        run: node scripts/check-candidate-distinction.mjs
+      # Correction / right-of-reply runtime suspension list is well-formed + referentially sound.
+      - name: Candidate correction suspension list
+        run: node scripts/check-candidate-corrections.mjs
+      # Behaviour: an independent / suspended party is never shown a figure, and the engine forces a
+      # suspended party's rows to no-alignment.
+      - name: Candidate/party distinction behaviour — guards
+        run: |
+          npx vitest run --config vitest.scripts.config.js \
+            scripts/check-candidate-minimisation.test.mjs \
+            scripts/check-candidate-mapping.test.mjs \
+            scripts/check-candidate-corrections.test.mjs \
+            scripts/check-candidate-distinction.test.mjs
+      # apps/web/tsconfig.json extends./.svelte-kit/tsconfig.json, generated by svelte-kit sync; without
+      # it oxc fails the web unit transform with "Tsconfig not found" (this job doesn't run a full build).
+      - name: Generate SvelteKit types (svelte-kit sync)
+        run: pnpm --filter @how2vote/web exec svelte-kit sync
+      - name: Candidate/party distinction behaviour — web unit
+        run: pnpm --filter @how2vote/web exec vitest run src/lib/candidate-alignment.test.ts
+      - name: Candidate/party distinction behaviour — engine ballot
+        run: pnpm --filter @how2vote/engine exec vitest run src/ballot.test.ts
+
+  local-privacy:
+    # This control spans two groups (Privacy and Research · Accessibility and Product). The local-device
+    # privacy behaviour — clear-all wipes every localStorage key AND the service-worker caches, the
+    # non-revocable-link warning is shown before any share-link copy, and "make my own comparison"
+    # starts a clean session with no residual state — is proven at the real surface by the blocking
+    # local-privacy Playwright suite, backed by the clear-all completeness guard (Privacy-and-Research
+    # group above) and the share-decoder fuzz suite. ADR 0006.
+    name: CI group (Privacy and Research · Accessibility and Product) — local-device privacy
+    needs: control-register
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7
+      - run: corepack enable
+      - uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e # v6
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - name: Validate the owning CI groups
+        run: |
+          node scripts/check-control-register.mjs --group "Privacy and Research"
+          node scripts/check-control-register.mjs --group "Accessibility and Product"
+      - name: Clear-all completeness guard unit test
+        run: npx vitest run --config vitest.scripts.config.js scripts/check-clear-all.test.mjs
+      - name: Share-decoder fuzz + robustness
+        run: pnpm --filter @how2vote/engine exec vitest run src/share.test.ts
+      - name: Build workspace (topological)
+        # Warm the build so Playwright's `pnpm build && pnpm preview` webServer starts within its
+        # timeout (mirrors the electoral-output + age-gate jobs).
+        run: pnpm build
+      - name: Install Playwright browser
+        run: pnpm --filter @how2vote/web exec playwright install --with-deps chromium
+      - name: Local-privacy suite — clear-all wipe + share-copy warning + clean session
+        run: pnpm --filter @how2vote/web exec playwright test local-privacy
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
+        if: failure()
+        with:
+          name: playwright-report-local-privacy
+          path: apps/web/playwright-report
+          retention-days: 7
+
+  privacy-transport:
+    # Issues 8 & 12 span two groups (Privacy and Research · Infrastructure and Operations). The privacy
+    # claims register generated from tested controls (fail-closed to the fallback), the de-identification
+    # register, and the research in-transit transport policy (no-store + field allowlist + no IP/UA/body
+    # logging) are proven by the guard unit suites, the transport-policy web unit test, and the
+    # network-interception e2e that inspects the on-the-wire contribution.
+    name: CI group (Privacy and Research · Infrastructure and Operations) — privacy claims + transport
+    needs: control-register
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7
+      - run: corepack enable
+      - uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e # v6
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - name: Validate the owning CI groups
+        run: |
+          node scripts/check-control-register.mjs --group "Privacy and Research"
+          node scripts/check-control-register.mjs --group "Infrastructure and Operations"
+      # Guard unit tests: fail-closed resolution to the fallback, register cross-binding, and the
+      # transport static-scan verdict (IP/UA/body-log + code↔infra consistency).
+      - name: Privacy-claims + transport guard unit tests
+        run: |
+          npx vitest run --config vitest.scripts.config.js \
+            scripts/check-privacy-claims.test.mjs \
+            scripts/generate-privacy-claims.test.mjs \
+            scripts/check-research-transport.test.mjs
+      - name: Build workspace (topological)
+        run: pnpm build
+      # apps/web/tsconfig.json extends./.svelte-kit/tsconfig.json (generated by svelte-kit sync in the
+      # build above); the transport-policy projection unit test needs that to resolve.
+      - name: Research transport policy — web unit
+        run: pnpm --filter @how2vote/web exec vitest run src/lib/research/transport-policy.test.ts
+      - name: Install Playwright browser
+        run: pnpm --filter @how2vote/web exec playwright install --with-deps chromium
+      - name: Research transport — on-the-wire interception
+        run: pnpm --filter @how2vote/web exec playwright test research-transport
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
+        if: failure()
+        with:
+          name: playwright-report-privacy-transport
+          path: apps/web/playwright-report
+          retention-days: 7
+
+  close-out:
+    # the programme capstone. Proves the whole compliance backbone is COMPLETE
+    # and ENFORCED: no orphan requirement / dangling test, the required-checks manifest
+    # (docs/legal/required-checks.json) has no drift from this workflow's jobs (a new compliance job
+    # that is not registered fails here), audited + expiring bypasses only, no user-facing disclaimer
+    # substitutes for a substantive control, and this workflow has no duplicate mapping keys. The
+    # actual branch-protection repo setting is a MANUAL maintainer step (see required-checks.json),
+    # recorded as EV-BRANCH-PROTECTION in the control register.
+    name: Close-out — control-register completeness + required-checks
+    needs: control-register
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7
+      - run: corepack enable
+      - uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e # v6
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - name: Programme close-out completeness
+        run: node scripts/check-close-out.mjs
+      - name: Close-out guard unit test
+        run: npx vitest run --config vitest.scripts.config.js scripts/check-close-out.test.mjs

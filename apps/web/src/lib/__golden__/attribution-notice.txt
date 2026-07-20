@@ -1,0 +1,31 @@
+# Attribution & licence notices
+
+## Operating entity (org.ts / operator.json)
+legalName:    General Consulting Services Pty Ltd as trustee for the Australian Business Trust, trading as National Digital
+tradingName:  National Digital
+abn:          13 744 838 758
+acn:          658 447 280
+locality:     Gold Coast
+state:        Queensland
+country:      Australia
+
+## Open licences the project publishes under (org.ts LICENCES)
+app:  GNU Affero General Public License v3 (AGPL-3.0) — https://www.gnu.org/licenses/agpl-3.0.html
+data: Open Database Licence (ODbL) — https://opendatacommons.org/licenses/odbl/1-0/
+
+## Parliamentary voting data source (org.ts DATA_SOURCE — ODbL attribution)
+name:      They Vote For You
+publisher: OpenAustralia Foundation
+url:       https://theyvoteforyou.org.au/
+
+## AEC boundary-map derivative-product notice (mapLicence.ts — prescribed wording)
+licence: AEC Spatial Data Download Data Licence
+url:     https://www.aec.gov.au/Electorates/gis/
+
+[1] This product (how2vote.au) incorporates data that is: © Commonwealth of Australia (Australian Electoral Commission) 2026
+
+[2] The Data (Commonwealth Electoral Boundaries (various years)) has been used in how2vote.au with the permission of the Australian Electoral Commission.
+
+[3] The Australian Electoral Commission has not evaluated the Data as altered and incorporated within how2vote.au, and therefore gives no warranty regarding its accuracy, completeness, currency or suitability for any particular purpose.
+
+[4] You may use how2vote.au to load, display, print and reproduce views obtained from the Data, retaining this notice, for your personal use, or use within your organisation only.

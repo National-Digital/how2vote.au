@@ -1,0 +1,3 @@
+# Cloudflare Pages redirects. Apex (how2vote.au) is canonical — consolidate www onto it so
+# canonical URLs, the sitemap and og:url all agree. HTTP→HTTPS is handled by Cloudflare + HSTS.
+https://www.how2vote.au/* https://how2vote.au/:splat 301

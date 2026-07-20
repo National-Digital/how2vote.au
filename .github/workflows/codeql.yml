@@ -1,0 +1,37 @@
+name: CodeQL
+
+# Static analysis for JavaScript/TypeScript on pushes to main, PRs, and a weekly schedule.
+# Code scanning requires a public repo (or GitHub Advanced Security), so the job below is guarded
+# on repository visibility — it skips (green) while the repo is private and self-activates when it
+# goes public. The weekly cron catches advisories in dependencies that change upstream between pushes.
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  schedule:
+    # Weekly deep scan (Mondays 02:30 UTC), independent of code changes.
+    - cron: "30 2 * * 1"
+
+permissions:
+  contents: read
+
+jobs:
+  analyze:
+    name: Analyze (javascript-typescript)
+    runs-on: ubuntu-latest
+    if: github.event.repository.visibility == 'public'
+    permissions:
+      security-events: write # upload results to code scanning
+      contents: read
+    steps:
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7
+      - name: Initialize CodeQL
+        uses: github/codeql-action/init@02c5e83432fe5497fd85b873b6c9f16a8578e1d9 # v3
+        with:
+          languages: javascript-typescript
+          build-mode: none
+      - name: Perform CodeQL analysis
+        uses: github/codeql-action/analyze@02c5e83432fe5497fd85b873b6c9f16a8578e1d9 # v3
+        with:
+          category: "/language:javascript-typescript"

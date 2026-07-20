@@ -1,0 +1,56 @@
+# Code owners — GitHub requests review from the owner(s) when matching files change.
+#
+# Owners map to the teams defined on this repo:
+#   @National-Digital/engineering  — maintain access (maintainers)
+#   @National-Digital/operations   — triage access (see note below)
+#
+# NOTE: A team must have write access or higher to be a functional code owner.
+# The `operations` team only has triage access, so GitHub ignores it as an owner
+# (it cannot be auto-requested for review). Grant it write access if you want it
+# enforced here.
+
+# Default owner for everything in the repo.
+*                                   @National-Digital/engineering
+
+# Repo/CI configuration.
+/.github/                           @National-Digital/engineering
+
+# ── Compliance-tier paths (risk-based review, see CONTRIBUTING.md → "Review tiers") ──────────────
+# Changes here are the "Compliance review" tier: printing/authorisation, election-period publishing,
+# attribution/licence handling, provenance, retention, the legal/privacy registers and the CI guards
+# that enforce them. They are routed to the accountable compliance signatories (the natural persons
+# in docs/legal/signatories.json), in addition to engineering. Keep this list in step with that
+# registry and with the compliance-sensitive paths documented in CONTRIBUTING.md.
+#
+# NOTE: to make these owners *blocking*, enable branch protection on main with "Require review from
+# Code Owners" (see docs/legal/required-checks.json). A GitHub team (@National-Digital/compliance)
+# could later replace the two individual handles below without touching path rules.
+
+# Legal, privacy and research registers + generated legal docs.
+/docs/legal/                        @National-Digital/engineering @x5hwuk7nc6jsudcc @Tarrah102
+/docs/privacy/                      @National-Digital/engineering @x5hwuk7nc6jsudcc @Tarrah102
+/docs/research/                     @National-Digital/engineering @x5hwuk7nc6jsudcc @Tarrah102
+/CITATION.cff                       @National-Digital/engineering @x5hwuk7nc6jsudcc @Tarrah102
+/LICENSE-DATA.md                    @National-Digital/engineering @x5hwuk7nc6jsudcc @Tarrah102
+
+# Compliance CI guards (the fail-closed enforcement of the control register).
+/scripts/check-*.mjs                @National-Digital/engineering @x5hwuk7nc6jsudcc @Tarrah102
+/.github/workflows/compliance.yml   @National-Digital/engineering @x5hwuk7nc6jsudcc @Tarrah102
+
+# Election data provenance, rights, corrections and governance (source-of-record + attestations).
+/data/source/                       @National-Digital/engineering @x5hwuk7nc6jsudcc @Tarrah102
+/data/rights/                       @National-Digital/engineering @x5hwuk7nc6jsudcc @Tarrah102
+/data/corrections/                  @National-Digital/engineering @x5hwuk7nc6jsudcc @Tarrah102
+/data/governance/                   @National-Digital/engineering @x5hwuk7nc6jsudcc @Tarrah102
+/data/aec-spatial/                  @National-Digital/engineering @x5hwuk7nc6jsudcc @Tarrah102
+
+# How-to-vote authorisation + shared-link restriction (electoral-output surface).
+/apps/web/src/lib/print-auth.ts            @National-Digital/engineering @x5hwuk7nc6jsudcc @Tarrah102
+/apps/web/src/lib/print-auth.svelte.ts     @National-Digital/engineering @x5hwuk7nc6jsudcc @Tarrah102
+/apps/web/src/lib/components/PrintAuthorisationDialog.svelte @National-Digital/engineering @x5hwuk7nc6jsudcc @Tarrah102
+
+# Research-ingestion backend (aggregate-only analytics + consent).
+/apps/web/functions/                @National-Digital/engineering @x5hwuk7nc6jsudcc @Tarrah102
+
+# The operating-entity record and the signatory registry itself.
+/apps/web/src/lib/operator.json     @National-Digital/engineering @x5hwuk7nc6jsudcc @Tarrah102

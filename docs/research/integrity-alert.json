@@ -1,0 +1,9 @@
+{
+  "schemaVersion": 1,
+  "active": false,
+  "scope": "all",
+  "declaredAt": null,
+  "declaredBy": null,
+  "reason": null,
+  "note": "Fail-closed integrity switch for the research pipeline. While `active` is true the public-stat generator (packages/data-pipeline generate-stats) REFUSES to regenerate or publish any stats file — a suspected ingestion-poisoning or integrity incident must never be baked into a published snapshot. Flip `active` to true and record declaredAt (ISO date), declaredBy and reason when an alert is raised; the committed stats files are left untouched until it is cleared. Validated by scripts/check-research-integrity.mjs."
+}

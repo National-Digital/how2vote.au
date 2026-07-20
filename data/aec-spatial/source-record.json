@@ -1,0 +1,44 @@
+{
+  "schemaVersion": 1,
+  "rightsClass": "aec-boundary-spatial",
+  "status": "current",
+  "productName": "how2vote.au",
+  "boundaryData": "Commonwealth Electoral Boundaries (various years)",
+  "licence": {
+    "name": "AEC Spatial Data Download Data Licence",
+    "url": "https://www.aec.gov.au/Electorates/gis/",
+    "pageTitle": "Data download licence",
+    "lastUpdated": "2013-06-25",
+    "capturedAt": "2026-07-15",
+    "copyrightYear": "2026",
+    "copyrightYearNote": "The AEC licence page (https://www.aec.gov.au/Electorates/gis/) renders the Commonwealth copyright year in its prescribed notices as 2026, even though the page itself records that the licence was last updated 25 June 2013. Per legal instruction the copyright year is NOT derived from the boundary/election year; this value reproduces the year exactly as shown in the licence wording captured on capturedAt. Written AEC confirmation of the correct year treatment is outstanding."
+  },
+  "notice": {
+    "description": "The full AEC Spatial Data Download derivative-product notice, prescribed by the licence and captured verbatim (with the product name and boundary-data description substituted) on licence.capturedAt. It must be displayed wherever the boundary geometry is shown or distributed. A shorter attribution alone is NOT sufficient under this licence.",
+    "components": [
+      "This product (how2vote.au) incorporates data that is: © Commonwealth of Australia (Australian Electoral Commission) 2026",
+      "The Data (Commonwealth Electoral Boundaries (various years)) has been used in how2vote.au with the permission of the Australian Electoral Commission.",
+      "The Australian Electoral Commission has not evaluated the Data as altered and incorporated within how2vote.au, and therefore gives no warranty regarding its accuracy, completeness, currency or suitability for any particular purpose.",
+      "You may use how2vote.au to load, display, print and reproduce views obtained from the Data, retaining this notice, for your personal use, or use within your organisation only."
+    ]
+  },
+  "licenceEvidence": "data/aec-spatial/aec-licence-capture-2026-07-15.md",
+  "sources": [
+    {
+      "electionId": "2025",
+      "title": "Commonwealth Electoral Boundaries — 2025 (national)",
+      "boundaryYear": 2025,
+      "boundaryDataDate": "2025-02-25",
+      "sourceUrl": "https://www.aec.gov.au/Electorates/gis/gis_datadownload.htm",
+      "outputPath": "apps/web/static/maps/2025",
+      "fileName": "AUS-March-2025-esri.zip",
+      "sha256": "bdc0393d8448477bf187ac84473978330f776b5ea2ed6343f7eb891187263a09",
+      "downloadedAt": "2026-07-13",
+      "archiveRetained": true,
+      "status": "verified",
+      "reviewer": "cameron-young",
+      "reviewedAt": "2026-07-15",
+      "note": "The committed map geometry under apps/web/static/maps/2025 was derived from this AEC ESRI shapefile archive (AUS-March-2025-esri.zip, boundary data dated 2025-02-25), which is retained in the restricted corporate store and pinned here by SHA-256 (the archive itself is not committed — it is licence-restricted and large). The governing licence terms are captured in licenceEvidence. Verified 2026-07-15 by Cameron (National Digital), who attests this archive and the captured AEC Spatial Data Download Data Licence govern the committed geometry. Because the raw archive is git-ignored, CI cannot recompute the checksum; any third party can reproduce this verification per data/aec-spatial/REBUILD.md (obtain the same AEC download, run `pnpm aec-archive:verify`, rebuild and diff). Only 2025 boundaries are rendered; 2019/2022 were fought on different boundaries and carry no committed geometry. Remaining: the in-app full-notice display adjacent to each map and confirming a byte-identical reproducible rebuild (follow-up)."
+    }
+  ]
+}

@@ -1,0 +1,412 @@
+{
+  "parties": [
+    {
+      "key": "australian_labor_party",
+      "displayName": "Australian Labor Party",
+      "aecName": "Australian Labor Party",
+      "aliases": [
+        "Labor",
+        "A.L.P.",
+        "Australian Labor Party (Northern Territory) Branch"
+      ],
+      "kind": "party"
+    },
+    {
+      "key": "family_first_party",
+      "displayName": "Family First",
+      "aecName": "Family First",
+      "aliases": [],
+      "kind": "party"
+    },
+    {
+      "key": "australian_greens",
+      "displayName": "The Greens",
+      "aecName": "The Greens",
+      "aliases": [
+        "Australian Greens",
+        "Queensland Greens",
+        "The Greens (WA)",
+        "The Greens (WA) Inc"
+      ],
+      "kind": "party"
+    },
+    {
+      "key": "andrew_wilkie_mp",
+      "displayName": "Andrew WILKIE",
+      "aecName": "WILKIE, Andrew",
+      "aliases": [],
+      "kind": "independent"
+    },
+    {
+      "key": "derryn_hinchs_justice_party",
+      "displayName": "Derryn Hinch's Justice Party",
+      "aecName": "Derryn Hinch's Justice Party",
+      "aliases": [],
+      "kind": "party"
+    },
+    {
+      "key": "nick_xenophon_team",
+      "displayName": "Nick Xenophon Team",
+      "aecName": "Nick Xenophon Team",
+      "aliases": [],
+      "kind": "party"
+    },
+    {
+      "key": "liberal_party",
+      "displayName": "Liberal",
+      "aecName": "Liberal",
+      "aliases": [],
+      "kind": "party",
+      "federalGroup": "Coalition"
+    },
+    {
+      "key": "helen_haines_mp",
+      "displayName": "Helen HAINES",
+      "aecName": "HAINES, Helen",
+      "aliases": [],
+      "kind": "independent"
+    },
+    {
+      "key": "senator_lidia_thorpe",
+      "displayName": "Lidia THORPE",
+      "aecName": "THORPE, Lidia",
+      "aliases": [],
+      "kind": "independent"
+    },
+    {
+      "key": "kate_chaney_mp",
+      "displayName": "Kate CHANEY",
+      "aecName": "CHANEY, Kate",
+      "aliases": [],
+      "kind": "independent"
+    },
+    {
+      "key": "zoe_daniel_mp",
+      "displayName": "Zoe DANIEL",
+      "aecName": "DANIEL, Zoe",
+      "aliases": [],
+      "kind": "independent"
+    },
+    {
+      "key": "monique_ryan_mp",
+      "displayName": "Monique RYAN",
+      "aecName": "RYAN, Monique",
+      "aliases": [],
+      "kind": "independent"
+    },
+    {
+      "key": "sophie_scamps_mp",
+      "displayName": "Sophie SCAMPS",
+      "aecName": "SCAMPS, Sophie",
+      "aliases": [],
+      "kind": "independent"
+    },
+    {
+      "key": "senator_david_pocock",
+      "displayName": "David POCOCK",
+      "aecName": "POCOCK, David",
+      "aliases": [
+        "David Pocock"
+      ],
+      "kind": "independent"
+    },
+    {
+      "key": "senator_tammy_tyrrell",
+      "displayName": "Tammy TYRRELL",
+      "aecName": "TYRRELL, Tammy",
+      "aliases": [],
+      "kind": "independent"
+    },
+    {
+      "key": "craig_thomson_mp",
+      "displayName": "Craig THOMSON",
+      "aecName": "THOMSON, Craig",
+      "aliases": [],
+      "kind": "independent"
+    },
+    {
+      "key": "jacqui_lambie_network",
+      "displayName": "Jacqui Lambie Network",
+      "aecName": "Jacqui Lambie Network",
+      "aliases": [],
+      "kind": "party"
+    },
+    {
+      "key": "tony_windsor_mp",
+      "displayName": "Tony WINDSOR",
+      "aecName": "WINDSOR, Tony",
+      "aliases": [],
+      "kind": "independent"
+    },
+    {
+      "key": "senator_john_madigan",
+      "displayName": "John MADIGAN",
+      "aecName": "MADIGAN, John",
+      "aliases": [],
+      "kind": "independent"
+    },
+    {
+      "key": "centre_alliance",
+      "displayName": "Centre Alliance",
+      "aecName": "Centre Alliance",
+      "aliases": [],
+      "kind": "party"
+    },
+    {
+      "key": "katters_australian_party",
+      "displayName": "Katter's Australian Party (KAP)",
+      "aecName": "Katter's Australian Party (KAP)",
+      "aliases": [],
+      "kind": "party"
+    },
+    {
+      "key": "palmer_united_party",
+      "displayName": "Palmer United Party",
+      "aecName": "Palmer United Party",
+      "aliases": [],
+      "kind": "party"
+    },
+    {
+      "key": "senator_glenn_lazarus",
+      "displayName": "Glenn LAZARUS",
+      "aecName": "LAZARUS, Glenn",
+      "aliases": [],
+      "kind": "independent"
+    },
+    {
+      "key": "australian_motoring_enthusiast_party",
+      "displayName": "Australian Motoring Enthusiast Party",
+      "aecName": "Australian Motoring Enthusiast Party",
+      "aliases": [],
+      "kind": "party"
+    },
+    {
+      "key": "senator_rex_patrick",
+      "displayName": "Rex PATRICK",
+      "aecName": "PATRICK, Rex",
+      "aliases": [],
+      "kind": "independent"
+    },
+    {
+      "key": "zali_steggall_mp",
+      "displayName": "Zali STEGGALL",
+      "aecName": "STEGGALL, Zali",
+      "aliases": [],
+      "kind": "independent"
+    },
+    {
+      "key": "allegra_spender_mp",
+      "displayName": "Allegra SPENDER",
+      "aecName": "SPENDER, Allegra",
+      "aliases": [],
+      "kind": "independent"
+    },
+    {
+      "key": "national_party",
+      "displayName": "The Nationals",
+      "aecName": "The Nationals",
+      "aliases": [
+        "National Party"
+      ],
+      "kind": "party",
+      "federalGroup": "Coalition"
+    },
+    {
+      "key": "robert_oakeshott_mp",
+      "displayName": "Robert OAKESHOTT",
+      "aecName": "OAKESHOTT, Robert",
+      "aliases": [],
+      "kind": "independent"
+    },
+    {
+      "key": "liberal_democratic_party",
+      "displayName": "Liberal Democrats",
+      "aecName": "Liberal Democrats",
+      "aliases": [],
+      "kind": "party"
+    },
+    {
+      "key": "pauline_hansons_one_nation_party",
+      "displayName": "Pauline Hanson's One Nation",
+      "aecName": "Pauline Hanson's One Nation",
+      "aliases": [],
+      "kind": "party"
+    },
+    {
+      "key": "senator_david_van",
+      "displayName": "David VAN",
+      "aecName": "VAN, David",
+      "aliases": [],
+      "kind": "independent"
+    },
+    {
+      "key": "country_liberal_party",
+      "displayName": "CLP",
+      "aecName": "NT CLP",
+      "aliases": [
+        "NT CLP"
+      ],
+      "kind": "party",
+      "federalGroup": "Coalition",
+      "region": "NT"
+    },
+    {
+      "key": "peter_slipper_mp",
+      "displayName": "Peter SLIPPER",
+      "aecName": "SLIPPER, Peter",
+      "aliases": [],
+      "kind": "independent"
+    },
+    {
+      "key": "liberal_national_party",
+      "displayName": "LNP",
+      "aecName": "LNP",
+      "aliases": [],
+      "kind": "party",
+      "federalGroup": "Coalition",
+      "region": "Qld"
+    },
+    {
+      "key": "australian_conservatives",
+      "displayName": "Australian Conservatives",
+      "aecName": "Australian Conservatives",
+      "aliases": [],
+      "kind": "party"
+    },
+    {
+      "key": "russell_broadbent_mp",
+      "displayName": "Russell BROADBENT",
+      "aecName": "BROADBENT, Russell",
+      "aliases": [],
+      "kind": "independent"
+    },
+    {
+      "key": "united_australia_party",
+      "displayName": "Trumpet of Patriots",
+      "aecName": "Trumpet of Patriots",
+      "aliases": [],
+      "kind": "party"
+    },
+    {
+      "key": "cathy_mcgowan_mp",
+      "displayName": "Cathy MCGOWAN",
+      "aecName": "MCGOWAN, Cathy",
+      "aliases": [],
+      "kind": "independent"
+    },
+    {
+      "key": "julia_banks_mp",
+      "displayName": "Julia BANKS",
+      "aecName": "BANKS, Julia",
+      "aliases": [],
+      "kind": "independent"
+    },
+    {
+      "key": "andrew_gee_mp",
+      "displayName": "Andrew GEE",
+      "aecName": "GEE, Andrew",
+      "aliases": [],
+      "kind": "independent"
+    },
+    {
+      "key": "dai_le_mp",
+      "displayName": "Dai LE",
+      "aecName": "LE, Dai",
+      "aliases": [],
+      "kind": "independent"
+    },
+    {
+      "key": "kylea_tink_mp",
+      "displayName": "Kylea TINK",
+      "aecName": "TINK, Kylea",
+      "aliases": [],
+      "kind": "independent"
+    },
+    {
+      "key": "australian_democrats",
+      "displayName": "Australian Democrats",
+      "aecName": "Australian Democrats",
+      "aliases": [],
+      "kind": "party"
+    },
+    {
+      "key": "senator_fraser_anning",
+      "displayName": "Fraser ANNING",
+      "aecName": "ANNING, Fraser",
+      "aliases": [],
+      "kind": "independent"
+    },
+    {
+      "key": "senator_steve_martin",
+      "displayName": "Steve MARTIN",
+      "aecName": "MARTIN, Steve",
+      "aliases": [],
+      "kind": "independent"
+    },
+    {
+      "key": "senator_tim_storer",
+      "displayName": "Tim STORER",
+      "aecName": "STORER, Tim",
+      "aliases": [],
+      "kind": "independent"
+    },
+    {
+      "key": "australias_voice",
+      "displayName": "Australia's Voice",
+      "aecName": "Australia's Voice",
+      "aliases": [],
+      "kind": "party"
+    },
+    {
+      "key": "gerard_rennick_people_first",
+      "displayName": "Gerard Rennick People First",
+      "aecName": "Gerard Rennick People First",
+      "aliases": [],
+      "kind": "party"
+    },
+    {
+      "key": "ian_goodenough_mp",
+      "displayName": "Ian GOODENOUGH",
+      "aecName": "GOODENOUGH, Ian",
+      "aliases": [],
+      "kind": "independent"
+    },
+    {
+      "key": "nicolette_boele_mp",
+      "displayName": "Nicolette BOELE",
+      "aecName": "BOELE, Nicolette",
+      "aliases": [],
+      "kind": "independent"
+    }
+  ],
+  "merges": [
+    {
+      "master": "centre_alliance",
+      "merger": "nick_xenophon_team"
+    },
+    {
+      "master": "family_first_party",
+      "merger": "australian_conservatives"
+    },
+    {
+      "master": "united_australia_party",
+      "merger": "palmer_united_party"
+    }
+  ],
+  "noRecord": [],
+  "deregisteredSource": "AEC Register of political parties (https://www.aec.gov.au/parties/registered/current-register.htm, updated 2026-07-10), cross-checked 2026-07-19; parties carrying a compiled record but no longer on the register are removed from this ballot-less upcoming comparison so it never offers a party that cannot contest.",
+  "deregistered": [
+    {
+      "key": "australian_motoring_enthusiast_party",
+      "reason": "Deregistered by the AEC in 2017; not on the current Register of political parties."
+    },
+    {
+      "key": "derryn_hinchs_justice_party",
+      "reason": "No longer on the AEC Register of political parties (deregistered after last contesting federally in 2019)."
+    },
+    {
+      "key": "liberal_democratic_party",
+      "reason": "The 'Liberal Democrats' federal registration was deregistered on 2022-07-19; the organisation re-registered under the new name 'Libertarian Party' (2024), a distinct registered party not represented in this dataset."
+    }
+  ]
+}

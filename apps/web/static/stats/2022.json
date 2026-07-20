@@ -1,0 +1,24 @@
+{
+  "schemaVersion": 3,
+  "generatedAt": "2026-07-15T22:50:59.389Z",
+  "electionId": "2022",
+  "electionLabel": "2022 Federal Election",
+  "minCell": 10,
+  "release": {
+    "releaseId": "rel-2022-b1dbf3c92655f63a",
+    "k": 10,
+    "suppressionRules": [
+      "k-anonymity: cells with fewer than k contributors are suppressed at the database view layer (HAVING SUM(n) >= k), never by post-hoc filtering",
+      "no true bucket total is emitted — a bucket's shown value is the sum of its surviving cells only",
+      "complementary suppression: per-state cells are dropped for any (dimension, bucket, party) series whose national marginal is not fully reconstructed by the published states, defeating differencing",
+      "per-cohort partition: collection-context cohorts are suppressed independently and never combined into a published cell-view",
+      "sensitive dimensions are published national-only, with no sub-national geography",
+      "only party keys present in the compiled dataset are ever published"
+    ],
+    "date": "2026-07-15"
+  },
+  "totalResponses": 0,
+  "published": false,
+  "views": [],
+  "cohorts": []
+}

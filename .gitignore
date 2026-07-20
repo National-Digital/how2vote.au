@@ -1,0 +1,69 @@
+# dependencies
+node_modules/
+.pnpm-store/
+
+# build output (package compile output only — data/dist is committed on purpose)
+packages/*/dist/
+apps/*/dist/
+build/
+.svelte-kit/
+*.tsbuildinfo
+
+# generated at build time (deterministic, not hand-edited) — see apps/web/scripts/generate-*.mjs
+apps/web/static/og.png
+apps/web/static/og-*.png
+apps/web/static/500.html
+apps/web/static/.well-known/security.txt
+apps/web/static/apple-touch-icon.png
+apps/web/static/favicon-16.png
+apps/web/static/favicon-32.png
+apps/web/static/favicon.svg
+apps/web/static/icon-192.png
+apps/web/static/icon-512.png
+apps/web/static/icon-maskable-512.png
+apps/web/static/icon-maskable.svg
+apps/web/static/icon.svg
+
+# test / coverage
+coverage/
+playwright-report/
+test-results/
+.vitest/
+
+# data pipeline: raw upstream fetches are reproducible, not committed
+data/raw/*
+# Exception: the AEC candidate/ballot/electorate source is CC-BY-4.0 (redistribution permitted),
+# so its raw downloads ARE retained in-repo as immutable, hashable provenance for the committed
+# ballots (data/source/*/aec-sources.json pins each by sha256). Everything else under data/raw
+# stays ignored — notably the licence-restricted boundary GIS, which must not be redistributed.
+!data/raw/aec/
+!data/raw/aec/**
+data/source/boundaries/
+data/compiled/
+
+# secrets — never commit API keys
+.env
+.env.*
+!.env.example
+apikey.conf
+# Cloudflare wrangler local secrets + state (D1 database id / API token for local `wrangler` use)
+.dev.vars
+.dev.vars.*
+.wrangler/
+
+# editor / os
+.DS_Store
+.idea/
+.vscode/*
+!.vscode/extensions.json
+*.log
+
+# local agent state (settings, worktrees) — never commit
+.claude/
+
+# CI/deploy-generated release manifest (build artefact, never committed)
+release-manifest.json
+
+# Generated CycloneDX SBOM (build artefact, regenerated deterministically from pnpm-lock.yaml)
+sbom.json
+sbom.cdx.json

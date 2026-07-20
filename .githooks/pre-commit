@@ -1,0 +1,29 @@
+#!/bin/sh
+# Pre-commit: format and lint the STAGED files with the prettier/eslint already in devDeps, so the
+# CI "Lint & format" gate (pnpm lint) never fails on something that could have been fixed locally.
+# Fixable issues are auto-corrected and re-staged; an unfixable lint error blocks the commit.
+#
+# Zero new dependencies on purpose — this repo pins and audits its supply chain, so hooks add no
+# husky/lint-staged. Enabled via `git config core.hooksPath .githooks`, set by the root `prepare`
+# script on install (see package.json).
+set -eu
+
+# Staged, still-present files (added/copied/modified/renamed — never deletions).
+staged=$(git diff --cached --name-only --diff-filter=ACMR)
+[ -z "$staged" ] && exit 0
+
+# Prettier over every staged file it understands (--ignore-unknown skips the rest, and .prettierignore
+# still applies). Format, then re-stage so the commit records the formatted content.
+fmt=$(printf '%s\n' "$staged" | grep -Ei '\.(ts|tsx|js|jsx|mjs|cjs|svelte|json|jsonc|css|md|html|ya?ml)$' || true)
+if [ -n "$fmt" ]; then
+  printf '%s\n' "$fmt" | xargs pnpm exec prettier --write --ignore-unknown
+  printf '%s\n' "$fmt" | xargs git add --
+fi
+
+# ESLint over staged source files, auto-fixing what it can and re-staging. --max-warnings 0 mirrors
+# CI, so a warning blocks the commit exactly as it would block the build.
+lint=$(printf '%s\n' "$staged" | grep -Ei '\.(ts|tsx|js|jsx|mjs|cjs|svelte)$' || true)
+if [ -n "$lint" ]; then
+  printf '%s\n' "$lint" | xargs pnpm exec eslint --fix --max-warnings 0
+  printf '%s\n' "$lint" | xargs git add --
+fi

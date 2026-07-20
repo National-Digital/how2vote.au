@@ -1,0 +1,31 @@
+{
+  "schemaVersion": 1,
+  "provider": "cloudflare",
+  "project": "how2vote-au",
+  "note": "Machine-readable, NON-SECRET edge transport/logging policy for the research ingestion routes (in-transit sensitive-data protection). It declares the REQUIRED deployed configuration — HTTPS-forced with HSTS, a minimum TLS version, no request-body logging (in Cloudflare logs or Logpush), and ingestion responses left uncached — so the deployed edge matches the in-code transport policy (apps/web/src/lib/research/transport-policy.ts). scripts/check-research-transport.mjs cross-ties this file to the code policy and validates the fail-closed values; a deploy-time verifier (documented in README.md) confirms the live account settings against it. FAIL CLOSED: any value weaker than declared here fails the guard.",
+  "codePolicy": "apps/web/src/lib/research/transport-policy.ts",
+  "ingestionRoutes": ["/api/research", "/api/research/geography", "/api/research/token"],
+  "requiredEdgeSettings": {
+    "alwaysUseHttps": true,
+    "minTlsVersion": "1.2",
+    "hsts": {
+      "enabled": true,
+      "maxAgeSeconds": 31536000,
+      "includeSubDomains": true
+    },
+    "requestBodyLogging": false,
+    "logpushIncludesRequestBody": false,
+    "cacheIngestionResponses": false
+  },
+  "forbiddenRequestReads": [
+    "CF-Connecting-IP",
+    "X-Forwarded-For",
+    "X-Real-IP",
+    "True-Client-IP",
+    "User-Agent"
+  ],
+  "verification": {
+    "mode": "deploy",
+    "description": "In CI the committed policy is validated and cross-tied to the in-code transport policy (fail-closed). At deploy, the live Cloudflare zone/account settings (Always Use HTTPS, minimum TLS version, HSTS, and the absence of request-body logging / body-carrying Logpush jobs on the ingestion routes) are confirmed against this file before promotion; a drift fails the deploy. No live verification runs without account credentials, so CI stays green without them — the same pattern as the post-deploy live smoke test."
+  }
+}

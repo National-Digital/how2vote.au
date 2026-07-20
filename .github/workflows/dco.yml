@@ -1,0 +1,44 @@
+name: DCO
+
+# Verifies every commit in a pull request carries a `Signed-off-by` trailer (Developer Certificate
+# of Origin — see CONTRIBUTING.md). Self-contained: no third-party actions, just the GitHub API.
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+
+permissions:
+  contents: read
+  pull-requests: read
+
+jobs:
+  dco:
+    name: Check sign-off
+    runs-on: ubuntu-latest
+    steps:
+      - name: Verify Signed-off-by on every commit
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PR: ${{ github.event.pull_request.number }}
+          REPO: ${{ github.repository }}
+        run: |
+          set -euo pipefail
+          # One JSON object per commit: its sha and full message.
+          commits=$(gh api --paginate "repos/$REPO/pulls/$PR/commits" \
+            --jq '.[] | {sha: .sha, message: .commit.message} | @base64')
+          missing=0
+          while IFS= read -r row; do
+            [ -z "$row" ] && continue
+            sha=$(echo "$row" | base64 -d | jq -r '.sha')
+            msg=$(echo "$row" | base64 -d | jq -r '.message')
+            if echo "$msg" | grep -qE '^Signed-off-by: .+ <.+@.+>$'; then
+              echo "ok   ${sha:0:8}"
+            else
+              echo "MISS ${sha:0:8} — no valid Signed-off-by trailer"
+              missing=1
+            fi
+          done <<< "$commits"
+          if [ "$missing" -ne 0 ]; then
+            echo "::error::One or more commits are missing a DCO sign-off. Run 'git rebase --signoff main' and force-push. See CONTRIBUTING.md."
+            exit 1
+          fi

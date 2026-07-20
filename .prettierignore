@@ -1,0 +1,26 @@
+pnpm-lock.yaml
+dist/
+build/
+.svelte-kit/
+coverage/
+.claude/
+data/raw/
+data/**/*.json
+*.md
+LICENSE
+# Gherkin/BDD acceptance specs — prettier has no parser for .feature files (bound to code by
+# apps/web/src/features.test.ts, which IS formatted/linted).
+*.feature
+# generated brand geometry — output of apps/web/scripts/generate-brand-mark.py
+apps/web/src/lib/brand/mark.mjs
+apps/web/scripts/og-taglines.mjs
+# generated vendor network allowlist — output of scripts/generate-vendor-allowlist.mjs (drift-gated)
+apps/web/src/lib/privacy/vendor-allowlist.generated.json
+# generated research election registry — output of scripts/generate-research-registry.mjs (drift-gated)
+apps/web/src/lib/research/election-registry.json
+# generated migration checksum registry — output of scripts/check-migration-registry.mjs (drift-gated)
+infra/providers/cloudflare/migration-registry.json
+# generated privacy-claims projection — output of scripts/generate-privacy-claims.mjs (drift-gated)
+apps/web/src/lib/privacy/privacy-claims.generated.json
+# generated public signatory projection — output of scripts/generate-signatories-public.mjs (drift-gated)
+apps/web/src/lib/governance/signatories.public.generated.json

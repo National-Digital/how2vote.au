@@ -1,0 +1,95 @@
+# Cloudflare Pages project configuration (ADR-0007).
+#
+# The site remains a fully static, prerendered SvelteKit build (adapter-static → ./build). This file
+# adds the two server-side pieces for the research store, both same-origin:
+#   - functions/    — Pages Functions, e.g. functions/api/research.ts (POST /api/research)
+#   - RESEARCH_DB   — the D1 (SQLite) database those functions write to
+#
+# The card, quiz, scoring and share flow have no server dependency and are unaffected if the
+# functions or database are absent (the survey POSTs fire-and-forget).
+#
+# Deploy wiring: scripts/deploy-cloudflare-pages.mjs runs `wrangler pages deploy build` FROM apps/web,
+# so this wrangler.toml (pages_build_output_dir = "build") and the adjacent functions/ directory are
+# both read — the static build AND the ingestion functions with their D1 + KV bindings ship together.
+# The database_id / KV id below are injected from CI variables just before the deploy (never committed).
+#
+# Operator setup (one-time, requires Cloudflare account access):
+#   wrangler d1 create how2vote-research         # copy the returned database_id below
+#   wrangler d1 migrations apply how2vote-research --remote
+#   wrangler d1 create how2vote-nonces           # atomic single-use nonce store (SEPARATE db; no migration)
+# Preview and production should use SEPARATE D1 databases (configure the preview id in the dashboard,
+# or via `[env.preview]`), so preview traffic never mixes into the published dataset.
+#
+# NOTE — the database_id is NOT committed (public repo). The deploy workflow injects it from the
+# CI variable CF_D1_DATABASE_ID and runs `wrangler d1 migrations apply --remote` on push to main.
+# For local wrangler use, authenticate with `wrangler login` (it resolves the DB by name) or put an
+# id/token in an untracked apps/web/.dev.vars (gitignored) — never commit either.
+#
+# NOTE — storage is aggregate counters only (ADR-0008). Migration 0001 creates the counter tables and
+# no per-person table is ever created, so applying the migration yields an aggregate-only schema by
+# construction, enforced by scripts/check-aggregate-only.mjs and by the deploy-time production-schema
+# allowlist check.
+#
+# NOTE — ingestion integrity. The research/geography endpoints require a
+# short-lived, single-use signed submission token when the integrity layer is provisioned:
+#   - RESEARCH_TOKEN_SECRET — HMAC signing secret for the submission tokens. Set as a Cloudflare
+#     SECRET (never committed): `wrangler pages secret put RESEARCH_TOKEN_SECRET`. When unset the
+#     token layer is inert and the endpoints stand on registry validation + the edge rate-limit.
+#   - TURNSTILE_RESEARCH_SECRET — Cloudflare Turnstile secret for the anti-abuse challenge at token-issue time
+#     (also a Cloudflare SECRET: `wrangler pages secret put TURNSTILE_RESEARCH_SECRET`). Provision it in
+#     production so the research-token endpoint verifies a Turnstile solution server-side before
+#     minting a submission token (see functions/api/research/token.ts + research/challenge.ts). When
+#     unset the challenge is an inert pass-through and the endpoint stands on registry validation +
+#     the edge rate-limit. This is a SEPARATE Turnstile widget/secret from the one Formspree uses for
+#     the contact/feedback forms (that secret lives only on Formspree). Its public site key is the
+#     PUBLIC_TURNSTILE_RESEARCH_SITE_KEY build variable (the survey renders that widget on submit).
+#   - RESEARCH_NONCES_DB — the ATOMIC D1 nonce store below (its OWN dedicated database, separate from
+#     RESEARCH_DB). A PAYLOAD-FREE store of spent nonces: it holds only opaque nonce keys with a short
+#     TTL — no PII, never joined to the aggregate research database. This is the store REQUIRED in
+#     PRODUCTION: an `INSERT … ON CONFLICT DO NOTHING` makes single-use enforcement race-free, so a
+#     captured token cannot be replayed inside its validity window. In production the ingestion
+#     endpoints refuse (503) when this binding is absent (fail closed — see research.ts nonceStore()
+#     and environment.ts). It MUST be a SEPARATE D1 database from RESEARCH_DB: the research DB is
+#     aggregate-only by construction (check-aggregate-only.mjs allowlists exactly the counter tables),
+#     so the used_nonce table cannot live there. The table self-provisions on first use — NO migration
+#     is applied to it. Provision once: `wrangler d1 create how2vote-nonces` (+ a separate
+#     how2vote-nonces-preview), then inject the ids from CI variables (public repo — ids are not
+#     committed), mirroring the RESEARCH_DB pattern.
+#   - RESEARCH_NONCES — the KV namespace below, the NON-PRODUCTION fallback nonce store. KV is
+#     eventually consistent (a get-then-put race can let a token replay inside the propagation window),
+#     so it is used only in preview/dev; production requires the atomic D1 store above. Provision once:
+#     `wrangler kv namespace create RESEARCH_NONCES` (+ `--preview`), then inject the ids from CI
+#     variables, mirroring the D1 pattern.
+
+name = "how2vote-au"
+pages_build_output_dir = "build"
+compatibility_date = "2025-06-01"
+
+# Deployment mode for the research ingestion Functions. "production" makes the research/geography/
+# token endpoints FAIL CLOSED: they refuse (503) rather than silently drop or accept unverified when
+# any mandatory integrity control is missing (token signing secret, Turnstile secret, the ATOMIC D1
+# nonce store, or the research database). See apps/web/src/lib/research/environment.ts. A PREVIEW
+# environment that wants the inert/dev behaviour should override this to a non-production value (e.g.
+# "preview") via `[env.preview.vars]` here or in the Cloudflare dashboard; local `pnpm dev` / vitest
+# have no var and are non-production by default.
+[vars]
+RESEARCH_ENVIRONMENT = "production"
+
+[[d1_databases]]
+binding = "RESEARCH_DB"
+database_name = "how2vote-research"
+database_id = "REPLACE_WITH_D1_DATABASE_ID"
+migrations_dir = "migrations"
+
+# Atomic single-use nonce store — its OWN dedicated D1 database, SEPARATE from RESEARCH_DB (see the
+# integrity NOTE above). Deliberately NO migrations_dir: the used_nonce table self-provisions on first
+# use (nonce-store.ts), so this database is never migrated and never carries a per-person table. The
+# id is injected at deploy from CF_D1_NONCES_DATABASE_ID (public repo — the placeholder is committed).
+[[d1_databases]]
+binding = "RESEARCH_NONCES_DB"
+database_name = "how2vote-nonces"
+database_id = "REPLACE_WITH_NONCES_D1_DATABASE_ID"
+
+[[kv_namespaces]]
+binding = "RESEARCH_NONCES"
+id = "REPLACE_WITH_KV_NAMESPACE_ID"

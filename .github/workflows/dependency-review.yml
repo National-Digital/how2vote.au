@@ -1,0 +1,24 @@
+name: Dependency review
+
+# Blocks a PR that introduces a dependency with a known high/critical vulnerability or a
+# disallowed licence. Runs only on pull requests (needs the base..head diff).
+# Dependency review needs the Dependency Graph, which requires a public repo (or GitHub Advanced
+# Security), so the job is guarded on visibility — it skips (green) while private and self-activates
+# when the repo goes public.
+
+on: pull_request
+
+permissions:
+  contents: read
+
+jobs:
+  review:
+    name: Review dependency changes
+    runs-on: ubuntu-latest
+    if: github.event.repository.visibility == 'public'
+    steps:
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7
+      - name: Dependency review
+        uses: actions/dependency-review-action@2031cfc080254a8a887f58cffee85186f0e49e48 # v4.9.0
+        with:
+          fail-on-severity: high

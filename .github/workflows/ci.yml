@@ -1,0 +1,133 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  quality:
+    name: Lint · typecheck · test · build · integrity
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7
+      - run: corepack enable
+      - uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e # v6
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+
+      - name: Build (topological)
+        run: pnpm build
+
+      - name: Typecheck
+        run: pnpm typecheck
+
+      - name: Unit tests
+        run: pnpm test
+
+      - name: Lint & format
+        run: pnpm lint
+
+      - name: Dataset integrity gate
+        run: pnpm data:validate
+
+      - name: Question-order gate (append-only; share links stay stable)
+        run: pnpm question-order:check
+
+      - name: Dataset is deterministically reproducible
+        run: |
+          pnpm data:compile >/dev/null 2>&1 || true
+          pnpm --filter @how2vote/data-pipeline dataset:build
+          git diff --exit-code data/dist \
+            || (echo "::error::Committed data/dist does not match a fresh build from source." && exit 1)
+
+      - name: Neutrality lint (monochrome CSS)
+        run: pnpm neutrality:check
+
+      - name: Legal-material leakage guard (no privileged/internal citations in the tree)
+        run: pnpm leakage:check
+
+      - name: Performance budget (gzipped JS)
+        run: pnpm --filter @how2vote/web budget:check
+
+      - name: Action-pinning gate (every third-party action is pinned to a full commit SHA)
+        # Supply-chain: a mutable tag/branch pin (@v4, @main) lets the action owner move it to
+        # malicious code that runs with this repo's token — the risk is acute on a public repo where
+        # forks and drive-by PRs run these workflows. See docs/self-hosting.md.
+        run: node scripts/check-action-pinning.mjs
+
+      - name: Dependency vulnerability gate (fail on high/critical without a signed acceptance)
+        # One policy, one implementation: the same gate the deploy runs. It fails closed on any
+        # high/critical advisory lacking a signed, unexpired risk acceptance, and on pnpm audit
+        # output-format drift — but honours a signed acceptance, so a PR does not go red the day an
+        # unpatched-but-accepted advisory lands (which raw `pnpm audit --audit-level=high` would).
+        run: node scripts/check-vuln-gate.mjs
+
+  snapshot-guard:
+    name: Locked snapshots are immutable
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e # v6
+        with:
+          node-version-file: .nvmrc
+      - name: Guard data/snapshots against post-lock edits (ADR 0005)
+        env:
+          GITHUB_EVENT_BEFORE: ${{ github.event.before }}
+        run: node scripts/check-locked-snapshots.mjs
+
+  secrets:
+    name: Secret scan (gitleaks)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7
+        with:
+          fetch-depth: 0
+      - name: Run gitleaks
+        run: |
+          VERSION=8.24.3
+          SHA256=9991e0b2903da4c8f6122b5c3186448b927a5da4deef1fe45271c3793f4ee29c
+          curl -sSfL -o gitleaks.tar.gz "https://github.com/gitleaks/gitleaks/releases/download/v${VERSION}/gitleaks_${VERSION}_linux_x64.tar.gz"
+          echo "${SHA256}  gitleaks.tar.gz" | sha256sum --check --quiet
+          tar -xzf gitleaks.tar.gz gitleaks
+          # --log-opts=--all: a leak on ANY ref must red the build, not just HEAD's history.
+          ./gitleaks detect --redact --no-banner --exit-code 1 --log-opts=--all
+
+  e2e:
+    name: E2E · keyboard, offline & axe
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7
+      - run: corepack enable
+      - uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e # v6
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - name: Build workspace
+        run: pnpm build
+      - name: Install Playwright browser
+        run: pnpm --filter @how2vote/web exec playwright install --with-deps chromium
+      - name: Run Playwright e2e (flow + accessibility)
+        run: pnpm --filter @how2vote/web test:e2e
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
+        if: failure()
+        with:
+          name: playwright-report
+          path: apps/web/playwright-report
+          retention-days: 7
+
+  # Lighthouse now runs in the compliance workflow's blocking "Accessibility and Product" job
+  # (accessibility category BLOCKING, performance informational), so it no longer
+  # has a separate advisory job here.

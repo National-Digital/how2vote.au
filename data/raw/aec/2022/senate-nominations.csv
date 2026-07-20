@@ -1,0 +1,422 @@
+StateAb,Ticket,CandidateNm,PartyNm,BallotPosition
+ACT,A,"GALLAGHER, Katy",Australian Labor Party,1
+ACT,A,"NORTHAM, Maddy",Australian Labor Party,2
+ACT,B,"ANGEL, Joy",Sustainable Australia Party - Stop Overdevelopment / Corruption,1
+ACT,B,"HAYDON, John",Sustainable Australia Party - Stop Overdevelopment / Corruption,2
+ACT,C,"SAVOULIDIS, James",United Australia Party,1
+ACT,C,"PAGE, Tracey",United Australia Party,2
+ACT,D,"SESELJA, Zed",Liberal,1
+ACT,D,"LAM, Kacey",Liberal,2
+ACT,E,"POCOCK, David",David Pocock,1
+ACT,E,"DOUBE, Clare",David Pocock,2
+ACT,F,"RUBENSTEIN, Kim",Kim for Canberra,1
+ACT,F,"HUYNH, Kim",Kim for Canberra,2
+ACT,G,"FAULKNER, Therese",Australian Progressives,1
+ACT,G,"LIN, Stephen",Australian Progressives,2
+ACT,H,"GORENG GORENG, Tjanara",The Greens,1
+ACT,H,"CRUZ, James",The Greens,2
+ACT,I,"KATELARIS, Andrew",Legalise Cannabis Australia,1
+ACT,I,"STANVIC, Michelle",Legalise Cannabis Australia,2
+ACT,J,"del VALLE, Yana",Animal Justice Party,1
+ACT,J,"FAHIZ, Jannah",Animal Justice Party,2
+ACT,K,"SIMMS, Michael",Informed Medical Options Party,1
+ACT,K,"LIDDICOAT, Mary-Jane",Informed Medical Options Party,2
+ACT,UG,"LI, Fuxin",Independent,1
+NSW,A,"BROLLO, Darren",Animal Justice Party,1
+NSW,A,"POWER, Julie",Animal Justice Party,2
+NSW,B,"KEEN, Steve",TNL,1
+NSW,B,"GREEN, Melissa",TNL,2
+NSW,C,"LIU, Kingsley",Citizens Party,1
+NSW,C,"LAWLER, Ann",Citizens Party,2
+NSW,D,"LAMB, Georgia",Sustainable Australia Party - Stop Overdevelopment / Corruption,1
+NSW,D,"DE VIVE, Suzanne",Sustainable Australia Party - Stop Overdevelopment / Corruption,2
+NSW,E,"SHOEBRIDGE, David",The Greens,1
+NSW,E,"COHN, Amanda",The Greens,2
+NSW,E,"FLOOD, Rochelle",The Greens,3
+NSW,E,"SCOTT, Jane",The Greens,4
+NSW,E,"ARYA, Hawa",The Greens,5
+NSW,E,"WHEELER, Danielle",The Greens,6
+NSW,F,"BODDY, Max",,1
+NSW,F,"GRENFELL, Oscar",,2
+NSW,G,"PAYNE, Marise",Liberal,1
+NSW,G,"CADELL, Ross",The Nationals,2
+NSW,G,"MOLAN, Jim",Liberal,3
+NSW,G,"PENFOLD, Alison Louise",The Nationals,4
+NSW,G,"JARVIS, Mary-Lou",Liberal,5
+NSW,G,"McGAHEY, Vicky",Liberal,6
+NSW,H,"CARO, Jane",Reason Australia,1
+NSW,H,"MAHER, Hannah Kate",Reason Australia,2
+NSW,H,"RYALL, Diana",Reason Australia,3
+NSW,I,"SANCHEZ, Paula",Socialist Alliance,1
+NSW,I,"LEKA, Niko",Socialist Alliance,2
+NSW,I,"EVANS, Rachel",Socialist Alliance,3
+NSW,J,"JONES, Ross",Federal ICAC Now,1
+NSW,J,"ANDERSON, Gabrielle",Federal ICAC Now,2
+NSW,K,"BATY, Steven James",Australian Democrats,1
+NSW,K,"ROGERS, Suzanne",Australian Democrats,2
+NSW,K,"RICHARDS, Craig Edward",Australian Democrats,3
+NSW,L,"WHYMAN, Owen Douglas",Indigenous - Aboriginal Party of Australia,1
+NSW,L,"BROOKE, Lawrence John",Indigenous - Aboriginal Party of Australia,2
+NSW,M,"DJURIC, Shane","Shooters, Fishers and Farmers Party",1
+NSW,M,"GREGORY, Desiree J","Shooters, Fishers and Farmers Party",2
+NSW,M,"MILGATE, Brian","Shooters, Fishers and Farmers Party",3
+NSW,M,"CROOKS, Jeremy","Shooters, Fishers and Farmers Party",4
+NSW,N,"KOCHER, Dessie",Seniors United Party of Australia,1
+NSW,N,"BENNIE, Ray",Seniors United Party of Australia,2
+NSW,O,"O'NEILL, Michael",Informed Medical Options Party,1
+NSW,O,"BURNUM BURNUM, Marelle",Informed Medical Options Party,2
+NSW,P,"HOPKINS, Matthew",The Great Australian Party,1
+NSW,P,"NOHRA, George",The Great Australian Party,2
+NSW,Q,"BALDERSTONE, Michael",Legalise Cannabis Australia,1
+NSW,Q,"HESTER, Gail",Legalise Cannabis Australia,2
+NSW,R,"LEONG, Andrea","FUSION: Science, Pirate, Secular, Climate Emergency",1
+NSW,R,"BRYCE, Ian R","FUSION: Science, Pirate, Secular, Climate Emergency",2
+NSW,S,"McCULLOCH, Kate",Pauline Hanson's One Nation,1
+NSW,S,"GRIGG, Colin",Pauline Hanson's One Nation,2
+NSW,S,"SMITH, Roger",Pauline Hanson's One Nation,3
+NSW,T,"RUDDICK, John",Liberal Democrats,1
+NSW,T,"LARTER, John",Liberal Democrats,2
+NSW,T,"CALDWELL, James Arthur",Liberal Democrats,3
+NSW,T,"GUEST, Mark Antony",Liberal Democrats,4
+NSW,U,"CLANCY, Selena",Australian Values Party,1
+NSW,U,"GILBERT, Dave",Australian Values Party,2
+NSW,V,"O'NEILL, Deborah",Labor,1
+NSW,V,"McALLISTER, Jenny",Labor,2
+NSW,V,"MORRIS, Shireen",Labor,3
+NSW,V,"MYERS, Mich-Elle Elizabeth",Labor,4
+NSW,V,"ROSE, Kylie Anne",Labor,5
+NSW,V,"WARREN-SMITH, James",Labor,6
+NSW,W,"MARTINO, Domenic Vincent",United Australia Party,1
+NSW,W,"WRIGHTSON, Suellen",United Australia Party,2
+NSW,W,"MOORE, Wayne Leslie",United Australia Party,3
+NSW,W,"MARTIN, Michelle",United Australia Party,4
+NSW,W,"YAP, Johnny",United Australia Party,5
+NSW,W,"LOUGHREY, Kevin Andrew",United Australia Party,6
+NSW,UG,"LIM, Danny",Independent,1
+NSW,UG,"COLLINS, Julie",Independent,2
+NSW,UG,"GRZIC, Warren",Independent,3
+NSW,UG,"LU, Guitang",Independent,4
+NSW,UG,"LAING, William",Independent,5
+NT,A,"PRICE, Jacinta Nampijinpa",NT CLP,1
+NT,A,"CIVITARESE, Kris",NT CLP,2
+NT,B,"McMAHON, Sam",Liberal Democrats,1
+NT,B,"HANSEN, Jed",Liberal Democrats,2
+NT,C,"McCARTHY, Malarndirri",A.L.P.,1
+NT,C,"GANLEY, Kate",A.L.P.,2
+NT,D,"LAWRENCE, Lance",Legalise Cannabis Australia,1
+NT,D,"HIBBERT, Kelly-Anne",Legalise Cannabis Australia,2
+NT,E,"WHYTE, Lamaan",Sustainable Australia Party - Stop Overdevelopment / Corruption,1
+NT,E,"BELCHER, Richard",Sustainable Australia Party - Stop Overdevelopment / Corruption,2
+NT,F,"ARRIGO, Steve",The Great Australian Party,1
+NT,F,"MARCUS, Angela",The Great Australian Party,2
+NT,G,"CAMPBELL, Trudy",Citizens Party,1
+NT,G,"FLYNN, Peter",Citizens Party,2
+NT,H,"ANLEZARK, Jane",The Greens,1
+NT,H,"STOKES, Dianne",The Greens,2
+NT,UG,"RAJWIN, Raj",United Australia Party,1
+QLD,A,"HARRIS, Len",,1
+QLD,A,"YUILLE, Debra",,2
+QLD,B,"LEES, Renee",Socialist Alliance,1
+QLD,B,"EMANUEL, Kamala",Socialist Alliance,2
+QLD,C,"BRADLEY, Bernard Anthony",Legalise Cannabis Australia,1
+QLD,C,"LUYKEN, Suzette",Legalise Cannabis Australia,2
+QLD,D,"MARTIN, Rhett",Sustainable Australia Party - Stop Overdevelopment / Corruption,1
+QLD,D,"FIRESTONE, Timotheos",Sustainable Australia Party - Stop Overdevelopment / Corruption,2
+QLD,E,"WILLIAMS, Ron",Reason Australia,1
+QLD,E,"JORDAN, Frank",Reason Australia,2
+QLD,F,"BRENNAN, Bess",TNL,1
+QLD,F,"KENNISH, Hannah",TNL,2
+QLD,F,"HOPLEY, Steven",TNL,3
+QLD,F,"MOMSEN, Jonathon",TNL,4
+QLD,F,"INGRAM, Lloyd",TNL,5
+QLD,F,"CREIGHTON, Jack",TNL,6
+QLD,G,"PAYNE, Kerin",Federal ICAC Now,1
+QLD,G,"CARROLL, Ken",Federal ICAC Now,2
+QLD,H,"DICKSON, Steve",,1
+QLD,H,"LLOYD, Rebecca",,2
+QLD,I,"HEAD, Mike",,1
+QLD,I,"DAVIS, John",,2
+QLD,J,"ALLMAN-PAYNE, Penny",Queensland Greens,1
+QLD,J,"SRI, Anna",Queensland Greens,2
+QLD,J,"PENNINGS, Ben",Queensland Greens,3
+QLD,J,"SIDHU, Navdeep Singh",Queensland Greens,4
+QLD,J,"NELLIGAN, Alyce",Queensland Greens,5
+QLD,J,"HALEY, Rebecca",Queensland Greens,6
+QLD,K,"HENAWAY, Lionel",Indigenous - Aboriginal Party of Australia,1
+QLD,K,"CARR, Jenny-Lee",Indigenous - Aboriginal Party of Australia,2
+QLD,L,"PUKALLUS, Jan",Citizens Party,1
+QLD,L,"DOEL, Rod",Citizens Party,2
+QLD,M,"MILES, Jason",The Great Australian Party,1
+QLD,M,"COTTAM, Elise",The Great Australian Party,2
+QLD,N,"RUSSELL, Heston",Australian Values Party,1
+QLD,N,"HANSEN, Jay",Australian Values Party,2
+QLD,O,"TILYARD, Isabel",Australian Federation Party,1
+QLD,O,"BENNETT, Jackie",Australian Federation Party,2
+QLD,O,"SMYTH, Michael Francis",Australian Federation Party,3
+QLD,P,"SEVERNS, Mackenzie",Animal Justice Party,1
+QLD,P,"WEBER, Sue",Animal Justice Party,2
+QLD,Q,"ARBUCKLE, Luke",Australian Democrats,1
+QLD,Q,"SIMPSON, Chris",Australian Democrats,2
+QLD,R,"PALMER, Clive Frederick",United Australia Party,1
+QLD,R,"BREWSTER, Martin",United Australia Party,2
+QLD,R,"ADIDI, Desmond",United Australia Party,3
+QLD,R,"McCABE, Jack",United Australia Party,4
+QLD,S,"McGRATH, James",Liberal National Party of Queensland,1
+QLD,S,"CANAVAN, Matt",Liberal National Party of Queensland,2
+QLD,S,"STOKER, Amanda",Liberal National Party of Queensland,3
+QLD,S,"TOBIN, Nicole",Liberal National Party of Queensland,4
+QLD,S,"CRIPPS, Andrew",Liberal National Party of Queensland,5
+QLD,S,"WARD, Fiona",Liberal National Party of Queensland,6
+QLD,T,"LAHN, Allona",Informed Medical Options Party,1
+QLD,T,"MELHOP, Jasmine",Informed Medical Options Party,2
+QLD,T,"LAMBETH, Peter",Informed Medical Options Party,3
+QLD,U,"SELIC, Brandon","FUSION: Science, Pirate, Secular, Climate Emergency",1
+QLD,U,"WHATLING, Roger","FUSION: Science, Pirate, Secular, Climate Emergency",2
+QLD,V,"PAVLOU, Drew",Drew Pavlou Democratic Alliance,1
+QLD,V,"LEITCH, Simon",Drew Pavlou Democratic Alliance,2
+QLD,W,"NEWMAN, Campbell",Liberal Democrats,1
+QLD,W,"GRAINGER, Tegan",Liberal Democrats,2
+QLD,X,"HANSON, Pauline",Pauline Hanson's One Nation,1
+QLD,X,"GURUSWAMY, Raj",Pauline Hanson's One Nation,2
+QLD,X,"CHRISTENSEN, George",Pauline Hanson's One Nation,3
+QLD,Y,"WATT, Murray",Australian Labor Party,1
+QLD,Y,"CHISHOLM, Anthony",Australian Labor Party,2
+QLD,Y,"ANDREW, Edwina",Australian Labor Party,3
+QLD,Y,"WARRY, Christina",Australian Labor Party,4
+QLD,Y,"HENDERSON, Jen",Australian Labor Party,5
+QLD,Y,"PASCOE, Richard",Australian Labor Party,6
+QLD,UG,"LYON, Robert",Katter's Australian Party (KAP),1
+QLD,UG,"SCHEFE, David John",Independent,2
+QLD,UG,"TEMPLE, Lindsay",Independent,3
+QLD,UG,"HAMILTON, Chey Geoffrey",Independent,4
+QLD,UG,"SMITH, Lorraine",Independent,5
+QLD,UG,"QUINLIVAN, Laurence",Independent,6
+QLD,UG,"KOCHARDY, Karakan Karoly",Independent,7
+QLD,UG,"ROGERS, Peter",Independent,8
+SA,A,"MARKOS, Ian",Liberal Democrats,1
+SA,A,"SMITH, Josh",Liberal Democrats,2
+SA,B,"PFEIFFER, Louise",Animal Justice Party,1
+SA,B,"PASTRO, Julie",Animal Justice Party,2
+SA,C,"BIRMINGHAM, Simon",Liberal,1
+SA,C,"McLACHLAN, Andrew",Liberal,2
+SA,C,"LIDDLE, Kerrynne",Liberal,3
+SA,C,"STOCK, Tania",Liberal,4
+SA,D,"WONG, Penny",Australian Labor Party,1
+SA,D,"FARRELL, Don",Australian Labor Party,2
+SA,D,"GILL, Trimann",Australian Labor Party,3
+SA,D,"SUTTON, Joanne",Australian Labor Party,4
+SA,D,"OWENS, Belinda",Australian Labor Party,5
+SA,E,"DAY, Bob",,1
+SA,E,"AMADIO, Pat",,2
+SA,F,"EASON, Jo-Anne",The Great Australian Party,1
+SA,F,"BENNETT, Trevor",The Great Australian Party,2
+SA,G,"BLANDFORD, Lisa",National Party,1
+SA,G,"BUIJS, Damien",National Party,2
+SA,H,"MICHIE, Elise",Sustainable Australia Party - Stop Overdevelopment / Corruption,1
+SA,H,"DUXBURY, Jack",Sustainable Australia Party - Stop Overdevelopment / Corruption,2
+SA,I,"FINNEY, Julie-Ann",The Local Party,1
+SA,I,"PARNELL, Rodney Kenneth",The Local Party,2
+SA,J,"BYRNE, Cathy",Australian Federation Party,1
+SA,J,"DUFFIELD, Nick",Australian Federation Party,2
+SA,K,"YAZBEK, Roger",Australian Democrats,1
+SA,K,"KANCK, Sandra",Australian Democrats,2
+SA,L,"YARMUHAMMAD, Adila",Drew Pavlou Democratic Alliance,1
+SA,L,"YARMUHAMMAD, Amina",Drew Pavlou Democratic Alliance,2
+SA,M,"KAUR, Harmeet",,1
+SA,M,"KUMAR, Rajesh",,2
+SA,N,"WOLFENDALE, Drew","FUSION: Science, Pirate, Secular, Climate Emergency",1
+SA,N,"KENNEDY, David","FUSION: Science, Pirate, Secular, Climate Emergency",2
+SA,O,"XENOPHON, Nick",,1
+SA,O,"GRIFF, Stirling",,2
+SA,P,"POCOCK, Barbara",The Greens,1
+SA,P,"SUMNER, Major Moogy",The Greens,2
+SA,P,"SELWOOD, Melanie",The Greens,3
+SA,Q,"CRUISE, Raina",Informed Medical Options Party,1
+SA,Q,"HARLEY, Heather",Informed Medical Options Party,2
+SA,R,"PATRICK, Rex",Rex Patrick Team,1
+SA,R,"McMAHON, Leonie",Rex Patrick Team,2
+SA,S,"GAME, Jennifer",Pauline Hanson's One Nation,1
+SA,S,"WATCHMAN, Alan",Pauline Hanson's One Nation,2
+SA,T,"GREEN, Tyler Bradley",Legalise Cannabis Australia,1
+SA,T,"ADAMS, Angela",Legalise Cannabis Australia,2
+SA,U,"ARBON, Michael",United Australia Party,1
+SA,U,"SCHILD, Caelum",United Australia Party,2
+SA,V,"FRANCIS, Russell",Citizens Party,1
+SA,V,"CURREY, Rodney",Citizens Party,2
+SA,UG,"HOPPER, Michael",Independent,1
+TAS,A,"DUDLEY, Todd",Sustainable Australia Party - Stop Overdevelopment / Corruption,1
+TAS,A,"LOCKWOOD, Daria",Sustainable Australia Party - Stop Overdevelopment / Corruption,2
+TAS,B,"MAV, Steve",Pauline Hanson's One Nation,1
+TAS,B,"BUTTON, Norelle",Pauline Hanson's One Nation,2
+TAS,C,"DAVIS, Ivan",Animal Justice Party,1
+TAS,C,"THOMAS-WURTH, Virginia",Animal Justice Party,2
+TAS,D,"URQUHART, Anne",Australian Labor Party,1
+TAS,D,"POLLEY, Helen",Australian Labor Party,2
+TAS,D,"RAINBIRD, Kate",Australian Labor Party,3
+TAS,D,"HULME, Daniel",Australian Labor Party,4
+TAS,D,"ROBERTS, Wayne",Australian Labor Party,5
+TAS,D,"GOURLAY, Chris",Australian Labor Party,6
+TAS,E,"OWEN, Matt",Legalise Cannabis Australia,1
+TAS,E,"FITZGIBBON, Oliver",Legalise Cannabis Australia,2
+TAS,F,"WILLIAMS, Ray","Shooters, Fishers and Farmers Party",1
+TAS,F,"DI FALCO, Carlo","Shooters, Fishers and Farmers Party",2
+TAS,F,"JONES, Brenton Ronald","Shooters, Fishers and Farmers Party",3
+TAS,G,"BROOMHALL, Ray",Australian Federation Party,1
+TAS,G,"STRINGER, Justin",Australian Federation Party,2
+TAS,H,"MINSHULL, Leanne",The Local Party,1
+TAS,H,"POULTON, Linda",The Local Party,2
+TAS,H,"VAN RAAY, Lara",The Local Party,3
+TAS,I,"WHISH-WILSON, Peter",The Greens,1
+TAS,I,"BLEYER, Vanessa",The Greens,2
+TAS,I,"BADGER, Tabatha",The Greens,3
+TAS,J,"FIELD, Topher",Liberal Democrats,1
+TAS,J,"CROFT, Chris",Liberal Democrats,2
+TAS,K,"ADAMS, Diana",United Australia Party,1
+TAS,K,"HENNESSY, Alan",United Australia Party,2
+TAS,L,"DUNIAM, Jonno",Liberal,1
+TAS,L,"ASKEW, Wendy",Liberal,2
+TAS,L,"ABETZ, Eric",Liberal,3
+TAS,M,"TYRRELL, Tammy",Jacqui Lambie Network,1
+TAS,M,"GROAT, Sarah",Jacqui Lambie Network,2
+TAS,M,"LAMBIE, Tom",Jacqui Lambie Network,3
+TAS,N,"KERSHAW, Lynne",Informed Medical Options Party,1
+TAS,N,"PICKERING, Matthew",Informed Medical Options Party,2
+TAS,UG,"CROTHERS, Steve",Independent,1
+TAS,UG,"EDWARDS, Fenella",Independent,2
+VIC,A,"VEGA, Yolanda",Reason Australia,1
+VIC,A,"MILLWARD, Harry",Reason Australia,2
+VIC,B,"RICHARDSON, Damien",,1
+VIC,B,"McBRIDE, John",,2
+VIC,C,"GREEN, Leonie",Australian Democrats,1
+VIC,C,"JAGOE, Stephen Peter",Australian Democrats,2
+VIC,D,"HENDERSON, Sarah",Liberal,1
+VIC,D,"McKENZIE, Bridget",The Nationals,2
+VIC,D,"MIRABELLA, Greg",Liberal,3
+VIC,D,"KMETJ, Chrestyna",Liberal,4
+VIC,D,"HARRINGTON, Mick",The Nationals,5
+VIC,D,"BURGESS, David",Liberal,6
+VIC,E,"SMITH, Elissa",Legalise Cannabis Australia,1
+VIC,E,"TAYLOR, Wayne",Legalise Cannabis Australia,2
+VIC,F,"WEARNE, Madeleine",Sustainable Australia Party - Stop Overdevelopment / Corruption,1
+VIC,F,"LONG, Robert",Sustainable Australia Party - Stop Overdevelopment / Corruption,2
+VIC,G,"BURSON, Chris",Australian Values Party,1
+VIC,G,"ASSER, Samantha",Australian Values Party,2
+VIC,H,"HINCH, Derryn",Derryn Hinch's Justice Party,1
+VIC,H,"STANFIELD, Ruth",Derryn Hinch's Justice Party,2
+VIC,I,"CURRIE, Bronwyn",Animal Justice Party,1
+VIC,I,"DELFORCE, Chris",Animal Justice Party,2
+VIC,J,"PITT, Antoinette",Australian Progressives,1
+VIC,J,"KNIGHT, David",Australian Progressives,2
+VIC,K,"WHITE, Linda",Australian Labor Party,1
+VIC,K,"STEWART, Jana",Australian Labor Party,2
+VIC,K,"NUNN, Casey",Australian Labor Party,3
+VIC,K,"BRIDGER-DARLING, Megan",Australian Labor Party,4
+VIC,K,"McFARLANE, Josh",Australian Labor Party,5
+VIC,L,"BABET, Ralph",United Australia Party,1
+VIC,L,"MORAN, Kelly",United Australia Party,2
+VIC,L,"GRIMMOND, Kenneth",United Australia Party,3
+VIC,M,"DANCE, Felix",Socialist Alliance,1
+VIC,M,"CARR, Angela",Socialist Alliance,2
+VIC,N,"HUGHES, Vern",Australian Federation Party,1
+VIC,N,"KIM, Karen",Australian Federation Party,2
+VIC,N,"LACEY, Cheryl",Australian Federation Party,3
+VIC,N,"MARA, Chris",Australian Federation Party,4
+VIC,N,"SEWAK, Neerja",Australian Federation Party,5
+VIC,N,"O'CONNELL, Mark",Australian Federation Party,6
+VIC,O,"CONSTANTINOU, Ethan","Shooters, Fishers and Farmers Party",1
+VIC,O,"BOURMAN, Nicole","Shooters, Fishers and Farmers Party",2
+VIC,P,"PICKERING, Warren",Pauline Hanson's One Nation,1
+VIC,P,"HUXHAM, Stuart",Pauline Hanson's One Nation,2
+VIC,Q,"BARWICK, Robbie",Citizens Party,1
+VIC,Q,"ISHERWOOD, Craig",Citizens Party,2
+VIC,R,"JONAS, Morgan C",,1
+VIC,R,"SMIT, Monica",,2
+VIC,S,"CORDNER HUNT, Kammy","FUSION: Science, Pirate, Secular, Climate Emergency",1
+VIC,S,"FARRANT, Tahlia","FUSION: Science, Pirate, Secular, Climate Emergency",2
+VIC,T,"BENEDYKA, Susan",,1
+VIC,T,"RICHARDS, Christine",,2
+VIC,U,"THORPE, Lidia",The Greens,1
+VIC,U,"FROGLEY, Adam",The Greens,2
+VIC,U,"AUSTIN, Sissy",The Greens,3
+VIC,U,"PAYNE, Zeb",The Greens,4
+VIC,V,"O'BRYAN, Darryl",The Great Australian Party,1
+VIC,V,"WHITEHEAD, Geoff",The Great Australian Party,2
+VIC,W,"LIMBRICK, David",Liberal Democrats,1
+VIC,W,"MITCHELL, Krystle",Liberal Democrats,2
+VIC,W,"WHITE, Caroline",Liberal Democrats,3
+VIC,X,"CLONARIDIS, Nick",Informed Medical Options Party,1
+VIC,X,"CURNOW, Robyn",Informed Medical Options Party,2
+VIC,Y,"BYRNE, Peter",,1
+VIC,Y,"WARDLE, Jason",,2
+VIC,Z,"MYLVAGANAM, Aran",Victorian Socialists,1
+VIC,Z,"RICCARDI, Laura",Victorian Socialists,2
+VIC,UG,"FLOYD, Glenn",Independent,1
+VIC,UG,"RIDGEWAY, Allen",Independent,2
+VIC,UG,"BOND, James",Independent,3
+VIC,UG,"SMITH, Neal",Independent,4
+VIC,UG,"DICKS, Max",Independent,5
+VIC,UG,"ATKINSON, Bernardine",Independent,6
+VIC,UG,"ROSS, Paul",Independent,7
+VIC,UG,"DE FRANCESCO, Nat",Independent,8
+VIC,UG,"TOSCANO, Joseph",Independent,9
+VIC,UG,"TRAN, Tara",Independent,10
+VIC,UG,"DILLON, David John",Independent,11
+VIC,UG,"GONSALVEZ, Geraldine Marie Antoinette",Independent,12
+WA,A,"COX, Dorinda",The Greens (WA),1
+WA,A,"CLARKE, River",The Greens (WA),2
+WA,A,"COLLINS, Simone",The Greens (WA),3
+WA,A,"CLARKE, Donald",The Greens (WA),4
+WA,A,"CAHILL, Jordan",The Greens (WA),5
+WA,A,"WALLACE, Alex",The Greens (WA),6
+WA,B,"CRICHTON, Mike",Australian Christians,1
+WA,B,"GROENEWALD, Maryka",Australian Christians,2
+WA,C,"McDONALD, James",United Australia Party,1
+WA,C,"FORSTER, Rob",United Australia Party,2
+WA,D,"LINES, Sue",Australian Labor Party,1
+WA,D,"STERLE, Glenn",Australian Labor Party,2
+WA,D,"PAYMAN, Fatima",Australian Labor Party,3
+WA,D,"HELPS, Vicki",Australian Labor Party,4
+WA,E,"OBORN, Karen",Sustainable Australia Party - Stop Overdevelopment / Corruption,1
+WA,E,"OOSTRYCK, Ryan",Sustainable Australia Party - Stop Overdevelopment / Corruption,2
+WA,F,"MITCHELL, Elana",Australian Democrats,1
+WA,F,"SIMSON, Simon",Australian Democrats,2
+WA,G,"FILING, Paul Anthony",Pauline Hanson's One Nation,1
+WA,G,"MUNDY, Sheila",Pauline Hanson's One Nation,2
+WA,H,"HARLEY, Petrina",Socialist Alliance,1
+WA,H,"SALMON, Alex",Socialist Alliance,2
+WA,I,"JOHNSON, Nicola Julia",Legalise Cannabis Australia,1
+WA,I,"PEET, Aaron",Legalise Cannabis Australia,2
+WA,J,"CULLETON, Rodney Norman",The Great Australian Party,1
+WA,J,"VINCI, Samantha Lee",The Great Australian Party,2
+WA,K,"GEORGATOS, Gerry",,1
+WA,K,"KRAKOUER, Megan",,2
+WA,L,"FANTINEL, Kate",Liberal Democrats,1
+WA,L,"McLOUGHLIN, Peter",Liberal Democrats,2
+WA,M,"KINSELLA, Michelle",Informed Medical Options Party,1
+WA,M,"LOCKYER, Leanne",Informed Medical Options Party,2
+WA,N,"PIZZEY, Rebecca",Australian Values Party,1
+WA,N,"FITZPATRICK, Kathy",Australian Values Party,2
+WA,O,"DORN, Amanda",Animal Justice Party,1
+WA,O,"McCASKER, Elizabeth Gay",Animal Justice Party,2
+WA,P,"TINLEY, Cam",,1
+WA,P,"AYRE, Tricia",,2
+WA,Q,"WILYMAN, Judy",Australian Federation Party,1
+WA,Q,"BARRETT, Leanne",Australian Federation Party,2
+WA,R,"CASH, Michaelia",Liberal,1
+WA,R,"SMITH, Dean",Liberal,2
+WA,R,"SMALL, Ben",Liberal,3
+WA,R,"SUFI, Sherry",Liberal,4
+WA,S,"VILJOEN, Tim","FUSION: Science, Pirate, Secular, Climate Emergency",1
+WA,S,"WOODINGS, Adam","FUSION: Science, Pirate, Secular, Climate Emergency",2
+WA,T,"McDOWALL, Matthew",WESTERN AUSTRALIA PARTY,1
+WA,T,"MATHESON, Julie",WESTERN AUSTRALIA PARTY,2
+WA,U,"BRAILEY, Denise",Citizens Party,1
+WA,U,"ROBINSON, Jean",Citizens Party,2
+WA,V,"COUNT, Matthew",Federal ICAC Now,1
+WA,V,"WATKINS, Dianne",Federal ICAC Now,2
+WA,UG,"MURPHY, Ziggi",Independent,1
+WA,UG,"BUCKLE, Ashley",Independent,2
+WA,UG,"McDONALD, Peter Robert",Independent,3
+WA,UG,"VAGH, Yunous",Independent,4
+WA,UG,"BURDETT, Bob",Seniors United Party of Australia,5
+WA,UG,"PEGRUM, Valentine",Independent,6

@@ -1,0 +1,75 @@
+{
+  "schemaVersion": 1,
+  "description": "Neutrality claims register. Maps each qualified neutrality wording used in public copy to its substantiating control, CI test IDs, external-evidence IDs and approver/expiry; and records the versioned proposition-selection rationale + scoring spec, bound to the built-dataset proposition manifest. Enforced by scripts/check-neutrality-claims.mjs (the claims/copy arm of the neutrality lint) and wired into the compliance CI groups. See also docs/claims-register.md (prose) and apps/web/src/routes/methodology/+page.svelte (the public surface).",
+  "claims": [
+    {
+      "id": "NC-NO-RECOMMENDATION",
+      "wording": "how2vote never suggests who to put first",
+      "substantiatingControl": "Comparison is shown as evidence only; the plan builder starts from a blank ballot (apps/web/src/lib/plan.ts) with no preselection or ranking; BallotRow.svelte styles every row identically so no candidate is crowned. Enforced by content.server.test.ts (routes never touch the scoring engine) and the neutrality-claims banned-phrase scan.",
+      "tests": ["neutrality-claims", "content-server-neutrality"],
+      "evidence": ["EV-METHODOLOGY-BALANCE-REVIEW"],
+      "approver": "Cameron (National Digital)",
+      "approvedAt": "2026-07-15",
+      "expiresAt": "2027-07-15"
+    },
+    {
+      "id": "NC-PARTY-NOT-CANDIDATE",
+      "wording": "It describes the party, not any individual candidate's personal views",
+      "substantiatingControl": "Scores are party-level averages of recorded parliamentary voting (methodology 'From members to parties'); a candidate with no personal record is shown against their party's record, never their own inferred view. Enforced by the neutrality-claims methodology-binding check.",
+      "tests": ["neutrality-claims"],
+      "evidence": ["EV-METHODOLOGY-BALANCE-REVIEW"],
+      "approver": "Cameron (National Digital)",
+      "approvedAt": "2026-07-15",
+      "expiresAt": "2027-07-15"
+    },
+    {
+      "id": "NC-NO-GUESSING",
+      "wording": "it is never guessed",
+      "substantiatingControl": "A party or candidate with no member on the record for an issue has no position; NO_DATA is carried through scoring so a missing record earns and risks nothing rather than being imputed (packages/engine scoring; methodology 'From members to parties').",
+      "tests": ["neutrality-claims"],
+      "evidence": ["EV-METHODOLOGY-BALANCE-REVIEW"],
+      "approver": "Cameron (National Digital)",
+      "approvedAt": "2026-07-15",
+      "expiresAt": "2027-07-15"
+    },
+    {
+      "id": "NC-NO-RANK-BY-SCORE",
+      "wording": "candidates are never ranked by score, only ever shown in official ballot order",
+      "substantiatingControl": "Candidates are rendered in official AEC ballot order (packages/engine ballot.ts), never sorted by alignment; the monochrome-palette neutrality lint (apps/web/scripts/neutrality-check.mjs) additionally prevents any hue reading as a winner. Enforced by the neutrality-claims methodology-binding check + content.server.test.ts.",
+      "tests": ["neutrality-claims", "content-server-neutrality"],
+      "evidence": ["EV-METHODOLOGY-BALANCE-REVIEW"],
+      "approver": "Cameron (National Digital)",
+      "approvedAt": "2026-07-15",
+      "expiresAt": "2027-07-15"
+    }
+  ],
+  "propositionSelection": {
+    "version": "3",
+    "rationale": "The propositions are selected from They Vote For You policies to span the parliamentary term; choosing and wording them is an editorial judgement, and each proposition links to the divisions behind it so a reader can check the record. Selection aims for coverage across policy areas and across the term rather than issue prominence, salience or any party's advantage; no proposition is included or excluded to steer a result. Each proposition states a concrete, contestable policy action alongside the genuine competing interest it trades off against, so that agreeing and disagreeing are equally reasonable positions rather than a foregone conclusion; the wording never asserts a particular outcome. The upcoming-election comparison additionally draws its propositions from policies the current Parliament has actually divided on, so the set reflects live parliamentary activity rather than any party's advantage.",
+    "scoringSpec": {
+      "scale": "Each party position and each user answer sits on a five-point scale (1 strongly disagree … 5 strongly agree); skips count for nothing.",
+      "banding": "A party's plain-average agreement figure (0-100) is placed on the five-point scale by dividing 0-100 into five equal bands (0-20 → 1 … 80-100 → 5).",
+      "distance": "d = |party − you|, a whole number 0 (identical) … 4 (opposite ends).",
+      "pointsAtStake": {
+        "strong": "max(0, 4 − d)",
+        "moderate": "max(0, 3 − d)",
+        "equalMerits": "max(0, 2 − d)",
+        "extremelyImportant": "×10 multiplier on a strong answer: max(0, 40 − 10d)"
+      },
+      "overallMatch": "match % = round( points earned ÷ points possible × 100 ); merged/renamed parties combine raw earned + possible points before the percentage; a party with no scorable question in common shows as no data rather than 0%.",
+      "noData": "A party or candidate with no recorded position on an issue has no position on it — never imputed.",
+      "displayOrder": "Party scores are placed beside candidates in official ballot order; nothing is ranked or crowned by score."
+    },
+    "pageWording": [
+      "The propositions are selected from They Vote For You policies to span the parliamentary term; choosing and wording them is an editorial judgement",
+      "proposition selection v3",
+      "match % = round( points earned ÷ points possible × 100 )"
+    ],
+    "boundManifestHash": "3194d9857cdff6f2dee7c3a647f714a8ab6bf65447f848fbe3b38a86319397ed",
+    "manifestNote": "SHA-256 over the canonical proposition manifest (per election, sorted, {id,text} only) of the built datasets — see scripts/check-neutrality-claims.mjs hashPropositionManifest(). Bumping the propositions requires re-versioning this record and updating the hash.",
+    "methodologyVersion": "2026.1",
+    "approver": "Cameron (National Digital)",
+    "approvedAt": "2026-07-19",
+    "expiresAt": "2027-07-15"
+  }
+}

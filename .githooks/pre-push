@@ -1,0 +1,26 @@
+#!/bin/sh
+# Pre-push: run the fast half of the CI "quality" gate before code leaves the machine, so a red PR is
+# the exception rather than the norm. These three cover the failures that are cheap to catch locally.
+#
+# Deliberately NOT here: `pnpm build`, the Playwright e2e suites and the compliance-script gates
+# (data:validate, neutrality:check, leakage:check, the boundary/rights/operator/… checks). They are
+# minutes-slow and belong in CI; running them on every push would make pushing painful. Run
+# `pnpm build` / the relevant `*:check` script by hand when a change touches those areas.
+#
+# Skip in CI (which pushes nothing) and allow an explicit escape hatch for work-in-progress branches:
+#   SKIP_HOOKS=1 git push
+set -eu
+
+[ "${CI:-}" = "true" ] && exit 0
+[ "${SKIP_HOOKS:-}" = "1" ] && { echo "pre-push: skipped (SKIP_HOOKS=1)"; exit 0; }
+
+echo "pre-push: pnpm lint (eslint + prettier --check)"
+pnpm lint
+
+echo "pre-push: pnpm typecheck"
+pnpm typecheck
+
+echo "pre-push: pnpm test"
+pnpm test
+
+echo "pre-push: all local gates passed"

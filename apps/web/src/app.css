@@ -1,0 +1,250 @@
+/*
+ * how2vote design system — "ink on paper".
+ * Strict two-tone: a warm near-black ink on warm paper (light) / warm chalk on warm slate (dark).
+ * There is NO hue anywhere in the product — match quality is encoded with fill, hatch, dash and
+ * text, never colour. CI greps the built CSS to enforce this (see scripts/neutrality-check.mjs).
+ * Every non-token value below is an alpha of the ink/chalk.
+ */
+
+@font-face {
+  font-family: "Newsreader";
+  font-style: normal;
+  font-weight: 200 800;
+  font-display: swap;
+  src: url("/fonts/newsreader.woff2") format("woff2");
+}
+@font-face {
+  font-family: "Newsreader";
+  font-style: italic;
+  font-weight: 200 800;
+  font-display: swap;
+  src: url("/fonts/newsreader-italic.woff2") format("woff2");
+}
+
+:root {
+  color-scheme: light;
+  --paper: #f6f4ee;
+  --raise: #fbfaf7;
+  --ink: #181611;
+  --ink2: rgba(24, 22, 17, 0.66);
+  --ink3: rgba(24, 22, 17, 0.6);
+  --line: rgba(24, 22, 17, 0.16);
+  --line2: rgba(24, 22, 17, 0.34);
+  --rule: rgba(24, 22, 17, 0.85);
+  --wash: rgba(24, 22, 17, 0.05);
+  --on-fill: #fbfaf7;
+  /* Modal scrim: intentionally dark in both themes (a scrim always darkens what's behind it),
+     so it is defined once here and not flipped by the dark-theme overrides. */
+  --scrim: rgba(24, 22, 17, 0.5);
+
+  --serif:
+    "Newsreader", "Iowan Old Style", "Palatino Linotype", "Book Antiqua", Georgia,
+    "Times New Roman", serif;
+  --ui: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --mono: ui-monospace, "Cascadia Mono", "SF Mono", Menlo, Consolas, monospace;
+
+  --gutter: 18px;
+  --radius: 6px;
+  --radius-box: 2px;
+  --sheet: 480px;
+
+  --dur-confirm: 160ms;
+  --dur-advance: 220ms;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    color-scheme: dark;
+    --paper: #151410;
+    --raise: #1c1b16;
+    --ink: #ebe8df;
+    --ink2: rgba(235, 232, 223, 0.68);
+    --ink3: rgba(235, 232, 223, 0.62);
+    --line: rgba(235, 232, 223, 0.17);
+    --line2: rgba(235, 232, 223, 0.36);
+    --rule: rgba(235, 232, 223, 0.88);
+    --wash: rgba(235, 232, 223, 0.07);
+    --on-fill: #151410;
+  }
+}
+
+/* Explicit theme override (the toggle stamps data-theme on <html>); wins in both directions. */
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --paper: #151410;
+  --raise: #1c1b16;
+  --ink: #ebe8df;
+  --ink2: rgba(235, 232, 223, 0.68);
+  --ink3: rgba(235, 232, 223, 0.62);
+  --line: rgba(235, 232, 223, 0.17);
+  --line2: rgba(235, 232, 223, 0.36);
+  --rule: rgba(235, 232, 223, 0.88);
+  --wash: rgba(235, 232, 223, 0.07);
+  --on-fill: #151410;
+}
+:root[data-theme="light"] {
+  color-scheme: light;
+  --paper: #f6f4ee;
+  --raise: #fbfaf7;
+  --ink: #181611;
+  --ink2: rgba(24, 22, 17, 0.66);
+  --ink3: rgba(24, 22, 17, 0.6);
+  --line: rgba(24, 22, 17, 0.16);
+  --line2: rgba(24, 22, 17, 0.34);
+  --rule: rgba(24, 22, 17, 0.85);
+  --wash: rgba(24, 22, 17, 0.05);
+  --on-fill: #fbfaf7;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
+  /* WCAG 2.2 SC 2.4.11 Focus Not Obscured (Minimum): keep keyboard focus clear of the bottom-fixed
+     consent banner when a focused control scrolls into view. The banner is dormant today (nothing
+     needs consent) but publishes --consent-banner-h when live; there is no sticky top header, so a
+     bottom inset is all that's needed (the fallback is 0). */
+  scroll-padding-bottom: var(--consent-banner-h, 0px);
+}
+
+body {
+  margin: 0;
+  min-height: 100dvh;
+  background: var(--paper);
+  color: var(--ink);
+  font-family: var(--serif);
+  font-size: 17px;
+  line-height: 1.55;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+h1,
+h2,
+h3,
+h4 {
+  font-family: var(--serif);
+  font-weight: 600;
+  line-height: 1.15;
+  text-wrap: balance;
+  margin: 0;
+}
+
+a {
+  color: inherit;
+}
+
+button {
+  font: inherit;
+  color: inherit;
+}
+
+:focus-visible {
+  outline: 2px solid var(--ink);
+  outline-offset: 2px;
+  border-radius: var(--radius-box);
+}
+
+/* Metadata, labels and controls use the UI stack; numerals are tabular for alignment. */
+.ui {
+  font-family: var(--ui);
+}
+.tnum {
+  font-variant-numeric: tabular-nums;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* Windows High Contrast / forced-colours: the two-tone system maps cleanly onto system colours. */
+@media (forced-colors: active) {
+  :root {
+    --ink: CanvasText;
+    --paper: Canvas;
+    --raise: Canvas;
+    --rule: CanvasText;
+    --line: GrayText;
+    --line2: GrayText;
+    --on-fill: Canvas;
+  }
+}
+
+/* The centred paper sheet: a phone-width column, raised on the paper ground on larger screens. */
+.sheet {
+  position: relative;
+  width: 100%;
+  max-width: var(--sheet);
+  margin: 0 auto;
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  background: var(--raise);
+  /* Reserve room for the fixed consent banner while it is shown, so bottom-anchored content is
+     never covered. The banner publishes its live height; the fallback is 0 when it is absent. On
+     mobile the sheet fills the viewport, so the reservation lives inside it (footer sits directly
+     above the fixed bar). The desktop override moves it below the card — see the media query. */
+  padding-bottom: var(--consent-banner-h, 0px);
+}
+@media (min-width: 720px) {
+  /* Centre the sheet in the viewport on both axes, rather than pinning it to the top. The flex
+     container plus auto margins centre it; the padding keeps a gap at the edges, and a sheet taller
+     than the viewport simply grows and scrolls instead of being clipped. */
+  body {
+    display: flex;
+    padding: 32px 0;
+  }
+  .sheet {
+    min-height: auto;
+    margin: auto;
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    box-shadow: 0 1px 0 var(--line);
+    overflow: clip;
+    /* The card is a narrow centred column now, not the full viewport, so an internal reservation
+       just leaves dead space between the footer and the card's bottom border. Reserve on the body
+       instead (below) so a scrolled-to-bottom footer still clears the fixed bar. */
+    padding-bottom: 0;
+  }
+  body {
+    padding-bottom: var(--consent-banner-h, 0px);
+  }
+}
+
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* The anti-abuse (Cloudflare Turnstile) disclosure line shown beneath each protected form. Turnstile
+   runs cookielessly in its non-interactive/invisible mode and adds no floating badge, so — unlike
+   reCAPTCHA — there is nothing to hide; the disclosure text (with links to Cloudflare's Privacy
+   Policy and Terms) is carried near each form (see FeedbackWidget and the Contact page). */
+.challenge-note {
+  font-family: var(--ui);
+  font-size: 12px;
+  line-height: 1.5;
+  color: var(--ink3);
+  margin: 14px 0 0;
+}
+.challenge-note a {
+  color: var(--ink2);
+}

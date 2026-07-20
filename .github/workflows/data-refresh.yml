@@ -1,0 +1,83 @@
+name: Data refresh
+
+# Rebuilds the dataset from upstream sources and opens a PR with the checksummed result.
+#
+# Dispatch-only (ADR 0005): the TVFY API is fetched exclusively via the guarded snapshot commands
+# during an election lead-up — there is NO scheduled polling. The snapshot command's own
+# writ-window and lock guards enforce this even if the workflow is dispatched off-season.
+# Triggers:
+#   - manual run (workflow_dispatch)
+#   - webhook: POST /repos/National-Digital/how2vote.au/dispatches {"event_type":"refresh-data"}
+on:
+  workflow_dispatch:
+    inputs:
+      election_id:
+        description: "Election id to snapshot-fetch from TVFY (writ window only; blank = skip)"
+        required: false
+      aec_house_csv_url:
+        description: "AEC House nominations CSV URL (optional; election time only)"
+        required: false
+      aec_senate_csv_url:
+        description: "AEC Senate nominations CSV URL (optional; election time only)"
+        required: false
+  repository_dispatch:
+    types: [refresh-data]
+
+permissions:
+  contents: write
+  pull-requests: write
+
+concurrency:
+  # Serialise refreshes: two dispatches racing on the shared data/refresh branch would clobber each
+  # other. Never cancel an in-flight refresh (it may be mid-fetch / mid-commit) — queue instead.
+  group: data-refresh
+  cancel-in-progress: false
+
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+    env:
+      TVFY_API_KEY: ${{ secrets.TVFY_API_KEY }}
+    steps:
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7
+      - run: corepack enable
+      - uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e # v6
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm build
+
+      - name: "Snapshot-fetch They Vote For You (guarded: writ window only)"
+        if: ${{ github.event.inputs.election_id != '' && env.TVFY_API_KEY != '' }}
+        # election_id is dispatch-controlled input: pass it via env and quote it so it can never be
+        # interpolated into the rendered shell (this job carries TVFY_API_KEY and contents: write).
+        # Matches the AEC-URL step's env-passing pattern below.
+        env:
+          ELECTION_ID: ${{ github.event.inputs.election_id }}
+        run: pnpm data:snapshot:fetch "$ELECTION_ID"
+
+      - name: Fetch AEC nominations
+        if: ${{ github.event.inputs.aec_house_csv_url != '' }}
+        env:
+          AEC_HOUSE_CSV_URL: ${{ github.event.inputs.aec_house_csv_url }}
+          AEC_SENATE_CSV_URL: ${{ github.event.inputs.aec_senate_csv_url }}
+        run: pnpm data:fetch:aec
+
+      - name: Rebuild and validate dataset
+        run: |
+          pnpm --filter @how2vote/data-pipeline dataset:build
+          pnpm data:validate
+
+      - name: Open a PR if the dataset changed
+        uses: peter-evans/create-pull-request@5f6978faf089d4d20b00c7766989d076bb2fc7f1 # v8.1.1
+        with:
+          branch: data/refresh
+          title: "chore(data): refresh compiled dataset"
+          commit-message: "chore(data): refresh compiled dataset"
+          body: |
+            Automated dataset refresh from They Vote For You (ODbL) and AEC nominations.
+            The dataset integrity gate passed. Review the checksum change in `data/dist/manifest.json`.
+          labels: data, automated
+          add-paths: |
+            data/

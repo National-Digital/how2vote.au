@@ -1,0 +1,40 @@
+# Cloudflare Pages security headers.
+#
+# The full per-resource Content-Security-Policy is emitted by SvelteKit as a per-page <meta> tag
+# (svelte.config.js csp, mode "hash") because the inline hydration-script hash differs per page and
+# cannot live in one static header. The CSP directives below are the ones a <meta> tag cannot express:
+# frame-ancestors (anti-clickjacking) and upgrade-insecure-requests. They apply to every response,
+# so non-HTML assets are covered too. Delivered as a real header, they take precedence over any
+# meta policy for these directives.
+/*
+  Content-Security-Policy: frame-ancestors 'none'; upgrade-insecure-requests
+  Strict-Transport-Security: max-age=63072000; includeSubDomains; preload
+  X-Content-Type-Options: nosniff
+  X-Frame-Options: DENY
+  Referrer-Policy: no-referrer
+  Cross-Origin-Opener-Policy: same-origin
+  Cross-Origin-Resource-Policy: same-origin
+  Origin-Agent-Cluster: ?1
+  Permissions-Policy: accelerometer=(), autoplay=(), browsing-topics=(), camera=(), display-capture=(), geolocation=(), gyroscope=(), interest-cohort=(), magnetometer=(), microphone=(), payment=(), usb=()
+  # AI-usage preferences (IETF AIPREF). Mirrors /robots.txt so non-HTML assets carry it too; the
+  # robots.txt Allow remains the authoritative access signal. search=y matches our crawlable stance;
+  # train-ai=y permits model training (public, factual, AGPL/ODbL content — "AI allowed by decision").
+  Content-Usage: search=y, train-ai=y
+
+/fonts/*
+  Cache-Control: public, max-age=31536000, immutable
+
+/_app/immutable/*
+  Cache-Control: public, max-age=31536000, immutable
+
+# The service worker is the update gatekeeper. Cloudflare's default (max-age=14400) lets browsers
+# keep serving an old SW — and therefore the old cache-first app bundle — for up to 4 hours after a
+# deploy, so new pages/routes (e.g. /contact) never appear until the cache lapses. Force revalidation
+# every load so a deploy reaches clients on their next visit.
+/service-worker.js
+  Cache-Control: public, max-age=0, must-revalidate
+
+# Runtime public env (PUBLIC_* form IDs, noindex flag) is emitted here and is NOT content-hashed, so
+# it must revalidate too — otherwise a changed form ID could stay stale behind the default cache.
+/_app/env.js
+  Cache-Control: public, max-age=0, must-revalidate

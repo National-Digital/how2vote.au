@@ -1,0 +1,58 @@
+{
+  "schemaVersion": 1,
+  "updated": "2026-07-20",
+  "branch": "main",
+  "note": "Authoritative, machine-checked manifest of the compliance-workflow required status checks. Branch protection is a GitHub REPO SETTING that cannot be changed from code — this file is the source of truth a maintainer copies into Settings → Branches → main → 'Require status checks to pass before merging'. scripts/check-close-out.mjs fails CI if the set of jobs in .github/workflows/compliance.yml drifts from requiredChecks (a new compliance job that is not registered here, or a stale entry here with no job), so the manual repo setting can never silently fall behind the workflow. The setting is confirmed and recorded as EV-BRANCH-PROTECTION in the control register.",
+  "ciGroups": [
+    "Legal",
+    "Data",
+    "Privacy and Research",
+    "Code and Supply Chain",
+    "Accessibility and Product",
+    "Infrastructure and Operations"
+  ],
+  "groupChecks": {
+    "Legal": "CI group (Legal)",
+    "Data": "CI group (Data)",
+    "Privacy and Research": "CI group (Privacy and Research)",
+    "Code and Supply Chain": "CI group (Code and Supply Chain)",
+    "Accessibility and Product": "CI group (Accessibility and Product)",
+    "Infrastructure and Operations": "CI group (Infrastructure and Operations)"
+  },
+  "requiredChecks": [
+    "Control register (fail-closed)",
+    "CI group (Accessibility and Product)",
+    "CI group (Data)",
+    "CI group (Privacy and Research)",
+    "CI group (Legal)",
+    "CI group (Legal · Accessibility and Product) — electoral output",
+    "CI group (Code and Supply Chain)",
+    "CI group (Infrastructure and Operations)",
+    "CI group (Privacy and Research · Accessibility and Product) — age-first gate",
+    "CI group (Legal · Accessibility and Product) — candidate/party distinction",
+    "CI group (Privacy and Research · Accessibility and Product) — local-device privacy",
+    "CI group (Privacy and Research · Infrastructure and Operations) — privacy claims + transport",
+    "Close-out — control-register completeness + required-checks"
+  ],
+  "bypasses": [],
+  "disclaimers": [
+    {
+      "id": "DISC-NOT-LEGAL-ADVICE",
+      "patternId": "advice",
+      "files": ["apps/web/src/routes/terms/+page.svelte"],
+      "backingControls": ["control-25", "control-2"],
+      "note": "The Terms of Use state the operator's published terms are 'not legal advice'. This disclaimer does NOT stand in for a control: the substantive backing is the versioned-Terms incorporation + internal-consistency control (scripts/check-terms.mjs) and the legal-review freshness / qualified-practitioner sign-off gate (scripts/check-legal-review.mjs) which requires an Australian practitioner's review before an election."
+    },
+    {
+      "id": "DISC-NO-RECOMMENDATION",
+      "patternId": "no-recommendation",
+      "files": [
+        "apps/web/src/routes/card/+page.svelte",
+        "apps/web/src/lib/content.server.ts",
+        "apps/web/src/routes/glossary/+page.svelte"
+      ],
+      "backingControls": ["control-5", "control-4"],
+      "note": "The card notice 'how2vote does not recommend a candidate or a preference order', the generated-page prose 'how2vote does not recommend a candidate or party' (content.server.ts — replacing the earlier absolute 'non-partisan' self-label per the 2026-07-19 deep review), and the glossary's 'Alignment' definition ('background information, not a recommendation — how2vote never tells you who to put first') are backed by real controls, not merely asserted: the neutrality / non-recommendation claims register + methodology binding (scripts/check-neutrality-claims.mjs) bans absolute / recommendation / preselection copy, and the user-authored blank-ballot design means every preference box starts empty and the voter authors the order themselves."
+    }
+  ]
+}

@@ -1,0 +1,2578 @@
+[
+  {
+    "id": 1,
+    "name": "same-sex marriage equality",
+    "description": "the Federal Government should amend the Marriage Act 1961 so that same-sex couples can marry under Australian law",
+    "provisional": false,
+    "last_edited_at": "2022-01-14T10:32:37+11:00"
+  },
+  {
+    "id": 2,
+    "name": "tobacco plain packaging",
+    "description": "the federal government should introduce plain packaging for tobacco products",
+    "provisional": false,
+    "last_edited_at": "2018-09-29T16:01:40+10:00"
+  },
+  {
+    "id": 3,
+    "name": "a carbon price",
+    "description": "the federal government should introduce a carbon pricing mechanism",
+    "provisional": false,
+    "last_edited_at": "2021-03-19T13:30:42+11:00"
+  },
+  {
+    "id": 4,
+    "name": "increasing scrutiny of asylum seeker management",
+    "description": "there should be more independent access to detention centres and more information provided about the management of asylum seekers under Australian government policy, including the interception of boats at sea",
+    "provisional": false,
+    "last_edited_at": "2022-01-14T11:06:43+11:00"
+  },
+  {
+    "id": 5,
+    "name": "government administered paid parental leave",
+    "description": "the federal government should administer the paid parental leave scheme rather than employers",
+    "provisional": false,
+    "last_edited_at": "2014-09-19T13:09:30+10:00"
+  },
+  {
+    "id": 6,
+    "name": "increasing trade unions' powers in the workplace",
+    "description": "the federal government should introduce legislation that increases the powers and influence of trade unions in workplace relations",
+    "provisional": false,
+    "last_edited_at": "2023-12-29T10:02:36+11:00"
+  },
+  {
+    "id": 7,
+    "name": "the Carbon Pollution Reduction Scheme",
+    "description": "the federal government should introduce the Carbon Pollution Reduction Scheme, which is a cap-and-trade system of emissions trading introduced by the Rudd Labor Government",
+    "provisional": false,
+    "last_edited_at": "2021-11-12T17:26:13+11:00"
+  },
+  {
+    "id": 8,
+    "name": "implementing refugee and protection conventions",
+    "description": "the federal government should implement the international conventions that relate to seeking refuge and protection from torture. These include the Convention relating to the Status of Refugees, the Protocol relating to the Status of Refugees and the non-refoulement provisions of the UN Convention Against Torture and the International Covenant on Civil and Political Rights",
+    "provisional": false,
+    "last_edited_at": "2024-09-29T14:49:56+10:00"
+  },
+  {
+    "id": 9,
+    "name": "increasing competition in bulk wheat export",
+    "description": "the federal government should deregulate Australia's wheat export market so that bulk wheat export is no longer done through a single exporter (which is known as a 'single desk' policy)",
+    "provisional": false,
+    "last_edited_at": "2014-10-17T10:58:32+11:00"
+  },
+  {
+    "id": 10,
+    "name": "recognising local government in the Constitution",
+    "description": "local government should be recognised in the Australian Constitution",
+    "provisional": false,
+    "last_edited_at": "2014-10-17T10:18:26+11:00"
+  },
+  {
+    "id": 11,
+    "name": "temporary protection visas",
+    "description": "the Federal government should introduce temporary protection visas",
+    "provisional": false,
+    "last_edited_at": "2024-07-03T17:08:13+10:00"
+  },
+  {
+    "id": 12,
+    "name": "voluntary student union fees",
+    "description": "university students should be able to choose whether or not to pay student services and amenities fees (also called student union fees)",
+    "provisional": false,
+    "last_edited_at": "2017-10-27T13:23:41+11:00"
+  },
+  {
+    "id": 13,
+    "name": "increasing or removing the Government debt limit",
+    "description": "the federal government should increase the limit on the total amount of Commonwealth stock and securities that may be on issue at any time (known as the 'debt limit') or remove the limit altogether",
+    "provisional": false,
+    "last_edited_at": "2016-08-04T10:33:46+10:00"
+  },
+  {
+    "id": 14,
+    "name": "a minerals resource rent tax ",
+    "description": "the federal government should put a tax on profits earned from mining mineral resources such as coal and iron ore",
+    "provisional": false,
+    "last_edited_at": "2016-08-04T10:49:01+10:00"
+  },
+  {
+    "id": 15,
+    "name": "increasing protection of Australia's fresh water",
+    "description": "the federal government should introduce legislation that increases the protection of Australia's fresh water resources, including its river and groundwater systems",
+    "provisional": false,
+    "last_edited_at": "2024-05-04T13:53:08+10:00"
+  },
+  {
+    "id": 16,
+    "name": "regional processing of asylum seekers",
+    "description": "asylum seekers who arrive in Australia without a visa, particularly those who arrive by boat, should have their asylum claims processed regionally in a country such as the Republic of Nauru or Papua New Guinea (See the policy \"For offshore processing of asylum seekers\" for more on processing asylum seeker claims in Australian territories like Christmas Island)",
+    "provisional": false,
+    "last_edited_at": "2023-02-10T11:04:16+11:00"
+  },
+  {
+    "id": 17,
+    "name": "increasing marine conservation",
+    "description": "the federal government should introduce legislation and regulations that protect and conserve Australia's marine ecosystems such as the Great Barrier Reef",
+    "provisional": false,
+    "last_edited_at": "2023-04-21T12:25:55+10:00"
+  },
+  {
+    "id": 18,
+    "name": "unconventional gas mining",
+    "description": "the federal government should allow companies to mine coal seam (CSG), tight and shale gas",
+    "provisional": false,
+    "last_edited_at": "2026-03-14T14:41:32+11:00"
+  },
+  {
+    "id": 19,
+    "name": "restricting foreign ownership",
+    "description": "the federal government should restrict foreign ownership within Australia, particularly where foreign ownership would be against the national interest",
+    "provisional": false,
+    "last_edited_at": "2022-10-21T16:49:43+11:00"
+  },
+  {
+    "id": 20,
+    "name": "increasing investment in renewable energy",
+    "description": "the federal government should increase investment in renewable energy technologies",
+    "provisional": false,
+    "last_edited_at": "2025-05-24T18:21:08+10:00"
+  },
+  {
+    "id": 21,
+    "name": "privatising government-owned assets",
+    "description": "the federal government should privatise government owned assets",
+    "provisional": false,
+    "last_edited_at": "2025-05-29T15:46:18+10:00"
+  },
+  {
+    "id": 22,
+    "name": "stem cell research",
+    "description": "the federal government should allow certain types of stem cell research, including human embryo research",
+    "provisional": false,
+    "last_edited_at": "2014-10-20T17:39:23+11:00"
+  },
+  {
+    "id": 23,
+    "name": "more scrutiny of intelligence services & police",
+    "description": "there should be more scrutiny or oversight of the actions and powers of Australian intelligence and law enforcement agencies, including the Australian Security Intelligence Organisation (ASIO), the Australian Secret Intelligence Service (ASIS) and the Australian Federal Police (AFP)",
+    "provisional": false,
+    "last_edited_at": "2026-02-13T14:10:33+11:00"
+  },
+  {
+    "id": 24,
+    "name": "increasing Aboriginal land rights",
+    "description": "the federal government should increase Aboriginal and Torres Strait Islander land rights by, for example, increasing their legal recognition and protection",
+    "provisional": false,
+    "last_edited_at": "2024-07-03T15:42:46+10:00"
+  },
+  {
+    "id": 25,
+    "name": "increasing funding for university education",
+    "description": "the federal government should increase funding for university education",
+    "provisional": false,
+    "last_edited_at": "2022-01-07T10:27:39+11:00"
+  },
+  {
+    "id": 26,
+    "name": "decreasing the private health insurance rebate",
+    "description": "the federal government should decrease the private health insurance rebate that eligible taxpayers are entitled to",
+    "provisional": false,
+    "last_edited_at": "2014-10-20T12:48:46+11:00"
+  },
+  {
+    "id": 27,
+    "name": "increasing the price of subsidised medicine",
+    "description": "the federal government should increase the amount that patients pay for medicine under the Pharmaceutical Benefits Scheme (PBS) and the Repatriation Pharmaceutical Benefits Scheme (known as the 'co-payment')",
+    "provisional": false,
+    "last_edited_at": "2016-08-04T10:30:01+10:00"
+  },
+  {
+    "id": 28,
+    "name": "increasing the age pension",
+    "description": "the federal government should increase the amount of the age pension",
+    "provisional": false,
+    "last_edited_at": "2025-07-25T11:05:30+10:00"
+  },
+  {
+    "id": 29,
+    "name": "extending government benefits to same-sex couples",
+    "description": "the federal government should extend any financial and work-related entitlements and benefits that currently only apply to heterosexual couples to same-sex couples and their children",
+    "provisional": false,
+    "last_edited_at": "2017-09-28T16:43:59+10:00"
+  },
+  {
+    "id": 30,
+    "name": "increasing protection of Aboriginal heritage sites",
+    "description": "the federal government should increase the protection of Aboriginal and Torres Strait Islander cultural heritage sites",
+    "provisional": false,
+    "last_edited_at": "2025-03-30T12:38:17+11:00"
+  },
+  {
+    "id": 31,
+    "name": "increasing availability of abortion drugs",
+    "description": "the federal government should increase the availability of RU486 and other medications that can induce an abortion",
+    "provisional": false,
+    "last_edited_at": "2014-10-23T12:20:35+11:00"
+  },
+  {
+    "id": 32,
+    "name": "live animal export",
+    "description": "the federal government should allow live animal export and place minimal restrictions on it",
+    "provisional": false,
+    "last_edited_at": "2024-07-27T17:33:51+10:00"
+  },
+  {
+    "id": 33,
+    "name": "carbon farming",
+    "description": "the federal government should introduce a carbon farming initiative that encourages the farming and timber industries to decrease carbon emissions or to increase carbon storage (known as carbon sequestration)",
+    "provisional": false,
+    "last_edited_at": "2014-10-17T10:05:26+11:00"
+  },
+  {
+    "id": 34,
+    "name": "decreasing availability of welfare payments",
+    "description": "the federal government should limit the availability of government social security payments",
+    "provisional": false,
+    "last_edited_at": "2023-09-15T08:16:57+10:00"
+  },
+  {
+    "id": 35,
+    "name": "re-approving/ re-registering agvet chemicals",
+    "description": "the federal government should, in relation to agricultural and veterinary ('agvet') chemicals, implement a mandatory scheme for the re-approval of active constituents and re-registration of chemical products to ensure their ongoing safety",
+    "provisional": false,
+    "last_edited_at": "2014-09-19T13:15:55+10:00"
+  },
+  {
+    "id": 36,
+    "name": "the Intervention in the Northern Territory",
+    "description": "the Federal Government should respond to reports about high levels of child sexual abuse in some Indigenous communities in the Northern Territory by introducing the Northern Territory National Emergency Response or the very similar Stronger Futures Policy, also referred to as \"the intervention\"",
+    "provisional": false,
+    "last_edited_at": "2014-11-22T10:55:41+11:00"
+  },
+  {
+    "id": 37,
+    "name": "an emissions reduction fund",
+    "description": "the federal government should introduce an emissions reduction fund so it can buy domestic greenhouse gas emissions reductions and offsets by reverse auction. This is a key part of the Coalition Government's Direct Action policy.",
+    "provisional": false,
+    "last_edited_at": "2016-08-04T10:30:35+10:00"
+  },
+  {
+    "id": 38,
+    "name": "increasing funding for road infrastructure",
+    "description": "the federal government should provide more funding for road infrastructure",
+    "provisional": false,
+    "last_edited_at": "2022-01-14T09:29:16+11:00"
+  },
+  {
+    "id": 39,
+    "name": "increasing restrictions on gambling",
+    "description": "the federal government should increase restrictions on the gambling industry in order to address the issue of problem gambling",
+    "provisional": false,
+    "last_edited_at": "2025-08-01T11:52:15+10:00"
+  },
+  {
+    "id": 40,
+    "name": "increasing beef import standards",
+    "description": "the federal government should increase the standards and assessment processes that protect the public and beef industry from diseases such as mad cow disease",
+    "provisional": false,
+    "last_edited_at": "2022-01-14T10:55:35+11:00"
+  },
+  {
+    "id": 41,
+    "name": "increasing fishing restrictions",
+    "description": "the federal government should increase fishing restrictions so that fish populations are sustainable",
+    "provisional": false,
+    "last_edited_at": "2018-12-07T15:37:19+11:00"
+  },
+  {
+    "id": 42,
+    "name": "encouraging Australian-based industry",
+    "description": "the federal government should encourage Australian-based industry and secure the jobs these industries create by, for example, providing incentives for companies to stay in Australia (note that there are specific policies in respect to the timber, dairy, shipping, coal, and film & TV industries, which means that votes specific to those subjects are not included here)",
+    "provisional": false,
+    "last_edited_at": "2025-07-25T09:44:06+10:00"
+  },
+  {
+    "id": 43,
+    "name": "uranium export",
+    "description": "the federal government should support the exportation of uranium from Australia",
+    "provisional": false,
+    "last_edited_at": "2015-02-14T10:17:59+11:00"
+  },
+  {
+    "id": 44,
+    "name": "increasing surveillance powers",
+    "description": "the federal government should introduce legislation to increase the powers of intelligence and law enforcement agencies to intercept and retain communications related to persons of interest. These agencies include the Australian Security Intelligence Organisation (ASIO), Australian Secret Intelligence Service (ASIS) and the Australian Federal Police (AFP).",
+    "provisional": false,
+    "last_edited_at": "2025-09-27T08:39:39+10:00"
+  },
+  {
+    "id": 45,
+    "name": "increasing consumer protections",
+    "description": "the federal government should introduce legislation that increases consumer protections by, for example, encouraging competition",
+    "provisional": false,
+    "last_edited_at": "2026-05-24T15:17:54+10:00"
+  },
+  {
+    "id": 46,
+    "name": "increasing access under Freedom of Information law",
+    "description": "the federal government should amend freedom of information (FOI) legislation to increase public access to government data and documents",
+    "provisional": false,
+    "last_edited_at": "2025-09-13T13:26:59+10:00"
+  },
+  {
+    "id": 47,
+    "name": "an NBN (using fibre to the premises)",
+    "description": "the federal government should introduce a National Broadband Network ('NBN') using the fibre to the premises ('FTTP') design",
+    "provisional": false,
+    "last_edited_at": "2014-10-10T16:13:55+11:00"
+  },
+  {
+    "id": 48,
+    "name": "test policies being allowed on They Vote For You",
+    "description": "Please ignore this, it's only a test. Just editing to get an email alerts",
+    "provisional": true,
+    "last_edited_at": "2017-10-14T12:08:16+11:00"
+  },
+  {
+    "id": 49,
+    "name": "TEST",
+    "description": "TEST POLICY",
+    "provisional": true,
+    "last_edited_at": "2014-11-27T15:41:47+11:00"
+  },
+  {
+    "id": 50,
+    "name": "a federal inquiry into Queensland government administration",
+    "description": "the federal government should establish a Select Committee on Certain Aspects of Queensland Government Administration related to Commonwealth Government Affairs",
+    "provisional": false,
+    "last_edited_at": "2022-01-14T11:21:41+11:00"
+  },
+  {
+    "id": 51,
+    "name": "offshore processing for people seeking asylum in Australia",
+    "description": "people seeking asylum in Australia, who arrive without a visa and particularly those who arrive by boat, should be held offshore in an Australian territory like Christmas Island while their application is processed (See the policy \"For regional processing of asylum seekers\" for more on processing asylum claims in other countries, like Nauru)",
+    "provisional": false,
+    "last_edited_at": "2022-01-07T11:26:16+11:00"
+  },
+  {
+    "id": 52,
+    "name": "reducing planned economic immigration for economic and environmental reasons",
+    "description": "Federal and State governments have a duty to ensure training, higher education, employment and housing are provided to citizens as a priority over invited economic immigrants.  Furthermore that Australia should keep its population small in light of\r\n(1) - diminishing natural space and habitat for Australian plants and animals\r\n(2) - demand-driven housing unaffordability and developer-driven population growth policies impacting democracy and quality of life\r\n(3) - demand-driven resource unaffordability and scarcity, including water, fuel and power\r\n(4) - infrastructure overuse\r\n(5) - diseconomies of scale\r\n(6) - associated cost of living rises",
+    "provisional": true,
+    "last_edited_at": "2014-10-28T17:07:27+11:00"
+  },
+  {
+    "id": 53,
+    "name": "increasing freedom of political communication",
+    "description": "the federal government should increase freedom of political communication in Australia by, for example, protecting people's right to inform others about issues and events in the public interest",
+    "provisional": false,
+    "last_edited_at": "2026-05-15T13:50:12+10:00"
+  },
+  {
+    "id": 54,
+    "name": "storing all citizens' telecommunications data for access by government agencies",
+    "description": "telecommunications providers should be required to store all their customers' usages data for later access by agencies with the Attorney General's consent",
+    "provisional": false,
+    "last_edited_at": "2022-01-14T10:04:04+11:00"
+  },
+  {
+    "id": 55,
+    "name": "requiring a warrant to access citizens’ telecommunications records",
+    "description": "staff of government agencies should need a warrant before being able to access the telecommunications records of citizens",
+    "provisional": false,
+    "last_edited_at": "2018-08-24T15:07:27+10:00"
+  },
+  {
+    "id": 56,
+    "name": "decreasing ABC and SBS funding",
+    "description": "the federal government should decrease funding for the Australian Broadcasting Corporation (ABC) and the Special Broadcasting Service (SBS)",
+    "provisional": false,
+    "last_edited_at": "2025-08-01T11:38:14+10:00"
+  },
+  {
+    "id": 57,
+    "name": "tighter means testing of family payments ",
+    "description": "the federal government should target family payments to low and moderate income households, to the exclusion of higher income households.",
+    "provisional": true,
+    "last_edited_at": "2025-01-31T11:03:14+11:00"
+  },
+  {
+    "id": 58,
+    "name": "deregulating undergraduate university fees",
+    "description": "the federal government should remove limits on the amount that universities can charge students for tuition in Commonwealth Supported Places (CSPs)",
+    "provisional": false,
+    "last_edited_at": "2016-06-30T15:43:59+10:00"
+  },
+  {
+    "id": 59,
+    "name": "increasing accessibility of government data and documents",
+    "description": "the federal government should make its data and documents more accessible for the general public and Parliament",
+    "provisional": false,
+    "last_edited_at": "2026-05-24T16:10:29+10:00"
+  },
+  {
+    "id": 60,
+    "name": "removing children from immigration detention",
+    "description": "the federal government should not put asylum seeker children into immigration detention and should release all children now in detention",
+    "provisional": false,
+    "last_edited_at": "2021-06-25T10:37:40+10:00"
+  },
+  {
+    "id": 61,
+    "name": "funding the national school chaplaincy program",
+    "description": "The federal government should continue to fund the National School Chaplaincy Program (NSCP) to fund chaplains in Australian primary and secondary schools",
+    "provisional": false,
+    "last_edited_at": "2022-01-14T10:28:50+11:00"
+  },
+  {
+    "id": 62,
+    "name": "landholders' right to say no to mining and gas exploration",
+    "description": "landholders, particularly farmers, should be able to say no to mining and gas exploration on their land (in other words, they should be able to lock the gate)\r\n",
+    "provisional": false,
+    "last_edited_at": "2022-01-14T10:30:38+11:00"
+  },
+  {
+    "id": 63,
+    "name": "building Australia’s new submarine fleet in South Australia",
+    "description": "the federal government should make sure that a planned fleet of 12 new submarines is built in South Australia (this new fleet was proposed in 2013 to replace the existing Collins Class submarine fleet)",
+    "provisional": false,
+    "last_edited_at": "2021-12-30T09:08:47+11:00"
+  },
+  {
+    "id": 64,
+    "name": "Cheaper, efficient, clean power generated locally and sometimes owned by the community.",
+    "description": "The Commonwealth create an agency with State and Local Government advisors to process renewable energy projects initiated by local communities to supply their energy needs and store or sell surplus.\r\nDepending on the environment this could be energy generation from solar, wind or other sustainable projects. New jobs would be generated for local residents to train and maintain systems with the foresight of creating long-term opportunities for young people.",
+    "provisional": true,
+    "last_edited_at": "2015-01-08T12:12:22+11:00"
+  },
+  {
+    "id": 65,
+    "name": "compensating victims of overseas terrorism since the September 11 attack",
+    "description": "the federal government should extend compensation to all Australian victims of overseas terrorism since the 11 September 2001 attack, or to their next of kin",
+    "provisional": false,
+    "last_edited_at": "2022-01-14T10:26:45+11:00"
+  },
+  {
+    "id": 66,
+    "name": "giving apprentices access to a $20,000 loan",
+    "description": "the federal government should introduce a loan program for apprentices, to a maximum of $20,000, like the program currently available for university students",
+    "provisional": false,
+    "last_edited_at": "2022-01-14T10:25:45+11:00"
+  },
+  {
+    "id": 67,
+    "name": "protecting whales within Australian waters",
+    "description": "the Federal Government should protect whales within Australian waters by, for example, taking action against the Japanese Government over its whaling program in the Southern Ocean",
+    "provisional": false,
+    "last_edited_at": "2022-01-14T10:24:30+11:00"
+  },
+  {
+    "id": 68,
+    "name": "increasing the diversity of media ownership",
+    "description": "the federal government should use regulation to increase the diversity of publishers and broadcasters in Australia's media industry by, for example, setting a threshold for the maximum market share of any one company.",
+    "provisional": false,
+    "last_edited_at": "2021-03-05T13:01:37+11:00"
+  },
+  {
+    "id": 69,
+    "name": "increasing support for community radio and TV",
+    "description": "the federal government should support community broadcasting (radio and television) by, for example, increasing its funding and its ability to broadcast",
+    "provisional": false,
+    "last_edited_at": "2022-01-14T10:23:33+11:00"
+  },
+  {
+    "id": 70,
+    "name": "increasing indexation of HECS-HELP debts",
+    "description": "the federal government should adjust how indexation rates of Higher Education Loan Programme (HELP) debts (also known as HECS-HELP debts) are quantified in order to make the system more sustainable",
+    "provisional": false,
+    "last_edited_at": "2025-09-20T15:31:55+10:00"
+  },
+  {
+    "id": 71,
+    "name": "charging postgraduate research students fees",
+    "description": "the federal government should let universities charge postgraduate research students fees",
+    "provisional": false,
+    "last_edited_at": "2015-03-06T11:15:28+11:00"
+  },
+  {
+    "id": 72,
+    "name": "decreasing the gender pay gap",
+    "description": "the federal government should introduce legislation that reduces the gap in income between women and men and ensures both sexes are paid equally well",
+    "provisional": false,
+    "last_edited_at": "2025-05-09T10:54:00+10:00"
+  },
+  {
+    "id": 73,
+    "name": "greater public scrutiny of the Trans-Pacific Partnership negotiations",
+    "description": "the Australian Government should publicly release more information about the contents of the Trans-Pacific Partnership (TPP) trade deal and its position in the negotiations ",
+    "provisional": false,
+    "last_edited_at": "2019-07-19T13:45:42+10:00"
+  },
+  {
+    "id": 74,
+    "name": "Changing the Australian flag",
+    "description": "Canada adopted a new flag in 1965 and remains a constitutional monarchy. Australia should do the same by adopting a new and distinctive flag which represents all Australians without reference to out of date imperial connections.",
+    "provisional": true,
+    "last_edited_at": "2015-02-18T11:38:56+11:00"
+  },
+  {
+    "id": 75,
+    "name": "increasing transparency of the China-Australia relationship",
+    "description": "the Australian Government should provide more transparency of our country's political relationship with China",
+    "provisional": false,
+    "last_edited_at": "2023-01-20T12:24:03+11:00"
+  },
+  {
+    "id": 76,
+    "name": "changing the current flag to better reflect Australia as a free, independent nation.",
+    "description": "The government should begin the process to debate and discuss proposals to change the flag by involving citizens in a national discussion, similar to the way the New Zealand government is doing with its flag.",
+    "provisional": true,
+    "last_edited_at": "2015-09-21T12:32:11+10:00"
+  },
+  {
+    "id": 77,
+    "name": "the Trans-Pacific Partnership (TPP) Agreement",
+    "description": "the federal government should support Australia joining the Trans-Pacific Partnership (TPP) Agreement, a trade agreement between countries along the rim of the Pacific Ocean, including Canada and New Zealand",
+    "provisional": false,
+    "last_edited_at": "2019-02-01T13:16:08+11:00"
+  },
+  {
+    "id": 78,
+    "name": "requiring Parliamentary approval of military deployments",
+    "description": "Australia should not deploy armed forces without the consideration and approval of Parliament",
+    "provisional": false,
+    "last_edited_at": "2023-03-31T09:42:18+11:00"
+  },
+  {
+    "id": 79,
+    "name": "Government direct and indirect action on climate change as a matter of urgency - ABANDONED",
+    "description": "*Due to feedback about the ambiguity of this policy, we've decided to abandon it replace it with other more specified policies.*",
+    "provisional": true,
+    "last_edited_at": "2023-03-03T11:22:13+11:00"
+  },
+  {
+    "id": 80,
+    "name": "Speaker of the House of Representatives, Bronwyn Bishop",
+    "description": "the Speaker has the confidence of the house and your support to remain in the position.",
+    "provisional": true,
+    "last_edited_at": "2015-04-15T00:31:25+10:00"
+  },
+  {
+    "id": 81,
+    "name": "increasing transparency of big business by making information public",
+    "description": "the federal govenment should increase transparency in big business (that is, companies with an income equal or more than $100 million/year or, alternatively, $200 million/year) by making certain information public, including their total income and how much tax they paid",
+    "provisional": false,
+    "last_edited_at": "2022-08-19T09:20:16+10:00"
+  },
+  {
+    "id": 82,
+    "name": "making Australians working overseas repay their student debts",
+    "description": "the Federal Government should make Australians working overseas repay their Higher Education Loan Programme debts (known as HELP or HECS debts) and their Trade Support Loan debts (known as TSL debts) under the same compulsory repayment system that applies to citizens working in Australia",
+    "provisional": false,
+    "last_edited_at": "2015-11-26T09:35:56+11:00"
+  },
+  {
+    "id": 83,
+    "name": "letting environmental groups challenge the legality of certain government decisions",
+    "description": "environmental and conservation groups should be able to challenge the legality of federal government decisions made under the Environment Protection and Biodiversity Conservation Act 1999 (EPBC Act) (in other words, they should have standing to seek judicial review under that Act)",
+    "provisional": false,
+    "last_edited_at": "2022-01-14T10:10:19+11:00"
+  },
+  {
+    "id": 84,
+    "name": "revoking citizenship of dual nationals involved with terrorism offences by the minister",
+    "description": "the federal government should give the immigration minister the power to revoke the citizenship of people who have dual nationality (that is, are also citizens of another country) if they take part in certain terrorism-related offences [NOTE: following a High Court decision that ruled that the Minister did not have the power to revoke citizenship in this manner, there is now a new policy titled \"Revoking citizenship of dual nationals involved with terrorism offences by the courts\", which involves giving the citizenship-revoking power to the courts rather than the Minister themself]",
+    "provisional": false,
+    "last_edited_at": "2024-02-23T09:28:46+11:00"
+  },
+  {
+    "id": 85,
+    "name": "restricting donations to political parties",
+    "description": "the federal government should introduce restrictions to the amount and type of donations that political parties can receive in order to prevent corruption or the appearance of corruption in government",
+    "provisional": false,
+    "last_edited_at": "2025-04-25T10:38:27+10:00"
+  },
+  {
+    "id": 86,
+    "name": "creating a federal Anti-Corruption Commission",
+    "description": "the federal government should create a national integrity commission similar to the NSW Independent Commission Against Corruption (ICAC) to detect, investigate and prevent corruption across all Commonwealth departments and agencies",
+    "provisional": false,
+    "last_edited_at": "2023-11-20T09:46:57+11:00"
+  },
+  {
+    "id": 87,
+    "name": "withdrawing troops from Afghanistan",
+    "description": "the federal government should begin to withdraw Australian troops from Afghanistan as soon as safely possible",
+    "provisional": false,
+    "last_edited_at": "2018-04-20T16:13:19+10:00"
+  },
+  {
+    "id": 88,
+    "name": "using natural resource wealth for the benefit of all Australians",
+    "description": "the federal government should use the wealth generated by mining for the benefit of Australian citizens, as encouraged by the Extractive Industries Transparency Initiative (EITI) Principles",
+    "provisional": false,
+    "last_edited_at": "2021-12-31T08:43:08+11:00"
+  },
+  {
+    "id": 89,
+    "name": "Senate electoral reform",
+    "description": "the federal government should change the laws governing Senate elections to allow voters more direct control over the flow of preferences, whether they vote above or below the line",
+    "provisional": false,
+    "last_edited_at": "2016-07-07T14:06:28+10:00"
+  },
+  {
+    "id": 90,
+    "name": "protecting whistleblowers",
+    "description": "the federal government should introduce legislation to protect people who disclose information for the benefit of the public interest and protect the journalists who report it",
+    "provisional": false,
+    "last_edited_at": "2026-05-15T13:50:19+10:00"
+  },
+  {
+    "id": 91,
+    "name": "a fast transition from fossil fuels to renewable energy - ABANDONED",
+    "description": "*Due to feedback about the ambiguity of this policy, we've decided to replace it with other more specified policies, such as \"For stopping government investment in fossil fuels\" and \"For decreasing subsidisation of fossil fuels\".*",
+    "provisional": true,
+    "last_edited_at": "2023-03-03T10:21:43+11:00"
+  },
+  {
+    "id": 92,
+    "name": "stopping tax avoidance or aggressive tax minimisation",
+    "description": "the federal government should make it harder for individuals and corporations to avoid or aggressively minimise their Australian tax obligations and take part in international efforts to keep track of these individuals and corporations by sharing income and asset information",
+    "provisional": false,
+    "last_edited_at": "2022-01-14T10:02:57+11:00"
+  },
+  {
+    "id": 93,
+    "name": "ending illegal logging",
+    "description": "the federal government should introduce legislation to end illegal logging and prevent the importation of timber that has been illegally harvested.",
+    "provisional": false,
+    "last_edited_at": "2024-09-15T09:38:01+10:00"
+  },
+  {
+    "id": 94,
+    "name": "protecting threatened forest and bushland habitats",
+    "description": "the federal government should protect threatened forest and bushland habitats from logging.",
+    "provisional": false,
+    "last_edited_at": "2026-06-26T16:24:21+10:00"
+  },
+  {
+    "id": 95,
+    "name": "a Royal Commission into banking",
+    "description": "the federal government should establish a Royal Commission into misconduct within the banking and financial services sector.",
+    "provisional": false,
+    "last_edited_at": "2022-01-14T09:53:57+11:00"
+  },
+  {
+    "id": 96,
+    "name": "a review of parliamentary entitlements",
+    "description": "the federal government should set up a review of parliamentary entitlements and allowances, including legitimate expenditure, salary packages, superannuation entitlements and other allowances ",
+    "provisional": false,
+    "last_edited_at": "2022-01-14T09:51:26+11:00"
+  },
+  {
+    "id": 97,
+    "name": "the use of strong encryption technologies",
+    "description": "Strong encryption technologies are critical and necessary enablers of communications and commerce.\r\nStrong encryption technologies should not be restricted, back-doored, undermined or crippled by law.",
+    "provisional": false,
+    "last_edited_at": "2022-01-14T09:52:16+11:00"
+  },
+  {
+    "id": 98,
+    "name": "increasing parliamentary entitlements for current MPs and Senators",
+    "description": "the federal governmnet should increase parliamentary entitlements for current MPs and Senators, such as legitimate expenditure, salary packages, superannuation entitlements and/or other allowances like the printing allowance",
+    "provisional": false,
+    "last_edited_at": "2022-01-14T09:12:00+11:00"
+  },
+  {
+    "id": 99,
+    "name": "increasing the foreign aid budget to 0.7% of Gross National Income",
+    "description": "the federal government should allocate 0.7% of Gross National Income (GNI) to foreign aid in line with the United Nations' target",
+    "provisional": false,
+    "last_edited_at": "2022-01-07T10:56:38+11:00"
+  },
+  {
+    "id": 100,
+    "name": "Copyright reforms",
+    "description": "Copyright laws in Australia requires reforms to modernise the Copyright Act, as recommended by the The Australian Law Reform Commission (ALRC). Australia should broaden the existing 'fair dealing' exceptions to a much broader, flexible 'fair use' exception, in line with US copyright law.",
+    "provisional": true,
+    "last_edited_at": "2016-06-23T16:31:39+10:00"
+  },
+  {
+    "id": 101,
+    "name": "removing parallel import restrictions for books",
+    "description": "the federal government should remove the current parallel import restrictions on books (also known as territorial copyright protections) so that an Australian territorial rights holder of a particular book cannot prevent others from importing that book from outside Australia at potentially lower prices",
+    "provisional": false,
+    "last_edited_at": "2022-01-14T09:50:20+11:00"
+  },
+  {
+    "id": 102,
+    "name": "local community consultation on infrastructure projects",
+    "description": "the federal government should always consult with local communities that may be affected by infrastructure projects, especially for major infrastructure projects such as dams, pulp mills or nuclear facilities",
+    "provisional": false,
+    "last_edited_at": "2017-03-02T08:03:41+11:00"
+  },
+  {
+    "id": 103,
+    "name": "a plebiscite on the carbon pricing mechanism",
+    "description": "the federal government should hold a plebiscite to gauge whether citizens support or oppose introducing a carbon pricing mechanism (also known as a 'carbon tax')",
+    "provisional": false,
+    "last_edited_at": "2016-06-30T12:17:56+10:00"
+  },
+  {
+    "id": 104,
+    "name": "maintaining or increasing CSIRO funding",
+    "description": "the federal government should maintain or increase the amount of funding allocated to the Commonwealth Scientific and Industrial Research Organisation (CSIRO)",
+    "provisional": false,
+    "last_edited_at": "2022-01-14T09:49:23+11:00"
+  },
+  {
+    "id": 105,
+    "name": "increasing funding for legal aid",
+    "description": "the federal government should maintain or increase funding for the legal assistance sector (Legal Aid, community legal centres, etc.)",
+    "provisional": false,
+    "last_edited_at": "2024-08-04T09:21:33+10:00"
+  },
+  {
+    "id": 106,
+    "name": "Universal basic income ",
+    "description": "The federal government should start a universal basic income trial and investigate studies from around the world  ",
+    "provisional": true,
+    "last_edited_at": "2016-07-07T17:11:08+10:00"
+  },
+  {
+    "id": 107,
+    "name": "buffer zones around abortion clinics",
+    "description": "protests shouldn't be allowed close to abortion clinics",
+    "provisional": false,
+    "last_edited_at": "2022-01-07T11:32:14+11:00"
+  },
+  {
+    "id": 108,
+    "name": "time-based restrictions on alcohol sales and venue entry",
+    "description": "venues shouldn't be allowed to accept new customers and alcohol sales should be forbidden after specified times",
+    "provisional": true,
+    "last_edited_at": "2016-07-09T16:34:49+10:00"
+  },
+  {
+    "id": 109,
+    "name": "putting welfare payments onto cashless debit cards (or indue cards) on a temporary basis as a trial",
+    "description": "the federal government should create a time-limited trial of putting a large proportion of a person's welfare payment onto a debit card that cannot be used for alcohol or gambling and cannot be used to make cash withdrawals (see the policy \"For putting welfare payments onto cashless debit cards (or indue cards) on an ongoing basis\" for votes on extending the program indefinitely)",
+    "provisional": false,
+    "last_edited_at": "2022-01-07T09:09:45+11:00"
+  },
+  {
+    "id": 110,
+    "name": "a publicly accessible foreign ownership register for agricultural land",
+    "description": "the federal government should increase transparency by creating a Foreign Ownership Register for Agricultural Land that is available for all citizens to access",
+    "provisional": false,
+    "last_edited_at": "2021-12-31T08:45:53+11:00"
+  },
+  {
+    "id": 111,
+    "name": "addressing sea level rise as a matter of urgency",
+    "description": "the federal government should take urgent action to address the issue of rising sea levels",
+    "provisional": true,
+    "last_edited_at": "2023-03-03T11:21:15+11:00"
+  },
+  {
+    "id": 112,
+    "name": "speeding things along in Parliament (procedural)",
+    "description": "Members of Parliament (MPs) and Senators should vote to speed things along by supporting motions to 'put the question' (known as 'closure' or 'gag' motions), which require Parliament to immediately vote on a question rather than debating it any further",
+    "provisional": false,
+    "last_edited_at": "2026-03-21T10:16:15+11:00"
+  },
+  {
+    "id": 113,
+    "name": "suspending the rules to allow a vote to happen (procedural)",
+    "description": "Members of Parliament (MPs) and Senators should vote to suspend standing and sessional orders (that is, the procedural rules of Parliament) so that their colleagues can introduce motions for Parliament to vote on even when the the procedural rules would prevent them from doing so",
+    "provisional": false,
+    "last_edited_at": "2026-06-07T12:09:37+10:00"
+  },
+  {
+    "id": 114,
+    "name": "letting all MPs or Senators speak in Parliament (procedural)",
+    "description": "Members of Parliament (MPs) and Senators should vote against all motions that stop an MP or Senator from speaking (that is, motions that the MP or Senator 'be no longer heard')",
+    "provisional": false,
+    "last_edited_at": "2025-05-15T14:45:58+10:00"
+  },
+  {
+    "id": 115,
+    "name": "high speed rail on the east coast",
+    "description": "there should be a high speed rail network connecting the major cities on the east coast of Australia",
+    "provisional": false,
+    "last_edited_at": "2016-08-11T10:32:26+10:00"
+  },
+  {
+    "id": 116,
+    "name": "federal action on public housing",
+    "description": "even though public housing is controlled by our state governments, the federal government should also take action to increase the availability of affordable public housing around Australia",
+    "provisional": false,
+    "last_edited_at": "2023-12-01T11:10:48+11:00"
+  },
+  {
+    "id": 117,
+    "name": "increasing housing affordability",
+    "description": "the federal government should take national action to increase housing affordability so that all Australians have the chance to buy their own home",
+    "provisional": false,
+    "last_edited_at": "2025-05-22T14:44:43+10:00"
+  },
+  {
+    "id": 118,
+    "name": "ending immigration detention on Nauru",
+    "description": "the federal government should close its Nauru Regional Processing Centre and stop all Nauru-based processing of people's claims for asylum",
+    "provisional": false,
+    "last_edited_at": "2023-03-10T15:48:41+11:00"
+  },
+  {
+    "id": 119,
+    "name": "imprisoning immigration detention workers who record or reveal information from their work",
+    "description": "the federal government should make it an offence punishable by imprisonment for Immigration and Border Protection employees, consultants and contractors to record or disclose information that they obtained while working in Australia's immigration detention centres",
+    "provisional": false,
+    "last_edited_at": "2018-01-20T18:14:03+11:00"
+  },
+  {
+    "id": 120,
+    "name": "putting a time limit on immigration detention",
+    "description": "the federal government should put a time limit on how long asylum seekers can be detained while their claims for asylum are being processed",
+    "provisional": false,
+    "last_edited_at": "2022-01-14T09:43:26+11:00"
+  },
+  {
+    "id": 121,
+    "name": "ending immigration detention on Manus Island",
+    "description": "the federal government should close its Manus Regional Processing Centre and stop all Manus-based processing of people's claims for asylum",
+    "provisional": false,
+    "last_edited_at": "2023-03-10T15:48:37+11:00"
+  },
+  {
+    "id": 122,
+    "name": "protecting the Great Barrier Reef",
+    "description": "the federal government should make laws and regulations that protect and conserve the health of the Great Barrier Reef for future generations",
+    "provisional": false,
+    "last_edited_at": "2023-03-03T09:38:01+11:00"
+  },
+  {
+    "id": 123,
+    "name": "public transport",
+    "description": "the federal government should increase funding for public transport within and between Australia's major urban centres and prioritise it over funding for private transport infrastructure projects",
+    "provisional": false,
+    "last_edited_at": "2026-05-10T12:53:13+10:00"
+  },
+  {
+    "id": 124,
+    "name": "increasing the price of tobacco",
+    "description": "the federal government should improve the health of Australians by increasing the excise and excise equivalent customs duty on tobacco",
+    "provisional": false,
+    "last_edited_at": "2016-09-17T22:44:34+10:00"
+  },
+  {
+    "id": 125,
+    "name": "a national redress scheme for institutional abuse survivors",
+    "description": "the federal government should create and coordinate a National Redress Scheme for Survivors of Institutional Sexual Abuse, which was recommended by the Royal Commission into Institutional Responses to Child Sexual Abuse",
+    "provisional": false,
+    "last_edited_at": "2022-01-14T09:26:48+11:00"
+  },
+  {
+    "id": 126,
+    "name": "strengthening gun control laws",
+    "description": "the federal government should maintain and strengthen gun control laws and make sure they're the same around Australia",
+    "provisional": false,
+    "last_edited_at": "2026-01-31T16:19:53+11:00"
+  },
+  {
+    "id": 127,
+    "name": "the Australian Renewable Energy Agency (ARENA)",
+    "description": "the federal government should fund and maintain the Australian Renewable Energy Agency, or ARENA, as an independent body that manages the government's renewable energy programs",
+    "provisional": false,
+    "last_edited_at": "2022-01-14T09:25:41+11:00"
+  },
+  {
+    "id": 128,
+    "name": "protecting citizens' privacy",
+    "description": "the federal government should respect its citizens' right to privacy and make sure all sensitive information it does have access to (such as medical, census or tax data) is kept secure",
+    "provisional": false,
+    "last_edited_at": "2025-09-27T12:08:13+10:00"
+  },
+  {
+    "id": 129,
+    "name": "a same-sex marriage plebiscite",
+    "description": "the federal government should hold a plebiscite (or national vote) on the question of whether the law should be changed to allow same-sex couples to marry",
+    "provisional": false,
+    "last_edited_at": "2016-11-19T02:31:26+11:00"
+  },
+  {
+    "id": 130,
+    "name": "reducing taxes for high-income earners",
+    "description": "the federal government should reduce the amount of income tax that high-income earners (those who earn over $200,000 per year) must pay each year",
+    "provisional": false,
+    "last_edited_at": "2023-06-30T09:56:52+10:00"
+  },
+  {
+    "id": 131,
+    "name": "increasing the initial tax rate for working holiday makers to 19%",
+    "description": "the federal government should increase the tax rate for working holiday visa holders so that they are taxed at a rate of 19% on every dollar earned up to $37,000",
+    "provisional": false,
+    "last_edited_at": "2016-11-26T00:59:45+11:00"
+  },
+  {
+    "id": 132,
+    "name": "an Australian Building and Construction Commission (ABCC)",
+    "description": "there should be an Australian Building and Construction Commission (ABCC) to monitor workplace relations in the building and construction industry",
+    "provisional": false,
+    "last_edited_at": "2023-01-06T10:39:24+11:00"
+  },
+  {
+    "id": 133,
+    "name": "increasing scrutiny of unions",
+    "description": "the federal government should increase scrutiny of unions and employer organisations by, for example, creating a commission to monitor them and applying the same standards of disclosure to them as to corporations as well as the same penalties for misconduct",
+    "provisional": false,
+    "last_edited_at": "2016-11-04T06:47:07+11:00"
+  },
+  {
+    "id": 134,
+    "name": "stopping people who arrive by boat from ever coming to Australia",
+    "description": "the federal government should ban people who arrive in Australia by boat and claim asylum from ever being able to apply for an Australian visa",
+    "provisional": false,
+    "last_edited_at": "2016-11-12T05:04:31+11:00"
+  },
+  {
+    "id": 135,
+    "name": "Preventative Detention Orders (PDOs)",
+    "description": "the police should be able to detain people without charge for a limited period if there is a threat of a terrorist attack or if it is likely that vital evidence will be lost after a terrorist attack takes place",
+    "provisional": false,
+    "last_edited_at": "2024-02-15T14:57:51+11:00"
+  },
+  {
+    "id": 136,
+    "name": "increasing the passenger movement charge ('PMC')",
+    "description": "increase the tax imposed on passengers leaving Australia (which is collected by airlines and shipping companies when passengers purchase their ticket)",
+    "provisional": false,
+    "last_edited_at": "2016-11-25T20:53:57+11:00"
+  },
+  {
+    "id": 137,
+    "name": "more scrutiny of the Australian Defence Force",
+    "description": "there should be more scrutiny or oversight of the actions and powers of the Australian Defence Force (ADF), both within Australia and overseas",
+    "provisional": false,
+    "last_edited_at": "2025-07-12T12:04:08+10:00"
+  },
+  {
+    "id": 138,
+    "name": "increasing the initial tax rate for working holiday makers to 15%",
+    "description": "the federal government should increase the tax rate for working holiday visa holders so that they are taxed at a rate of 15% on every dollar earned up to $37,000",
+    "provisional": false,
+    "last_edited_at": "2016-12-09T04:15:49+11:00"
+  },
+  {
+    "id": 139,
+    "name": "Continuing Detention Orders (CDOs)",
+    "description": "the federal government should introduce laws that allow people who have been convicted of certain terrorist offences to be kept in detention even after their custodial sentences have ended if there is an unacceptable risk that they will commit certain serious terrorism offences after being released",
+    "provisional": false,
+    "last_edited_at": "2021-08-13T13:40:29+10:00"
+  },
+  {
+    "id": 140,
+    "name": "the right to protest",
+    "description": "the federal government should protect the right of its citizens to protest against its laws, policies and decisions",
+    "provisional": true,
+    "last_edited_at": "2021-11-26T09:59:42+11:00"
+  },
+  {
+    "id": 141,
+    "name": "increasing investment in the coal industry",
+    "description": "the federal government should maintain or increase its investment in and support for the Australian coal industry",
+    "provisional": false,
+    "last_edited_at": "2026-03-14T14:41:55+11:00"
+  },
+  {
+    "id": 142,
+    "name": "a Free Trade Agreement with China",
+    "description": "the federal government should enter into a Free Trade Agreement (FTA) with China to create more favourable trading conditions between China and Australia",
+    "provisional": false,
+    "last_edited_at": "2019-12-06T15:20:40+11:00"
+  },
+  {
+    "id": 143,
+    "name": "banning all investment in cluster munitions",
+    "description": "the federal government should ban both direct and indirect (e.g. through parent companies) investment in cluster munitions",
+    "provisional": false,
+    "last_edited_at": "2017-01-28T00:51:39+11:00"
+  },
+  {
+    "id": 144,
+    "name": "changing the date of Australia Day",
+    "description": "the date of Australia Day should be changed from 26 January, which was the day the First Fleet arrived at Port Jackson, Sydney, and is a day of mourning for many Australians",
+    "provisional": false,
+    "last_edited_at": "2022-01-14T09:12:51+11:00"
+  },
+  {
+    "id": 145,
+    "name": "doctor-initiated medical transfers for asylum seekers",
+    "description": "the Federal Government should pass laws that ensure that people seeking asylum who are being held at offshore processing centres will be transferred to Australia for medical attention if more than one doctor say they need it, unless the Home Affairs Minister rejects it for security reasons",
+    "provisional": false,
+    "last_edited_at": "2020-04-24T09:48:06+10:00"
+  },
+  {
+    "id": 146,
+    "name": "getting rid of the Gold Travel Pass",
+    "description": "the federal government should get rid of the Gold Travel Pass, which gives free domestic air travel to certain former politicians, such as former Prime Ministers",
+    "provisional": false,
+    "last_edited_at": "2017-02-24T22:16:11+11:00"
+  },
+  {
+    "id": 147,
+    "name": "changing the wording of section 18C of the Racial Discrimination Act",
+    "description": "the federal government should change section 18C of the Racial Discrimination Act so that the words \"insult\", \"offend\", \"humiliate\" are replaced with the word \"harass\"",
+    "provisional": false,
+    "last_edited_at": "2018-04-20T17:12:09+10:00"
+  },
+  {
+    "id": 148,
+    "name": "getting rid of Sunday and public holiday penalty rates",
+    "description": "there should be no penalty rates when employees work on Sundays or public holidays",
+    "provisional": false,
+    "last_edited_at": "2017-12-17T16:42:08+11:00"
+  },
+  {
+    "id": 149,
+    "name": "reducing the corporate tax rate",
+    "description": "the federal government should reduce the corporate (or company) tax rate for all corporations (not just for small business)",
+    "provisional": false,
+    "last_edited_at": "2023-06-16T08:50:52+10:00"
+  },
+  {
+    "id": 150,
+    "name": "the Coalition's Youth Jobs PaTH",
+    "description": "the Government should introduced the Youth Jobs PaTH, a youth employment plan to assist up to 120,000 jobs seekers under 25 years which includes three phases three phases (skills training, voluntary internships and wage subsidies for businesses)",
+    "provisional": false,
+    "last_edited_at": "2017-05-27T00:03:00+10:00"
+  },
+  {
+    "id": 151,
+    "name": "the Coalition's new schools funding policy (\"Gonski 2.0\")",
+    "description": "the federal government should implement the Coalition's new funding policy, proposed under Prime Minister Malcolm Turnbull and dubbed \"Gonski 2.0\", so that it replaces the previous Labor Government's Gonski agreements",
+    "provisional": false,
+    "last_edited_at": "2023-11-24T09:56:10+11:00"
+  },
+  {
+    "id": 152,
+    "name": "technology neutral emission reduction targets",
+    "description": "the federal government's policies to reduce Australia's greenhouse gas emissions should be \"technology neutral\", which means all forms of electricity generation should be on the table, including coal with carbon capture and storage and gas",
+    "provisional": true,
+    "last_edited_at": "2023-12-23T12:02:25+11:00"
+  },
+  {
+    "id": 153,
+    "name": "requiring every native title claimant to sign land use agreements",
+    "description": "all native title claimants need to sign an Indigenous Land Use Agreement before the Agreement can be registered by the Native Title Registrar (agreements like this let, for example, mining companies mine in an area covered by native title)",
+    "provisional": false,
+    "last_edited_at": "2017-06-17T00:16:43+10:00"
+  },
+  {
+    "id": 154,
+    "name": "giving approval for mining in the Liverpool Plains",
+    "description": "the federal government should give approval for new mines in the Liverpool Plains, such as the Shenhua Watermark coal mine",
+    "provisional": false,
+    "last_edited_at": "2022-01-14T08:50:40+11:00"
+  },
+  {
+    "id": 155,
+    "name": "making sanitary items GST-free",
+    "description": "GST should not be charged on sanitary items (such as tampons and pads) as they are health products",
+    "provisional": false,
+    "last_edited_at": "2017-06-24T00:40:47+10:00"
+  },
+  {
+    "id": 156,
+    "name": "increasing access to medicinal cannabis products",
+    "description": "the federal government should increase access to therapeutic cannabis for those with a medical need and prescription",
+    "provisional": false,
+    "last_edited_at": "2025-05-29T10:16:59+10:00"
+  },
+  {
+    "id": 157,
+    "name": "a Royal Commission into Violence and Abuse against People with Disability",
+    "description": "the federal government should establish a Royal Commission to investigate and report on violence and abuse against people with disability in light of the the disproportionately high number of reports of abuse of Australians with a disability by people who are meant to care for them",
+    "provisional": false,
+    "last_edited_at": "2019-03-14T16:16:10+11:00"
+  },
+  {
+    "id": 158,
+    "name": "criminalising \"revenge porn\"",
+    "description": "the federal government should make it a criminal offence to share intimate images without consent (known colloquially as \"revenge porn\") and not just leave it up to the state-level governments to criminalise it separately in each State and Territory",
+    "provisional": false,
+    "last_edited_at": "2018-08-03T16:33:58+10:00"
+  },
+  {
+    "id": 159,
+    "name": "ceremonial recognition of the first people in Australia",
+    "description": "the federal government should support efforts to close the gap between Indigenous and non-Indigenous Australians by also supporting ceremonial inititiatives that aim to recognise Aboriginal and Torres Strait Islander peoples and nations",
+    "provisional": true,
+    "last_edited_at": "2017-07-22T11:23:01+10:00"
+  },
+  {
+    "id": 160,
+    "name": "closing the gap between Indigenous and non-Indigenous Australians",
+    "description": "the federal government needs to make closing the gap between Aboriginal and Torres Strait Islanders and other Australians a priority",
+    "provisional": false,
+    "last_edited_at": "2026-04-25T11:42:00+10:00"
+  },
+  {
+    "id": 161,
+    "name": "maintaining or increasing defence spending",
+    "description": "the federal government should keep up or increase the amount of money it spends on defence",
+    "provisional": false,
+    "last_edited_at": "2025-10-04T15:07:29+10:00"
+  },
+  {
+    "id": 162,
+    "name": "Adani's proposed Carmichael coal mine in the Galilee Basin",
+    "description": "the federal government should support the Adani Group's plans to build the Carmichael mine in Queensland's Galilee Basin",
+    "provisional": false,
+    "last_edited_at": "2022-01-07T11:14:15+11:00"
+  },
+  {
+    "id": 163,
+    "name": "drug testing welfare recipients",
+    "description": "the federal government should introduce mandatory drug testing for people who receive certain welfare payments",
+    "provisional": false,
+    "last_edited_at": "2023-07-14T09:34:20+10:00"
+  },
+  {
+    "id": 164,
+    "name": "equal treatment for all couples",
+    "description": "all couples should attract the same rights, entitlements and benefits under Australian law in both the public and private sector, whether they are de facto or married, heterosexual or homosexual",
+    "provisional": false,
+    "last_edited_at": "2017-09-28T16:44:11+10:00"
+  },
+  {
+    "id": 165,
+    "name": "refugee family reunification",
+    "description": "the federal government should ensure that refugees in Australia are able to apply for family reunification visas so that their families can join them in Australia",
+    "provisional": false,
+    "last_edited_at": "2017-10-14T13:36:37+11:00"
+  },
+  {
+    "id": 166,
+    "name": "a citizenship test",
+    "description": "people should have to pass a test before they are eligible to become Australian citizens",
+    "provisional": false,
+    "last_edited_at": "2022-01-07T13:45:46+11:00"
+  },
+  {
+    "id": 167,
+    "name": "POLICY IN DRAFT AND MAY BE INACCURATE",
+    "description": "This policy is in DRAFT which means it has not been adequately edited and therefore may be wildly inaccurate. We have a warning attached to all draft policies stating this, but it seems some people are sharing this policy on social media with those warnings removed.",
+    "provisional": true,
+    "last_edited_at": "2026-02-13T11:54:37+11:00"
+  },
+  {
+    "id": 168,
+    "name": "privatising certain government services",
+    "description": "the federal government should give the private sector control over running and managing some of its services (such as public welfare, aged care and visa services) by either outsourcing or privatisation",
+    "provisional": false,
+    "last_edited_at": "2023-01-20T12:02:27+11:00"
+  },
+  {
+    "id": 169,
+    "name": "increasing the Medicare Levy to pay for the National Disability Insurance Scheme",
+    "description": "the federal goverment should fund the Commonwealth’s contribution to the National Disability Insurance Scheme (NDIS) by increasing the Medicare Levy for all Australians",
+    "provisional": false,
+    "last_edited_at": "2017-11-10T13:43:05+11:00"
+  },
+  {
+    "id": 170,
+    "name": "a review of our representatives' eligibility",
+    "description": "the federal government should conduct a review of our senators and members of parliament (MPs) to make sure that they are all eligible to represent us in Parliament under the Australian Constitution",
+    "provisional": false,
+    "last_edited_at": "2022-01-07T13:39:40+11:00"
+  },
+  {
+    "id": 171,
+    "name": "increasing federal government support for childcare",
+    "description": "the federal government should increase financial support for childcare and early childhood eduction by, for example, supporting increased wages for workers and providing grants for not-for-profit community child care initiatives",
+    "provisional": false,
+    "last_edited_at": "2021-05-07T15:09:43+10:00"
+  },
+  {
+    "id": 172,
+    "name": "federal government action on animal & plant extinctions",
+    "description": "the federal government needs to support research and conservation initiatives that aim to put a stop to the current trajectory of animal and plant extinctions in Australia",
+    "provisional": false,
+    "last_edited_at": "2026-05-15T11:26:42+10:00"
+  },
+  {
+    "id": 173,
+    "name": "increasing government funding to private bodies that provide certain services",
+    "description": "the federal government should increase funding to private bodies that provide certain services otherwise provided by the government, such as education and health (for example, private universities)",
+    "provisional": true,
+    "last_edited_at": "2018-03-09T14:35:35+11:00"
+  },
+  {
+    "id": 174,
+    "name": "turning back asylum boats when possible",
+    "description": "the federal government should issue instructions for border protection forces to turn back boats carrying asylum seekers to Australia where it is safe to do so",
+    "provisional": false,
+    "last_edited_at": "2018-03-23T17:40:33+11:00"
+  },
+  {
+    "id": 175,
+    "name": "civil celebrants having the right to refuse to marry same-sex couples",
+    "description": "the federal government should protect the right of celebrants to refuse to marry same-sex couples if doing so would be against their religious or conscientious beliefs",
+    "provisional": false,
+    "last_edited_at": "2018-04-06T12:33:35+10:00"
+  },
+  {
+    "id": 176,
+    "name": "universal access to abortion services",
+    "description": "the federal government should ensure that all Australians have access to abortion services",
+    "provisional": false,
+    "last_edited_at": "2022-04-15T13:44:40+10:00"
+  },
+  {
+    "id": 177,
+    "name": "supporting weapons manufacturing in Australia",
+    "description": "the federal government should provide financial support for the Australian weapons manufacturing industry",
+    "provisional": true,
+    "last_edited_at": "2019-03-30T09:57:35+11:00"
+  },
+  {
+    "id": 178,
+    "name": "expanding public funded dental care",
+    "description": "the federal government should expand public funded dental care",
+    "provisional": false,
+    "last_edited_at": "2025-11-02T15:48:56+11:00"
+  },
+  {
+    "id": 179,
+    "name": "increasing the Newstart Allowance rate",
+    "description": "the federal government should increase the Newstart Allowance rate to ensure that it covers basic living costs",
+    "provisional": false,
+    "last_edited_at": "2019-09-13T16:53:38+10:00"
+  },
+  {
+    "id": 180,
+    "name": "an inquiry into the Iraq War",
+    "description": "the federal government should support an inquiry into Australia's involvement in the Iraq War",
+    "provisional": false,
+    "last_edited_at": "2018-04-20T16:13:40+10:00"
+  },
+  {
+    "id": 181,
+    "name": "smaller government",
+    "description": "the federal government should reduce the size of the public service by, for example, abolishing unnecessary Commonwealth bodies and making sure there is no overlap in the functions of existing bodies",
+    "provisional": true,
+    "last_edited_at": "2018-04-25T15:07:14+10:00"
+  },
+  {
+    "id": 182,
+    "name": "greater control over items brought into immigration detention centres",
+    "description": "the federal government should make laws that ensure that the minister can control what items people are allowed to bring into Australia's immigration detention centres by, for example, passing laws that allow authorised officers to search both facilities and people and seize any prohibited items found",
+    "provisional": false,
+    "last_edited_at": "2022-01-07T11:44:17+11:00"
+  },
+  {
+    "id": 183,
+    "name": "the Paris Climate Agreement",
+    "description": "the federal government should amend its laws and policies to meet the objectives of the Paris Climate Agreement",
+    "provisional": false,
+    "last_edited_at": "2024-08-07T10:25:54+10:00"
+  },
+  {
+    "id": 184,
+    "name": "increasing eligibility requirements for Australian citizenship",
+    "description": "the federal government should take a restrictive approach to granting Australian citizenship by introducing more eligibility requirements, such as applicants needing greater English language proficiency and needing to spend more time living in Australia before they can submit their applications",
+    "provisional": false,
+    "last_edited_at": "2020-11-20T11:19:30+11:00"
+  },
+  {
+    "id": 185,
+    "name": "making more water from Murray-Darling Basin available to use",
+    "description": "the federal government should increase water allocations from the Murray-Darling Basin for farmers and other users",
+    "provisional": false,
+    "last_edited_at": "2022-01-07T11:38:06+11:00"
+  },
+  {
+    "id": 186,
+    "name": "privatising the ABC",
+    "description": "the federal government should privatise the Australian Broadcasting Corporation (ABC)",
+    "provisional": false,
+    "last_edited_at": "2020-09-25T21:08:12+10:00"
+  },
+  {
+    "id": 187,
+    "name": "targeting foreign interference in Australia",
+    "description": "the federal government should address the issue of foreign interference in Australia by, for example, introducing new offences against acts such as sabotage, treason and espionage",
+    "provisional": false,
+    "last_edited_at": "2020-01-17T12:19:04+11:00"
+  },
+  {
+    "id": 188,
+    "name": "increasing penalties for breach of data",
+    "description": "the federal government should increase penalties for breach of data by for-profit companies that have been contracted by the government to store sensitive information or to provide services to citizens",
+    "provisional": false,
+    "last_edited_at": "2018-08-10T12:29:50+10:00"
+  },
+  {
+    "id": 189,
+    "name": "a declared area offence",
+    "description": "the federal government should make it an offence to enter or remain in areas that have been listed as “declared areas” by the Minister for Foreign Affairs because of terrorist activity (such as the Mosul district in Iraq and Al-Raqqa Province in Syria)",
+    "provisional": false,
+    "last_edited_at": "2021-08-13T13:48:43+10:00"
+  },
+  {
+    "id": 190,
+    "name": "the territories being able to legalise euthanasia",
+    "description": "the parliaments of the Northern Territory and the Australian Capital Territory should have the power to legalise euthanasia (also known as voluntary assisted dying)",
+    "provisional": false,
+    "last_edited_at": "2022-11-25T10:15:38+11:00"
+  },
+  {
+    "id": 191,
+    "name": "a national homelessness strategy",
+    "description": "the federal government should work with states and territories to develop a nationwide strategy to target the increasing levels of homelessness in Australia",
+    "provisional": true,
+    "last_edited_at": "2018-09-21T11:20:18+10:00"
+  },
+  {
+    "id": 192,
+    "name": "stopping former ministers from taking lobbying positions within five years",
+    "description": "the federal government should tighten the ministerial code of conduct to stop former ministers from taking up lobbying positions - including in-house positions - within five years of leaving Parliament",
+    "provisional": false,
+    "last_edited_at": "2022-01-07T11:29:07+11:00"
+  },
+  {
+    "id": 193,
+    "name": "increasing information sharing between state and federal government agencies",
+    "description": "the federal government should work with its state and territory counterparts to ensure more effective information sharing between their agencies by, for example, storing citizens' data in central databases or creating new schemes for information exchange",
+    "provisional": true,
+    "last_edited_at": "2020-11-20T12:02:26+11:00"
+  },
+  {
+    "id": 194,
+    "name": "promoting multiculturalism",
+    "description": "the federal government should actively support and promote multiculturalism in Australia",
+    "provisional": false,
+    "last_edited_at": "2022-01-07T11:28:06+11:00"
+  },
+  {
+    "id": 195,
+    "name": "increasing legal protections for LGBTI people",
+    "description": "the federal government should increase legal protections for people who identify as LGBTI (Lesbian, Gay, Bisexual, Transgender and Intersex) by, for example, getting rid of all current exemptions that permit discrimination against LGBTI people by religious insitutions (such as schools)",
+    "provisional": false,
+    "last_edited_at": "2026-01-27T17:15:06+11:00"
+  },
+  {
+    "id": 196,
+    "name": "nuclear energy",
+    "description": "the federal government should support nuclear energy generation in Australia",
+    "provisional": false,
+    "last_edited_at": "2025-05-09T09:52:34+10:00"
+  },
+  {
+    "id": 197,
+    "name": "Me/cfs myalgic encephalomyelitis / chronic fatigue syndrome ",
+    "description": "Support biomedical research, remove graded exercise therapy, remove cognitive behaviour therapy, improve access to dsp or NDIS/NDIA ",
+    "provisional": true,
+    "last_edited_at": "2018-11-12T10:00:05+11:00"
+  },
+  {
+    "id": 198,
+    "name": "prioritising religious freedom",
+    "description": "the federal government should protect religious freedoms over other rights and freedoms (for example, by giving religious organisations the right to discriminate)",
+    "provisional": false,
+    "last_edited_at": "2022-02-24T09:36:19+11:00"
+  },
+  {
+    "id": 199,
+    "name": "increasing political transparency",
+    "description": "the federal government should increase transparency requirements for political parties (for example, requiring full and prompt disclosure of any political donations on easy-to-search public websites)",
+    "provisional": false,
+    "last_edited_at": "2023-12-08T09:18:29+11:00"
+  },
+  {
+    "id": 200,
+    "name": "a travel ban on people from certain countries",
+    "description": "the federal government should introduce a travel ban on people from certain countries for national security reasons",
+    "provisional": false,
+    "last_edited_at": "2019-02-22T13:11:25+11:00"
+  },
+  {
+    "id": 201,
+    "name": "MacMines' proposed China Stone coal mine in the Galilee Basin",
+    "description": "the federal government should support MacMines' plans to build the China Stone coal mine in Queensland's Galilee Basin",
+    "provisional": false,
+    "last_edited_at": "2023-03-03T11:14:12+11:00"
+  },
+  {
+    "id": 202,
+    "name": "a combined Federal Circuit and Family Court of Australia",
+    "description": "the federal government should unify the Federal Circuit Court of Australia and the Family Court of Australia so that they are one court  to be known as the Federal Circuit and Family Court of Australia",
+    "provisional": false,
+    "last_edited_at": "2021-02-19T15:22:26+11:00"
+  },
+  {
+    "id": 203,
+    "name": "political intervention in research funding grants",
+    "description": "the federal government should be able to intervene in the research grant process with the Australian Research Council (ARC) by, for example, vetoing certain grant application where considered appropriate",
+    "provisional": false,
+    "last_edited_at": "2024-03-28T15:34:44+11:00"
+  },
+  {
+    "id": 204,
+    "name": "protecting Australian sovereignty in trade agreements",
+    "description": "the federal government should ensure that Australian sovereignty always comes first when signing trade agreements so that the government can protect Australian interests (including its workforce and industries) without risking legal action from foreign investors under provisions such as investor-state dispute settlement (ISDS) clauses",
+    "provisional": false,
+    "last_edited_at": "2022-01-07T11:04:06+11:00"
+  },
+  {
+    "id": 205,
+    "name": "targeting inequality",
+    "description": "the federal government needs to research, develop and implement a nation-wide strategy for addressing inequality in the Australian community",
+    "provisional": true,
+    "last_edited_at": "2019-01-25T12:00:48+11:00"
+  },
+  {
+    "id": 206,
+    "name": "pill testing",
+    "description": "the federal government should develop and implement a pill testing policy to reduce the risk of death and/or injury caused by taking illicit drugs",
+    "provisional": false,
+    "last_edited_at": "2025-01-31T10:56:34+11:00"
+  },
+  {
+    "id": 207,
+    "name": "legalising pepper spray",
+    "description": "the federal government should legalise the importation of pepper spray and encourage state governments to legalise carrying pepper spray - especially by women - to deter and defend against attacks",
+    "provisional": false,
+    "last_edited_at": "2019-02-22T13:59:08+11:00"
+  },
+  {
+    "id": 208,
+    "name": "increasing government support for the dairy industry",
+    "description": "the federal government should increase their support of Australia's dairy industry by, for example, regulating increased milk prices",
+    "provisional": false,
+    "last_edited_at": "2020-01-31T12:34:23+11:00"
+  },
+  {
+    "id": 209,
+    "name": "legalising medicinal and recreational marijuana",
+    "description": "see policies on medicinal cannabis - https://theyvoteforyou.org.au/policies/156 - and recreational cannabis - https://theyvoteforyou.org.au/policies/272",
+    "provisional": true,
+    "last_edited_at": "2025-05-29T10:19:21+10:00"
+  },
+  {
+    "id": 210,
+    "name": "an independent ABC",
+    "description": "the federal government should make sure that the Australian Broadcasting Corporation (ABC) is independent and free of political interference",
+    "provisional": true,
+    "last_edited_at": "2024-01-26T18:32:23+11:00"
+  },
+  {
+    "id": 211,
+    "name": "humane treatment of asylum seekers",
+    "description": "the federal government should ban offshore processing and not hold asylum seekers indefinitely",
+    "provisional": true,
+    "last_edited_at": "2019-04-17T23:27:43+10:00"
+  },
+  {
+    "id": 212,
+    "name": "ending Governor-General allowances for serious misconduct",
+    "description": "the federal government should cease paying allowances to former Governor-Generals if they are found to have engaged in serious misconduct",
+    "provisional": false,
+    "last_edited_at": "2019-04-26T13:58:00+10:00"
+  },
+  {
+    "id": 213,
+    "name": "a more progressive citizenship framework for permanent residents",
+    "description": "the federal government should amend the Australian citizenship framework to enable permanent residents who travel frequently for work, to apply for citizenship",
+    "provisional": true,
+    "last_edited_at": "2019-05-17T10:40:55+10:00"
+  },
+  {
+    "id": 214,
+    "name": "transgender rights and protections",
+    "description": "the federal government should support the rights of transgender people (including genderfluid, nonbinary and genderqueer people) by amending laws and policies to support healthy lives by, for example, ensuring that appropriate healthcare is available nationwide and that trans people are protected from discrimination and harassment",
+    "provisional": false,
+    "last_edited_at": "2026-04-03T15:46:36+11:00"
+  },
+  {
+    "id": 215,
+    "name": "a well-resourced and person-centred aged care system",
+    "description": "the federal government needs a clear strategy and sustainability plan to care for older Australians into the future",
+    "provisional": true,
+    "last_edited_at": "2019-05-29T15:15:52+10:00"
+  },
+  {
+    "id": 216,
+    "name": "community right to say no to nuclear waste disposal sites",
+    "description": "the federal government should be required to seek the consent of local communities before selecting new sites for radioactive waste disposal",
+    "provisional": false,
+    "last_edited_at": "2020-07-03T13:12:21+10:00"
+  },
+  {
+    "id": 217,
+    "name": "Australia's timber industry",
+    "description": "the federal government should protect Australia's logging industry and the jobs it represents",
+    "provisional": false,
+    "last_edited_at": "2023-08-04T12:35:51+10:00"
+  },
+  {
+    "id": 218,
+    "name": "reducing personal income tax",
+    "description": "the federal government should reduce personal income tax rates in Australia",
+    "provisional": true,
+    "last_edited_at": "2023-06-30T09:01:44+10:00"
+  },
+  {
+    "id": 219,
+    "name": "increasing the Youth Allowance rate",
+    "description": "the federal government should increase the Youth Allowance rate to ensure that it covers basic living costs",
+    "provisional": false,
+    "last_edited_at": "2025-07-25T11:05:40+10:00"
+  },
+  {
+    "id": 220,
+    "name": "Temporary Exclusion Orders",
+    "description": "the federal government should be able to prevent an Australian citizen aged 14 years or older who is overseas from returning to Australia for up to two years at a time for counter-terrorism reasons",
+    "provisional": false,
+    "last_edited_at": "2019-08-01T12:02:47+10:00"
+  },
+  {
+    "id": 221,
+    "name": "making the cashless debit card program voluntary and not mandatory",
+    "description": "the federal government should make the cashless debit card program (a program where welfare payments are put onto controlled debit cards, also known as Indue cards, for restricted use) voluntary so that people are not forced to participate in it",
+    "provisional": false,
+    "last_edited_at": "2023-04-07T06:53:46+10:00"
+  },
+  {
+    "id": 222,
+    "name": "banning new thermal coal mines",
+    "description": "the federal government should put a ban on new thermal coal mines opening in Australia",
+    "provisional": false,
+    "last_edited_at": "2024-02-15T16:42:29+11:00"
+  },
+  {
+    "id": 223,
+    "name": "an independent Australian Federal Police",
+    "description": "the federal government should ensure that the Australian Federal Police (AFP) have enough independence so that they can carry out their duties in relation to politically sensitive matters",
+    "provisional": true,
+    "last_edited_at": "2022-10-30T22:20:16+11:00"
+  },
+  {
+    "id": 224,
+    "name": "removing import restrictions on cars",
+    "description": "the federal government should remove the current restrictions on passenger vehicles and light commercial vehicles, including second hand cars",
+    "provisional": true,
+    "last_edited_at": "2019-10-11T16:04:04+11:00"
+  },
+  {
+    "id": 225,
+    "name": "reducing air pollution",
+    "description": "the federal government should develop policies and legislation that reduce air pollution, including vehicle emissions",
+    "provisional": false,
+    "last_edited_at": "2026-01-20T09:44:53+11:00"
+  },
+  {
+    "id": 226,
+    "name": "an independent NDIS assessment process",
+    "description": "the federal government should introduce independent assessments for access and planning decisions for the National Disability Insurance Scheme (NDIS)",
+    "provisional": false,
+    "last_edited_at": "2021-07-02T09:56:57+10:00"
+  },
+  {
+    "id": 227,
+    "name": "investing in climate science",
+    "description": "the federal government should invest in climate science to ensure that Australia is best equipped to deal with the challenges of climate change",
+    "provisional": false,
+    "last_edited_at": "2019-11-22T10:20:53+11:00"
+  },
+  {
+    "id": 228,
+    "name": "building community climate change resilience",
+    "description": "the federal government should invest in efforts to increase community resilience to extreme weather events, such as bushfires and floods",
+    "provisional": false,
+    "last_edited_at": "2019-12-06T12:16:36+11:00"
+  },
+  {
+    "id": 229,
+    "name": "an Australian bill of rights",
+    "description": "the government should introduce an Australian bill of rights either as a piece of legislation or as part of the Constitution",
+    "provisional": true,
+    "last_edited_at": "2021-08-13T13:20:42+10:00"
+  },
+  {
+    "id": 230,
+    "name": "displays of national loyalty and performance of patriotism",
+    "description": "there should be more displays of patriotism and expressions of loyalty to the nation",
+    "provisional": true,
+    "last_edited_at": "2020-02-07T20:39:35+11:00"
+  },
+  {
+    "id": 231,
+    "name": "offshore oil mining",
+    "description": "the federal government should support offshore petroleum mining by, for example, granting exploration and drilling licences",
+    "provisional": false,
+    "last_edited_at": "2023-04-21T11:59:48+10:00"
+  },
+  {
+    "id": 232,
+    "name": "increasing funding for vocational education",
+    "description": "the federal government should increase funding for the vocational education sector, which includes TAFEs, apprenticeships and traineeships",
+    "provisional": true,
+    "last_edited_at": "2023-12-29T09:22:30+11:00"
+  },
+  {
+    "id": 233,
+    "name": "preventing cash purchases over $10,000 in the belief it will stop money laundering in the economy",
+    "description": "the federal government should make payments in cash over $10,000 in certain circumstances illegal.",
+    "provisional": true,
+    "last_edited_at": "2021-09-24T09:15:17+10:00"
+  },
+  {
+    "id": 234,
+    "name": "independent reviews of significant legal changes",
+    "description": "when a bill makes a significant change to existing law, the federal government should make sure the bill includes a provision that requires an independent review to take place after a defined period to ensure that the new regime is operating as intended",
+    "provisional": true,
+    "last_edited_at": "2020-07-10T11:33:30+10:00"
+  },
+  {
+    "id": 235,
+    "name": "increasing access to the JobKeeper Payment",
+    "description": "the JobKeeper payment, which is part of the federal government's response to the Coronavirus (COVID-19) pandemic, should be made available to more workers, including casual workers, workers with major charities, working-visa holders who are still in the country, and workers in sectors such as Education, Disability and Local Government",
+    "provisional": false,
+    "last_edited_at": "2023-03-03T14:15:07+11:00"
+  },
+  {
+    "id": 236,
+    "name": "assisting the Arts sector through the coronavirus pandemic",
+    "description": "the federal government should develop a specific Coronavirus (COVID-19) response package for the Arts and Entertainment sector as many workers in that sector are ineligible for the JobKeeper Payment",
+    "provisional": false,
+    "last_edited_at": "2021-09-03T11:17:53+10:00"
+  },
+  {
+    "id": 237,
+    "name": "parliament continuing to meet during the COVID-19 pandemic",
+    "description": "the federal parliament should continue to sit during the coronavirus pandemic",
+    "provisional": false,
+    "last_edited_at": "2020-05-15T10:14:56+10:00"
+  },
+  {
+    "id": 238,
+    "name": "mandatory minimum sentences for certain offences",
+    "description": "the federal government should include mandatory minimum sentences in their federal-level criminal laws that deal with crimes such as child sex offences",
+    "provisional": false,
+    "last_edited_at": "2026-02-07T13:39:24+11:00"
+  },
+  {
+    "id": 239,
+    "name": "increasing support for rural and regional Australia",
+    "description": "the federal government should increase its funding for initiatives that support rural and regional communities",
+    "provisional": false,
+    "last_edited_at": "2026-04-25T11:41:46+10:00"
+  },
+  {
+    "id": 240,
+    "name": "paid parental leave equality for stay-at-home mums and dads",
+    "description": "the federal government should ensure that paid parental leave provisions apply equally to both female and male primary care givers",
+    "provisional": false,
+    "last_edited_at": "2022-01-07T10:03:01+11:00"
+  },
+  {
+    "id": 241,
+    "name": "increasing funding for public schools",
+    "description": "the federal government should increase funding for public schools and prioritise their funding over non-government (private) schools",
+    "provisional": false,
+    "last_edited_at": "2023-02-17T14:43:00+11:00"
+  },
+  {
+    "id": 242,
+    "name": "a nation-wide approach to border closures due to COVID-19",
+    "description": "the federal government should encourage states and territories to stop acting independently and instead take a nation-wide approach to COVID-19 border closures through the National Cabinet",
+    "provisional": true,
+    "last_edited_at": "2020-08-28T09:42:23+10:00"
+  },
+  {
+    "id": 243,
+    "name": "a Royal Commission into Robodebt",
+    "description": "the federal government should establish a Royal Commission to investigate the government's Robodebt scheme, officially known as the Online Compliance Intervention, which related to automated debt recovery",
+    "provisional": false,
+    "last_edited_at": "2020-12-24T16:15:33+11:00"
+  },
+  {
+    "id": 244,
+    "name": "banning mobiles and other devices in immigration detention",
+    "description": "the federal government should give the Minister the power to prohibit items such as mobile phones, SIM cards and internet capable devices for people in immigration detention facilities",
+    "provisional": false,
+    "last_edited_at": "2024-11-29T16:42:38+11:00"
+  },
+  {
+    "id": 245,
+    "name": "increasing state and territory environmental approval powers",
+    "description": "the federal government should give greater environmental approval powers to state and territory governments by creating a single environmental assessment and approval process for nationally protected matters that is administered at state and territory level",
+    "provisional": false,
+    "last_edited_at": "2021-02-26T12:37:16+11:00"
+  },
+  {
+    "id": 246,
+    "name": "increasing the cost of humanities degrees",
+    "description": "the federal government should substantially increase the cost of humanities degrees at university (that is, degrees focussed on the study of human culture and society) in order to discourage students from enrolling in the the subject area and instead enrol in other subject areas, such as mathematics",
+    "provisional": false,
+    "last_edited_at": "2025-10-04T13:43:32+10:00"
+  },
+  {
+    "id": 247,
+    "name": "reducing waste in Australia",
+    "description": "the federal government should take steps to reduce the amount of waste being generated and exported by Australia",
+    "provisional": false,
+    "last_edited_at": "2023-03-04T21:13:06+11:00"
+  },
+  {
+    "id": 248,
+    "name": "the Murray Darling Basin Plan",
+    "description": "the federal government should support the full delivery of the Murray Darling Basin Plan",
+    "provisional": false,
+    "last_edited_at": "2022-01-07T09:26:12+11:00"
+  },
+  {
+    "id": 249,
+    "name": "assisting Australians trying to return from overseas",
+    "description": "the federal government should assist returning Australians stranded overseas due to COVID-19 by, for example, increasing the numbers of permitted arrivals under international flight caps and targetting price gauging so that return airline tickets are affordable",
+    "provisional": false,
+    "last_edited_at": "2022-04-15T09:58:14+10:00"
+  },
+  {
+    "id": 250,
+    "name": "ending government investment in fossil fuels",
+    "description": "the federal government should stop all investment in fossil fuels",
+    "provisional": false,
+    "last_edited_at": "2026-06-07T12:33:24+10:00"
+  },
+  {
+    "id": 251,
+    "name": "increasing workplace protections",
+    "description": "the federal government should increase protections for workers by, for example, ensuring there are adequate dispute resolution processes available",
+    "provisional": false,
+    "last_edited_at": "2024-09-22T12:51:25+10:00"
+  },
+  {
+    "id": 252,
+    "name": "draft",
+    "description": "NOTE: It is important to make sure that there are relevant divisions available to link to policies before creating them. The purpose of policies is not to express the creator's opinion, but to organise voting information so that we can better hold our representatives accountable for what they do - not what we wish they would do.",
+    "provisional": true,
+    "last_edited_at": "2021-10-30T09:24:16+11:00"
+  },
+  {
+    "id": 253,
+    "name": "extending Jobkeeper Payment",
+    "description": "The JobKeeper payment, which is part of the federal government's response to the Coronavirus (COVID-19) pandemic, should be extended for industries that are still being adversely affected by the pandemic, such as the tourism industry",
+    "provisional": false,
+    "last_edited_at": "2022-01-07T09:53:41+11:00"
+  },
+  {
+    "id": 254,
+    "name": "increasing funding for public good research",
+    "description": "the federal government should invest more in research for the public good in the tertiary sector, including by supporting the PhD candidates undertaking it",
+    "provisional": true,
+    "last_edited_at": "2023-03-10T13:36:27+11:00"
+  },
+  {
+    "id": 255,
+    "name": "increasing protections for franchisees",
+    "description": "the federal government should amend current laws in order to address the current power disparity between franchisor and franchisee",
+    "provisional": false,
+    "last_edited_at": "2021-03-12T12:41:59+11:00"
+  },
+  {
+    "id": 256,
+    "name": "an independent inquiry into Attorney-General Christian Porter",
+    "description": "the federal government should establish an independent inquiry into whether Attorney-General Christian Porter is fit to remain in his role in light of the recent sexual assault allegation",
+    "provisional": false,
+    "last_edited_at": "2021-11-21T08:30:15+11:00"
+  },
+  {
+    "id": 257,
+    "name": "This policy has been replaced [Formerly: for a constitutionally enshrined First Nations Voice]",
+    "description": "*** NOTE: Due to accuracy issues, this policy has now been replaced with the following two: (1) for a referendum on the Aboriginal and Torres Strait Islander Voice at theyvoteforyou.org.au/policies/308 and (2) for implementing the Uluru Statement from the Heart in full at theyvoteforyou.org.au/policies/309  These two new policies have been created to better reflect the content of the divisions they are attached to. ***",
+    "provisional": true,
+    "last_edited_at": "2023-09-01T07:41:00+10:00"
+  },
+  {
+    "id": 258,
+    "name": "implementing the recommendations of the Royal Commission into Aboriginal Deaths in Custody",
+    "description": "the federal government should implement all the recommendations of the Royal Commission into Aboriginal Deaths in Custody in partnership with First Nations communities.",
+    "provisional": false,
+    "last_edited_at": "2021-04-16T09:59:59+10:00"
+  },
+  {
+    "id": 259,
+    "name": "waiving childcare fees during lockdown",
+    "description": "the federal government should waive childcare fees during COVID-19 related lockdowns",
+    "provisional": true,
+    "last_edited_at": "2021-05-07T10:02:05+10:00"
+  },
+  {
+    "id": 260,
+    "name": "no new fossil fuels projects",
+    "description": "the federal government should ban all new fossil fuel projects (oil, gas, coal) (for those votes that relate specifically to new thermal coal mines, see the policy \"for banning new thermal coal mines\")",
+    "provisional": false,
+    "last_edited_at": "2025-08-22T18:12:15+10:00"
+  },
+  {
+    "id": 261,
+    "name": "increasing support for the Australian film and TV industry",
+    "description": "the federal government should increase support for the Australian film and television industry by, for example, increasing the amount of Australian programming spending required by television broadcasting organisations",
+    "provisional": false,
+    "last_edited_at": "2025-08-17T13:01:06+10:00"
+  },
+  {
+    "id": 262,
+    "name": "supporting Medicare",
+    "description": "the federal government should support Medicare and ensure that it is sufficiently funded to support the health of the Australian people",
+    "provisional": true,
+    "last_edited_at": "2021-06-25T12:11:22+10:00"
+  },
+  {
+    "id": 263,
+    "name": "building dedicated quarantine facilities (COVID-19)",
+    "description": "the federal government should build dedicated quarantine facilities in every state and territory as part of its response to the COVID-19 pandemic",
+    "provisional": false,
+    "last_edited_at": "2022-04-15T09:59:39+10:00"
+  },
+  {
+    "id": 264,
+    "name": "treating the COVID vaccine rollout as a matter of urgency",
+    "description": "the federal government should treat the COVID-19 vaccination as a matter of urgency and ensure that Australians are being vaccinated as fast as possible, starting with essential workers such as staff working in hospitals and aged care facilities",
+    "provisional": false,
+    "last_edited_at": "2022-04-15T09:59:49+10:00"
+  },
+  {
+    "id": 265,
+    "name": "a transition plan for coal workers",
+    "description": "the federal government should develop and implement a plan to transition workers in the coal industry to other industries",
+    "provisional": false,
+    "last_edited_at": "2025-07-12T10:17:29+10:00"
+  },
+  {
+    "id": 266,
+    "name": "adding Pensioners onto the Indue Card",
+    "description": "NOTE: There are currently no divisions supporting this policy. The Social Security (Administration) Amendment (Continuation of Cashless Welfare) Bill 2020 specifically did not include age pensioners. While some have pointed to provision 61 of this bill, it appears that that provision is an amendment to the definition of \"restrictive payments\" and does not seem to affect the definition of who is actually a program participant - that is, if a person is already a program participant due to sections 124PGD and 124PGE of the Social Security (Administration) Act 1999, and they or their partner is also on the age pension, that age pension now seems to be included as a restrictive payment under this bill. If a person is only an age pension recipient, and doesn't receive any of the payments referred to in sections 124PGD and 124PGE of the Social Security (Administration) Act 1999, this provision does not seem to affect them. If you believe our reading of this bill's provisions is wrong, please let us know.",
+    "provisional": true,
+    "last_edited_at": "2021-10-01T07:43:18+10:00"
+  },
+  {
+    "id": 267,
+    "name": "increasing workplace protections for women",
+    "description": "the federal government should increase legal protections for women in the workplace, particularly in respect to sex discrimination and harassment",
+    "provisional": false,
+    "last_edited_at": "2025-05-09T10:53:51+10:00"
+  },
+  {
+    "id": 268,
+    "name": "decreasing subsidisation of fossil fuels",
+    "description": "the federal government should decrease the subsidisation of taxpayer money into fossil fuels",
+    "provisional": false,
+    "last_edited_at": "2026-03-14T14:40:46+11:00"
+  },
+  {
+    "id": 269,
+    "name": "limiting foreign investment of Australian land and water.",
+    "description": "The federal government should place limitations on the ability for foreign owned corporations and government representatives to purchase land for agriculture, mining or drilling, or fresh water sources. ",
+    "provisional": true,
+    "last_edited_at": "2021-09-18T04:52:41+10:00"
+  },
+  {
+    "id": 270,
+    "name": "Women's rights",
+    "description": "the Federal government should implement legislation designed to protect a woman's right to bodily autonomy, physical safety, and ensure women are treated equally in the workforce. (NOTE 15/10/21: This policy is worded too broadly to be accurate. There are several existing policies that touch on this subject matter, including \"for increasing workplace protections for women,\" \"for decreasing the gender pay gap,\" \"for universal access to abortion services,\" \"for buffer zones around abortion clinics,\" \"for increasing availability of abortion drugs,\" \"for criminalising \"revenge porn,\" \"for increasing federal government support for childcare\" and \"for making sanitary items GST-free\")",
+    "provisional": true,
+    "last_edited_at": "2021-10-15T09:22:23+11:00"
+  },
+  {
+    "id": 271,
+    "name": "Universal Healthcare",
+    "description": "the federal government should fund medicare, keep medicine costs affordable, invest in healthcare facilities, and ensure private health funds are affordable. (NOTE 15/10/2021: This policy is worded too broadly and so will be marked \"draft.\" The divisions that were attached to it were either unrelated to the subject matter, or only partially related to it, which made the policy inaccurate.)",
+    "provisional": true,
+    "last_edited_at": "2021-10-15T09:11:27+11:00"
+  },
+  {
+    "id": 272,
+    "name": "legalising recreational cannabis for adults",
+    "description": "the federal government should legalise recreational cannabis use for adults in Australia",
+    "provisional": false,
+    "last_edited_at": "2025-05-29T10:19:43+10:00"
+  },
+  {
+    "id": 273,
+    "name": "limiting global warming to 1.5 degrees ",
+    "description": "the federal government should commit to a target of limiting global warming to 1.5 degrees celsius above pre-industrial levels",
+    "provisional": false,
+    "last_edited_at": "2024-09-15T11:22:20+10:00"
+  },
+  {
+    "id": 274,
+    "name": "increasing the Renewable Energy Target (RET) ",
+    "description": "the federal government should increase the Renewable Energy Target (RET) to further increase the proportion of electricity generated in Australia from renewable sources, reduce the emissions of greenhouse gases from electricity generation and promote the development of a renewable energy industry in Australia",
+    "provisional": true,
+    "last_edited_at": "2023-02-24T12:25:25+11:00"
+  },
+  {
+    "id": 275,
+    "name": "the Register of Members' Interests",
+    "description": "MPs and Senators should have to disclose to the public any money they receive which could constitute, or be seen to constitute, a conflict of interest",
+    "provisional": true,
+    "last_edited_at": "2021-11-10T08:51:13+11:00"
+  },
+  {
+    "id": 276,
+    "name": "putting welfare payments onto cashless debit cards (or indue cards) on an ongoing basis",
+    "description": "the federal government should extend the Cashless Debit Card (or Indue) program on an ongoing basis, meaning that they should continue to put a large proportion of a person's welfare payment onto a debit card that cannot be used for alcohol or gambling and cannot be used to make cash withdrawals (see the policy \"For putting welfare payments onto cashless debit cards (or indue cards) on a temporary basis as a trial\" for votes on the program's trial period)",
+    "provisional": false,
+    "last_edited_at": "2023-09-01T09:29:14+10:00"
+  },
+  {
+    "id": 277,
+    "name": "considering legislation to create a federal anti-corruption commission (procedural)",
+    "description": "the parliament should immediately introduce and debate legislation to create a federal anti-corruption commission, or national integrity commission, that would detect, investigate and prevent corruption at a federal level (NB: this policy is related to our other policy, called \"For creating a federal Anti-Corruption Commission\")",
+    "provisional": false,
+    "last_edited_at": "2022-08-26T10:35:47+10:00"
+  },
+  {
+    "id": 278,
+    "name": "Extended Supervision Orders (ESOs)",
+    "description": "the federal government should introduce Extended Supervision Orders (ESOs) that impose conditions on a person who has been convicted of certain terrorist offences and subsequently released, if the court is satisfied that there is an unacceptable risk that the person will commit certain serious terrorism offences in the community",
+    "provisional": false,
+    "last_edited_at": "2021-12-17T13:38:12+11:00"
+  },
+  {
+    "id": 279,
+    "name": "increasing support for the Australian shipping industry",
+    "description": "the federal government should increase financial and regulation-based support for the Australian shipping and maritime industry to ensure its future viability and competitiveness",
+    "provisional": false,
+    "last_edited_at": "2023-06-16T12:09:13+10:00"
+  },
+  {
+    "id": 280,
+    "name": "To Take The NASDAQ Stockbrokers and Bankers To The WTO for Greed and Manipulating The Sharemarket",
+    "description": "The Federal Government Should Take The NASDAQ Stockbrokers and US Bankers to The WTO for Deliberately Manipulating The Sharemarket for Greed.  ",
+    "provisional": true,
+    "last_edited_at": "2022-01-05T07:48:20+11:00"
+  },
+  {
+    "id": 281,
+    "name": "reproductive bodily autonomy",
+    "description": "the federal government should ensure that Australian laws protect the reproductive bodily autonomy of women and other people capable of childbearing by, for example, protecting them from pregnancy-related discrimination and ensuring they have access to pregnancy-related healthcare services, which include affordable contraception, maternity care and abortion services",
+    "provisional": false,
+    "last_edited_at": "2022-11-11T14:02:28+11:00"
+  },
+  {
+    "id": 282,
+    "name": "vaccinating the Australian population against COVID-19",
+    "description": "the federal government should fund programs to ensure that everyone in Australia has access to vaccinations against COVID-19 and encourage everyone to vaccinate themselves and their families",
+    "provisional": true,
+    "last_edited_at": "2022-04-01T14:58:33+11:00"
+  },
+  {
+    "id": 283,
+    "name": "increasing parliamentary scrutiny of laws",
+    "description": "the parliament should maintain its ability to scrutinise new laws, whether through considering bills in committee, adding sunset clauses so that certain provisions need to be reconsidered at a future date or through its power to disallow legislative instruments",
+    "provisional": false,
+    "last_edited_at": "2026-03-27T14:13:47+11:00"
+  },
+  {
+    "id": 284,
+    "name": "intersex rights",
+    "description": "intersex people must have equal rights, protection from discrimination, vilification, defamation, human rights abuses and other forms of mistreatment",
+    "provisional": true,
+    "last_edited_at": "2022-11-11T14:37:55+11:00"
+  },
+  {
+    "id": 285,
+    "name": "net zero emissions by 2050",
+    "description": "the federal government should commit to achieving net zero emissions by 2050 as part of Australia's efforts to address climate change",
+    "provisional": false,
+    "last_edited_at": "2026-06-13T09:21:31+10:00"
+  },
+  {
+    "id": 286,
+    "name": "a lower-carbon and less environmentally-damaging transportation system in Australia",
+    "description": "the federal government should pass laws and policies which reduce and ultimately eliminate our reliance on fossil-fuel-based transport, and replace it with the most eco-friendly and energy efficient alternative possible",
+    "provisional": true,
+    "last_edited_at": "2022-08-11T22:55:14+10:00"
+  },
+  {
+    "id": 287,
+    "name": "net zero emissions by 2035",
+    "description": "the federal government should commit to achieving net zero emissions by 2035 as part of Australia's efforts to address climate change (note: this policy has been superseded by the alternative policy goal of *for net zero emissions by 2050*)",
+    "provisional": false,
+    "last_edited_at": "2026-06-13T09:21:39+10:00"
+  },
+  {
+    "id": 288,
+    "name": "increasing transparency of ministers' use of governmental power",
+    "description": "there should be transparency surrounding how federal ministers use the powers given to them by legislation",
+    "provisional": true,
+    "last_edited_at": "2022-10-30T22:20:13+11:00"
+  },
+  {
+    "id": 289,
+    "name": "decreasing government funding for private schools",
+    "description": "private schools (also known as independent or non-government schools) should not receive significant funding from the government",
+    "provisional": false,
+    "last_edited_at": "2023-11-10T15:50:51+11:00"
+  },
+  {
+    "id": 290,
+    "name": "reducing economic inequality",
+    "description": "the federal government should intervene to ensure Australia's wealth is distributed more evenly",
+    "provisional": true,
+    "last_edited_at": "2022-11-08T22:40:37+11:00"
+  },
+  {
+    "id": 291,
+    "name": "banning pay secrecy clauses",
+    "description": "the federal government should ban pay secrecy clauses so that employees can freely discuss and compare their pay with others",
+    "provisional": false,
+    "last_edited_at": "2023-01-06T10:39:43+11:00"
+  },
+  {
+    "id": 292,
+    "name": "capping gas prices",
+    "description": "the federal government should have the power to put a limit on gas prices in order to address rising electricity costs",
+    "provisional": false,
+    "last_edited_at": "2022-12-16T14:48:52+11:00"
+  },
+  {
+    "id": 293,
+    "name": "procedural fairness",
+    "description": "all Australian laws should be subject to procedural fairness requirements so that people can request reasons for government decisions that impact them personally and can appeal those decisions on the basis of whether they were made lawfully",
+    "provisional": false,
+    "last_edited_at": "2026-03-21T10:40:46+11:00"
+  },
+  {
+    "id": 294,
+    "name": "repealing Stage 3 tax cuts",
+    "description": "the federal government should abandon the planned Stage 3 tax cuts which are due to take effect from July 2024",
+    "provisional": false,
+    "last_edited_at": "2024-03-14T16:34:32+11:00"
+  },
+  {
+    "id": 295,
+    "name": "a character test for Australian visas",
+    "description": "the federal government should impose a character test on all non-citizens holding or applying for an Australian visa which would give the minister the power to cancel or refuse a visa under certain character-related circumstances as set out in the relevant legislation",
+    "provisional": false,
+    "last_edited_at": "2026-01-27T16:43:39+11:00"
+  },
+  {
+    "id": 296,
+    "name": "Treatment of transgender, non binary and gender diverse adults and children *DUPLICATE*",
+    "description": "The federal government should establish positive policies to assist transgender, non binary, and gender diverse Australians live their best lives free from discrimination -> See \"For transgender rights\" policy at https://theyvoteforyou.org.au/policies/214",
+    "provisional": true,
+    "last_edited_at": "2023-03-24T11:54:51+11:00"
+  },
+  {
+    "id": 297,
+    "name": "transgender children and young people having access to gender affirming healthcare",
+    "description": "the federal government should not restrict access to gender affirming healthcare for transgender people under the age of eighteen, rather they should leave healthcare matters in the hands of the professional bodies responsible for administering such healthcare (e.g., the Australian Medical Association, the Australian Psychological Society, etc.)",
+    "provisional": false,
+    "last_edited_at": "2025-09-07T15:38:50+10:00"
+  },
+  {
+    "id": 298,
+    "name": "compulsory income management for welfare recipients",
+    "description": "the federal government should introduce a hybrid welfare quarantining regime to replace the Cashless Debit Card (CDC) regime and it should be compulsory for certain recipients",
+    "provisional": false,
+    "last_edited_at": "2024-05-22T14:39:38+10:00"
+  },
+  {
+    "id": 299,
+    "name": "Separation of currency from State",
+    "description": "For free trade to exist currency should not be controlled by any entity. A crypto currency using block chain with a set amount that cannot be changed should replace all dollars currently in circulation and the reserve bank abolished. Any loan that is current and entered into in the future is locked in current agreement the interest rate and repayments cannot be changed without agreement from both parties.\r\nThe amount of currency in circulation is fixed cannot be increased or decreased and the market to set pricing such as costs of goods and wages.  \r\nThe currency is run by an algorithm the same as bit coin with the exception of mining new coins as all moneys and values of goods at the time of change over is to be the same value set by the Australian dollar. Upon implementation the market is considered a free market with trade between parities now open for individual negotiation. \r\nAll prices for good and service to be set by the vendor and the market to determine the value upon exchange.\r\nWages between employers and employees to be kept at rates before commencement of the changeover and any change in wages to be agreed upon by both parties.\r\n",
+    "provisional": true,
+    "last_edited_at": "2023-05-04T05:02:13+10:00"
+  },
+  {
+    "id": 300,
+    "name": "Abolishment of Corporate welfare ",
+    "description": "Under no circumstances any government can distribute monies collected from any form of tax to be distributed to any company.\r\n",
+    "provisional": true,
+    "last_edited_at": "2023-05-04T05:09:43+10:00"
+  },
+  {
+    "id": 301,
+    "name": "reducing taxes for middle-income earners",
+    "description": "the federal government should reduce income tax for middle-income earners (those who earn more than $80,000 per year)",
+    "provisional": false,
+    "last_edited_at": "2023-06-30T10:23:11+10:00"
+  },
+  {
+    "id": 302,
+    "name": "climate change inaction",
+    "description": "the federal government should do nothing to address climate change",
+    "provisional": true,
+    "last_edited_at": "2023-11-17T11:28:18+11:00"
+  },
+  {
+    "id": 303,
+    "name": "market-led approaches to protecting biodiversity",
+    "description": "the federal government should address the destruction of Australia's biodiversity by commodifying the protection of natural environments (e.g., issuing certificates or credits for biodiversity protection that can then be sold on the market)",
+    "provisional": false,
+    "last_edited_at": "2024-02-23T09:55:36+11:00"
+  },
+  {
+    "id": 304,
+    "name": "No human relationship can permit violence without consequence.",
+    "description": "Equality under the law without favour nor qualified according to gender but only through mutual consent and mutual respect according to being at least old enough to vote and to drive, because from the moment of bonding the responsibility is to the life and the welfare of the other in stating vows of bonding in mutual respect to share space, time and property, the unstated pledge is to do no harm, so abuse disqualifies all and has all promises breached in that act. No one wants to gjve their life to a bully if they are also healthy of mind, to marry into a life without care nor empathy, a battlefield is not a home. Especially not for any children as a school for life best lived. Abuse and lost respect mutual and self is greater breach of bond than infidelity, and nullifies vows instantaneously. Too many passionate killings by weak people indicate the vows of marriage are too easily made and separate dwellings may save lives.",
+    "provisional": true,
+    "last_edited_at": "2023-08-04T17:42:06+10:00"
+  },
+  {
+    "id": 305,
+    "name": "protecting freedom of speech online",
+    "description": "the federal government should not enact laws that are detrimental to the freedom of speech and communication of Australian citizens online, such as those that compel (through fines and punishment) digital services (e.g. social media, web forums, websites) to censor speech.",
+    "provisional": true,
+    "last_edited_at": "2023-08-07T16:32:00+10:00"
+  },
+  {
+    "id": 306,
+    "name": "increasing transparency of public appointments",
+    "description": "the federal government should ensure that public appointments are made through a transparent and independent process to address concerns about a \"jobs for mates\" culture in Australian politics",
+    "provisional": true,
+    "last_edited_at": "2023-08-11T10:50:32+10:00"
+  },
+  {
+    "id": 307,
+    "name": "increasing transparency of public funds",
+    "description": "the federal government should increase the transparency of public funds by increasing reporting requirements on bodies that spend them and making these publicly available (through, for example, the publication of audits and annual reviews)",
+    "provisional": true,
+    "last_edited_at": "2023-08-11T10:37:06+10:00"
+  },
+  {
+    "id": 308,
+    "name": "having a referendum on whether to create an Indigenous Voice to Parliament",
+    "description": "there should be a public referendum on the question of whether the Constitution should be amended to include a requirement for an Aboriginal and Torres Strait Islander Voice to federal parliament, such as that envisaged by the Uluru Statement from the Heart",
+    "provisional": false,
+    "last_edited_at": "2025-01-31T09:13:31+11:00"
+  },
+  {
+    "id": 309,
+    "name": "implementing the Uluru Statement from the Heart in full",
+    "description": "the federal government should implement the Uluru Statement from the Heart in full, including an Aboriginal and Torres Strait Islander Voice and a Makarrata Commission for agreement-making and truth-telling",
+    "provisional": false,
+    "last_edited_at": "2023-08-25T08:16:05+10:00"
+  },
+  {
+    "id": 310,
+    "name": "making university education fee-free",
+    "description": "the federal government should create fee-free places at university for Australians (note: there is a separate fee-free TAFE policy)",
+    "provisional": false,
+    "last_edited_at": "2025-09-20T15:03:17+10:00"
+  },
+  {
+    "id": 311,
+    "name": "increasing the income free area for welfare payments",
+    "description": "the federal government should increase the income free area for welfare payments so that recipients can earn more before their welfare payments get reduced",
+    "provisional": true,
+    "last_edited_at": "2023-09-15T08:41:05+10:00"
+  },
+  {
+    "id": 312,
+    "name": "increasing welfare payments",
+    "description": "the federal government should increase the payments given to people receiving support from the government",
+    "provisional": true,
+    "last_edited_at": "2025-07-25T11:06:37+10:00"
+  },
+  {
+    "id": 313,
+    "name": "acknowledging the Government's role in foreign conflicts",
+    "description": "the federal government should acknowledge the role it has played in any foreign conflicts which caused loss of life and were not directly for the defense of Australia or its people",
+    "provisional": true,
+    "last_edited_at": "2025-01-31T10:57:35+11:00"
+  },
+  {
+    "id": 314,
+    "name": "self-governance of the territories",
+    "description": "the federal government should not interfere in, nor intervene with, the governance of federal territories - such as the Australian Capital Territory (ACT) or the Northern Territory (NT) - and should allow those territories to create and uphold their own laws",
+    "provisional": false,
+    "last_edited_at": "2023-12-08T14:40:52+11:00"
+  },
+  {
+    "id": 315,
+    "name": "harm reduction strategies for drug use",
+    "description": "illicit drug use should be met with harm reduction strategies, such as by increasing availability of support programs, sharps containers, overdose prevention methods, or treating drug use as a health issue and not a criminal issue",
+    "provisional": true,
+    "last_edited_at": "2025-01-31T10:53:36+11:00"
+  },
+  {
+    "id": 316,
+    "name": "climate change mitigation strategies (e.g., carbon capture and storage)",
+    "description": "the federal government should encourage climate mitigation strategies, including carbon capture and storage (CCS) and marine geoengineering",
+    "provisional": false,
+    "last_edited_at": "2024-10-06T10:25:54+11:00"
+  },
+  {
+    "id": 317,
+    "name": "ending indexation on student debt (vocational and tertiary)",
+    "description": "the federal government should stop indexing student debts from trade support loans and tertiary education HELP loans",
+    "provisional": false,
+    "last_edited_at": "2025-09-20T15:36:14+10:00"
+  },
+  {
+    "id": 318,
+    "name": "the federal government calling for a ceasefire in Gaza (2023-26)",
+    "description": "the Australian Government should call for an immediate and permanent ceasefire to end the humanitarian disaster in Gaza that began in October 2023, which is now the subject of an ongoing case in the International Court of Justice (ICJ), in which South Africa is accusing Israel of genocide",
+    "provisional": false,
+    "last_edited_at": "2026-02-13T12:10:42+11:00"
+  },
+  {
+    "id": 319,
+    "name": "introducing a Pacific Engagement Visa (PEV)",
+    "description": "the federal government should introduce a permanent Pacific Engagement Visa (PEV) to encourage more permanent migration to Australia from Pacific Island countries",
+    "provisional": false,
+    "last_edited_at": "2024-02-15T16:20:42+11:00"
+  },
+  {
+    "id": 320,
+    "name": "revoking citizenship of dual nationals involved with terrorism offences by the courts",
+    "description": "the federal government should give the Minister for Home Affairs the power to apply to the courts to revoke the citizenship of people who have dual nationality (that is, are also citizens of another country) if they take part in certain terrorism-related offences [NOTE: this policy is related to an older policy titled \"Revoking citizenship of dual nationals involved with terrorism offences by the minister\"]",
+    "provisional": false,
+    "last_edited_at": "2024-02-23T09:29:47+11:00"
+  },
+  {
+    "id": 321,
+    "name": "considering motions on Gaza (2023-26) (procedural)",
+    "description": "the federal government should suspend the usual procedural rules - known as standing orders - that would otherwise prevent our representatives from considering and voting on motions related to the humanitarian disaster in Gaza that began in October 2023 and which is now the subject of an ongoing case in the International Court of Justice (ICJ), in which South Africa is accusing Israel of genocide",
+    "provisional": false,
+    "last_edited_at": "2026-02-13T16:27:53+11:00"
+  },
+  {
+    "id": 322,
+    "name": "up to 12 months of paid parental leave by 2030",
+    "description": "the federal government should amend the law to extend paid parental leave to up to 12 months by 2030",
+    "provisional": false,
+    "last_edited_at": "2025-01-31T10:50:39+11:00"
+  },
+  {
+    "id": 323,
+    "name": "carbon capture, storage and sequestration",
+    "description": "the federal government should encourage the development of carbon capture and storage (CCS) technologies",
+    "provisional": true,
+    "last_edited_at": "2024-04-26T16:48:06+10:00"
+  },
+  {
+    "id": 324,
+    "name": "the federal government calling for a release of Israeli hostages in Gaza (2023-25)",
+    "description": "the Australian Government should call for the immediate release of Israeli hostages abducted in October 2023 and currently held in Gaza by Hamas and other groups",
+    "provisional": true,
+    "last_edited_at": "2026-02-13T12:42:17+11:00"
+  },
+  {
+    "id": 325,
+    "name": "recognising the State of Palestine",
+    "description": "the federal government should officially recognise the State of Palestine",
+    "provisional": true,
+    "last_edited_at": "2026-02-13T12:10:18+11:00"
+  },
+  {
+    "id": 326,
+    "name": "Build to Rent (BTR)",
+    "description": "the federal government should address the rental crisis by supporting Build to Rent (BTR) with tax incentives, so as to encourage the development of more multi-apartment buildings where the apartments are rented out (usually through a single management entity) rather than sold",
+    "provisional": false,
+    "last_edited_at": "2024-07-20T08:45:09+10:00"
+  },
+  {
+    "id": 327,
+    "name": "banning the sale of non-therapeutic vapes",
+    "description": "the federal government should restrict the importation, domestic manufacture, supply, commercial possession and advertisement of non-therapeutic and disposable vaping goods",
+    "provisional": false,
+    "last_edited_at": "2025-04-05T11:22:08+11:00"
+  },
+  {
+    "id": 328,
+    "name": "treating COVID vaccine status as a protected attribute",
+    "description": "the federal government should introduce anti-discrimination laws so that a person cannot be discriminated against on the basis of their COVID vaccine status",
+    "provisional": false,
+    "last_edited_at": "2024-08-17T14:12:44+10:00"
+  },
+  {
+    "id": 329,
+    "name": "vehicle efficiency standards",
+    "description": "the federal government should introduce a vehicle efficiency standard (also known as a fuel efficiency or a vehicle carbon emissions standard)",
+    "provisional": false,
+    "last_edited_at": "2024-11-05T13:39:44+11:00"
+  },
+  {
+    "id": 330,
+    "name": "banning politicial deepfakes",
+    "description": "the federal government should introduce laws to ban the use of deepfakes in political advertising in the lead up to elections",
+    "provisional": false,
+    "last_edited_at": "2025-01-31T10:48:28+11:00"
+  },
+  {
+    "id": 331,
+    "name": "placing the CFMEU into administration",
+    "description": "the federal government should put the Construction, Forestry and Maritime Employees Union (CFMEU) into administration",
+    "provisional": false,
+    "last_edited_at": "2024-09-01T14:53:36+10:00"
+  },
+  {
+    "id": 332,
+    "name": "capping international student numbers at universities",
+    "description": "the minister should have the power to place a cap on the number of international students admitted to Australian universities",
+    "provisional": false,
+    "last_edited_at": "2024-09-07T20:33:16+10:00"
+  },
+  {
+    "id": 333,
+    "name": "For increased domestic gas supply",
+    "description": "The Federal Government should support increased investment in domestic gas supply to enable cheaper gas for households, manufactuers and to support renewables for power generation.",
+    "provisional": true,
+    "last_edited_at": "2024-09-17T12:20:43+10:00"
+  },
+  {
+    "id": 334,
+    "name": "making price gouging illegal",
+    "description": "the federal government should introduce laws to prohibit corporations from engaging in conduct that is likely to result in excessive prices for goods and services for consumers",
+    "provisional": false,
+    "last_edited_at": "2026-02-07T12:28:06+11:00"
+  },
+  {
+    "id": 335,
+    "name": "introducing digital ID",
+    "description": "the federal government should introduce legislation to establish digital ID in Australia",
+    "provisional": false,
+    "last_edited_at": "2024-12-28T08:19:38+11:00"
+  },
+  {
+    "id": 336,
+    "name": "reducing tax concessions for high socio-economic status",
+    "description": "the federal government should reduce tax concessions for high earners and those of high socio-economic status",
+    "provisional": false,
+    "last_edited_at": "2026-03-22T12:01:24+11:00"
+  },
+  {
+    "id": 337,
+    "name": "full implementation of the Genocide Convention",
+    "description": "the federal government should fully implement the Convention on the Prevention and Punishment of the Crime of Genocide into Australian domestic law",
+    "provisional": true,
+    "last_edited_at": "2025-03-28T14:44:37+11:00"
+  },
+  {
+    "id": 338,
+    "name": "targetting homelessness in specific vulnerable groups",
+    "description": "the federal government should work to address homelessness in specific vulnerable groups, such as older women and First Nations people",
+    "provisional": false,
+    "last_edited_at": "2025-01-31T10:41:53+11:00"
+  },
+  {
+    "id": 339,
+    "name": "criminalising wage theft",
+    "description": "Employers should be able to be criminally prosecuted for intentionally stealing the wages of their employees.",
+    "provisional": false,
+    "last_edited_at": "2025-01-04T13:38:22+11:00"
+  },
+  {
+    "id": 340,
+    "name": "Building Fusion Energy Power plants instead of Nuclear Fission power plants in Australia and ASEAN",
+    "description": "The Federal government must invest privately and publically in research and develop into Fusion Energy's peaceful power generation. \r\n\r\nThe federal government is risking Australia becoming a backwater community in the ASEAN region.\r\n\r\nIn an Australian context, Nuclear only refers to Thorium and Fission, not FUSION ENERGY.\r\nThe government is failing the Australian taxpayer and hampering Australian growth.\r\nAustralia can build a Fusion power plant now.\r\n\r\n1. Fusion Energy is Legal under current Australian nuclear laws.\r\n2. Nuclear fission power generation is banned in Australia now.\r\n3. Commercial Fusion will be available to build in Australia before mid-2040.\r\n4. Commercial Fission will not be available to build in Australia by mid-2040.\r\n5. Commercial comparisons of Fission and Fusion power plants built in Australia shows that Fusion is cheaper.\r\n7. Commercial Fusion SMRs will likely be available to build in Australia before mid-2040?\r\n8. Commercial Fission SMRs will not likely be available to build in Australia before mid-2040.\r\n9. Commercial Thorium will not be available to build in Australia by mid-2040?\r\n10. Uranium's lifetime, considering the 2022 Uranium Red Book from NEA and OECD states 90 years?\r\nAustralia has more reason to research, develop and build Fusion Energy Power plants and power Australia into a dynamic future.",
+    "provisional": true,
+    "last_edited_at": "2025-01-13T17:22:28+11:00"
+  },
+  {
+    "id": 341,
+    "name": "All Australians should be given the same privileges no matter their gender.",
+    "description": "The Federal Government should amend any laws that inhibit the marriages of couples no matter how they identify sexually.",
+    "provisional": true,
+    "last_edited_at": "2025-01-22T16:03:57+11:00"
+  },
+  {
+    "id": 342,
+    "name": "Reducing immigration intake ",
+    "description": "The federal government should lower immigration intake by 80%",
+    "provisional": true,
+    "last_edited_at": "2025-01-31T10:39:56+11:00"
+  },
+  {
+    "id": 343,
+    "name": "making TAFE education fee-free",
+    "description": "the federal government should create fee-free places at TAFE for Australians (note: there is a separate fee-free university policy)",
+    "provisional": false,
+    "last_edited_at": "2025-09-20T15:02:54+10:00"
+  },
+  {
+    "id": 344,
+    "name": "Electoral & party reforms to reduce the disproportionate influence of money",
+    "description": "The federal government should reduce or remove the ability for those with extreme wealth to be able to exert disproportionate influence over politics. The federal government should eliminate the ability for candidates to outspend one another as a means of disproportionately influencing elections in seats and at a national level.",
+    "provisional": true,
+    "last_edited_at": "2025-02-13T17:19:21+11:00"
+  },
+  {
+    "id": 345,
+    "name": "Improving pay and conditions for gig workers",
+    "description": "the pay, conditions, and rights of gig economy workers (AKA “employee-like workers”) should be strengthened.",
+    "provisional": false,
+    "last_edited_at": "2025-05-23T19:56:19+10:00"
+  },
+  {
+    "id": 346,
+    "name": "an inquiry into Australia's COVID response",
+    "description": "the federal government should establish a committee of inquiry into Australia’s response to the COVID-19 pandemic",
+    "provisional": true,
+    "last_edited_at": "2025-03-30T12:47:54+11:00"
+  },
+  {
+    "id": 347,
+    "name": "Developing Fusion for Australia in Australia for Australias future.",
+    "description": "Growing Australia's Industry, Supporting Immigration, and Developing Fusion Energy\r\nContents\r\n1.\tIntroduction:\t1\r\n2.\tIndustry Growth Strategy\t1\r\n3.\tImmigration as a Growth Enabler:\t1\r\n4.\tFusion Energy Development and Challenges:\t1\r\n5.\tBarriers to Fusion Energy Development\t1\r\n6.\tAddressing Concerns about Australia's Industry and Immigration Appeal:\t1\r\n7.\tDefence Capability Enhancement:\t1\r\n8.\tGlobal and Political Considerations:\t1\r\n9.\tWhy Fusion Energy is Superior to Fission\t1\r\n10.\tEconomic & Environmental Benefits:\t1\r\n11.\tConclusion:\t1\r\n\r\n1.\tIntroduction: \r\n\r\nAustralia has the potential to become a global leader in advanced industries, sustainable energy, and skilled workforce development. By strategically integrating industry growth, immigration policies, and cutting-edge energy research, Australia can enhance economic growth, global competitiveness, and energy security.\r\n2.\tIndustry Growth Strategy: \r\n\r\nAdvanced Manufacturing: Invest in high-tech sectors like semiconductors, robotics, and space technology. • Green Technology & Renewable Energy: Expand battery storage, solar panel production, and hydrogen-based industries. • Mining & Resources Innovation: Promote sustainable mining and value-added processing. • Infrastructure Development: Strengthen transport and digital infrastructure.\r\n3.\tImmigration as a Growth Enabler: \r\n\r\nSkilled Migration Pathways: Attract top talent in STEM, engineering, and energy research. • Regional Immigration Initiatives: Encourage skilled immigrants to support regional economies. • Entrepreneurial & Start-up Support: Introduce visas for entrepreneurs and investors. • Education & Workforce Integration: Enhance pathways for international students to join the workforce.\r\n4.\tFusion Energy Development and Challenges:\r\n\r\nR&D Investments: Establish national fusion research centres in collaboration with global partners. • Public-Private Partnerships: Support private-sector investment in fusion start-ups. • International Collaboration: Partner with ITER, MIT, HB11, and other leading research organisations. • Regulatory Framework & Safety Standards: Develop clear policies for responsible fusion energy deployment.\r\n5.\tBarriers to Fusion Energy Development: \r\n\r\nUnderfunding: Lack of public funding has hindered progress. • Policy Inconsistencies: No cohesive national strategy exists. • Regulatory Barriers: Unclear regulations deter investment. • Lack of Research Infrastructure: No large-scale fusion research facilities in Australia. • Limited Industry Collaboration: Insufficient government incentives for private-sector partnerships. • Low Public Awareness & Political Will: Minimal advocacy for fusion energy development.\r\n6.\tAddressing Concerns about Australia's Industry and Immigration Appeal: \r\n\r\nWho Will Buy Australian-Manufactured Products? o Trade Partnerships: Strong agreements with China, the U.S., Japan, and the EU. o Competitive Advantage: High-quality, ethically sourced goods. o Emerging Industries: Growth in green technology, defence, and medical innovations. • Who Would Immigrate to Australia? o Quality of Life: High rankings in healthcare, education, and safety. o Economic Opportunities: Strong demand for skilled workers. o Political & Social Stability: A safe, democratic environment. o Research & Innovation Hubs: World-class opportunities in clean energy and manufacturing.\r\n7.\tDefence Capability Enhancement: \r\n\r\nInvest in modern defence technologies, cybersecurity, and intelligence capabilities to safeguard national interests. • Trade Defence: Establish policies to counter unfair tariffs and trade restrictions imposed by foreign governments, ensuring Australian industries remain competitive. • Energy Security: Reduce reliance on foreign energy imports by investing in domestic renewable and fusion energy resources. • Border Protection & Maritime Security: Strengthen border control mechanisms to safeguard Australia's sovereignty and economic interests. • Allied Partnerships: Expand strategic defence alliances with like-minded nations to enhance regional security. • Fusion Energy for Defence and Logistics: Develop fusion-based propulsion for submarines, surface maritime vessels, and rail transport to enhance defence logistics and trade efficiency. • Space Propulsion: Invest in fusion-powered space propulsion systems to establish leadership in space exploration and satellite deployment.\r\n8.\tGlobal and Political Considerations: \r\n\r\nUkraine War Impact: Supply chain disruptions highlight domestic energy security needs. • U.S. Trade Policies: Protectionism requires Australia to diversify trade markets. • Ethnic Clashes in Australia: Strengthen integration policies to maintain social cohesion. • Upcoming Australian Federal Election: Policy decisions on industry, immigration, and energy will shape the nation's future.\r\n9.\tWhy Fusion Energy is Superior to Fission: \r\n\r\nSafety: No long-lived radioactive waste or meltdown risks. • Fuel Abundance: Uses widely available deuterium and tritium. • Minimal Environmental Impact: No greenhouse gas emissions. • Higher Energy Yield: More efficient and sustainable. • Reduced Proliferation Risks: No weaponisable byproducts.\r\n10.\tEconomic & Environmental Benefits: \r\n\r\nHousehold Budget Savings: Fusion Energy will significantly lower electricity costs due to its high efficiency and abundant fuel supply, reducing financial pressure on households. • Lower Construction Costs: An affordable and consistent energy supply will reduce the cost of building materials and manufacturing, making home construction more accessible. • Reduced Industrial and Farming Costs: Reliable, low-cost fusion energy will lower production expenses for industries and agriculture, increasing competitiveness and reducing consumer prices. • Job Creation: Expands employment across multiple sectors. • Energy Independence: Reduces reliance on fossil fuels. • Environmental Sustainability: Supports carbon neutrality goals. • Global Leadership: Positions Australia at the forefront of clean energy innovation.\r\n11.\tConclusion: \r\nBy integrating industrial growth, strategic immigration policies, and fusion energy development, Australia can secure a prosperous and globally competitive future. Overcoming barriers to fusion energy, strengthening trade relationships, and attracting skilled immigrants will ensure economic resilience, energy security, and technological leadership. Navigating geopolitical challenges and trade shifts will be key to sustaining long-term national progress.\r\n",
+    "provisional": true,
+    "last_edited_at": "2025-04-03T12:09:40+11:00"
+  },
+  {
+    "id": 348,
+    "name": "reducing tax on lowest income bracket",
+    "description": "the federal government should reduce the tax rate on the lowest taxable income bracket (i.e., the tax on income between $18,201 – $45,000)",
+    "provisional": false,
+    "last_edited_at": "2025-04-06T12:34:08+10:00"
+  },
+  {
+    "id": 349,
+    "name": "increasing access to subsidised childcare",
+    "description": "the federal government should introduce legislation to make more subsidised childcare hours available to families",
+    "provisional": false,
+    "last_edited_at": "2025-04-06T14:14:36+10:00"
+  },
+  {
+    "id": 350,
+    "name": "implementating the UN Declaration on the Rights of Indigenous Peoples into Australian law",
+    "description": "the federal government should fully implement the provisions of the United Nations Declaration on the Rights of Indigenous Peoples (UNDRIP) into Australian domestic law",
+    "provisional": true,
+    "last_edited_at": "2025-04-18T10:43:38+10:00"
+  },
+  {
+    "id": 351,
+    "name": "capping electoral spending",
+    "description": "the federal government should put caps on how much candidates can spend during their electoral campaigns",
+    "provisional": true,
+    "last_edited_at": "2025-04-25T10:38:19+10:00"
+  },
+  {
+    "id": 352,
+    "name": "criminalising hate speech",
+    "description": "the federal government should make hate speech that calls for force or violence a criminal offense ",
+    "provisional": false,
+    "last_edited_at": "2026-05-30T15:46:47+10:00"
+  },
+  {
+    "id": 353,
+    "name": "criminalising hate symbols",
+    "description": "the federal government should make displaying hate symbols (e.g., Nazi symbols) a criminal offense",
+    "provisional": false,
+    "last_edited_at": "2026-05-30T15:46:53+10:00"
+  },
+  {
+    "id": 354,
+    "name": "banning social media accounts for minors (under 16 years of age)",
+    "description": "the federal government should introduce laws and policies that would prevent young people under the age of 16-years-old from creating user accounts on social media platforms",
+    "provisional": true,
+    "last_edited_at": "2025-05-29T10:50:42+10:00"
+  },
+  {
+    "id": 355,
+    "name": "mandatory climate financial disclosures",
+    "description": "the federal government should require large businesses to produce a sustainability report that makes climate related financial disclosures",
+    "provisional": false,
+    "last_edited_at": "2025-07-04T16:47:17+10:00"
+  },
+  {
+    "id": 356,
+    "name": "increasing support for Indigenous creative arts",
+    "description": "the federal government should increase support for Aboriginal and Torres Strait Islander creative arts",
+    "provisional": true,
+    "last_edited_at": "2025-07-12T11:52:00+10:00"
+  },
+  {
+    "id": 357,
+    "name": "supporting access to sex worker services under the NDIS",
+    "description": "the federal government should allow NDIS participants to access sex worker services under their NDIS plan",
+    "provisional": true,
+    "last_edited_at": "2025-07-19T14:04:06+10:00"
+  },
+  {
+    "id": 358,
+    "name": "local quotas for Australian streaming content",
+    "description": "the federal government should introduce local content quotas for streaming companies to increase the amount of Australian content being produced and aired",
+    "provisional": true,
+    "last_edited_at": "2025-08-17T12:56:10+10:00"
+  },
+  {
+    "id": 359,
+    "name": "increasing the financial return on fossil fuels",
+    "description": "the federal government should increase the financial return on the sale of Australian fossil fuels to fossil fuel companies",
+    "provisional": false,
+    "last_edited_at": "2026-06-07T12:04:20+10:00"
+  },
+  {
+    "id": 360,
+    "name": "paid placements for all students",
+    "description": "the federal government should ensure that all Australian students who are undertaking mandatory placements as part of their tertiary or vocational qualifications should receive payment for that work",
+    "provisional": false,
+    "last_edited_at": "2025-09-27T13:16:11+10:00"
+  },
+  {
+    "id": 361,
+    "name": "wiping all student debt (university and vocational)",
+    "description": "the federal government should wipe all student debt for Australians who have undertaken vocational or tertiary education in Australia",
+    "provisional": false,
+    "last_edited_at": "2025-09-20T15:03:37+10:00"
+  },
+  {
+    "id": 362,
+    "name": "capping the indexation rates for HECS-HELP debts",
+    "description": "the federal government should cap the indexation rates for HECS-HELP debts to ensure students have certainty about the level of debt they will accrue",
+    "provisional": false,
+    "last_edited_at": "2025-09-20T15:32:51+10:00"
+  },
+  {
+    "id": 363,
+    "name": "reducing university student debt",
+    "description": "the federal government should introduce legislation that makes a one-time reduction in the level of Higher Education Loan Programme (HELP) debts - also known as HECS-HELP debts - for Australian university students",
+    "provisional": false,
+    "last_edited_at": "2025-10-04T13:57:39+10:00"
+  },
+  {
+    "id": 364,
+    "name": "condemning the genocide in Gaza (2023 - ongoing)",
+    "description": "the federal government should condemn the state of Israel over its actions in Gaza since October 2023, which is now widely reconised as an act of genocide",
+    "provisional": false,
+    "last_edited_at": "2026-02-13T12:53:53+11:00"
+  },
+  {
+    "id": 365,
+    "name": "increasing legal protections for minors in the criminal justice system",
+    "description": "the federal government should ensure that the rights of minors are protected throughout the criminal justice system",
+    "provisional": true,
+    "last_edited_at": "2026-05-15T10:38:05+10:00"
+  },
+  {
+    "id": 366,
+    "name": "increasing the questioning powers of intelligence services",
+    "description": "intelligence agencies should have increased powers to question citizens about matters of national security",
+    "provisional": true,
+    "last_edited_at": "2026-02-13T14:27:56+11:00"
+  },
+  {
+    "id": 367,
+    "name": "increasing tax on fossil fuels - DUPLICATE",
+    "description": "the federal government should increase taxes on the sale and export of Australian fossil fuels products (gas, coal)",
+    "provisional": true,
+    "last_edited_at": "2026-05-15T10:42:05+10:00"
+  },
+  {
+    "id": 368,
+    "name": "protecting copyrighted material from data mining",
+    "description": "the federal government should restrict the ability of tech companies from data-mining copyrighted materials without authorisation or compensation",
+    "provisional": true,
+    "last_edited_at": "2026-05-03T09:10:16+10:00"
+  }
+]

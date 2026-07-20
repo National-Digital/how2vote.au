@@ -1,0 +1,176 @@
+{
+  "parties": [
+    {
+      "key": "australian_labor_party",
+      "displayName": "Australian Labor Party",
+      "aecName": "Australian Labor Party",
+      "aliases": [
+        "Labor",
+        "A.L.P."
+      ],
+      "kind": "party"
+    },
+    {
+      "key": "australian_greens",
+      "displayName": "The Greens",
+      "aecName": "The Greens",
+      "aliases": [
+        "Queensland Greens",
+        "The Greens (WA)"
+      ],
+      "kind": "party"
+    },
+    {
+      "key": "andrew_wilkie_mp",
+      "displayName": "Andrew WILKIE",
+      "aecName": "WILKIE, Andrew",
+      "aliases": [],
+      "kind": "independent"
+    },
+    {
+      "key": "united_australia_party",
+      "displayName": "United Australia Party",
+      "aecName": "United Australia Party",
+      "aliases": [],
+      "kind": "party"
+    },
+    {
+      "key": "centre_alliance",
+      "displayName": "Centre Alliance",
+      "aecName": "Centre Alliance",
+      "aliases": [],
+      "kind": "party"
+    },
+    {
+      "key": "liberal_party",
+      "displayName": "Liberal",
+      "aecName": "Liberal",
+      "aliases": [],
+      "kind": "party"
+    },
+    {
+      "key": "katters_australian_party",
+      "displayName": "Katter's Australian Party (KAP)",
+      "aecName": "Katter's Australian Party (KAP)",
+      "aliases": [],
+      "kind": "party"
+    },
+    {
+      "key": "jacqui_lambie_network",
+      "displayName": "Jacqui Lambie Network",
+      "aecName": "Jacqui Lambie Network",
+      "aliases": [],
+      "kind": "party"
+    },
+    {
+      "key": "pauline_hansons_one_nation_party",
+      "displayName": "Pauline Hanson's One Nation",
+      "aecName": "Pauline Hanson's One Nation",
+      "aliases": [],
+      "kind": "party"
+    },
+    {
+      "key": "senator_rex_patrick",
+      "displayName": "Rex Patrick Team",
+      "aecName": "Rex Patrick Team",
+      "aliases": [],
+      "kind": "independent"
+    },
+    {
+      "key": "national_party",
+      "displayName": "The Nationals",
+      "aecName": "The Nationals",
+      "aliases": [
+        "National Party"
+      ],
+      "kind": "party"
+    },
+    {
+      "key": "country_liberal_party",
+      "displayName": "NT CLP",
+      "aecName": "NT CLP",
+      "aliases": [],
+      "kind": "party"
+    },
+    {
+      "key": "liberal_national_party",
+      "displayName": "Liberal National Party of Queensland",
+      "aecName": "Liberal National Party of Queensland",
+      "aliases": [],
+      "kind": "party"
+    },
+    {
+      "key": "liberal_democratic_party",
+      "displayName": "Liberal Democrats",
+      "aecName": "Liberal Democrats",
+      "aliases": [],
+      "kind": "party"
+    },
+    {
+      "key": "derryn_hinchs_justice_party",
+      "displayName": "Derryn Hinch's Justice Party",
+      "aecName": "Derryn Hinch's Justice Party",
+      "aliases": [],
+      "kind": "party"
+    },
+    {
+      "key": "australian_democrats",
+      "displayName": "Australian Democrats",
+      "aecName": "Australian Democrats",
+      "aliases": [],
+      "kind": "party"
+    },
+    {
+      "key": "helen_haines_mp",
+      "displayName": "Helen HAINES",
+      "aecName": "HAINES, Helen",
+      "aliases": [],
+      "kind": "independent"
+    },
+    {
+      "key": "zali_steggall_mp",
+      "displayName": "Zali STEGGALL",
+      "aecName": "STEGGALL, Zali",
+      "aliases": [],
+      "kind": "independent"
+    }
+  ],
+  "merges": [
+    {
+      "master": "centre_alliance",
+      "merger": "nick_xenophon_team"
+    },
+    {
+      "master": "united_australia_party",
+      "merger": "palmer_united_party"
+    }
+  ],
+  "noRecord": [
+    "Animal Justice Party",
+    "Australian Christians",
+    "Australian Federation Party",
+    "Australian Progressives",
+    "Australian Values Party",
+    "Citizens Party",
+    "David Pocock",
+    "Democratic Alliance",
+    "Drew Pavlou Democratic Alliance",
+    "FUSION: Science, Pirate, Secular, Climate Emergency",
+    "Federal ICAC Now",
+    "Independent",
+    "Indigenous - Aboriginal Party of Australia",
+    "Informed Medical Options Party",
+    "Kim for Canberra",
+    "Legalise Cannabis Australia",
+    "Reason Australia",
+    "Seniors United Party of Australia",
+    "Shooters, Fishers and Farmers Party",
+    "Socialist Alliance",
+    "Sustainable Australia Party - Stop Overdevelopment / Corruption",
+    "TNL",
+    "The Great Australian Party",
+    "The Local Party",
+    "Victorian Socialists",
+    "WESTERN AUSTRALIA PARTY"
+  ]
+}

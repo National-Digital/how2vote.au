@@ -1,0 +1,9 @@
+cff-version: 1.2.0
+message: "If you use how2vote or its data, please cite it as below."
+title: "how2vote"
+type: software
+authors:
+  - name: "National Digital"
+url: "https://github.com/National-Digital/how2vote.au"
+repository-code: "https://github.com/National-Digital/how2vote.au"
+license: AGPL-3.0-or-later

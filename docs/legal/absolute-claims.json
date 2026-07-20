@@ -1,0 +1,120 @@
+{
+  "schemaVersion": 1,
+  "description": "Enforceable absolute-claims register. bannedTerms: categorical / quasi-legal wording banned from public copy — an absolute 'non-partisan' self-label, 'anonymous', 'unlinkable', an absolute legal-compliance claim, 'no personal information', 'cannot recognise/track', 'IP addresses are never collected' — each with the softer wording to prefer. permittedClaims: the narrow exceptions, each a specific claim at a specific location allowed by a CURRENT control-register evidence record, carrying the qualification that makes it defensible (permitted_qualification + mustContain), the unqualified wording it may never regress to (prohibited_absolute_wording), an evidence_owner and a review_date/expiry_date. Enforced fail-closed by scripts/check-absolute-claims.mjs (Legal CI group). See docs/claims-register.md for the wider claim↔substantiation map.",
+  "bannedTerms": [
+    {
+      "id": "non-partisan",
+      "label": "an absolute 'non-partisan' self-label",
+      "pattern": "\\bnon-?partisan\\b",
+      "prefer": "independent / independently developed using a published methodology"
+    },
+    {
+      "id": "anonymous",
+      "label": "an absolute 'anonymous' claim",
+      "pattern": "\\banonymous\\b|(?<!k-)\\banonymi(?:sed|zed|se|ze|sation|zation|ty)\\b",
+      "prefer": "de-identified / no direct identifiers are stored in the research database"
+    },
+    {
+      "id": "unlinkable",
+      "label": "an absolute 'unlinkable' claim",
+      "pattern": "\\bunlinkable\\b",
+      "prefer": "sent as a separate request / designed to reduce linkability"
+    },
+    {
+      "id": "absolute-compliance",
+      "label": "an absolute legal-compliance claim",
+      "pattern": "\\blegally compliant\\b|\\bfully compliant\\b|\\bguaranteed compliant\\b|\\blegally the sole\\b|\\bsole authoriser\\b",
+      "prefer": "describe the specific control, not a blanket compliance or sole-authoriser guarantee"
+    },
+    {
+      "id": "no-personal-info",
+      "label": "an absolute 'no personal information' claim",
+      "pattern": "\\b(?:no|not) personal (?:information|data)\\b|\\bcollects? no personal\\b",
+      "prefer": "no direct identifiers are stored"
+    },
+    {
+      "id": "cannot-track",
+      "label": "an absolute 'cannot recognise/track' claim",
+      "pattern": "\\bcannot\\b[^.]{0,30}\\b(?:recognise|recognize|track|identify)\\b",
+      "prefer": "is not designed to recognise or track you"
+    },
+    {
+      "id": "ip-absolute",
+      "label": "an absolute 'IP address is never collected' claim",
+      "pattern": "\\b(?:never|no|not|don'?t|do not)\\b[^.]{0,45}\\bIP address",
+      "prefer": "no IP address is stored in the research database"
+    }
+  ],
+  "permittedClaims": [
+    {
+      "id": "AC-AGGREGATE-NOT-PERSONAL",
+      "claim": "The privacy policy describes the research group counts as 'not personal information' to support indefinite retention.",
+      "location": "apps/web/src/routes/privacy/+page.svelte",
+      "claim_type": "privacy-retention",
+      "term": "no-personal-info",
+      "evidence": ["EV-DEIDENTIFICATION-ASSESSMENT", "EV-PRIVACY-ACT-DETERMINATION"],
+      "evidence_owner": "cameron-young",
+      "review_date": "2026-07-20",
+      "expiry_date": "2027-07-20",
+      "permitted_qualification": "Scoped to genuinely aggregated group totals with no per-person record; the aggregates are still reviewed after each federal election and the operative protection is the disclosure controls (k-suppression), stated on the same page — not an absolute deletion or non-identifiability promise.",
+      "prohibited_absolute_wording": "your data is anonymous and can never identify you",
+      "mustContain": ["the disclosure controls"]
+    },
+    {
+      "id": "AC-ANALYTICS-NO-PERSONAL-INFO",
+      "claim": "The privacy policy states the analytics collects no personal information.",
+      "location": "apps/web/src/routes/privacy/+page.svelte",
+      "claim_type": "analytics",
+      "term": "no-personal-info",
+      "evidence": ["EV-PROVIDER-DPA", "EV-PRIVACY-ACT-DETERMINATION"],
+      "evidence_owner": "cameron-young",
+      "review_date": "2026-07-20",
+      "expiry_date": "2027-07-20",
+      "permitted_qualification": "Tied to the cookieless, edge-only construction of Cloudflare Web Analytics (sets no cookie, stores nothing on the device, assigns no identifier); the claim follows from that design and is scoped to this provider, not a product-wide assertion.",
+      "prohibited_absolute_wording": "we never collect any information about you",
+      "mustContain": ["cookieless"]
+    },
+    {
+      "id": "AC-ANALYTICS-CANNOT-TRACK",
+      "claim": "The privacy policy states the analytics cannot be used to recognise or track people across visits or sites.",
+      "location": "apps/web/src/routes/privacy/+page.svelte",
+      "claim_type": "analytics",
+      "term": "cannot-track",
+      "evidence": ["EV-PROVIDER-DPA"],
+      "evidence_owner": "cameron-young",
+      "review_date": "2026-07-20",
+      "expiry_date": "2027-07-20",
+      "permitted_qualification": "Follows directly from the cookieless, identifier-free construction (no cookie, no device identifier); scoped to this analytics provider, not a global tracking-impossibility claim.",
+      "prohibited_absolute_wording": "we can never track anyone anywhere",
+      "mustContain": ["cookieless"]
+    },
+    {
+      "id": "AC-RESEARCH-NO-IP",
+      "claim": "The methodology page states the research holds no name, contact detail, IP address or device identifier.",
+      "location": "apps/web/src/routes/methodology/+page.svelte",
+      "claim_type": "research-privacy",
+      "term": "ip-absolute",
+      "evidence": ["EV-DEIDENTIFICATION-ASSESSMENT"],
+      "evidence_owner": "cameron-young",
+      "review_date": "2026-07-20",
+      "expiry_date": "2027-07-20",
+      "permitted_qualification": "Backed by the transmitted-field allowlist that never sends the IP, and immediately qualified on the same page — a small-count residual re-identification risk is acknowledged, not an absolute non-identifiability guarantee.",
+      "prohibited_absolute_wording": "you are completely anonymous and cannot ever be identified",
+      "mustContain": ["no technique eliminates every possible risk"]
+    },
+    {
+      "id": "AC-TVFY-PUBLIC-DATA",
+      "claim": "The third-party services registry states no personal data is involved in / disclosed to the public parliamentary-data source.",
+      "location": "apps/web/src/lib/privacy/third-party-services.json",
+      "claim_type": "data-provenance",
+      "term": "no-personal-info",
+      "evidence": ["EV-RIGHTS-CLASSES"],
+      "evidence_owner": "cameron-young",
+      "review_date": "2026-07-20",
+      "expiry_date": "2027-07-20",
+      "permitted_qualification": "Factual statement about one specific data flow — the retrieved content is public parliamentary voting records — not a blanket product-wide 'no personal information' claim.",
+      "prohibited_absolute_wording": "how2vote holds no personal information about anyone",
+      "mustContain": ["public parliamentary records"]
+    }
+  ]
+}

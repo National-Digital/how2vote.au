@@ -1,0 +1,64 @@
+{
+  "schemaVersion": 1,
+  "electionId": "2025",
+  "rightsClass": "aec-candidate-data",
+  "recordedAt": "2026-07-17",
+  "outputHash": "a5c693904c59cf882d4097b535a9cd6c035158b2a1fdea181e54b5329f171df5",
+  "coverage": {
+    "houseCandidates": 1126,
+    "senateCandidates": 330,
+    "houseElectorates": 150,
+    "senateJurisdictions": 8,
+    "electorates": 150
+  },
+  "sources": [
+    {
+      "id": "house-nominations",
+      "title": "2025 federal election — House of Representatives candidates (declared nominations, with ballot order)",
+      "publisher": "Australian Electoral Commission",
+      "url": "https://www.aec.gov.au/election/files/data/house-candidates.csv",
+      "publishedAt": "2025-04-11",
+      "retrievedAt": "2026-07-17T06:04:49Z",
+      "sourceSha256": "fec45e1e500490e1b89169f4ca027bb923eb99566068e0a4025b8a85fe852a7f",
+      "rawPath": "data/raw/aec/2025/house-candidates.csv",
+      "rawRetained": true,
+      "parserVersion": "packages/data-pipeline/src/aec.ts parseCsv+normaliseName v1",
+      "status": "verified",
+      "reviewer": "cameron-young",
+      "reviewedAt": "2026-07-17",
+      "note": "Canonical AEC House candidate download (columns: state, division, ballotPosition, surname, ballotGivenName, partyBallotName) — the primary aec.gov.au source of record, which carries both the candidate SET and the ballot ORDER. Catalogue: https://www.aec.gov.au/election/fe25/downloads-statistics.htm. Licence: CC BY 4.0 per the AEC website-wide copyright notice (https://www.aec.gov.au/footer/copyright.htm); redistribution permitted, so the raw CSV is retained in-repo and pinned by SHA-256. Verified 2026-07-17: the committed ballots.json reproduces this file EXACTLY — 1126/1126 House candidates across 150/150 divisions, matching on (state, division, ballot position, candidate, party)."
+    },
+    {
+      "id": "senate-nominations",
+      "title": "2025 federal election — Senate candidates (declared nominations, with group + ballot order)",
+      "publisher": "Australian Electoral Commission",
+      "url": "https://www.aec.gov.au/election/files/data/senate-candidates.csv",
+      "publishedAt": "2025-04-11",
+      "retrievedAt": "2026-07-17T06:04:49Z",
+      "sourceSha256": "f157b1cbdedf70b8f2ab07a09f771fe90b98a7bcf6454319f53e67fdf1a23f2b",
+      "rawPath": "data/raw/aec/2025/senate-candidates.csv",
+      "rawRetained": true,
+      "parserVersion": "packages/data-pipeline/src/aec.ts parseCsv+normaliseName v1",
+      "status": "verified",
+      "reviewer": "cameron-young",
+      "reviewedAt": "2026-07-17",
+      "note": "Canonical AEC Senate candidate download (columns: state, column, ballotPosition, surname, ballotGivenName, groupName, partyBallotName) — the primary aec.gov.au source of record, carrying the Senate candidate SET, group columns and within-group ballot ORDER. Licence: CC BY 4.0 per the AEC website-wide copyright notice; raw retained + SHA-256 pinned. Verified 2026-07-17: ballots.json reproduces this file EXACTLY — 330/330 Senate candidates across 8 jurisdictions, matching on (state, group, ballot position, candidate, party)."
+    },
+    {
+      "id": "electorates",
+      "title": "2025 federal election — electoral divisions",
+      "publisher": "Australian Electoral Commission",
+      "url": "https://www.aec.gov.au/election/files/data/house-candidates.csv",
+      "publishedAt": "2025-04-11",
+      "retrievedAt": "2026-07-17T06:04:49Z",
+      "sourceSha256": "fec45e1e500490e1b89169f4ca027bb923eb99566068e0a4025b8a85fe852a7f",
+      "rawPath": "data/raw/aec/2025/house-candidates.csv",
+      "rawRetained": true,
+      "parserVersion": "packages/data-pipeline/src/aec.ts v1",
+      "status": "verified",
+      "reviewer": "cameron-young",
+      "reviewedAt": "2026-07-17",
+      "note": "The set of 150 contesting electoral divisions is the distinct (state, division) values in the canonical House candidate download (same retained file as house-nominations). Verified 2026-07-17: 150/150 division names match ballots.json."
+    }
+  ]
+}

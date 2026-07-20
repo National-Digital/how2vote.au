@@ -1,0 +1,16 @@
+# how2vote is a public, independent tool — everything is crawlable.
+# AI crawlers are allowed by decision (the content is public and factual); this is intentional
+# and mirrored by /llms.txt (generated at build time from the route metadata).
+User-agent: *
+Allow: /
+
+# AI-usage preferences (IETF AIPREF, draft-ietf-aipref-{vocab,attach}). Standards-track successor to
+# ad-hoc signals; forward-compatible plain text. The vocabulary currently defines two categories:
+#   search=y   — may be used in search applications that link back here (matches our crawlable stance)
+#   train-ai=y — may be used to train AI models (permitted: the content is public, factual, and
+#                AGPL/ODbL-licensed; consistent with "AI crawlers are allowed by decision" above)
+# The robots.txt Allow above remains the authoritative access signal; this is an additional, more
+# specific usage declaration, mirrored by the Content-Usage response header (static/_headers).
+Content-Usage: search=y, train-ai=y
+
+Sitemap: https://how2vote.au/sitemap.xml

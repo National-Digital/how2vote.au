@@ -1,0 +1,64 @@
+{
+  "schemaVersion": 1,
+  "electionId": "2022",
+  "rightsClass": "aec-candidate-data",
+  "recordedAt": "2026-07-18",
+  "outputHash": "92c18818fec17000c84dbad9b2476b233740c726cfc327df21282122901102ab",
+  "coverage": {
+    "houseCandidates": 1203,
+    "senateCandidates": 421,
+    "houseElectorates": 151,
+    "senateJurisdictions": 8,
+    "electorates": 151
+  },
+  "sources": [
+    {
+      "id": "house-nominations",
+      "title": "2022 federal election — House of Representatives candidates (declared nominations)",
+      "publisher": "Australian Electoral Commission",
+      "url": "https://www.aec.gov.au/election/candidates.htm",
+      "publishedAt": "2022-04-22",
+      "retrievedAt": "2026-07-18",
+      "sourceSha256": "959b534982f41706d85f791a1355f7ae3b0b78a18f8f825b1a8d72d8a07926ec",
+      "rawPath": "data/raw/aec/2022/house-nominations.csv",
+      "rawRetained": true,
+      "parserVersion": "packages/data-pipeline/src/aec.ts parseCsv+normaliseName v1",
+      "status": "verified",
+      "reviewer": "cameron-young",
+      "reviewedAt": "2026-07-18",
+      "note": "House of Representatives candidate set and ballot order for the 21 May 2022 poll (declaration of nominations). Columns StateAb, DivisionNm, CandidateNm, PartyNm, BallotPosition round-trip to ballots.json verbatim. This raw CSV is a byte-faithful, lossless export of the committed 2022 ballots.json, retained in-repo and pinned by SHA-256. It is a dated snapshot captured on 2026-07-18 — NOT an independent contemporaneous AEC download from 2022. From the 2025 election onward the AEC nominations feed is captured live at nomination time (see data/source/2025), giving a true point-in-time snapshot; 2019 and 2022 predate that practice, so these records honestly capture the dataset as we now hold it rather than the AEC record as it stood at the time. Rights: AEC candidate data (CC BY 4.0). The two-person ballot-ORDER review is tracked separately in ballot-verification.json."
+    },
+    {
+      "id": "senate-nominations",
+      "title": "2022 federal election — Senate candidates (declared nominations)",
+      "publisher": "Australian Electoral Commission",
+      "url": "https://www.aec.gov.au/election/candidates.htm",
+      "publishedAt": "2022-04-22",
+      "retrievedAt": "2026-07-18",
+      "sourceSha256": "68c8be7265755b246956176d6a94d1dec1d42ec78d1323790f69c47b9e949541",
+      "rawPath": "data/raw/aec/2022/senate-nominations.csv",
+      "rawRetained": true,
+      "parserVersion": "packages/data-pipeline/src/aec.ts parseCsv+normaliseName v1",
+      "status": "verified",
+      "reviewer": "cameron-young",
+      "reviewedAt": "2026-07-18",
+      "note": "Senate candidate set, ticket columns and within-group ballot order for the 21 May 2022 poll. Columns StateAb, Ticket, CandidateNm, PartyNm, BallotPosition round-trip to ballots.json verbatim. This raw CSV is a byte-faithful, lossless export of the committed 2022 ballots.json, retained in-repo and pinned by SHA-256. It is a dated snapshot captured on 2026-07-18 — NOT an independent contemporaneous AEC download from 2022. From the 2025 election onward the AEC nominations feed is captured live at nomination time (see data/source/2025), giving a true point-in-time snapshot; 2019 and 2022 predate that practice, so these records honestly capture the dataset as we now hold it rather than the AEC record as it stood at the time."
+    },
+    {
+      "id": "electorates",
+      "title": "2022 federal election — electoral divisions",
+      "publisher": "Australian Electoral Commission",
+      "url": "https://www.aec.gov.au/electorates/",
+      "publishedAt": "2022-04-22",
+      "retrievedAt": "2026-07-18",
+      "sourceSha256": "5792ace6943053e114d1789cdbc412ce5731506889ba89f532e7078192229c4e",
+      "rawPath": "data/raw/aec/2022/electorates.csv",
+      "rawRetained": true,
+      "parserVersion": "packages/data-pipeline/src/aec.ts v1",
+      "status": "verified",
+      "reviewer": "cameron-young",
+      "reviewedAt": "2026-07-18",
+      "note": "Set of contesting electoral divisions (StateAb, DivisionNm) for the 21 May 2022 poll. This raw CSV is a byte-faithful, lossless export of the committed 2022 ballots.json, retained in-repo and pinned by SHA-256. It is a dated snapshot captured on 2026-07-18 — NOT an independent contemporaneous AEC download from 2022. From the 2025 election onward the AEC nominations feed is captured live at nomination time (see data/source/2025), giving a true point-in-time snapshot; 2019 and 2022 predate that practice, so these records honestly capture the dataset as we now hold it rather than the AEC record as it stood at the time."
+    }
+  ]
+}

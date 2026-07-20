@@ -1,0 +1,7394 @@
+[
+  {
+    "State": "ACT",
+    "Division": "Bean",
+    "Candidate": "FAULKNER, Therese",
+    "Party": "Australian Progressives",
+    "Position": 1
+  },
+  {
+    "State": "ACT",
+    "Division": "Bean",
+    "Candidate": "CHRISTIE, Jamie",
+    "Party": "Independent",
+    "Position": 2
+  },
+  {
+    "State": "ACT",
+    "Division": "Bean",
+    "Candidate": "RUSHTON, Ben",
+    "Party": "The Great Australian Party",
+    "Position": 3
+  },
+  {
+    "State": "ACT",
+    "Division": "Bean",
+    "Candidate": "DONNELLY, Matt",
+    "Party": "Liberal Democrats",
+    "Position": 4
+  },
+  {
+    "State": "ACT",
+    "Division": "Bean",
+    "Candidate": "HANLEY, Tony",
+    "Party": "United Australia Party",
+    "Position": 5
+  },
+  {
+    "State": "ACT",
+    "Division": "Bean",
+    "Candidate": "COCKS, Ed",
+    "Party": "Liberal",
+    "Position": 6
+  },
+  {
+    "State": "ACT",
+    "Division": "Bean",
+    "Candidate": "SMITH, David",
+    "Party": "Australian Labor Party",
+    "Position": 7
+  },
+  {
+    "State": "ACT",
+    "Division": "Bean",
+    "Candidate": "DAVIS, Johnathan",
+    "Party": "The Greens",
+    "Position": 8
+  },
+  {
+    "State": "ACT",
+    "Division": "Canberra",
+    "Candidate": "BOHM, Tim",
+    "Party": "Independent",
+    "Position": 1
+  },
+  {
+    "State": "ACT",
+    "Division": "Canberra",
+    "Candidate": "PAYNE, Alicia",
+    "Party": "Australian Labor Party",
+    "Position": 2
+  },
+  {
+    "State": "ACT",
+    "Division": "Canberra",
+    "Candidate": "HOLLO, Tim",
+    "Party": "The Greens",
+    "Position": 3
+  },
+  {
+    "State": "ACT",
+    "Division": "Canberra",
+    "Candidate": "ZAKI, Mina",
+    "Party": "Liberal",
+    "Position": 4
+  },
+  {
+    "State": "ACT",
+    "Division": "Canberra",
+    "Candidate": "KNIGHT, Robert John",
+    "Party": "Australian Progressives",
+    "Position": 5
+  },
+  {
+    "State": "ACT",
+    "Division": "Canberra",
+    "Candidate": "DE MAINE, Greg",
+    "Party": "United Australia Party",
+    "Position": 6
+  },
+  {
+    "State": "ACT",
+    "Division": "Fenner",
+    "Candidate": "HODGSON, Glen J",
+    "Party": "United Australia Party",
+    "Position": 1
+  },
+  {
+    "State": "ACT",
+    "Division": "Fenner",
+    "Candidate": "RATLHAGANE, Kagiso",
+    "Party": "Australian Progressives",
+    "Position": 2
+  },
+  {
+    "State": "ACT",
+    "Division": "Fenner",
+    "Candidate": "BRADDOCK, Andrew",
+    "Party": "The Greens",
+    "Position": 3
+  },
+  {
+    "State": "ACT",
+    "Division": "Fenner",
+    "Candidate": "LEIGH, Andrew",
+    "Party": "Australian Labor Party",
+    "Position": 4
+  },
+  {
+    "State": "ACT",
+    "Division": "Fenner",
+    "Candidate": "CASTLEY, Leanne",
+    "Party": "Liberal",
+    "Position": 5
+  },
+  {
+    "State": "NSW",
+    "Division": "Banks",
+    "Candidate": "COLEMAN, David",
+    "Party": "Liberal",
+    "Position": 1
+  },
+  {
+    "State": "NSW",
+    "Division": "Banks",
+    "Candidate": "DRAGONE, Gianluca",
+    "Party": "The Greens",
+    "Position": 2
+  },
+  {
+    "State": "NSW",
+    "Division": "Banks",
+    "Candidate": "GAMBIAN, Chris",
+    "Party": "Australian Labor Party",
+    "Position": 3
+  },
+  {
+    "State": "NSW",
+    "Division": "Banks",
+    "Candidate": "WRIGHT, Reginald Keith",
+    "Party": "United Australia Party",
+    "Position": 4
+  },
+  {
+    "State": "NSW",
+    "Division": "Banks",
+    "Candidate": "THAKUR, Anjali",
+    "Party": "Animal Justice Party",
+    "Position": 5
+  },
+  {
+    "State": "NSW",
+    "Division": "Banks",
+    "Candidate": "HO, Ki Man",
+    "Party": "Christian Democratic Party (Fred Nile Group)",
+    "Position": 6
+  },
+  {
+    "State": "NSW",
+    "Division": "Barton",
+    "Candidate": "BURNEY, Linda",
+    "Party": "Australian Labor Party",
+    "Position": 1
+  },
+  {
+    "State": "NSW",
+    "Division": "Barton",
+    "Candidate": "SHRESTHA, Pramej",
+    "Party": "Liberal",
+    "Position": 2
+  },
+  {
+    "State": "NSW",
+    "Division": "Barton",
+    "Candidate": "LIU, Ben Tung",
+    "Party": "United Australia Party",
+    "Position": 3
+  },
+  {
+    "State": "NSW",
+    "Division": "Barton",
+    "Candidate": "SUSILO, Sonny",
+    "Party": "Christian Democratic Party (Fred Nile Group)",
+    "Position": 4
+  },
+  {
+    "State": "NSW",
+    "Division": "Barton",
+    "Candidate": "PARISSIS, Connor",
+    "Party": "The Greens",
+    "Position": 5
+  },
+  {
+    "State": "NSW",
+    "Division": "Barton",
+    "Candidate": "POLLARD, Phillip",
+    "Party": "Pauline Hanson's One Nation",
+    "Position": 6
+  },
+  {
+    "State": "NSW",
+    "Division": "Bennelong",
+    "Candidate": "OWLER, Brian",
+    "Party": "Australian Labor Party",
+    "Position": 1
+  },
+  {
+    "State": "NSW",
+    "Division": "Bennelong",
+    "Candidate": "MARKS, Andrew",
+    "Party": "United Australia Party",
+    "Position": 2
+  },
+  {
+    "State": "NSW",
+    "Division": "Bennelong",
+    "Candidate": "ALEXANDER, John",
+    "Party": "Liberal",
+    "Position": 3
+  },
+  {
+    "State": "NSW",
+    "Division": "Bennelong",
+    "Candidate": "ZHANG, Qiu Yue",
+    "Party": "The Greens",
+    "Position": 4
+  },
+  {
+    "State": "NSW",
+    "Division": "Bennelong",
+    "Candidate": "WORSLEY, Julie",
+    "Party": "Christian Democratic Party (Fred Nile Group)",
+    "Position": 5
+  },
+  {
+    "State": "NSW",
+    "Division": "Berowra",
+    "Candidate": "TAN, Monica",
+    "Party": "The Greens",
+    "Position": 1
+  },
+  {
+    "State": "NSW",
+    "Division": "Berowra",
+    "Candidate": "LEESER, Julian",
+    "Party": "Liberal",
+    "Position": 2
+  },
+  {
+    "State": "NSW",
+    "Division": "Berowra",
+    "Candidate": "McLACHLAN, Craig Steven",
+    "Party": "United Australia Party",
+    "Position": 3
+  },
+  {
+    "State": "NSW",
+    "Division": "Berowra",
+    "Candidate": "CLARKE, Brendan Michael",
+    "Party": "Science Party",
+    "Position": 4
+  },
+  {
+    "State": "NSW",
+    "Division": "Berowra",
+    "Candidate": "TAYLOR, Simon Alan",
+    "Party": "Christian Democratic Party (Fred Nile Group)",
+    "Position": 5
+  },
+  {
+    "State": "NSW",
+    "Division": "Berowra",
+    "Candidate": "WOODWARD, Roger",
+    "Party": "Independent",
+    "Position": 6
+  },
+  {
+    "State": "NSW",
+    "Division": "Berowra",
+    "Candidate": "GALLAGHER, Mick",
+    "Party": "Independent",
+    "Position": 7
+  },
+  {
+    "State": "NSW",
+    "Division": "Berowra",
+    "Candidate": "GOMPERTZ, Katie",
+    "Party": "Australian Labor Party",
+    "Position": 8
+  },
+  {
+    "State": "NSW",
+    "Division": "Berowra",
+    "Candidate": "THOMAS, Justin",
+    "Party": "Sustainable Australia",
+    "Position": 9
+  },
+  {
+    "State": "NSW",
+    "Division": "Blaxland",
+    "Candidate": "ROWE, Veronica",
+    "Party": "Christian Democratic Party (Fred Nile Group)",
+    "Position": 1
+  },
+  {
+    "State": "NSW",
+    "Division": "Blaxland",
+    "Candidate": "GUNEY, Oz",
+    "Party": "Liberal",
+    "Position": 2
+  },
+  {
+    "State": "NSW",
+    "Division": "Blaxland",
+    "Candidate": "CLARE, Jason",
+    "Party": "Australian Labor Party",
+    "Position": 3
+  },
+  {
+    "State": "NSW",
+    "Division": "Blaxland",
+    "Candidate": "ASHRAF, Nadeem",
+    "Party": "United Australia Party",
+    "Position": 4
+  },
+  {
+    "State": "NSW",
+    "Division": "Blaxland",
+    "Candidate": "ROONEY, James",
+    "Party": "The Greens",
+    "Position": 5
+  },
+  {
+    "State": "NSW",
+    "Division": "Bradfield",
+    "Candidate": "ADAMS, Tony",
+    "Party": "The Greens",
+    "Position": 1
+  },
+  {
+    "State": "NSW",
+    "Division": "Bradfield",
+    "Candidate": "FLETCHER, Paul",
+    "Party": "Liberal",
+    "Position": 2
+  },
+  {
+    "State": "NSW",
+    "Division": "Bradfield",
+    "Candidate": "VERSACE, Marcus",
+    "Party": "United Australia Party",
+    "Position": 3
+  },
+  {
+    "State": "NSW",
+    "Division": "Bradfield",
+    "Candidate": "MOLLOY, Stephen",
+    "Party": "Sustainable Australia",
+    "Position": 4
+  },
+  {
+    "State": "NSW",
+    "Division": "Bradfield",
+    "Candidate": "HAVILAND, Chris",
+    "Party": "Australian Labor Party",
+    "Position": 5
+  },
+  {
+    "State": "NSW",
+    "Division": "Calare",
+    "Candidate": "ROMANO, Sam",
+    "Party": "Shooters, Fishers and Farmers",
+    "Position": 1
+  },
+  {
+    "State": "NSW",
+    "Division": "Calare",
+    "Candidate": "CHEN, Shuyi",
+    "Party": "Christian Democratic Party (Fred Nile Group)",
+    "Position": 2
+  },
+  {
+    "State": "NSW",
+    "Division": "Calare",
+    "Candidate": "JENNINGS, Jess",
+    "Party": "Australian Labor Party",
+    "Position": 3
+  },
+  {
+    "State": "NSW",
+    "Division": "Calare",
+    "Candidate": "CAMERON, Beverley T.",
+    "Party": "United Australia Party",
+    "Position": 4
+  },
+  {
+    "State": "NSW",
+    "Division": "Calare",
+    "Candidate": "GEE, Andrew",
+    "Party": "The Nationals",
+    "Position": 5
+  },
+  {
+    "State": "NSW",
+    "Division": "Calare",
+    "Candidate": "BISGROVE, Stephen",
+    "Party": "Liberal Democrats",
+    "Position": 6
+  },
+  {
+    "State": "NSW",
+    "Division": "Calare",
+    "Candidate": "LUKE, Stephanie",
+    "Party": "The Greens",
+    "Position": 7
+  },
+  {
+    "State": "NSW",
+    "Division": "Chifley",
+    "Candidate": "GREEN, Josh",
+    "Party": "Christian Democratic Party (Fred Nile Group)",
+    "Position": 1
+  },
+  {
+    "State": "NSW",
+    "Division": "Chifley",
+    "Candidate": "KHAN, Ammar Aziz",
+    "Party": "Independent",
+    "Position": 2
+  },
+  {
+    "State": "NSW",
+    "Division": "Chifley",
+    "Candidate": "O'CONNOR, Joseph Oscar",
+    "Party": "United Australia Party",
+    "Position": 3
+  },
+  {
+    "State": "NSW",
+    "Division": "Chifley",
+    "Candidate": "ROBERTSON, Brent John",
+    "Party": "The Greens",
+    "Position": 4
+  },
+  {
+    "State": "NSW",
+    "Division": "Chifley",
+    "Candidate": "CHETTIPALLY, Livingston",
+    "Party": "Liberal",
+    "Position": 5
+  },
+  {
+    "State": "NSW",
+    "Division": "Chifley",
+    "Candidate": "HUSIC, Ed",
+    "Party": "Australian Labor Party",
+    "Position": 6
+  },
+  {
+    "State": "NSW",
+    "Division": "Cook",
+    "Candidate": "MORRISON, Scott",
+    "Party": "Liberal",
+    "Position": 1
+  },
+  {
+    "State": "NSW",
+    "Division": "Cook",
+    "Candidate": "KELLY, Peter",
+    "Party": "Fraser Anning's Conservative National Party",
+    "Position": 2
+  },
+  {
+    "State": "NSW",
+    "Division": "Cook",
+    "Candidate": "O'BRIEN, Simon",
+    "Party": "Australian Labor Party",
+    "Position": 3
+  },
+  {
+    "State": "NSW",
+    "Division": "Cook",
+    "Candidate": "CAMERON, Gaye",
+    "Party": "Pauline Hanson's One Nation",
+    "Position": 4
+  },
+  {
+    "State": "NSW",
+    "Division": "Cook",
+    "Candidate": "DOIG, Jon",
+    "Party": "The Greens",
+    "Position": 5
+  },
+  {
+    "State": "NSW",
+    "Division": "Cook",
+    "Candidate": "BOLLING, Roger",
+    "Party": "Christian Democratic Party (Fred Nile Group)",
+    "Position": 6
+  },
+  {
+    "State": "NSW",
+    "Division": "Cook",
+    "Candidate": "McSWEYN, John Neil",
+    "Party": "United Australia Party",
+    "Position": 7
+  },
+  {
+    "State": "NSW",
+    "Division": "Cowper",
+    "Candidate": "MEADS, Ruth",
+    "Party": "Christian Democratic Party (Fred Nile Group)",
+    "Position": 1
+  },
+  {
+    "State": "NSW",
+    "Division": "Cowper",
+    "Candidate": "CONAGHAN, Pat",
+    "Party": "The Nationals",
+    "Position": 2
+  },
+  {
+    "State": "NSW",
+    "Division": "Cowper",
+    "Candidate": "STEWART, Alexander",
+    "Party": "United Australia Party",
+    "Position": 3
+  },
+  {
+    "State": "NSW",
+    "Division": "Cowper",
+    "Candidate": "WOODWARD, Andrew",
+    "Party": "Australian Labor Party",
+    "Position": 4
+  },
+  {
+    "State": "NSW",
+    "Division": "Cowper",
+    "Candidate": "OAKESHOTT, Robert",
+    "Party": "Independent",
+    "Position": 5
+  },
+  {
+    "State": "NSW",
+    "Division": "Cowper",
+    "Candidate": "EDWARDS, Lauren",
+    "Party": "The Greens",
+    "Position": 6
+  },
+  {
+    "State": "NSW",
+    "Division": "Cowper",
+    "Candidate": "PEARCE, Kellie",
+    "Party": "Animal Justice Party",
+    "Position": 7
+  },
+  {
+    "State": "NSW",
+    "Division": "Cowper",
+    "Candidate": "GREEN, Allan",
+    "Party": "Independent",
+    "Position": 8
+  },
+  {
+    "State": "NSW",
+    "Division": "Cunningham",
+    "Candidate": "ATLEE, Chris",
+    "Party": "Liberal",
+    "Position": 1
+  },
+  {
+    "State": "NSW",
+    "Division": "Cunningham",
+    "Candidate": "HUXTABLE, Rowan",
+    "Party": "The Greens",
+    "Position": 2
+  },
+  {
+    "State": "NSW",
+    "Division": "Cunningham",
+    "Candidate": "BIRD, Sharon",
+    "Party": "Australian Labor Party",
+    "Position": 3
+  },
+  {
+    "State": "NSW",
+    "Division": "Cunningham",
+    "Candidate": "FLANAGAN, John",
+    "Party": "Non-Custodial Parents Party (Equal Parenting)",
+    "Position": 4
+  },
+  {
+    "State": "NSW",
+    "Division": "Cunningham",
+    "Candidate": "GILL, John",
+    "Party": "Sustainable Australia",
+    "Position": 5
+  },
+  {
+    "State": "NSW",
+    "Division": "Cunningham",
+    "Candidate": "YOUNGER, Grace Louise",
+    "Party": "United Australia Party",
+    "Position": 6
+  },
+  {
+    "State": "NSW",
+    "Division": "Dobell",
+    "Candidate": "HARPLEY-CARR, Aaron Gregory",
+    "Party": "United Australia Party",
+    "Position": 1
+  },
+  {
+    "State": "NSW",
+    "Division": "Dobell",
+    "Candidate": "GRUNDY, Paula",
+    "Party": "Christian Democratic Party (Fred Nile Group)",
+    "Position": 2
+  },
+  {
+    "State": "NSW",
+    "Division": "Dobell",
+    "Candidate": "PILON, Jilly",
+    "Party": "Liberal",
+    "Position": 3
+  },
+  {
+    "State": "NSW",
+    "Division": "Dobell",
+    "Candidate": "RICKARD, Scott",
+    "Party": "The Greens",
+    "Position": 4
+  },
+  {
+    "State": "NSW",
+    "Division": "Dobell",
+    "Candidate": "McBRIDE, Emma",
+    "Party": "Australian Labor Party",
+    "Position": 5
+  },
+  {
+    "State": "NSW",
+    "Division": "Dobell",
+    "Candidate": "STEPHENSON, Gregory Francis",
+    "Party": "Independent",
+    "Position": 6
+  },
+  {
+    "State": "NSW",
+    "Division": "Eden-Monaro",
+    "Candidate": "KELLY, Mike",
+    "Party": "Australian Labor Party",
+    "Position": 1
+  },
+  {
+    "State": "NSW",
+    "Division": "Eden-Monaro",
+    "Candidate": "KOTVOJS, Fiona",
+    "Party": "Liberal",
+    "Position": 2
+  },
+  {
+    "State": "NSW",
+    "Division": "Eden-Monaro",
+    "Candidate": "McGINLAY, Pat",
+    "Party": "The Greens",
+    "Position": 3
+  },
+  {
+    "State": "NSW",
+    "Division": "Eden-Monaro",
+    "Candidate": "SHELDON, David William",
+    "Party": "Independent",
+    "Position": 4
+  },
+  {
+    "State": "NSW",
+    "Division": "Eden-Monaro",
+    "Candidate": "WADE, Sophie",
+    "Party": "The Nationals",
+    "Position": 5
+  },
+  {
+    "State": "NSW",
+    "Division": "Eden-Monaro",
+    "Candidate": "HARRIS, Thomas",
+    "Party": "Christian Democratic Party (Fred Nile Group)",
+    "Position": 6
+  },
+  {
+    "State": "NSW",
+    "Division": "Eden-Monaro",
+    "Candidate": "SINGH, Chandra",
+    "Party": "United Australia Party",
+    "Position": 7
+  },
+  {
+    "State": "NSW",
+    "Division": "Eden-Monaro",
+    "Candidate": "HOLGATE, James",
+    "Party": "Independent",
+    "Position": 8
+  },
+  {
+    "State": "NSW",
+    "Division": "Farrer",
+    "Candidate": "LEY, Sussan",
+    "Party": "Liberal",
+    "Position": 1
+  },
+  {
+    "State": "NSW",
+    "Division": "Farrer",
+    "Candidate": "HAMILTON, Ross",
+    "Party": "Sustainable Australia",
+    "Position": 2
+  },
+  {
+    "State": "NSW",
+    "Division": "Farrer",
+    "Candidate": "DRABSCH, Kieran",
+    "Party": "Australian Labor Party",
+    "Position": 3
+  },
+  {
+    "State": "NSW",
+    "Division": "Farrer",
+    "Candidate": "MACK, Kevin Francis",
+    "Party": "Independent",
+    "Position": 4
+  },
+  {
+    "State": "NSW",
+    "Division": "Farrer",
+    "Candidate": "LANGFIELD, Philip",
+    "Party": "Christian Democratic Party (Fred Nile Group)",
+    "Position": 5
+  },
+  {
+    "State": "NSW",
+    "Division": "Farrer",
+    "Candidate": "ELLIS, Mark",
+    "Party": "Liberal Democrats",
+    "Position": 6
+  },
+  {
+    "State": "NSW",
+    "Division": "Farrer",
+    "Candidate": "MILLS, Brian",
+    "Party": "Independent",
+    "Position": 7
+  },
+  {
+    "State": "NSW",
+    "Division": "Farrer",
+    "Candidate": "ROSE, Michael Hunter",
+    "Party": "United Australia Party",
+    "Position": 8
+  },
+  {
+    "State": "NSW",
+    "Division": "Farrer",
+    "Candidate": "MOSS, Dean",
+    "Party": "The Greens",
+    "Position": 9
+  },
+  {
+    "State": "NSW",
+    "Division": "Fowler",
+    "Candidate": "MOCANU, Francesca",
+    "Party": "Christian Democratic Party (Fred Nile Group)",
+    "Position": 1
+  },
+  {
+    "State": "NSW",
+    "Division": "Fowler",
+    "Candidate": "HAYES, Chris",
+    "Party": "Australian Labor Party",
+    "Position": 2
+  },
+  {
+    "State": "NSW",
+    "Division": "Fowler",
+    "Candidate": "JABBOUR, Joshua",
+    "Party": "United Australia Party",
+    "Position": 3
+  },
+  {
+    "State": "NSW",
+    "Division": "Fowler",
+    "Candidate": "LEE, Seamus",
+    "Party": "The Greens",
+    "Position": 4
+  },
+  {
+    "State": "NSW",
+    "Division": "Fowler",
+    "Candidate": "BLEWITT, Wayne",
+    "Party": "Liberal",
+    "Position": 5
+  },
+  {
+    "State": "NSW",
+    "Division": "Gilmore",
+    "Candidate": "McCALLUM, Carmel Mary",
+    "Party": "The Greens",
+    "Position": 1
+  },
+  {
+    "State": "NSW",
+    "Division": "Gilmore",
+    "Candidate": "SCHULTZ, Grant",
+    "Party": "Independent",
+    "Position": 2
+  },
+  {
+    "State": "NSW",
+    "Division": "Gilmore",
+    "Candidate": "LESLIGHT, Milton",
+    "Party": "United Australia Party",
+    "Position": 3
+  },
+  {
+    "State": "NSW",
+    "Division": "Gilmore",
+    "Candidate": "PHILLIPS, Fiona",
+    "Party": "Australian Labor Party",
+    "Position": 4
+  },
+  {
+    "State": "NSW",
+    "Division": "Gilmore",
+    "Candidate": "KOLUKULAPALLY, Serah",
+    "Party": "Christian Democratic Party (Fred Nile Group)",
+    "Position": 5
+  },
+  {
+    "State": "NSW",
+    "Division": "Gilmore",
+    "Candidate": "HODGKINSON, Katrina",
+    "Party": "The Nationals",
+    "Position": 6
+  },
+  {
+    "State": "NSW",
+    "Division": "Gilmore",
+    "Candidate": "MUNDINE, Warren",
+    "Party": "Liberal",
+    "Position": 7
+  },
+  {
+    "State": "NSW",
+    "Division": "Grayndler",
+    "Candidate": "MORELLO, Majella",
+    "Party": "Science Party",
+    "Position": 1
+  },
+  {
+    "State": "NSW",
+    "Division": "Grayndler",
+    "Candidate": "HENDERSON, Derek",
+    "Party": "Liberal",
+    "Position": 2
+  },
+  {
+    "State": "NSW",
+    "Division": "Grayndler",
+    "Candidate": "KING-ORSBORN, Paris",
+    "Party": "United Australia Party",
+    "Position": 3
+  },
+  {
+    "State": "NSW",
+    "Division": "Grayndler",
+    "Candidate": "CASEY, Jim",
+    "Party": "The Greens",
+    "Position": 4
+  },
+  {
+    "State": "NSW",
+    "Division": "Grayndler",
+    "Candidate": "ALBANESE, Anthony",
+    "Party": "Australian Labor Party",
+    "Position": 5
+  },
+  {
+    "State": "NSW",
+    "Division": "Grayndler",
+    "Candidate": "CAO, Gui Dong",
+    "Party": "Christian Democratic Party (Fred Nile Group)",
+    "Position": 6
+  },
+  {
+    "State": "NSW",
+    "Division": "Greenway",
+    "Candidate": "McFARLAND, Graham",
+    "Party": "Australian Better Families",
+    "Position": 1
+  },
+  {
+    "State": "NSW",
+    "Division": "Greenway",
+    "Candidate": "ATKINS, Damien",
+    "Party": "The Greens",
+    "Position": 2
+  },
+  {
+    "State": "NSW",
+    "Division": "Greenway",
+    "Candidate": "GREEN, Allan",
+    "Party": "Liberal",
+    "Position": 3
+  },
+  {
+    "State": "NSW",
+    "Division": "Greenway",
+    "Candidate": "ROWLAND, Michelle",
+    "Party": "Australian Labor Party",
+    "Position": 4
+  },
+  {
+    "State": "NSW",
+    "Division": "Greenway",
+    "Candidate": "FEENEY, Scott Daniel",
+    "Party": "United Australia Party",
+    "Position": 5
+  },
+  {
+    "State": "NSW",
+    "Division": "Greenway",
+    "Candidate": "RAJADURAI, Osbourn Inparajah",
+    "Party": "Christian Democratic Party (Fred Nile Group)",
+    "Position": 6
+  },
+  {
+    "State": "NSW",
+    "Division": "Hughes",
+    "Candidate": "KELLY, Craig",
+    "Party": "Liberal",
+    "Position": 1
+  },
+  {
+    "State": "NSW",
+    "Division": "Hughes",
+    "Candidate": "SHAKESPEARE, Mitchell",
+    "Party": "The Greens",
+    "Position": 2
+  },
+  {
+    "State": "NSW",
+    "Division": "Hughes",
+    "Candidate": "CONSTABLE, Gae",
+    "Party": "Animal Justice Party",
+    "Position": 3
+  },
+  {
+    "State": "NSW",
+    "Division": "Hughes",
+    "Candidate": "KEEP, Terrance",
+    "Party": "United Australia Party",
+    "Position": 4
+  },
+  {
+    "State": "NSW",
+    "Division": "Hughes",
+    "Candidate": "STEINWALL, Diedree",
+    "Party": "Australian Labor Party",
+    "Position": 5
+  },
+  {
+    "State": "NSW",
+    "Division": "Hughes",
+    "Candidate": "BRYAN, Matt",
+    "Party": "Independent",
+    "Position": 6
+  },
+  {
+    "State": "NSW",
+    "Division": "Hughes",
+    "Candidate": "LIU, Leo-Ning",
+    "Party": "Christian Democratic Party (Fred Nile Group)",
+    "Position": 7
+  },
+  {
+    "State": "NSW",
+    "Division": "Hume",
+    "Candidate": "CHAMPION, Aoife",
+    "Party": "Australian Labor Party",
+    "Position": 1
+  },
+  {
+    "State": "NSW",
+    "Division": "Hume",
+    "Candidate": "ABDO, Lynda",
+    "Party": "United Australia Party",
+    "Position": 2
+  },
+  {
+    "State": "NSW",
+    "Division": "Hume",
+    "Candidate": "HARGRAVES, Tanya",
+    "Party": "Fraser Anning's Conservative National Party",
+    "Position": 3
+  },
+  {
+    "State": "NSW",
+    "Division": "Hume",
+    "Candidate": "TAYLOR, Angus",
+    "Party": "Liberal",
+    "Position": 4
+  },
+  {
+    "State": "NSW",
+    "Division": "Hume",
+    "Candidate": "POWELL, David",
+    "Party": "The Greens",
+    "Position": 5
+  },
+  {
+    "State": "NSW",
+    "Division": "Hume",
+    "Candidate": "KINGSTON, Huw Mostyn",
+    "Party": "Independent",
+    "Position": 6
+  },
+  {
+    "State": "NSW",
+    "Division": "Hume",
+    "Candidate": "NEBAUER, Ian Stanley",
+    "Party": "Christian Democratic Party (Fred Nile Group)",
+    "Position": 7
+  },
+  {
+    "State": "NSW",
+    "Division": "Hunter",
+    "Candidate": "BONDS, Stuart",
+    "Party": "Pauline Hanson's One Nation",
+    "Position": 1
+  },
+  {
+    "State": "NSW",
+    "Division": "Hunter",
+    "Candidate": "ANGUS, Josh",
+    "Party": "The Nationals",
+    "Position": 2
+  },
+  {
+    "State": "NSW",
+    "Division": "Hunter",
+    "Candidate": "MURPHY, James",
+    "Party": "Animal Justice Party",
+    "Position": 3
+  },
+  {
+    "State": "NSW",
+    "Division": "Hunter",
+    "Candidate": "DAVIES, Paul",
+    "Party": "United Australia Party",
+    "Position": 4
+  },
+  {
+    "State": "NSW",
+    "Division": "Hunter",
+    "Candidate": "MURRAY, Janet",
+    "Party": "The Greens",
+    "Position": 5
+  },
+  {
+    "State": "NSW",
+    "Division": "Hunter",
+    "Candidate": "STRETTON, Richard",
+    "Party": "Christian Democratic Party (Fred Nile Group)",
+    "Position": 6
+  },
+  {
+    "State": "NSW",
+    "Division": "Hunter",
+    "Candidate": "FITZGIBBON, Joel",
+    "Party": "Australian Labor Party",
+    "Position": 7
+  },
+  {
+    "State": "NSW",
+    "Division": "Hunter",
+    "Candidate": "BODDY, Max",
+    "Party": "Socialist Equality Party",
+    "Position": 8
+  },
+  {
+    "State": "NSW",
+    "Division": "Kingsford Smith",
+    "Candidate": "CRUZ, James",
+    "Party": "The Greens",
+    "Position": 1
+  },
+  {
+    "State": "NSW",
+    "Division": "Kingsford Smith",
+    "Candidate": "MANSON, Adrian",
+    "Party": "Christian Democratic Party (Fred Nile Group)",
+    "Position": 2
+  },
+  {
+    "State": "NSW",
+    "Division": "Kingsford Smith",
+    "Candidate": "THISTLETHWAITE, Matt",
+    "Party": "Australian Labor Party",
+    "Position": 3
+  },
+  {
+    "State": "NSW",
+    "Division": "Kingsford Smith",
+    "Candidate": "CAMPBELL, Petra",
+    "Party": "Sustainable Australia",
+    "Position": 4
+  },
+  {
+    "State": "NSW",
+    "Division": "Kingsford Smith",
+    "Candidate": "JANSSON, James",
+    "Party": "Science Party",
+    "Position": 5
+  },
+  {
+    "State": "NSW",
+    "Division": "Kingsford Smith",
+    "Candidate": "WATSON, Adam Bruce",
+    "Party": "United Australia Party",
+    "Position": 6
+  },
+  {
+    "State": "NSW",
+    "Division": "Kingsford Smith",
+    "Candidate": "WILMOT, Amanda",
+    "Party": "Liberal",
+    "Position": 7
+  },
+  {
+    "State": "NSW",
+    "Division": "Lindsay",
+    "Candidate": "LEES, Brandon",
+    "Party": "Fraser Anning's Conservative National Party",
+    "Position": 1
+  },
+  {
+    "State": "NSW",
+    "Division": "Lindsay",
+    "Candidate": "BEAMER, Diane",
+    "Party": "Australian Labor Party",
+    "Position": 2
+  },
+  {
+    "State": "NSW",
+    "Division": "Lindsay",
+    "Candidate": "McINTOSH, Melissa",
+    "Party": "Liberal",
+    "Position": 3
+  },
+  {
+    "State": "NSW",
+    "Division": "Lindsay",
+    "Candidate": "BEST, Nick",
+    "Party": "The Greens",
+    "Position": 4
+  },
+  {
+    "State": "NSW",
+    "Division": "Lindsay",
+    "Candidate": "BUTTEL, Christopher",
+    "Party": "United Australia Party",
+    "Position": 5
+  },
+  {
+    "State": "NSW",
+    "Division": "Lindsay",
+    "Candidate": "TYNDALL, Mark",
+    "Party": "Independent",
+    "Position": 6
+  },
+  {
+    "State": "NSW",
+    "Division": "Lindsay",
+    "Candidate": "BROWN, Geoff",
+    "Party": "Sustainable Australia",
+    "Position": 7
+  },
+  {
+    "State": "NSW",
+    "Division": "Lindsay",
+    "Candidate": "MOODY-BASEDOW, Mark K.C.",
+    "Party": "Christian Democratic Party (Fred Nile Group)",
+    "Position": 8
+  },
+  {
+    "State": "NSW",
+    "Division": "Lindsay",
+    "Candidate": "SALEAM, Jim",
+    "Party": "Australia First Party",
+    "Position": 9
+  },
+  {
+    "State": "NSW",
+    "Division": "Lyne",
+    "Candidate": "COSTA, Phil",
+    "Party": "Australian Labor Party",
+    "Position": 1
+  },
+  {
+    "State": "NSW",
+    "Division": "Lyne",
+    "Candidate": "GILLESPIE, David",
+    "Party": "The Nationals",
+    "Position": 2
+  },
+  {
+    "State": "NSW",
+    "Division": "Lyne",
+    "Candidate": "BOURKE, Garry",
+    "Party": "United Australia Party",
+    "Position": 3
+  },
+  {
+    "State": "NSW",
+    "Division": "Lyne",
+    "Candidate": "GOLDSPRING, Ryan Frederick",
+    "Party": "Fraser Anning's Conservative National Party",
+    "Position": 4
+  },
+  {
+    "State": "NSW",
+    "Division": "Lyne",
+    "Candidate": "McCRAE, Dean",
+    "Party": "Liberal Democrats",
+    "Position": 5
+  },
+  {
+    "State": "NSW",
+    "Division": "Lyne",
+    "Candidate": "CARUANA, Ed",
+    "Party": "Australian Workers Party",
+    "Position": 6
+  },
+  {
+    "State": "NSW",
+    "Division": "Lyne",
+    "Candidate": "MILLER, Jeremy John",
+    "Party": "Independent",
+    "Position": 7
+  },
+  {
+    "State": "NSW",
+    "Division": "Lyne",
+    "Candidate": "ZHAO, Catherine",
+    "Party": "Christian Democratic Party (Fred Nile Group)",
+    "Position": 8
+  },
+  {
+    "State": "NSW",
+    "Division": "Lyne",
+    "Candidate": "WATSON, Stuart",
+    "Party": "The Greens",
+    "Position": 9
+  },
+  {
+    "State": "NSW",
+    "Division": "Macarthur",
+    "Candidate": "GENT, James",
+    "Party": "Christian Democratic Party (Fred Nile Group)",
+    "Position": 1
+  },
+  {
+    "State": "NSW",
+    "Division": "Macarthur",
+    "Candidate": "FREELANDER, Mike",
+    "Party": "Australian Labor Party",
+    "Position": 2
+  },
+  {
+    "State": "NSW",
+    "Division": "Macarthur",
+    "Candidate": "STELLINO, Matt",
+    "Party": "Animal Justice Party",
+    "Position": 3
+  },
+  {
+    "State": "NSW",
+    "Division": "Macarthur",
+    "Candidate": "NORMAN, Shane",
+    "Party": "Pauline Hanson's One Nation",
+    "Position": 4
+  },
+  {
+    "State": "NSW",
+    "Division": "Macarthur",
+    "Candidate": "MUNRO, Riley",
+    "Party": "Liberal",
+    "Position": 5
+  },
+  {
+    "State": "NSW",
+    "Division": "Macarthur",
+    "Candidate": "MURPHY, Nathan John",
+    "Party": "United Australia Party",
+    "Position": 6
+  },
+  {
+    "State": "NSW",
+    "Division": "Macarthur",
+    "Candidate": "RIVERA, Jayden",
+    "Party": "The Greens",
+    "Position": 7
+  },
+  {
+    "State": "NSW",
+    "Division": "Mackellar",
+    "Candidate": "LYON, David",
+    "Party": "United Australia Party",
+    "Position": 1
+  },
+  {
+    "State": "NSW",
+    "Division": "Mackellar",
+    "Candidate": "DALY, Suzanne",
+    "Party": "Sustainable Australia",
+    "Position": 2
+  },
+  {
+    "State": "NSW",
+    "Division": "Mackellar",
+    "Candidate": "THOMPSON, Alice",
+    "Party": "Independent",
+    "Position": 3
+  },
+  {
+    "State": "NSW",
+    "Division": "Mackellar",
+    "Candidate": "WAWN, Pru",
+    "Party": "The Greens",
+    "Position": 4
+  },
+  {
+    "State": "NSW",
+    "Division": "Mackellar",
+    "Candidate": "STEELE, Declan",
+    "Party": "Australian Labor Party",
+    "Position": 5
+  },
+  {
+    "State": "NSW",
+    "Division": "Mackellar",
+    "Candidate": "FALINSKI, Jason",
+    "Party": "Liberal",
+    "Position": 6
+  },
+  {
+    "State": "NSW",
+    "Division": "Mackellar",
+    "Candidate": "LEVETT, Greg",
+    "Party": "Christian Democratic Party (Fred Nile Group)",
+    "Position": 7
+  },
+  {
+    "State": "NSW",
+    "Division": "Macquarie",
+    "Candidate": "RICHARDS, Sarah",
+    "Party": "Liberal",
+    "Position": 1
+  },
+  {
+    "State": "NSW",
+    "Division": "Macquarie",
+    "Candidate": "LIU, Kingsley",
+    "Party": "The Greens",
+    "Position": 2
+  },
+  {
+    "State": "NSW",
+    "Division": "Macquarie",
+    "Candidate": "TEMPLEMAN, Susan",
+    "Party": "Australian Labor Party",
+    "Position": 3
+  },
+  {
+    "State": "NSW",
+    "Division": "Macquarie",
+    "Candidate": "KEIGHTLEY, Greg",
+    "Party": "Animal Justice Party",
+    "Position": 4
+  },
+  {
+    "State": "NSW",
+    "Division": "Macquarie",
+    "Candidate": "PETTITT, Tony Bryan",
+    "Party": "United Australia Party",
+    "Position": 5
+  },
+  {
+    "State": "NSW",
+    "Division": "McMahon",
+    "Candidate": "WRIGHTSON, Meg Libby",
+    "Party": "United Australia Party",
+    "Position": 1
+  },
+  {
+    "State": "NSW",
+    "Division": "McMahon",
+    "Candidate": "COMMANE, Damian",
+    "Party": "Pauline Hanson's One Nation",
+    "Position": 2
+  },
+  {
+    "State": "NSW",
+    "Division": "McMahon",
+    "Candidate": "FRANCIS, Zeeshan Philip",
+    "Party": "Christian Democratic Party (Fred Nile Group)",
+    "Position": 3
+  },
+  {
+    "State": "NSW",
+    "Division": "McMahon",
+    "Candidate": "BOWEN, Chris",
+    "Party": "Australian Labor Party",
+    "Position": 4
+  },
+  {
+    "State": "NSW",
+    "Division": "McMahon",
+    "Candidate": "O'NEILL, Astrid",
+    "Party": "The Greens",
+    "Position": 5
+  },
+  {
+    "State": "NSW",
+    "Division": "McMahon",
+    "Candidate": "SINGHA, Vivek",
+    "Party": "Liberal",
+    "Position": 6
+  },
+  {
+    "State": "NSW",
+    "Division": "Mitchell",
+    "Candidate": "SELVARAJ, Immanuel",
+    "Party": "Australian Labor Party",
+    "Position": 1
+  },
+  {
+    "State": "NSW",
+    "Division": "Mitchell",
+    "Candidate": "HAWKE, Alex",
+    "Party": "Liberal",
+    "Position": 2
+  },
+  {
+    "State": "NSW",
+    "Division": "Mitchell",
+    "Candidate": "HOPPENBROUWER, Roy Peter",
+    "Party": "United Australia Party",
+    "Position": 3
+  },
+  {
+    "State": "NSW",
+    "Division": "Mitchell",
+    "Candidate": "HALL, Craig L",
+    "Party": "Christian Democratic Party (Fred Nile Group)",
+    "Position": 4
+  },
+  {
+    "State": "NSW",
+    "Division": "Mitchell",
+    "Candidate": "MURPHY, Lawrence",
+    "Party": "The Greens",
+    "Position": 5
+  },
+  {
+    "State": "NSW",
+    "Division": "New England",
+    "Candidate": "LEDGER, Natasha",
+    "Party": "Independent",
+    "Position": 1
+  },
+  {
+    "State": "NSW",
+    "Division": "New England",
+    "Candidate": "COLLINS, Julie",
+    "Party": "Christian Democratic Party (Fred Nile Group)",
+    "Position": 2
+  },
+  {
+    "State": "NSW",
+    "Division": "New England",
+    "Candidate": "LANGENBERG, Yvonne",
+    "Party": "Australian Labor Party",
+    "Position": 3
+  },
+  {
+    "State": "NSW",
+    "Division": "New England",
+    "Candidate": "JOYCE, Barnaby",
+    "Party": "The Nationals",
+    "Position": 4
+  },
+  {
+    "State": "NSW",
+    "Division": "New England",
+    "Candidate": "LONERGAN, Tony",
+    "Party": "The Greens",
+    "Position": 5
+  },
+  {
+    "State": "NSW",
+    "Division": "New England",
+    "Candidate": "BLAKESTER, Adam",
+    "Party": "Independent",
+    "Position": 6
+  },
+  {
+    "State": "NSW",
+    "Division": "New England",
+    "Candidate": "TABER, Rob",
+    "Party": "Independent",
+    "Position": 7
+  },
+  {
+    "State": "NSW",
+    "Division": "New England",
+    "Candidate": "DUNCAN, Cindy Anne",
+    "Party": "United Australia Party",
+    "Position": 8
+  },
+  {
+    "State": "NSW",
+    "Division": "Newcastle",
+    "Candidate": "CLAYDON, Sharon",
+    "Party": "Australian Labor Party",
+    "Position": 1
+  },
+  {
+    "State": "NSW",
+    "Division": "Newcastle",
+    "Candidate": "MACKENZIE, John",
+    "Party": "The Greens",
+    "Position": 2
+  },
+  {
+    "State": "NSW",
+    "Division": "Newcastle",
+    "Candidate": "WISE, Pam",
+    "Party": "Christian Democratic Party (Fred Nile Group)",
+    "Position": 3
+  },
+  {
+    "State": "NSW",
+    "Division": "Newcastle",
+    "Candidate": "SCULLY, Geoffrey",
+    "Party": "United Australia Party",
+    "Position": 4
+  },
+  {
+    "State": "NSW",
+    "Division": "Newcastle",
+    "Candidate": "FUTTER, B.J.",
+    "Party": "The Great Australian Party",
+    "Position": 5
+  },
+  {
+    "State": "NSW",
+    "Division": "Newcastle",
+    "Candidate": "BROLLO, Darren",
+    "Party": "Animal Justice Party",
+    "Position": 6
+  },
+  {
+    "State": "NSW",
+    "Division": "Newcastle",
+    "Candidate": "WARK, Katrina",
+    "Party": "Liberal",
+    "Position": 7
+  },
+  {
+    "State": "NSW",
+    "Division": "North Sydney",
+    "Candidate": "VERNON, David",
+    "Party": "Christian Democratic Party (Fred Nile Group)",
+    "Position": 1
+  },
+  {
+    "State": "NSW",
+    "Division": "North Sydney",
+    "Candidate": "STONE, Brett",
+    "Party": "Australian Labor Party",
+    "Position": 2
+  },
+  {
+    "State": "NSW",
+    "Division": "North Sydney",
+    "Candidate": "VAGG, Peter John",
+    "Party": "United Australia Party",
+    "Position": 3
+  },
+  {
+    "State": "NSW",
+    "Division": "North Sydney",
+    "Candidate": "KEOGH, Daniel",
+    "Party": "The Greens",
+    "Position": 4
+  },
+  {
+    "State": "NSW",
+    "Division": "North Sydney",
+    "Candidate": "CHESTERFIELD-EVANS, Arthur",
+    "Party": "Independent",
+    "Position": 5
+  },
+  {
+    "State": "NSW",
+    "Division": "North Sydney",
+    "Candidate": "GRAHAM, Greg",
+    "Party": "Sustainable Australia",
+    "Position": 6
+  },
+  {
+    "State": "NSW",
+    "Division": "North Sydney",
+    "Candidate": "ZIMMERMAN, Trent",
+    "Party": "Liberal",
+    "Position": 7
+  },
+  {
+    "State": "NSW",
+    "Division": "Page",
+    "Candidate": "LEVINY, Fiona",
+    "Party": "Independent",
+    "Position": 1
+  },
+  {
+    "State": "NSW",
+    "Division": "Page",
+    "Candidate": "WATERS, Alison",
+    "Party": "Animal Justice Party",
+    "Position": 2
+  },
+  {
+    "State": "NSW",
+    "Division": "Page",
+    "Candidate": "WALKER, Peter",
+    "Party": "Christian Democratic Party (Fred Nile Group)",
+    "Position": 3
+  },
+  {
+    "State": "NSW",
+    "Division": "Page",
+    "Candidate": "MUDGE, John Damian",
+    "Party": "United Australia Party",
+    "Position": 4
+  },
+  {
+    "State": "NSW",
+    "Division": "Page",
+    "Candidate": "REID, Dan",
+    "Party": "The Greens",
+    "Position": 5
+  },
+  {
+    "State": "NSW",
+    "Division": "Page",
+    "Candidate": "HOGAN, Kevin",
+    "Party": "The Nationals",
+    "Position": 6
+  },
+  {
+    "State": "NSW",
+    "Division": "Page",
+    "Candidate": "DEEGAN, Patrick",
+    "Party": "Australian Labor Party",
+    "Position": 7
+  },
+  {
+    "State": "NSW",
+    "Division": "Parkes",
+    "Candidate": "JONES, Daniel J",
+    "Party": "Liberal Democrats",
+    "Position": 1
+  },
+  {
+    "State": "NSW",
+    "Division": "Parkes",
+    "Candidate": "COULTON, Mark",
+    "Party": "The Nationals",
+    "Position": 2
+  },
+  {
+    "State": "NSW",
+    "Division": "Parkes",
+    "Candidate": "PAULL, David",
+    "Party": "The Greens",
+    "Position": 3
+  },
+  {
+    "State": "NSW",
+    "Division": "Parkes",
+    "Candidate": "AYOUB, Jack",
+    "Party": "Australian Labor Party",
+    "Position": 4
+  },
+  {
+    "State": "NSW",
+    "Division": "Parkes",
+    "Candidate": "LANDERS, Will",
+    "Party": "Independent",
+    "Position": 5
+  },
+  {
+    "State": "NSW",
+    "Division": "Parkes",
+    "Candidate": "VAN DER STEEN, Petrus Joannes Gijsbertus",
+    "Party": "United Australia Party",
+    "Position": 6
+  },
+  {
+    "State": "NSW",
+    "Division": "Parramatta",
+    "Candidate": "CAMENZULI, Charles",
+    "Party": "Liberal",
+    "Position": 1
+  },
+  {
+    "State": "NSW",
+    "Division": "Parramatta",
+    "Candidate": "OWENS, Julie",
+    "Party": "Australian Labor Party",
+    "Position": 2
+  },
+  {
+    "State": "NSW",
+    "Division": "Parramatta",
+    "Candidate": "LOKE, Ganesh Sahadev",
+    "Party": "United Australia Party",
+    "Position": 3
+  },
+  {
+    "State": "NSW",
+    "Division": "Parramatta",
+    "Candidate": "BRADLEY, Phil",
+    "Party": "The Greens",
+    "Position": 4
+  },
+  {
+    "State": "NSW",
+    "Division": "Parramatta",
+    "Candidate": "PAYARA, Asma",
+    "Party": "Christian Democratic Party (Fred Nile Group)",
+    "Position": 5
+  },
+  {
+    "State": "NSW",
+    "Division": "Parramatta",
+    "Candidate": "GRENFELL, Oscar",
+    "Party": "Socialist Equality Party",
+    "Position": 6
+  },
+  {
+    "State": "NSW",
+    "Division": "Paterson",
+    "Candidate": "JOSHI, Sachin",
+    "Party": "Liberal",
+    "Position": 1
+  },
+  {
+    "State": "NSW",
+    "Division": "Paterson",
+    "Candidate": "TURNER, Neil",
+    "Party": "Pauline Hanson's One Nation",
+    "Position": 2
+  },
+  {
+    "State": "NSW",
+    "Division": "Paterson",
+    "Candidate": "SWANSON, Meryl",
+    "Party": "Australian Labor Party",
+    "Position": 3
+  },
+  {
+    "State": "NSW",
+    "Division": "Paterson",
+    "Candidate": "BURSTON, Graham",
+    "Party": "United Australia Party",
+    "Position": 4
+  },
+  {
+    "State": "NSW",
+    "Division": "Paterson",
+    "Candidate": "DAVIS, Jan",
+    "Party": "The Greens",
+    "Position": 5
+  },
+  {
+    "State": "NSW",
+    "Division": "Paterson",
+    "Candidate": "VALE, Christopher Arthur",
+    "Party": "Christian Democratic Party (Fred Nile Group)",
+    "Position": 6
+  },
+  {
+    "State": "NSW",
+    "Division": "Reid",
+    "Candidate": "PIPER, Keith",
+    "Party": "Christian Democratic Party (Fred Nile Group)",
+    "Position": 1
+  },
+  {
+    "State": "NSW",
+    "Division": "Reid",
+    "Candidate": "JAGO, Charles",
+    "Party": "The Greens",
+    "Position": 2
+  },
+  {
+    "State": "NSW",
+    "Division": "Reid",
+    "Candidate": "CROSBY, Sam",
+    "Party": "Australian Labor Party",
+    "Position": 3
+  },
+  {
+    "State": "NSW",
+    "Division": "Reid",
+    "Candidate": "MARTIN, Fiona",
+    "Party": "Liberal",
+    "Position": 4
+  },
+  {
+    "State": "NSW",
+    "Division": "Reid",
+    "Candidate": "LEE, Young",
+    "Party": "United Australia Party",
+    "Position": 5
+  },
+  {
+    "State": "NSW",
+    "Division": "Reid",
+    "Candidate": "LAXMANALAL, Rohan",
+    "Party": "Animal Justice Party",
+    "Position": 6
+  },
+  {
+    "State": "NSW",
+    "Division": "Richmond",
+    "Candidate": "McDONALD, Ronald",
+    "Party": "Sustainable Australia",
+    "Position": 1
+  },
+  {
+    "State": "NSW",
+    "Division": "Richmond",
+    "Candidate": "MITCHELL, Hamish Jenkin",
+    "Party": "United Australia Party",
+    "Position": 2
+  },
+  {
+    "State": "NSW",
+    "Division": "Richmond",
+    "Candidate": "COX, Morgan",
+    "Party": "Christian Democratic Party (Fred Nile Group)",
+    "Position": 3
+  },
+  {
+    "State": "NSW",
+    "Division": "Richmond",
+    "Candidate": "ELLIOT, Justine",
+    "Party": "Australian Labor Party",
+    "Position": 4
+  },
+  {
+    "State": "NSW",
+    "Division": "Richmond",
+    "Candidate": "KARAM, Ray",
+    "Party": "Independent",
+    "Position": 5
+  },
+  {
+    "State": "NSW",
+    "Division": "Richmond",
+    "Candidate": "BARNETT, Tom",
+    "Party": "Involuntary Medication Objectors (Vaccination/Fluoride) Party",
+    "Position": 6
+  },
+  {
+    "State": "NSW",
+    "Division": "Richmond",
+    "Candidate": "FRASER, Matthew",
+    "Party": "The Nationals",
+    "Position": 7
+  },
+  {
+    "State": "NSW",
+    "Division": "Richmond",
+    "Candidate": "LYON, Michael",
+    "Party": "The Greens",
+    "Position": 8
+  },
+  {
+    "State": "NSW",
+    "Division": "Riverina",
+    "Candidate": "McCORMACK, Michael",
+    "Party": "The Nationals",
+    "Position": 1
+  },
+  {
+    "State": "NSW",
+    "Division": "Riverina",
+    "Candidate": "BAYLES, Michael",
+    "Party": "The Greens",
+    "Position": 2
+  },
+  {
+    "State": "NSW",
+    "Division": "Riverina",
+    "Candidate": "JEFFRESON, Mark",
+    "Party": "Australian Labor Party",
+    "Position": 3
+  },
+  {
+    "State": "NSW",
+    "Division": "Riverina",
+    "Candidate": "FOLEY, Richard",
+    "Party": "United Australia Party",
+    "Position": 4
+  },
+  {
+    "State": "NSW",
+    "Division": "Robertson",
+    "Candidate": "SINGER, Judy",
+    "Party": "Sustainable Australia",
+    "Position": 1
+  },
+  {
+    "State": "NSW",
+    "Division": "Robertson",
+    "Candidate": "MARKS, Robert James",
+    "Party": "United Australia Party",
+    "Position": 2
+  },
+  {
+    "State": "NSW",
+    "Division": "Robertson",
+    "Candidate": "STUCKEN, Fiona Phoebe",
+    "Party": "Christian Democratic Party (Fred Nile Group)",
+    "Position": 3
+  },
+  {
+    "State": "NSW",
+    "Division": "Robertson",
+    "Candidate": "ABRAHAMS, David Fraser",
+    "Party": "Independent",
+    "Position": 4
+  },
+  {
+    "State": "NSW",
+    "Division": "Robertson",
+    "Candidate": "WICKS, Lucy",
+    "Party": "Liberal",
+    "Position": 5
+  },
+  {
+    "State": "NSW",
+    "Division": "Robertson",
+    "Candidate": "CONNOR, Cath",
+    "Party": "The Greens",
+    "Position": 6
+  },
+  {
+    "State": "NSW",
+    "Division": "Robertson",
+    "Candidate": "BREMNER YOUNG, Sean",
+    "Party": "Animal Justice Party",
+    "Position": 7
+  },
+  {
+    "State": "NSW",
+    "Division": "Robertson",
+    "Candidate": "CHARLTON, Anne",
+    "Party": "Australian Labor Party",
+    "Position": 8
+  },
+  {
+    "State": "NSW",
+    "Division": "Shortland",
+    "Candidate": "NEWBURY, Susan",
+    "Party": "Sustainable Australia",
+    "Position": 1
+  },
+  {
+    "State": "NSW",
+    "Division": "Shortland",
+    "Candidate": "YU, Xing",
+    "Party": "Christian Democratic Party (Fred Nile Group)",
+    "Position": 2
+  },
+  {
+    "State": "NSW",
+    "Division": "Shortland",
+    "Candidate": "CONROY, Pat",
+    "Party": "Australian Labor Party",
+    "Position": 3
+  },
+  {
+    "State": "NSW",
+    "Division": "Shortland",
+    "Candidate": "RIFAI, Dani",
+    "Party": "United Australia Party",
+    "Position": 4
+  },
+  {
+    "State": "NSW",
+    "Division": "Shortland",
+    "Candidate": "CAMPBELL, Wylie",
+    "Party": "The Greens",
+    "Position": 5
+  },
+  {
+    "State": "NSW",
+    "Division": "Shortland",
+    "Candidate": "McGRATH, Bryan",
+    "Party": "Animal Justice Party",
+    "Position": 6
+  },
+  {
+    "State": "NSW",
+    "Division": "Shortland",
+    "Candidate": "McGILL, Nell",
+    "Party": "Liberal",
+    "Position": 7
+  },
+  {
+    "State": "NSW",
+    "Division": "Sydney",
+    "Candidate": "MUNRO, Jacqui",
+    "Party": "Liberal",
+    "Position": 1
+  },
+  {
+    "State": "NSW",
+    "Division": "Sydney",
+    "Candidate": "HAMMOND, Aaron",
+    "Party": "Science Party",
+    "Position": 2
+  },
+  {
+    "State": "NSW",
+    "Division": "Sydney",
+    "Candidate": "PLIBERSEK, Tanya",
+    "Party": "Australian Labor Party",
+    "Position": 3
+  },
+  {
+    "State": "NSW",
+    "Division": "Sydney",
+    "Candidate": "HOLT, Adam",
+    "Party": "United Australia Party",
+    "Position": 4
+  },
+  {
+    "State": "NSW",
+    "Division": "Sydney",
+    "Candidate": "THOMPSON, Matthew",
+    "Party": "The Greens",
+    "Position": 5
+  },
+  {
+    "State": "NSW",
+    "Division": "Sydney",
+    "Candidate": "REDDIN, Rebecca",
+    "Party": "Christian Democratic Party (Fred Nile Group)",
+    "Position": 6
+  },
+  {
+    "State": "NSW",
+    "Division": "Warringah",
+    "Candidate": "BARNES, Heather",
+    "Party": "Animal Justice Party",
+    "Position": 1
+  },
+  {
+    "State": "NSW",
+    "Division": "Warringah",
+    "Candidate": "MOYLAN, Susan",
+    "Party": "Independent",
+    "Position": 2
+  },
+  {
+    "State": "NSW",
+    "Division": "Warringah",
+    "Candidate": "HARRIS, Dean",
+    "Party": "Australian Labor Party",
+    "Position": 3
+  },
+  {
+    "State": "NSW",
+    "Division": "Warringah",
+    "Candidate": "PALETTO, Emanuele",
+    "Party": "Sustainable Australia",
+    "Position": 4
+  },
+  {
+    "State": "NSW",
+    "Division": "Warringah",
+    "Candidate": "WRIGHTSON, Suellen Marree",
+    "Party": "United Australia Party",
+    "Position": 5
+  },
+  {
+    "State": "NSW",
+    "Division": "Warringah",
+    "Candidate": "ABBOTT, Tony",
+    "Party": "Liberal",
+    "Position": 6
+  },
+  {
+    "State": "NSW",
+    "Division": "Warringah",
+    "Candidate": "CLARE, Brian",
+    "Party": "Fraser Anning's Conservative National Party",
+    "Position": 7
+  },
+  {
+    "State": "NSW",
+    "Division": "Warringah",
+    "Candidate": "STEGGALL, Zali",
+    "Party": "Independent",
+    "Position": 8
+  },
+  {
+    "State": "NSW",
+    "Division": "Warringah",
+    "Candidate": "BLAIKLOCK, Jason",
+    "Party": "Christian Democratic Party (Fred Nile Group)",
+    "Position": 9
+  },
+  {
+    "State": "NSW",
+    "Division": "Warringah",
+    "Candidate": "GLANVILLE, Kristyn",
+    "Party": "The Greens",
+    "Position": 10
+  },
+  {
+    "State": "NSW",
+    "Division": "Watson",
+    "Candidate": "WRIGHTSON, Dean",
+    "Party": "United Australia Party",
+    "Position": 1
+  },
+  {
+    "State": "NSW",
+    "Division": "Watson",
+    "Candidate": "SCHUBERT, Karl",
+    "Party": "Christian Democratic Party (Fred Nile Group)",
+    "Position": 2
+  },
+  {
+    "State": "NSW",
+    "Division": "Watson",
+    "Candidate": "ZENG, Raymond",
+    "Party": "Science Party",
+    "Position": 3
+  },
+  {
+    "State": "NSW",
+    "Division": "Watson",
+    "Candidate": "de BHALDRAITHE, Emmet",
+    "Party": "The Greens",
+    "Position": 4
+  },
+  {
+    "State": "NSW",
+    "Division": "Watson",
+    "Candidate": "BURKE, Tony",
+    "Party": "Australian Labor Party",
+    "Position": 5
+  },
+  {
+    "State": "NSW",
+    "Division": "Watson",
+    "Candidate": "ZAMAN, Mohammad",
+    "Party": "Liberal",
+    "Position": 6
+  },
+  {
+    "State": "NSW",
+    "Division": "Wentworth",
+    "Candidate": "DRAKE-BROCKMAN, Matthew",
+    "Party": "Independent",
+    "Position": 1
+  },
+  {
+    "State": "NSW",
+    "Division": "Wentworth",
+    "Candidate": "MURRAY, Tim",
+    "Party": "Australian Labor Party",
+    "Position": 2
+  },
+  {
+    "State": "NSW",
+    "Division": "Wentworth",
+    "Candidate": "BLOOMFIELD, Michael John",
+    "Party": "United Australia Party",
+    "Position": 3
+  },
+  {
+    "State": "NSW",
+    "Division": "Wentworth",
+    "Candidate": "TREACY, Paul",
+    "Party": "Christian Democratic Party (Fred Nile Group)",
+    "Position": 4
+  },
+  {
+    "State": "NSW",
+    "Division": "Wentworth",
+    "Candidate": "SHARMA, Dave",
+    "Party": "Liberal",
+    "Position": 5
+  },
+  {
+    "State": "NSW",
+    "Division": "Wentworth",
+    "Candidate": "KANAK, Dominic Wy",
+    "Party": "The Greens",
+    "Position": 6
+  },
+  {
+    "State": "NSW",
+    "Division": "Wentworth",
+    "Candidate": "PHELPS, Kerryn",
+    "Party": "Independent",
+    "Position": 7
+  },
+  {
+    "State": "NSW",
+    "Division": "Werriwa",
+    "Candidate": "STOREY, Narelle",
+    "Party": "Christian Democratic Party (Fred Nile Group)",
+    "Position": 1
+  },
+  {
+    "State": "NSW",
+    "Division": "Werriwa",
+    "Candidate": "MILLER, Shayne",
+    "Party": "Liberal",
+    "Position": 2
+  },
+  {
+    "State": "NSW",
+    "Division": "Werriwa",
+    "Candidate": "WESTERBERG, Signe",
+    "Party": "The Greens",
+    "Position": 3
+  },
+  {
+    "State": "NSW",
+    "Division": "Werriwa",
+    "Candidate": "WHITE, Michael",
+    "Party": "Independent",
+    "Position": 4
+  },
+  {
+    "State": "NSW",
+    "Division": "Werriwa",
+    "Candidate": "TSIRIPLIS, Ignatios",
+    "Party": "United Australia Party",
+    "Position": 5
+  },
+  {
+    "State": "NSW",
+    "Division": "Werriwa",
+    "Candidate": "STANLEY, Anne Maree",
+    "Party": "Australian Labor Party",
+    "Position": 6
+  },
+  {
+    "State": "NSW",
+    "Division": "Whitlam",
+    "Candidate": "CUDA, Angelo",
+    "Party": "United Australia Party",
+    "Position": 1
+  },
+  {
+    "State": "NSW",
+    "Division": "Whitlam",
+    "Candidate": "NERO, Frank Rodolfo",
+    "Party": "Christian Democratic Party (Fred Nile Group)",
+    "Position": 2
+  },
+  {
+    "State": "NSW",
+    "Division": "Whitlam",
+    "Candidate": "WENTWORTH, Stephen",
+    "Party": "The Nationals",
+    "Position": 3
+  },
+  {
+    "State": "NSW",
+    "Division": "Whitlam",
+    "Candidate": "JONES, Stephen",
+    "Party": "Australian Labor Party",
+    "Position": 4
+  },
+  {
+    "State": "NSW",
+    "Division": "Whitlam",
+    "Candidate": "DIXON, Jamie",
+    "Party": "The Greens",
+    "Position": 5
+  },
+  {
+    "State": "NSW",
+    "Division": "Whitlam",
+    "Candidate": "DAVIS, Ken",
+    "Party": "Sustainable Australia",
+    "Position": 6
+  },
+  {
+    "State": "NT",
+    "Division": "Lingiari",
+    "Candidate": "SNOWDON, Warren",
+    "Party": "Australian Labor Party",
+    "Position": 1
+  },
+  {
+    "State": "NT",
+    "Division": "Lingiari",
+    "Candidate": "HANNA, George",
+    "Party": "The Greens",
+    "Position": 2
+  },
+  {
+    "State": "NT",
+    "Division": "Lingiari",
+    "Candidate": "HODGSON, Daniel Isaac",
+    "Party": "United Australia Party",
+    "Position": 3
+  },
+  {
+    "State": "NT",
+    "Division": "Lingiari",
+    "Candidate": "McCARTHY, Regina",
+    "Party": "Rise Up Australia Party",
+    "Position": 4
+  },
+  {
+    "State": "NT",
+    "Division": "Lingiari",
+    "Candidate": "MacFARLANE, Hamish",
+    "Party": "Independent",
+    "Position": 5
+  },
+  {
+    "State": "NT",
+    "Division": "Lingiari",
+    "Candidate": "PRICE, Jacinta",
+    "Party": "Country Liberals (NT)",
+    "Position": 6
+  },
+  {
+    "State": "NT",
+    "Division": "Solomon",
+    "Candidate": "GOSLING, Luke John",
+    "Party": "Australian Labor Party",
+    "Position": 1
+  },
+  {
+    "State": "NT",
+    "Division": "Solomon",
+    "Candidate": "GIMINI, Lorraine",
+    "Party": "Rise Up Australia Party",
+    "Position": 2
+  },
+  {
+    "State": "NT",
+    "Division": "Solomon",
+    "Candidate": "GANLEY, Kathy",
+    "Party": "Country Liberals (NT)",
+    "Position": 3
+  },
+  {
+    "State": "NT",
+    "Division": "Solomon",
+    "Candidate": "PARISH, Timothy",
+    "Party": "The Greens",
+    "Position": 4
+  },
+  {
+    "State": "NT",
+    "Division": "Solomon",
+    "Candidate": "RAJWIN, Raj Samson",
+    "Party": "United Australia Party",
+    "Position": 5
+  },
+  {
+    "State": "NT",
+    "Division": "Solomon",
+    "Candidate": "FRASER-ADAMS, Sue",
+    "Party": "Independent",
+    "Position": 6
+  },
+  {
+    "State": "QLD",
+    "Division": "Blair",
+    "Candidate": "KARANDREWS, Simone",
+    "Party": "Independent",
+    "Position": 1
+  },
+  {
+    "State": "QLD",
+    "Division": "Blair",
+    "Candidate": "FITZPATRICK, Peter John",
+    "Party": "Fraser Anning's Conservative National Party",
+    "Position": 2
+  },
+  {
+    "State": "QLD",
+    "Division": "Blair",
+    "Candidate": "NEUMANN, Shayne Kenneth",
+    "Party": "Australian Labor Party",
+    "Position": 3
+  },
+  {
+    "State": "QLD",
+    "Division": "Blair",
+    "Candidate": "BELL, Sharon",
+    "Party": "Pauline Hanson's One Nation",
+    "Position": 4
+  },
+  {
+    "State": "QLD",
+    "Division": "Blair",
+    "Candidate": "SHEARMAN, Robert",
+    "Party": "Liberal National Party of Queensland",
+    "Position": 5
+  },
+  {
+    "State": "QLD",
+    "Division": "Blair",
+    "Candidate": "ZIMPEL, Majella",
+    "Party": "United Australia Party",
+    "Position": 6
+  },
+  {
+    "State": "QLD",
+    "Division": "Blair",
+    "Candidate": "QUINN, John",
+    "Party": "Labour DLP",
+    "Position": 7
+  },
+  {
+    "State": "QLD",
+    "Division": "Blair",
+    "Candidate": "DUNCAN, Michelle",
+    "Party": "The Greens",
+    "Position": 8
+  },
+  {
+    "State": "QLD",
+    "Division": "Blair",
+    "Candidate": "TURNER, John",
+    "Party": "Independent",
+    "Position": 9
+  },
+  {
+    "State": "QLD",
+    "Division": "Bonner",
+    "Candidate": "FLITCROFT, Simon E F",
+    "Party": "United Australia Party",
+    "Position": 1
+  },
+  {
+    "State": "QLD",
+    "Division": "Bonner",
+    "Candidate": "BELL, Barbara",
+    "Party": "The Greens",
+    "Position": 2
+  },
+  {
+    "State": "QLD",
+    "Division": "Bonner",
+    "Candidate": "SYMES, Ian",
+    "Party": "Pauline Hanson's One Nation",
+    "Position": 3
+  },
+  {
+    "State": "QLD",
+    "Division": "Bonner",
+    "Candidate": "VASTA, Ross",
+    "Party": "Liberal National Party of Queensland",
+    "Position": 4
+  },
+  {
+    "State": "QLD",
+    "Division": "Bonner",
+    "Candidate": "MAYNARD, Alex",
+    "Party": "Fraser Anning's Conservative National Party",
+    "Position": 5
+  },
+  {
+    "State": "QLD",
+    "Division": "Bonner",
+    "Candidate": "BRISKEY, Jo",
+    "Party": "Australian Labor Party",
+    "Position": 6
+  },
+  {
+    "State": "QLD",
+    "Division": "Bowman",
+    "Candidate": "MOON, Emerald",
+    "Party": "The Greens",
+    "Position": 1
+  },
+  {
+    "State": "QLD",
+    "Division": "Bowman",
+    "Candidate": "LAMING, Andrew",
+    "Party": "Liberal National Party of Queensland",
+    "Position": 2
+  },
+  {
+    "State": "QLD",
+    "Division": "Bowman",
+    "Candidate": "CLARKE, Shane",
+    "Party": "United Australia Party",
+    "Position": 3
+  },
+  {
+    "State": "QLD",
+    "Division": "Bowman",
+    "Candidate": "ANDERSON, David",
+    "Party": "Fraser Anning's Conservative National Party",
+    "Position": 4
+  },
+  {
+    "State": "QLD",
+    "Division": "Bowman",
+    "Candidate": "WADSWORTH, Glen",
+    "Party": "Pauline Hanson's One Nation",
+    "Position": 5
+  },
+  {
+    "State": "QLD",
+    "Division": "Bowman",
+    "Candidate": "BASTER, Tom",
+    "Party": "Australian Labor Party",
+    "Position": 6
+  },
+  {
+    "State": "QLD",
+    "Division": "Brisbane",
+    "Candidate": "PERRY, Anne",
+    "Party": "Pauline Hanson's One Nation",
+    "Position": 1
+  },
+  {
+    "State": "QLD",
+    "Division": "Brisbane",
+    "Candidate": "EVANS, Trevor",
+    "Party": "Liberal National Party of Queensland",
+    "Position": 2
+  },
+  {
+    "State": "QLD",
+    "Division": "Brisbane",
+    "Candidate": "WHITTAKER, Aaron",
+    "Party": "United Australia Party",
+    "Position": 3
+  },
+  {
+    "State": "QLD",
+    "Division": "Brisbane",
+    "Candidate": "BARTLETT, Andrew",
+    "Party": "The Greens",
+    "Position": 4
+  },
+  {
+    "State": "QLD",
+    "Division": "Brisbane",
+    "Candidate": "JEANNERET, Rod",
+    "Party": "Fraser Anning's Conservative National Party",
+    "Position": 5
+  },
+  {
+    "State": "QLD",
+    "Division": "Brisbane",
+    "Candidate": "NEWBURY, Paul",
+    "Party": "Australian Labor Party",
+    "Position": 6
+  },
+  {
+    "State": "QLD",
+    "Division": "Brisbane",
+    "Candidate": "EMANUEL, Kamala",
+    "Party": "Socialist Alliance",
+    "Position": 7
+  },
+  {
+    "State": "QLD",
+    "Division": "Capricornia",
+    "Candidate": "BAMBRICK, Paul",
+    "Party": "The Greens",
+    "Position": 1
+  },
+  {
+    "State": "QLD",
+    "Division": "Capricornia",
+    "Candidate": "BIRKBECK, George",
+    "Party": "Katter's Australian Party (KAP)",
+    "Position": 2
+  },
+  {
+    "State": "QLD",
+    "Division": "Capricornia",
+    "Candidate": "TEMPLE, Richard",
+    "Party": "Labour DLP",
+    "Position": 3
+  },
+  {
+    "State": "QLD",
+    "Division": "Capricornia",
+    "Candidate": "MURRAY, Ken",
+    "Party": "Independent",
+    "Position": 4
+  },
+  {
+    "State": "QLD",
+    "Division": "Capricornia",
+    "Candidate": "LANDRY, Michelle",
+    "Party": "Liberal National Party of Queensland",
+    "Position": 5
+  },
+  {
+    "State": "QLD",
+    "Division": "Capricornia",
+    "Candidate": "ROBERTSON, Russell",
+    "Party": "Australian Labor Party",
+    "Position": 6
+  },
+  {
+    "State": "QLD",
+    "Division": "Capricornia",
+    "Candidate": "ROTHERY, Wade",
+    "Party": "Pauline Hanson's One Nation",
+    "Position": 7
+  },
+  {
+    "State": "QLD",
+    "Division": "Capricornia",
+    "Candidate": "STURGEON, Lindsay",
+    "Party": "United Australia Party",
+    "Position": 8
+  },
+  {
+    "State": "QLD",
+    "Division": "Capricornia",
+    "Candidate": "PRATT, Grant",
+    "Party": "Fraser Anning's Conservative National Party",
+    "Position": 9
+  },
+  {
+    "State": "QLD",
+    "Division": "Dawson",
+    "Candidate": "WARE, Ann-Maree",
+    "Party": "Labour DLP",
+    "Position": 1
+  },
+  {
+    "State": "QLD",
+    "Division": "Dawson",
+    "Candidate": "TURNER, Michael Wayne",
+    "Party": "Fraser Anning's Conservative National Party",
+    "Position": 2
+  },
+  {
+    "State": "QLD",
+    "Division": "Dawson",
+    "Candidate": "LAWSON, Debra",
+    "Party": "Pauline Hanson's One Nation",
+    "Position": 3
+  },
+  {
+    "State": "QLD",
+    "Division": "Dawson",
+    "Candidate": "CHRISTENSEN, George",
+    "Party": "Liberal National Party of Queensland",
+    "Position": 4
+  },
+  {
+    "State": "QLD",
+    "Division": "Dawson",
+    "Candidate": "HASSAN, Belinda",
+    "Party": "Australian Labor Party",
+    "Position": 5
+  },
+  {
+    "State": "QLD",
+    "Division": "Dawson",
+    "Candidate": "BUNYAN, Brendan",
+    "Party": "Katter's Australian Party (KAP)",
+    "Position": 6
+  },
+  {
+    "State": "QLD",
+    "Division": "Dawson",
+    "Candidate": "LINDENBERG, Imogen",
+    "Party": "The Greens",
+    "Position": 7
+  },
+  {
+    "State": "QLD",
+    "Division": "Dawson",
+    "Candidate": "QUEENAN, Lachlan",
+    "Party": "Independent",
+    "Position": 8
+  },
+  {
+    "State": "QLD",
+    "Division": "Dawson",
+    "Candidate": "THOMPSON, Colin Richard",
+    "Party": "United Australia Party",
+    "Position": 9
+  },
+  {
+    "State": "QLD",
+    "Division": "Dickson",
+    "Candidate": "COYNE, Benedict",
+    "Party": "The Greens",
+    "Position": 1
+  },
+  {
+    "State": "QLD",
+    "Division": "Dickson",
+    "Candidate": "DUTTON, Peter",
+    "Party": "Liberal National Party of Queensland",
+    "Position": 2
+  },
+  {
+    "State": "QLD",
+    "Division": "Dickson",
+    "Candidate": "FRANCE, Ali",
+    "Party": "Australian Labor Party",
+    "Position": 3
+  },
+  {
+    "State": "QLD",
+    "Division": "Dickson",
+    "Candidate": "PROHASKA, Thor",
+    "Party": "Independent",
+    "Position": 4
+  },
+  {
+    "State": "QLD",
+    "Division": "Dickson",
+    "Candidate": "AUSTIN, Steve",
+    "Party": "United Australia Party",
+    "Position": 5
+  },
+  {
+    "State": "QLD",
+    "Division": "Dickson",
+    "Candidate": "HALLIWELL, Carrol",
+    "Party": "Pauline Hanson's One Nation",
+    "Position": 6
+  },
+  {
+    "State": "QLD",
+    "Division": "Dickson",
+    "Candidate": "SIMPSON, Richelle",
+    "Party": "Fraser Anning's Conservative National Party",
+    "Position": 7
+  },
+  {
+    "State": "QLD",
+    "Division": "Dickson",
+    "Candidate": "BROHMAN, Maureen",
+    "Party": "Animal Justice Party",
+    "Position": 8
+  },
+  {
+    "State": "QLD",
+    "Division": "Fadden",
+    "Candidate": "WELCH, Jake",
+    "Party": "Liberal Democrats",
+    "Position": 1
+  },
+  {
+    "State": "QLD",
+    "Division": "Fadden",
+    "Candidate": "STANTON, Luz",
+    "Party": "Australian Labor Party",
+    "Position": 2
+  },
+  {
+    "State": "QLD",
+    "Division": "Fadden",
+    "Candidate": "EATHER, Darren",
+    "Party": "Pauline Hanson's One Nation",
+    "Position": 3
+  },
+  {
+    "State": "QLD",
+    "Division": "Fadden",
+    "Candidate": "BARBER, Allan",
+    "Party": "Fraser Anning's Conservative National Party",
+    "Position": 4
+  },
+  {
+    "State": "QLD",
+    "Division": "Fadden",
+    "Candidate": "TURNER, Scott",
+    "Party": "The Greens",
+    "Position": 5
+  },
+  {
+    "State": "QLD",
+    "Division": "Fadden",
+    "Candidate": "ROBERT, Stuart",
+    "Party": "Liberal National Party of Queensland",
+    "Position": 6
+  },
+  {
+    "State": "QLD",
+    "Division": "Fadden",
+    "Candidate": "KRISCHKER, Mara",
+    "Party": "United Australia Party",
+    "Position": 7
+  },
+  {
+    "State": "QLD",
+    "Division": "Fairfax",
+    "Candidate": "COWLING, Kylie Natasha",
+    "Party": "United Australia Party",
+    "Position": 1
+  },
+  {
+    "State": "QLD",
+    "Division": "Fairfax",
+    "Candidate": "RYAN, Jake Luke",
+    "Party": "Fraser Anning's Conservative National Party",
+    "Position": 2
+  },
+  {
+    "State": "QLD",
+    "Division": "Fairfax",
+    "Candidate": "ETHERIDGE, Sue",
+    "Party": "The Greens",
+    "Position": 3
+  },
+  {
+    "State": "QLD",
+    "Division": "Fairfax",
+    "Candidate": "O'BRIEN, Ted",
+    "Party": "Liberal National Party of Queensland",
+    "Position": 4
+  },
+  {
+    "State": "QLD",
+    "Division": "Fairfax",
+    "Candidate": "BELCHER, Richard",
+    "Party": "Sustainable Australia",
+    "Position": 5
+  },
+  {
+    "State": "QLD",
+    "Division": "Fairfax",
+    "Candidate": "HENSELIN, Paul",
+    "Party": "Pauline Hanson's One Nation",
+    "Position": 6
+  },
+  {
+    "State": "QLD",
+    "Division": "Fairfax",
+    "Candidate": "AUSTRALIE, Sinim",
+    "Party": "Independent",
+    "Position": 7
+  },
+  {
+    "State": "QLD",
+    "Division": "Fairfax",
+    "Candidate": "CADART, Bertrand",
+    "Party": "Liberal Democrats",
+    "Position": 8
+  },
+  {
+    "State": "QLD",
+    "Division": "Fairfax",
+    "Candidate": "McGLONE, Julie",
+    "Party": "Australian Labor Party",
+    "Position": 9
+  },
+  {
+    "State": "QLD",
+    "Division": "Fisher",
+    "Candidate": "GRAY, Trevor David",
+    "Party": "United Australia Party",
+    "Position": 1
+  },
+  {
+    "State": "QLD",
+    "Division": "Fisher",
+    "Candidate": "PARSELL, Daniel",
+    "Party": "Australian Labor Party",
+    "Position": 2
+  },
+  {
+    "State": "QLD",
+    "Division": "Fisher",
+    "Candidate": "BURTON, Tracy",
+    "Party": "The Greens",
+    "Position": 3
+  },
+  {
+    "State": "QLD",
+    "Division": "Fisher",
+    "Candidate": "PATERSON, Christopher",
+    "Party": "Pauline Hanson's One Nation",
+    "Position": 4
+  },
+  {
+    "State": "QLD",
+    "Division": "Fisher",
+    "Candidate": "WALLACE, Andrew",
+    "Party": "Liberal National Party of Queensland",
+    "Position": 5
+  },
+  {
+    "State": "QLD",
+    "Division": "Fisher",
+    "Candidate": "JESSOP, Mike",
+    "Party": "Fraser Anning's Conservative National Party",
+    "Position": 6
+  },
+  {
+    "State": "QLD",
+    "Division": "Fisher",
+    "Candidate": "MONAGHAN, Paul",
+    "Party": "Love Australia or Leave",
+    "Position": 7
+  },
+  {
+    "State": "QLD",
+    "Division": "Flynn",
+    "Candidate": "BEERS, Zac",
+    "Party": "Australian Labor Party",
+    "Position": 1
+  },
+  {
+    "State": "QLD",
+    "Division": "Flynn",
+    "Candidate": "HARRIS, Nathan David",
+    "Party": "United Australia Party",
+    "Position": 2
+  },
+  {
+    "State": "QLD",
+    "Division": "Flynn",
+    "Candidate": "BAKER, Jaiben",
+    "Party": "The Greens",
+    "Position": 3
+  },
+  {
+    "State": "QLD",
+    "Division": "Flynn",
+    "Candidate": "PETERSON, Murray",
+    "Party": "Independent",
+    "Position": 4
+  },
+  {
+    "State": "QLD",
+    "Division": "Flynn",
+    "Candidate": "LOHSE, Sharon",
+    "Party": "Pauline Hanson's One Nation",
+    "Position": 5
+  },
+  {
+    "State": "QLD",
+    "Division": "Flynn",
+    "Candidate": "SCOTT, Duncan George",
+    "Party": "Independent",
+    "Position": 6
+  },
+  {
+    "State": "QLD",
+    "Division": "Flynn",
+    "Candidate": "HIESLER, Marcus John",
+    "Party": "Fraser Anning's Conservative National Party",
+    "Position": 7
+  },
+  {
+    "State": "QLD",
+    "Division": "Flynn",
+    "Candidate": "O'DOWD, Ken",
+    "Party": "Liberal National Party of Queensland",
+    "Position": 8
+  },
+  {
+    "State": "QLD",
+    "Division": "Forde",
+    "Candidate": "BOWRON, Ian",
+    "Party": "Pauline Hanson's One Nation",
+    "Position": 1
+  },
+  {
+    "State": "QLD",
+    "Division": "Forde",
+    "Candidate": "PETERSEN, Kirsty",
+    "Party": "The Greens",
+    "Position": 2
+  },
+  {
+    "State": "QLD",
+    "Division": "Forde",
+    "Candidate": "CREIGHTON, Paul",
+    "Party": "United Australia Party",
+    "Position": 3
+  },
+  {
+    "State": "QLD",
+    "Division": "Forde",
+    "Candidate": "VAN MANEN, Bert",
+    "Party": "Liberal National Party of Queensland",
+    "Position": 4
+  },
+  {
+    "State": "QLD",
+    "Division": "Forde",
+    "Candidate": "HARDMAN, Des",
+    "Party": "Australian Labor Party",
+    "Position": 5
+  },
+  {
+    "State": "QLD",
+    "Division": "Forde",
+    "Candidate": "INNES, Les",
+    "Party": "Fraser Anning's Conservative National Party",
+    "Position": 6
+  },
+  {
+    "State": "QLD",
+    "Division": "Griffith",
+    "Candidate": "ROBERTS, Olivia",
+    "Party": "Liberal National Party of Queensland",
+    "Position": 1
+  },
+  {
+    "State": "QLD",
+    "Division": "Griffith",
+    "Candidate": "BUTLER, Terri",
+    "Party": "Australian Labor Party",
+    "Position": 2
+  },
+  {
+    "State": "QLD",
+    "Division": "Griffith",
+    "Candidate": "CHANDLER-MATHER, Max",
+    "Party": "The Greens",
+    "Position": 3
+  },
+  {
+    "State": "QLD",
+    "Division": "Griffith",
+    "Candidate": "JULIUS, Christian John",
+    "Party": "United Australia Party",
+    "Position": 4
+  },
+  {
+    "State": "QLD",
+    "Division": "Griffith",
+    "Candidate": "DARLINGTON, Julie",
+    "Party": "Pauline Hanson's One Nation",
+    "Position": 5
+  },
+  {
+    "State": "QLD",
+    "Division": "Griffith",
+    "Candidate": "MURRAY, Tony",
+    "Party": "Fraser Anning's Conservative National Party",
+    "Position": 6
+  },
+  {
+    "State": "QLD",
+    "Division": "Groom",
+    "Candidate": "NELLIGAN, Alyce",
+    "Party": "The Greens",
+    "Position": 1
+  },
+  {
+    "State": "QLD",
+    "Division": "Groom",
+    "Candidate": "KING, David",
+    "Party": "Pauline Hanson's One Nation",
+    "Position": 2
+  },
+  {
+    "State": "QLD",
+    "Division": "Groom",
+    "Candidate": "ADRELIUS, Perry",
+    "Party": "Fraser Anning's Conservative National Party",
+    "Position": 3
+  },
+  {
+    "State": "QLD",
+    "Division": "Groom",
+    "Candidate": "McVEIGH, John",
+    "Party": "Liberal National Party of Queensland",
+    "Position": 4
+  },
+  {
+    "State": "QLD",
+    "Division": "Groom",
+    "Candidate": "LAW, Kenneth Ian",
+    "Party": "United Australia Party",
+    "Position": 5
+  },
+  {
+    "State": "QLD",
+    "Division": "Groom",
+    "Candidate": "KAY, Troy",
+    "Party": "Australian Labor Party",
+    "Position": 6
+  },
+  {
+    "State": "QLD",
+    "Division": "Herbert",
+    "Candidate": "LOHSE, Amy",
+    "Party": "Pauline Hanson's One Nation",
+    "Position": 1
+  },
+  {
+    "State": "QLD",
+    "Division": "Herbert",
+    "Candidate": "DOWLING, Greg",
+    "Party": "United Australia Party",
+    "Position": 2
+  },
+  {
+    "State": "QLD",
+    "Division": "Herbert",
+    "Candidate": "RADECK, Nanette",
+    "Party": "Katter's Australian Party (KAP)",
+    "Position": 3
+  },
+  {
+    "State": "QLD",
+    "Division": "Herbert",
+    "Candidate": "BLACKADDER, Sam",
+    "Party": "The Greens",
+    "Position": 4
+  },
+  {
+    "State": "QLD",
+    "Division": "Herbert",
+    "Candidate": "THOMPSON, Phillip",
+    "Party": "Liberal National Party of Queensland",
+    "Position": 5
+  },
+  {
+    "State": "QLD",
+    "Division": "Herbert",
+    "Candidate": "DURANT, Tamara",
+    "Party": "Fraser Anning's Conservative National Party",
+    "Position": 6
+  },
+  {
+    "State": "QLD",
+    "Division": "Herbert",
+    "Candidate": "SEVERNS, Mackenzie",
+    "Party": "Animal Justice Party",
+    "Position": 7
+  },
+  {
+    "State": "QLD",
+    "Division": "Herbert",
+    "Candidate": "O'TOOLE, Cathy",
+    "Party": "Australian Labor Party",
+    "Position": 8
+  },
+  {
+    "State": "QLD",
+    "Division": "Hinkler",
+    "Candidate": "HUXHAM, Damian",
+    "Party": "Pauline Hanson's One Nation",
+    "Position": 1
+  },
+  {
+    "State": "QLD",
+    "Division": "Hinkler",
+    "Candidate": "PITT, Keith",
+    "Party": "Liberal National Party of Queensland",
+    "Position": 2
+  },
+  {
+    "State": "QLD",
+    "Division": "Hinkler",
+    "Candidate": "JACKSON, Anne",
+    "Party": "The Greens",
+    "Position": 3
+  },
+  {
+    "State": "QLD",
+    "Division": "Hinkler",
+    "Candidate": "NORMAN, David",
+    "Party": "Independent",
+    "Position": 4
+  },
+  {
+    "State": "QLD",
+    "Division": "Hinkler",
+    "Candidate": "TURAGA, Moe",
+    "Party": "Independent",
+    "Position": 5
+  },
+  {
+    "State": "QLD",
+    "Division": "Hinkler",
+    "Candidate": "ERSKINE, Aaron",
+    "Party": "Fraser Anning's Conservative National Party",
+    "Position": 6
+  },
+  {
+    "State": "QLD",
+    "Division": "Hinkler",
+    "Candidate": "ELLUL, Joseph Kevin",
+    "Party": "United Australia Party",
+    "Position": 7
+  },
+  {
+    "State": "QLD",
+    "Division": "Hinkler",
+    "Candidate": "BYRNES, Amy",
+    "Party": "Animal Justice Party",
+    "Position": 8
+  },
+  {
+    "State": "QLD",
+    "Division": "Hinkler",
+    "Candidate": "PASCOE, Richard",
+    "Party": "Australian Labor Party",
+    "Position": 9
+  },
+  {
+    "State": "QLD",
+    "Division": "Hinkler",
+    "Candidate": "WONE, Adrian Jacob",
+    "Party": "Independent",
+    "Position": 10
+  },
+  {
+    "State": "QLD",
+    "Division": "Kennedy",
+    "Candidate": "BERTUCH, Sue",
+    "Party": "United Australia Party",
+    "Position": 1
+  },
+  {
+    "State": "QLD",
+    "Division": "Kennedy",
+    "Candidate": "KATTER, Bob",
+    "Party": "Katter's Australian Party (KAP)",
+    "Position": 2
+  },
+  {
+    "State": "QLD",
+    "Division": "Kennedy",
+    "Candidate": "BURNESS, Lyle",
+    "Party": "The Greens",
+    "Position": 3
+  },
+  {
+    "State": "QLD",
+    "Division": "Kennedy",
+    "Candidate": "HACKWELL, Ian Douglas",
+    "Party": "Fraser Anning's Conservative National Party",
+    "Position": 4
+  },
+  {
+    "State": "QLD",
+    "Division": "Kennedy",
+    "Candidate": "BEVERIDGE, Frank",
+    "Party": "Liberal National Party of Queensland",
+    "Position": 5
+  },
+  {
+    "State": "QLD",
+    "Division": "Kennedy",
+    "Candidate": "McGUIRE, Brett",
+    "Party": "Australian Labor Party",
+    "Position": 6
+  },
+  {
+    "State": "QLD",
+    "Division": "Leichhardt",
+    "Candidate": "ASHBY, Jo",
+    "Party": "Fraser Anning's Conservative National Party",
+    "Position": 1
+  },
+  {
+    "State": "QLD",
+    "Division": "Leichhardt",
+    "Candidate": "ANDERSON, Chad",
+    "Party": "Independent",
+    "Position": 2
+  },
+  {
+    "State": "QLD",
+    "Division": "Leichhardt",
+    "Candidate": "FAITH, Elida",
+    "Party": "Australian Labor Party",
+    "Position": 3
+  },
+  {
+    "State": "QLD",
+    "Division": "Leichhardt",
+    "Candidate": "MACDONALD, Ross",
+    "Party": "Pauline Hanson's One Nation",
+    "Position": 4
+  },
+  {
+    "State": "QLD",
+    "Division": "Leichhardt",
+    "Candidate": "McCARTHY, Daniel",
+    "Party": "Katter's Australian Party (KAP)",
+    "Position": 5
+  },
+  {
+    "State": "QLD",
+    "Division": "Leichhardt",
+    "Candidate": "SACKLEY, Jen",
+    "Party": "United Australia Party",
+    "Position": 6
+  },
+  {
+    "State": "QLD",
+    "Division": "Leichhardt",
+    "Candidate": "ENTSCH, Warren",
+    "Party": "Liberal National Party of Queensland",
+    "Position": 7
+  },
+  {
+    "State": "QLD",
+    "Division": "Leichhardt",
+    "Candidate": "OLIVER, Gary",
+    "Party": "The Greens",
+    "Position": 8
+  },
+  {
+    "State": "QLD",
+    "Division": "Lilley",
+    "Candidate": "BELL-HENSELIN, Tracey",
+    "Party": "Pauline Hanson's One Nation",
+    "Position": 1
+  },
+  {
+    "State": "QLD",
+    "Division": "Lilley",
+    "Candidate": "COLES, Don",
+    "Party": "Fraser Anning's Conservative National Party",
+    "Position": 2
+  },
+  {
+    "State": "QLD",
+    "Division": "Lilley",
+    "Candidate": "CROOK, Mike",
+    "Party": "Socialist Alliance",
+    "Position": 3
+  },
+  {
+    "State": "QLD",
+    "Division": "Lilley",
+    "Candidate": "CARSWELL, Brad",
+    "Party": "Liberal National Party of Queensland",
+    "Position": 4
+  },
+  {
+    "State": "QLD",
+    "Division": "Lilley",
+    "Candidate": "WELLS, Anika",
+    "Party": "Australian Labor Party",
+    "Position": 5
+  },
+  {
+    "State": "QLD",
+    "Division": "Lilley",
+    "Candidate": "MEYER, John",
+    "Party": "The Greens",
+    "Position": 6
+  },
+  {
+    "State": "QLD",
+    "Division": "Lilley",
+    "Candidate": "McCLAER, David Bruce",
+    "Party": "United Australia Party",
+    "Position": 7
+  },
+  {
+    "State": "QLD",
+    "Division": "Longman",
+    "Candidate": "YOUNG, Terry",
+    "Party": "Liberal National Party of Queensland",
+    "Position": 1
+  },
+  {
+    "State": "QLD",
+    "Division": "Longman",
+    "Candidate": "MAHER, Bailey James",
+    "Party": "United Australia Party",
+    "Position": 2
+  },
+  {
+    "State": "QLD",
+    "Division": "Longman",
+    "Candidate": "YOUNG, Jono",
+    "Party": "Australian Progressives",
+    "Position": 3
+  },
+  {
+    "State": "QLD",
+    "Division": "Longman",
+    "Candidate": "LAMB, Susan",
+    "Party": "Australian Labor Party",
+    "Position": 4
+  },
+  {
+    "State": "QLD",
+    "Division": "Longman",
+    "Candidate": "SCHUBACK, Peter Keith",
+    "Party": "Australia First Party",
+    "Position": 5
+  },
+  {
+    "State": "QLD",
+    "Division": "Longman",
+    "Candidate": "THOMSON, Matthew",
+    "Party": "Pauline Hanson's One Nation",
+    "Position": 6
+  },
+  {
+    "State": "QLD",
+    "Division": "Longman",
+    "Candidate": "PAULKE, Dave",
+    "Party": "Fraser Anning's Conservative National Party",
+    "Position": 7
+  },
+  {
+    "State": "QLD",
+    "Division": "Longman",
+    "Candidate": "DEJUN, Simone",
+    "Party": "The Greens",
+    "Position": 8
+  },
+  {
+    "State": "QLD",
+    "Division": "Maranoa",
+    "Candidate": "LITTLE, Linda",
+    "Party": "Australian Labor Party",
+    "Position": 1
+  },
+  {
+    "State": "QLD",
+    "Division": "Maranoa",
+    "Candidate": "LITTLEPROUD, David",
+    "Party": "Liberal National Party of Queensland",
+    "Position": 2
+  },
+  {
+    "State": "QLD",
+    "Division": "Maranoa",
+    "Candidate": "WALLIS, Anthony",
+    "Party": "Katter's Australian Party (KAP)",
+    "Position": 3
+  },
+  {
+    "State": "QLD",
+    "Division": "Maranoa",
+    "Candidate": "SAUNDERS, Julie Marie",
+    "Party": "United Australia Party",
+    "Position": 4
+  },
+  {
+    "State": "QLD",
+    "Division": "Maranoa",
+    "Candidate": "CHRISTIANSEN, Darren Lee",
+    "Party": "Fraser Anning's Conservative National Party",
+    "Position": 5
+  },
+  {
+    "State": "QLD",
+    "Division": "Maranoa",
+    "Candidate": "MOULDEN, Rosemary",
+    "Party": "Pauline Hanson's One Nation",
+    "Position": 6
+  },
+  {
+    "State": "QLD",
+    "Division": "Maranoa",
+    "Candidate": "CHIDLEY, Emmeline",
+    "Party": "The Greens",
+    "Position": 7
+  },
+  {
+    "State": "QLD",
+    "Division": "McPherson",
+    "Candidate": "SANTELISES, Aaron",
+    "Party": "Australian Labor Party",
+    "Position": 1
+  },
+  {
+    "State": "QLD",
+    "Division": "McPherson",
+    "Candidate": "CROWE, Scott",
+    "Party": "Liberal Democrats",
+    "Position": 2
+  },
+  {
+    "State": "QLD",
+    "Division": "McPherson",
+    "Candidate": "KAFF, Michael",
+    "Party": "Independent",
+    "Position": 3
+  },
+  {
+    "State": "QLD",
+    "Division": "McPherson",
+    "Candidate": "QUINN, Alan",
+    "Party": "The Greens",
+    "Position": 4
+  },
+  {
+    "State": "QLD",
+    "Division": "McPherson",
+    "Candidate": "ANDREWS, Karen",
+    "Party": "Liberal National Party of Queensland",
+    "Position": 5
+  },
+  {
+    "State": "QLD",
+    "Division": "McPherson",
+    "Candidate": "GAFFY, Sean Gordon",
+    "Party": "Fraser Anning's Conservative National Party",
+    "Position": 6
+  },
+  {
+    "State": "QLD",
+    "Division": "McPherson",
+    "Candidate": "STEWART, Renee",
+    "Party": "Animal Justice Party",
+    "Position": 7
+  },
+  {
+    "State": "QLD",
+    "Division": "McPherson",
+    "Candidate": "MacKENZIE, Fiona Kay",
+    "Party": "United Australia Party",
+    "Position": 8
+  },
+  {
+    "State": "QLD",
+    "Division": "McPherson",
+    "Candidate": "SPELLMAN, John",
+    "Party": "Pauline Hanson's One Nation",
+    "Position": 9
+  },
+  {
+    "State": "QLD",
+    "Division": "Moncrieff",
+    "Candidate": "FREEMAN, Karla",
+    "Party": "Animal Justice Party",
+    "Position": 1
+  },
+  {
+    "State": "QLD",
+    "Division": "Moncrieff",
+    "Candidate": "BELL, Angie",
+    "Party": "Liberal National Party of Queensland",
+    "Position": 2
+  },
+  {
+    "State": "QLD",
+    "Division": "Moncrieff",
+    "Candidate": "SIBSON, Vanessa",
+    "Party": "Pauline Hanson's One Nation",
+    "Position": 3
+  },
+  {
+    "State": "QLD",
+    "Division": "Moncrieff",
+    "Candidate": "SPAIN, Sally",
+    "Party": "The Greens",
+    "Position": 4
+  },
+  {
+    "State": "QLD",
+    "Division": "Moncrieff",
+    "Candidate": "EILOLA, Garry Paul",
+    "Party": "United Australia Party",
+    "Position": 5
+  },
+  {
+    "State": "QLD",
+    "Division": "Moncrieff",
+    "Candidate": "LONG, Darren Alan",
+    "Party": "Fraser Anning's Conservative National Party",
+    "Position": 6
+  },
+  {
+    "State": "QLD",
+    "Division": "Moncrieff",
+    "Candidate": "BELL, Tracey",
+    "Party": "Australian Labor Party",
+    "Position": 7
+  },
+  {
+    "State": "QLD",
+    "Division": "Moncrieff",
+    "Candidate": "GRYPHON, S",
+    "Party": "Liberal Democrats",
+    "Position": 8
+  },
+  {
+    "State": "QLD",
+    "Division": "Moreton",
+    "Candidate": "NIEASS, Aaron",
+    "Party": "Fraser Anning's Conservative National Party",
+    "Position": 1
+  },
+  {
+    "State": "QLD",
+    "Division": "Moreton",
+    "Candidate": "PERRETT, Graham",
+    "Party": "Australian Labor Party",
+    "Position": 2
+  },
+  {
+    "State": "QLD",
+    "Division": "Moreton",
+    "Candidate": "O'BRIEN, Patsy",
+    "Party": "The Greens",
+    "Position": 3
+  },
+  {
+    "State": "QLD",
+    "Division": "Moreton",
+    "Candidate": "LAWRENCE, William",
+    "Party": "Pauline Hanson's One Nation",
+    "Position": 4
+  },
+  {
+    "State": "QLD",
+    "Division": "Moreton",
+    "Candidate": "OWEN, Angela",
+    "Party": "Liberal National Party of Queensland",
+    "Position": 5
+  },
+  {
+    "State": "QLD",
+    "Division": "Moreton",
+    "Candidate": "BROWN, Jenny-Rebecca",
+    "Party": "United Australia Party",
+    "Position": 6
+  },
+  {
+    "State": "QLD",
+    "Division": "Oxley",
+    "Candidate": "BAUER, Russell",
+    "Party": "Liberal National Party of Queensland",
+    "Position": 1
+  },
+  {
+    "State": "QLD",
+    "Division": "Oxley",
+    "Candidate": "PURCELL, Steven",
+    "Party": "The Greens",
+    "Position": 2
+  },
+  {
+    "State": "QLD",
+    "Division": "Oxley",
+    "Candidate": "DICK, Milton",
+    "Party": "Australian Labor Party",
+    "Position": 3
+  },
+  {
+    "State": "QLD",
+    "Division": "Oxley",
+    "Candidate": "FERGUSON, Ian Maurice",
+    "Party": "United Australia Party",
+    "Position": 4
+  },
+  {
+    "State": "QLD",
+    "Division": "Oxley",
+    "Candidate": "LINDBOM, Janet",
+    "Party": "Pauline Hanson's One Nation",
+    "Position": 5
+  },
+  {
+    "State": "QLD",
+    "Division": "Oxley",
+    "Candidate": "HEAD, Mike",
+    "Party": "Socialist Equality Party",
+    "Position": 6
+  },
+  {
+    "State": "QLD",
+    "Division": "Oxley",
+    "Candidate": "MOERLAND, Scott",
+    "Party": "Fraser Anning's Conservative National Party",
+    "Position": 7
+  },
+  {
+    "State": "QLD",
+    "Division": "Petrie",
+    "Candidate": "HOPKINS, Troy",
+    "Party": "United Australia Party",
+    "Position": 1
+  },
+  {
+    "State": "QLD",
+    "Division": "Petrie",
+    "Candidate": "HOWARTH, Luke",
+    "Party": "Liberal National Party of Queensland",
+    "Position": 2
+  },
+  {
+    "State": "QLD",
+    "Division": "Petrie",
+    "Candidate": "AAI REDDY, Nikhil",
+    "Party": "Pauline Hanson's One Nation",
+    "Position": 3
+  },
+  {
+    "State": "QLD",
+    "Division": "Petrie",
+    "Candidate": "MULHOLLAND, Corinne",
+    "Party": "Australian Labor Party",
+    "Position": 4
+  },
+  {
+    "State": "QLD",
+    "Division": "Petrie",
+    "Candidate": "FOWLER, Neville John",
+    "Party": "Fraser Anning's Conservative National Party",
+    "Position": 5
+  },
+  {
+    "State": "QLD",
+    "Division": "Petrie",
+    "Candidate": "KENNEDY, Jason",
+    "Party": "The Greens",
+    "Position": 6
+  },
+  {
+    "State": "QLD",
+    "Division": "Rankin",
+    "Candidate": "CHALMERS, Jim",
+    "Party": "Australian Labor Party",
+    "Position": 1
+  },
+  {
+    "State": "QLD",
+    "Division": "Rankin",
+    "Candidate": "REDDY, Shyamal",
+    "Party": "United Australia Party",
+    "Position": 2
+  },
+  {
+    "State": "QLD",
+    "Division": "Rankin",
+    "Candidate": "COTTER, Neil",
+    "Party": "The Greens",
+    "Position": 3
+  },
+  {
+    "State": "QLD",
+    "Division": "Rankin",
+    "Candidate": "SCHNEIDER, Jesse",
+    "Party": "Pauline Hanson's One Nation",
+    "Position": 4
+  },
+  {
+    "State": "QLD",
+    "Division": "Rankin",
+    "Candidate": "ANDREWS, Peter James",
+    "Party": "Fraser Anning's Conservative National Party",
+    "Position": 5
+  },
+  {
+    "State": "QLD",
+    "Division": "Rankin",
+    "Candidate": "DAVIES, Ric",
+    "Party": "Liberal Democrats",
+    "Position": 6
+  },
+  {
+    "State": "QLD",
+    "Division": "Rankin",
+    "Candidate": "PATTISON, Clinton",
+    "Party": "Liberal National Party of Queensland",
+    "Position": 7
+  },
+  {
+    "State": "QLD",
+    "Division": "Rankin",
+    "Candidate": "MOHAMMAD, Yusuf",
+    "Party": "",
+    "Position": 8
+  },
+  {
+    "State": "QLD",
+    "Division": "Ryan",
+    "Candidate": "COSSAR, Peter",
+    "Party": "Australian Labor Party",
+    "Position": 1
+  },
+  {
+    "State": "QLD",
+    "Division": "Ryan",
+    "Candidate": "CROUCH, Larry Edward",
+    "Party": "United Australia Party",
+    "Position": 2
+  },
+  {
+    "State": "QLD",
+    "Division": "Ryan",
+    "Candidate": "WEBB, Joanne",
+    "Party": "Animal Justice Party",
+    "Position": 3
+  },
+  {
+    "State": "QLD",
+    "Division": "Ryan",
+    "Candidate": "MILES, Rodney",
+    "Party": "Pauline Hanson's One Nation",
+    "Position": 4
+  },
+  {
+    "State": "QLD",
+    "Division": "Ryan",
+    "Candidate": "SIMMONDS, Julian",
+    "Party": "Liberal National Party of Queensland",
+    "Position": 5
+  },
+  {
+    "State": "QLD",
+    "Division": "Ryan",
+    "Candidate": "SCHOERMER, Jake",
+    "Party": "The Greens",
+    "Position": 6
+  },
+  {
+    "State": "QLD",
+    "Division": "Ryan",
+    "Candidate": "BANKS, Andrew",
+    "Party": "Fraser Anning's Conservative National Party",
+    "Position": 7
+  },
+  {
+    "State": "QLD",
+    "Division": "Wide Bay",
+    "Candidate": "BRYAR, Daniel",
+    "Party": "The Greens",
+    "Position": 1
+  },
+  {
+    "State": "QLD",
+    "Division": "Wide Bay",
+    "Candidate": "SCANES, Jason",
+    "Party": "Australian Labor Party",
+    "Position": 2
+  },
+  {
+    "State": "QLD",
+    "Division": "Wide Bay",
+    "Candidate": "SCHEBELLA, Andrew",
+    "Party": "United Australia Party",
+    "Position": 3
+  },
+  {
+    "State": "QLD",
+    "Division": "Wide Bay",
+    "Candidate": "O'BRIEN, Llew",
+    "Party": "Liberal National Party of Queensland",
+    "Position": 4
+  },
+  {
+    "State": "QLD",
+    "Division": "Wide Bay",
+    "Candidate": "JEROME, Tim",
+    "Party": "Independent",
+    "Position": 5
+  },
+  {
+    "State": "QLD",
+    "Division": "Wide Bay",
+    "Candidate": "SMITH, Jasmine",
+    "Party": "Fraser Anning's Conservative National Party",
+    "Position": 6
+  },
+  {
+    "State": "QLD",
+    "Division": "Wide Bay",
+    "Candidate": "VICO, Aaron",
+    "Party": "Pauline Hanson's One Nation",
+    "Position": 7
+  },
+  {
+    "State": "QLD",
+    "Division": "Wright",
+    "Candidate": "WRIGHT, David William",
+    "Party": "United Australia Party",
+    "Position": 1
+  },
+  {
+    "State": "QLD",
+    "Division": "Wright",
+    "Candidate": "GIRARD, Shannon",
+    "Party": "The Greens",
+    "Position": 2
+  },
+  {
+    "State": "QLD",
+    "Division": "Wright",
+    "Candidate": "LARKIN, Innes",
+    "Party": "Independent",
+    "Position": 3
+  },
+  {
+    "State": "QLD",
+    "Division": "Wright",
+    "Candidate": "McCREADIE, Pam",
+    "Party": "Australian Labor Party",
+    "Position": 4
+  },
+  {
+    "State": "QLD",
+    "Division": "Wright",
+    "Candidate": "SMITH, Rod",
+    "Party": "Fraser Anning's Conservative National Party",
+    "Position": 5
+  },
+  {
+    "State": "QLD",
+    "Division": "Wright",
+    "Candidate": "TOMLINSON, Matthew",
+    "Party": "Katter's Australian Party (KAP)",
+    "Position": 6
+  },
+  {
+    "State": "QLD",
+    "Division": "Wright",
+    "Candidate": "O'CALLAGHAN, Chris",
+    "Party": "Pauline Hanson's One Nation",
+    "Position": 7
+  },
+  {
+    "State": "QLD",
+    "Division": "Wright",
+    "Candidate": "BUCHHOLZ, Scott",
+    "Party": "Liberal National Party of Queensland",
+    "Position": 8
+  },
+  {
+    "State": "SA",
+    "Division": "Adelaide",
+    "Candidate": "JAMES, Chris",
+    "Party": "Australian Democrats",
+    "Position": 1
+  },
+  {
+    "State": "SA",
+    "Division": "Adelaide",
+    "Candidate": "POCOCK, Barbara",
+    "Party": "The Greens",
+    "Position": 2
+  },
+  {
+    "State": "SA",
+    "Division": "Adelaide",
+    "Candidate": "GEORGANAS, Steve",
+    "Party": "Australian Labor Party",
+    "Position": 3
+  },
+  {
+    "State": "SA",
+    "Division": "Adelaide",
+    "Candidate": "KANGAS, Deanna",
+    "Party": "Animal Justice Party",
+    "Position": 4
+  },
+  {
+    "State": "SA",
+    "Division": "Adelaide",
+    "Candidate": "OSBORN, Shaun",
+    "Party": "Liberal",
+    "Position": 5
+  },
+  {
+    "State": "SA",
+    "Division": "Adelaide",
+    "Candidate": "REA, Antonio",
+    "Party": "United Australia Party",
+    "Position": 6
+  },
+  {
+    "State": "SA",
+    "Division": "Barker",
+    "Candidate": "HILLAM, Rosa",
+    "Party": "The Greens",
+    "Position": 1
+  },
+  {
+    "State": "SA",
+    "Division": "Barker",
+    "Candidate": "BACHER, Bert",
+    "Party": "United Australia Party",
+    "Position": 2
+  },
+  {
+    "State": "SA",
+    "Division": "Barker",
+    "Candidate": "PASIN, Tony",
+    "Party": "Liberal",
+    "Position": 3
+  },
+  {
+    "State": "SA",
+    "Division": "Barker",
+    "Candidate": "ECKERMANN, Karen",
+    "Party": "Animal Justice Party",
+    "Position": 4
+  },
+  {
+    "State": "SA",
+    "Division": "Barker",
+    "Candidate": "GLADIGAU, Kelly",
+    "Party": "Centre Alliance",
+    "Position": 5
+  },
+  {
+    "State": "SA",
+    "Division": "Barker",
+    "Candidate": "HANNEMANN, Miles",
+    "Party": "The Nationals",
+    "Position": 6
+  },
+  {
+    "State": "SA",
+    "Division": "Barker",
+    "Candidate": "O'BRIEN, Mat",
+    "Party": "Australian Labor Party",
+    "Position": 7
+  },
+  {
+    "State": "SA",
+    "Division": "Boothby",
+    "Candidate": "RUSSELL, Geoff",
+    "Party": "Animal Justice Party",
+    "Position": 1
+  },
+  {
+    "State": "SA",
+    "Division": "Boothby",
+    "Candidate": "ROZITIS, Stef",
+    "Party": "The Greens",
+    "Position": 2
+  },
+  {
+    "State": "SA",
+    "Division": "Boothby",
+    "Candidate": "CHEOK, Adrian David",
+    "Party": "Fraser Anning's Conservative National Party",
+    "Position": 3
+  },
+  {
+    "State": "SA",
+    "Division": "Boothby",
+    "Candidate": "WONG, Carol",
+    "Party": "Rise Up Australia Party",
+    "Position": 4
+  },
+  {
+    "State": "SA",
+    "Division": "Boothby",
+    "Candidate": "FLINT, Nicolle",
+    "Party": "Liberal",
+    "Position": 5
+  },
+  {
+    "State": "SA",
+    "Division": "Boothby",
+    "Candidate": "CLANCY, Nadia",
+    "Party": "Australian Labor Party",
+    "Position": 6
+  },
+  {
+    "State": "SA",
+    "Division": "Boothby",
+    "Candidate": "SALERNO, Peter",
+    "Party": "United Australia Party",
+    "Position": 7
+  },
+  {
+    "State": "SA",
+    "Division": "Boothby",
+    "Candidate": "JONES, Trevor",
+    "Party": "Independent",
+    "Position": 8
+  },
+  {
+    "State": "SA",
+    "Division": "Grey",
+    "Candidate": "EDGECOMBE, Jacqui",
+    "Party": "Animal Justice Party",
+    "Position": 1
+  },
+  {
+    "State": "SA",
+    "Division": "Grey",
+    "Candidate": "BOLTON, Karin",
+    "Party": "Australian Labor Party",
+    "Position": 2
+  },
+  {
+    "State": "SA",
+    "Division": "Grey",
+    "Candidate": "STONE, David",
+    "Party": "Pauline Hanson's One Nation",
+    "Position": 3
+  },
+  {
+    "State": "SA",
+    "Division": "Grey",
+    "Candidate": "CARMODY, Richard",
+    "Party": "Independent",
+    "Position": 4
+  },
+  {
+    "State": "SA",
+    "Division": "Grey",
+    "Candidate": "WARREN, Alexander David",
+    "Party": "United Australia Party",
+    "Position": 5
+  },
+  {
+    "State": "SA",
+    "Division": "Grey",
+    "Candidate": "RAMSEY, Rowan",
+    "Party": "Liberal",
+    "Position": 6
+  },
+  {
+    "State": "SA",
+    "Division": "Grey",
+    "Candidate": "BROADFOOT, Andrea",
+    "Party": "Centre Alliance",
+    "Position": 7
+  },
+  {
+    "State": "SA",
+    "Division": "Grey",
+    "Candidate": "CHAMPION, Candace",
+    "Party": "The Greens",
+    "Position": 8
+  },
+  {
+    "State": "SA",
+    "Division": "Hindmarsh",
+    "Candidate": "VAID, Rajan",
+    "Party": "Fraser Anning's Conservative National Party",
+    "Position": 1
+  },
+  {
+    "State": "SA",
+    "Division": "Hindmarsh",
+    "Candidate": "MORRIS, Rose",
+    "Party": "United Australia Party",
+    "Position": 2
+  },
+  {
+    "State": "SA",
+    "Division": "Hindmarsh",
+    "Candidate": "BUTLER, Mark",
+    "Party": "Australian Labor Party",
+    "Position": 3
+  },
+  {
+    "State": "SA",
+    "Division": "Hindmarsh",
+    "Candidate": "KELTY, Alison",
+    "Party": "Animal Justice Party",
+    "Position": 4
+  },
+  {
+    "State": "SA",
+    "Division": "Hindmarsh",
+    "Candidate": "HALL-EVANS, Jake",
+    "Party": "Liberal",
+    "Position": 5
+  },
+  {
+    "State": "SA",
+    "Division": "Hindmarsh",
+    "Candidate": "FARRELL, Matt",
+    "Party": "The Greens",
+    "Position": 6
+  },
+  {
+    "State": "SA",
+    "Division": "Kingston",
+    "Candidate": "RISHWORTH, Amanda",
+    "Party": "Australian Labor Party",
+    "Position": 1
+  },
+  {
+    "State": "SA",
+    "Division": "Kingston",
+    "Candidate": "CURRAN, Laura",
+    "Party": "Liberal",
+    "Position": 2
+  },
+  {
+    "State": "SA",
+    "Division": "Kingston",
+    "Candidate": "MORTIER, Nikki",
+    "Party": "The Greens",
+    "Position": 3
+  },
+  {
+    "State": "SA",
+    "Division": "Kingston",
+    "Candidate": "SOMERS, Kellie",
+    "Party": "Animal Justice Party",
+    "Position": 4
+  },
+  {
+    "State": "SA",
+    "Division": "Kingston",
+    "Candidate": "HOSKIN, Jodie Anne",
+    "Party": "United Australia Party",
+    "Position": 5
+  },
+  {
+    "State": "SA",
+    "Division": "Makin",
+    "Candidate": "ZAPPIA, Tony",
+    "Party": "Australian Labor Party",
+    "Position": 1
+  },
+  {
+    "State": "SA",
+    "Division": "Makin",
+    "Candidate": "DAVE, Hemant",
+    "Party": "Liberal",
+    "Position": 2
+  },
+  {
+    "State": "SA",
+    "Division": "Makin",
+    "Candidate": "GASTON, Lyn",
+    "Party": "Animal Justice Party",
+    "Position": 3
+  },
+  {
+    "State": "SA",
+    "Division": "Makin",
+    "Candidate": "STEWART, Stephanie",
+    "Party": "The Greens",
+    "Position": 4
+  },
+  {
+    "State": "SA",
+    "Division": "Makin",
+    "Candidate": "COLLIS, Rachel",
+    "Party": "United Australia Party",
+    "Position": 5
+  },
+  {
+    "State": "SA",
+    "Division": "Mayo",
+    "Candidate": "DOWNER, Georgina",
+    "Party": "Liberal",
+    "Position": 1
+  },
+  {
+    "State": "SA",
+    "Division": "Mayo",
+    "Candidate": "BOURNE, Anne",
+    "Party": "The Greens",
+    "Position": 2
+  },
+  {
+    "State": "SA",
+    "Division": "Mayo",
+    "Candidate": "DOWLAND, Helen",
+    "Party": "Animal Justice Party",
+    "Position": 3
+  },
+  {
+    "State": "SA",
+    "Division": "Mayo",
+    "Candidate": "CANE, Michael",
+    "Party": "United Australia Party",
+    "Position": 4
+  },
+  {
+    "State": "SA",
+    "Division": "Mayo",
+    "Candidate": "GERHARDY, Saskia",
+    "Party": "Australian Labor Party",
+    "Position": 5
+  },
+  {
+    "State": "SA",
+    "Division": "Mayo",
+    "Candidate": "SHARKIE, Rebekha",
+    "Party": "Centre Alliance",
+    "Position": 6
+  },
+  {
+    "State": "SA",
+    "Division": "Spence",
+    "Candidate": "CHAMPION, Nick",
+    "Party": "Australian Labor Party",
+    "Position": 1
+  },
+  {
+    "State": "SA",
+    "Division": "Spence",
+    "Candidate": "BOURNE, Kathleen",
+    "Party": "Liberal",
+    "Position": 2
+  },
+  {
+    "State": "SA",
+    "Division": "Spence",
+    "Candidate": "FIEDLER, Ron",
+    "Party": "United Australia Party",
+    "Position": 3
+  },
+  {
+    "State": "SA",
+    "Division": "Spence",
+    "Candidate": "JURY, Daniel",
+    "Party": "The Greens",
+    "Position": 4
+  },
+  {
+    "State": "SA",
+    "Division": "Spence",
+    "Candidate": "KUHLMANN, Rita",
+    "Party": "Animal Justice Party",
+    "Position": 5
+  },
+  {
+    "State": "SA",
+    "Division": "Spence",
+    "Candidate": "HERBERT, Nathan",
+    "Party": "Independent",
+    "Position": 6
+  },
+  {
+    "State": "SA",
+    "Division": "Sturt",
+    "Candidate": "BOUNDY, Paul",
+    "Party": "The Greens",
+    "Position": 1
+  },
+  {
+    "State": "SA",
+    "Division": "Sturt",
+    "Candidate": "STEVENS, James",
+    "Party": "Liberal",
+    "Position": 2
+  },
+  {
+    "State": "SA",
+    "Division": "Sturt",
+    "Candidate": "O'HANLON, Cressida",
+    "Party": "Australian Labor Party",
+    "Position": 3
+  },
+  {
+    "State": "SA",
+    "Division": "Sturt",
+    "Candidate": "ROBERTS, Harbinda",
+    "Party": "Animal Justice Party",
+    "Position": 4
+  },
+  {
+    "State": "SA",
+    "Division": "Sturt",
+    "Candidate": "HARDING, Hedley",
+    "Party": "United Australia Party",
+    "Position": 5
+  },
+  {
+    "State": "SA",
+    "Division": "Sturt",
+    "Candidate": "THOMAS, Colin",
+    "Party": "Child Protection Party",
+    "Position": 6
+  },
+  {
+    "State": "SA",
+    "Division": "Sturt",
+    "Candidate": "FULCO, Angela",
+    "Party": "Australian Progressives",
+    "Position": 7
+  },
+  {
+    "State": "SA",
+    "Division": "Sturt",
+    "Candidate": "LARCOMBE, Nick",
+    "Party": "Independent",
+    "Position": 8
+  },
+  {
+    "State": "TAS",
+    "Division": "Bass",
+    "Candidate": "HALL, Tom",
+    "Party": "The Greens",
+    "Position": 1
+  },
+  {
+    "State": "TAS",
+    "Division": "Bass",
+    "Candidate": "HART, Ross",
+    "Party": "Australian Labor Party",
+    "Position": 2
+  },
+  {
+    "State": "TAS",
+    "Division": "Bass",
+    "Candidate": "WOODBURY, Susan",
+    "Party": "Animal Justice Party",
+    "Position": 3
+  },
+  {
+    "State": "TAS",
+    "Division": "Bass",
+    "Candidate": "ARCHER, Bridget",
+    "Party": "Liberal",
+    "Position": 4
+  },
+  {
+    "State": "TAS",
+    "Division": "Bass",
+    "Candidate": "LAMBERT, Todd",
+    "Party": "Independent",
+    "Position": 5
+  },
+  {
+    "State": "TAS",
+    "Division": "Bass",
+    "Candidate": "ROARK, Allan John",
+    "Party": "United Australia Party",
+    "Position": 6
+  },
+  {
+    "State": "TAS",
+    "Division": "Bass",
+    "Candidate": "COOPER, Carl",
+    "Party": "The Nationals",
+    "Position": 7
+  },
+  {
+    "State": "TAS",
+    "Division": "Braddon",
+    "Candidate": "SPAULDING, Karen Wendy",
+    "Party": "United Australia Party",
+    "Position": 1
+  },
+  {
+    "State": "TAS",
+    "Division": "Braddon",
+    "Candidate": "BRAKEY, Craig",
+    "Party": "Independent",
+    "Position": 2
+  },
+  {
+    "State": "TAS",
+    "Division": "Braddon",
+    "Candidate": "ALLAN, Shane",
+    "Party": "Fraser Anning's Conservative National Party",
+    "Position": 3
+  },
+  {
+    "State": "TAS",
+    "Division": "Braddon",
+    "Candidate": "PEARCE, Gavin",
+    "Party": "Liberal",
+    "Position": 4
+  },
+  {
+    "State": "TAS",
+    "Division": "Braddon",
+    "Candidate": "MILBOURNE, Sally",
+    "Party": "The Nationals",
+    "Position": 5
+  },
+  {
+    "State": "TAS",
+    "Division": "Braddon",
+    "Candidate": "PARSONS, Phill",
+    "Party": "The Greens",
+    "Position": 6
+  },
+  {
+    "State": "TAS",
+    "Division": "Braddon",
+    "Candidate": "SMITH, Brett Michael",
+    "Party": "Independent",
+    "Position": 7
+  },
+  {
+    "State": "TAS",
+    "Division": "Braddon",
+    "Candidate": "KEAY, Justine",
+    "Party": "Australian Labor Party",
+    "Position": 8
+  },
+  {
+    "State": "TAS",
+    "Division": "Braddon",
+    "Candidate": "GALLAHER, Graham",
+    "Party": "Pauline Hanson's One Nation",
+    "Position": 9
+  },
+  {
+    "State": "TAS",
+    "Division": "Clark",
+    "Candidate": "WILKIE, Andrew",
+    "Party": "Independent",
+    "Position": 1
+  },
+  {
+    "State": "TAS",
+    "Division": "Clark",
+    "Candidate": "McGREGOR, Ben",
+    "Party": "Australian Labor Party",
+    "Position": 2
+  },
+  {
+    "State": "TAS",
+    "Division": "Clark",
+    "Candidate": "MARKHAM, Amanda-Sue",
+    "Party": "Liberal",
+    "Position": 3
+  },
+  {
+    "State": "TAS",
+    "Division": "Clark",
+    "Candidate": "SHAW, Juniper",
+    "Party": "The Greens",
+    "Position": 4
+  },
+  {
+    "State": "TAS",
+    "Division": "Clark",
+    "Candidate": "STARKEY, Jim",
+    "Party": "United Australia Party",
+    "Position": 5
+  },
+  {
+    "State": "TAS",
+    "Division": "Franklin",
+    "Candidate": "DARKO, Kit",
+    "Party": "The Greens",
+    "Position": 1
+  },
+  {
+    "State": "TAS",
+    "Division": "Franklin",
+    "Candidate": "YOUNG, Dean",
+    "Party": "Liberal",
+    "Position": 2
+  },
+  {
+    "State": "TAS",
+    "Division": "Franklin",
+    "Candidate": "HAWES, Darren John",
+    "Party": "Fraser Anning's Conservative National Party",
+    "Position": 3
+  },
+  {
+    "State": "TAS",
+    "Division": "Franklin",
+    "Candidate": "COLLINS, Julie",
+    "Party": "Australian Labor Party",
+    "Position": 4
+  },
+  {
+    "State": "TAS",
+    "Division": "Franklin",
+    "Candidate": "WINTER, Darren",
+    "Party": "United Australia Party",
+    "Position": 5
+  },
+  {
+    "State": "TAS",
+    "Division": "Lyons",
+    "Candidate": "HUTCHINSON, Deanna",
+    "Party": "The Nationals",
+    "Position": 1
+  },
+  {
+    "State": "TAS",
+    "Division": "Lyons",
+    "Candidate": "MITCHELL, Brian",
+    "Party": "Australian Labor Party",
+    "Position": 2
+  },
+  {
+    "State": "TAS",
+    "Division": "Lyons",
+    "Candidate": "WHISSON, Gary",
+    "Party": "The Greens",
+    "Position": 3
+  },
+  {
+    "State": "TAS",
+    "Division": "Lyons",
+    "Candidate": "MURTAGH, Tennille",
+    "Party": "Pauline Hanson's One Nation",
+    "Position": 4
+  },
+  {
+    "State": "TAS",
+    "Division": "Lyons",
+    "Candidate": "WHELAN, Jessica",
+    "Party": "Liberal",
+    "Position": 5
+  },
+  {
+    "State": "TAS",
+    "Division": "Lyons",
+    "Candidate": "WARNE, Michael",
+    "Party": "United Australia Party",
+    "Position": 6
+  },
+  {
+    "State": "VIC",
+    "Division": "Aston",
+    "Candidate": "TUDGE, Alan",
+    "Party": "Liberal",
+    "Position": 1
+  },
+  {
+    "State": "VIC",
+    "Division": "Aston",
+    "Candidate": "COOKSON, Asher",
+    "Party": "The Greens",
+    "Position": 2
+  },
+  {
+    "State": "VIC",
+    "Division": "Aston",
+    "Candidate": "PETHIYAGODA, Kadira",
+    "Party": "Australian Labor Party",
+    "Position": 3
+  },
+  {
+    "State": "VIC",
+    "Division": "Aston",
+    "Candidate": "SIRIANNI-DUFFY, Matthew",
+    "Party": "United Australia Party",
+    "Position": 4
+  },
+  {
+    "State": "VIC",
+    "Division": "Aston",
+    "Candidate": "KENNEDY, Anna",
+    "Party": "Labour DLP",
+    "Position": 5
+  },
+  {
+    "State": "VIC",
+    "Division": "Ballarat",
+    "Candidate": "HILLS, Bryn",
+    "Party": "Animal Justice Party",
+    "Position": 1
+  },
+  {
+    "State": "VIC",
+    "Division": "Ballarat",
+    "Candidate": "COZYN, Peter",
+    "Party": "United Australia Party",
+    "Position": 2
+  },
+  {
+    "State": "VIC",
+    "Division": "Ballarat",
+    "Candidate": "GRAHAM, Alex",
+    "Party": "Independent",
+    "Position": 3
+  },
+  {
+    "State": "VIC",
+    "Division": "Ballarat",
+    "Candidate": "SHADY, Nick",
+    "Party": "Independent",
+    "Position": 4
+  },
+  {
+    "State": "VIC",
+    "Division": "Ballarat",
+    "Candidate": "McALOON, Karen",
+    "Party": "The Greens",
+    "Position": 5
+  },
+  {
+    "State": "VIC",
+    "Division": "Ballarat",
+    "Candidate": "VO, Tim",
+    "Party": "Liberal",
+    "Position": 6
+  },
+  {
+    "State": "VIC",
+    "Division": "Ballarat",
+    "Candidate": "KING, Catherine",
+    "Party": "Australian Labor Party",
+    "Position": 7
+  },
+  {
+    "State": "VIC",
+    "Division": "Bendigo",
+    "Candidate": "BUDDE, Sharon",
+    "Party": "Rise Up Australia Party",
+    "Position": 1
+  },
+  {
+    "State": "VIC",
+    "Division": "Bendigo",
+    "Candidate": "HOLIAN, Robert",
+    "Party": "The Greens",
+    "Position": 2
+  },
+  {
+    "State": "VIC",
+    "Division": "Bendigo",
+    "Candidate": "CHESTERS, Lisa",
+    "Party": "Australian Labor Party",
+    "Position": 3
+  },
+  {
+    "State": "VIC",
+    "Division": "Bendigo",
+    "Candidate": "VEITCH, Adam",
+    "Party": "United Australia Party",
+    "Position": 4
+  },
+  {
+    "State": "VIC",
+    "Division": "Bendigo",
+    "Candidate": "GAYED, Sam",
+    "Party": "Liberal",
+    "Position": 5
+  },
+  {
+    "State": "VIC",
+    "Division": "Bendigo",
+    "Candidate": "WILLIAMS, Vaughan",
+    "Party": "Pauline Hanson's One Nation",
+    "Position": 6
+  },
+  {
+    "State": "VIC",
+    "Division": "Bendigo",
+    "Candidate": "HOSKIN, Julie",
+    "Party": "Fraser Anning's Conservative National Party",
+    "Position": 7
+  },
+  {
+    "State": "VIC",
+    "Division": "Bruce",
+    "Candidate": "BOYANTON, Tim",
+    "Party": "Fraser Anning's Conservative National Party",
+    "Position": 1
+  },
+  {
+    "State": "VIC",
+    "Division": "Bruce",
+    "Candidate": "AHMED, Mubahil",
+    "Party": "United Australia Party",
+    "Position": 2
+  },
+  {
+    "State": "VIC",
+    "Division": "Bruce",
+    "Candidate": "MacISAAC, John",
+    "Party": "Liberal",
+    "Position": 3
+  },
+  {
+    "State": "VIC",
+    "Division": "Bruce",
+    "Candidate": "HILL, Julian",
+    "Party": "Australian Labor Party",
+    "Position": 4
+  },
+  {
+    "State": "VIC",
+    "Division": "Bruce",
+    "Candidate": "GARAD, Rhonda",
+    "Party": "The Greens",
+    "Position": 5
+  },
+  {
+    "State": "VIC",
+    "Division": "Calwell",
+    "Candidate": "KERR, Keith",
+    "Party": "Citizens Electoral Council",
+    "Position": 1
+  },
+  {
+    "State": "VIC",
+    "Division": "Calwell",
+    "Candidate": "MORGAN, Polly",
+    "Party": "The Greens",
+    "Position": 2
+  },
+  {
+    "State": "VIC",
+    "Division": "Calwell",
+    "Candidate": "VAMVAKINOU, Maria",
+    "Party": "Australian Labor Party",
+    "Position": 3
+  },
+  {
+    "State": "VIC",
+    "Division": "Calwell",
+    "Candidate": "VAIL, Adam",
+    "Party": "Fraser Anning's Conservative National Party",
+    "Position": 4
+  },
+  {
+    "State": "VIC",
+    "Division": "Calwell",
+    "Candidate": "SMALL, Jerome",
+    "Party": "Victorian Socialists",
+    "Position": 5
+  },
+  {
+    "State": "VIC",
+    "Division": "Calwell",
+    "Candidate": "CHHABRA, Prakul",
+    "Party": "United Australia Party",
+    "Position": 6
+  },
+  {
+    "State": "VIC",
+    "Division": "Calwell",
+    "Candidate": "BYRNE, Peter",
+    "Party": "Socialist Equality Party",
+    "Position": 7
+  },
+  {
+    "State": "VIC",
+    "Division": "Calwell",
+    "Candidate": "HAMILTON, Genevieve",
+    "Party": "Liberal",
+    "Position": 8
+  },
+  {
+    "State": "VIC",
+    "Division": "Casey",
+    "Candidate": "CHARLETON, Peter",
+    "Party": "Independent",
+    "Position": 1
+  },
+  {
+    "State": "VIC",
+    "Division": "Casey",
+    "Candidate": "CALABRO, Antony",
+    "Party": "Rise Up Australia Party",
+    "Position": 2
+  },
+  {
+    "State": "VIC",
+    "Division": "Casey",
+    "Candidate": "McPHEE, Ross",
+    "Party": "Labour DLP",
+    "Position": 3
+  },
+  {
+    "State": "VIC",
+    "Division": "Casey",
+    "Candidate": "BARKER, Travis",
+    "Party": "Animal Justice Party",
+    "Position": 4
+  },
+  {
+    "State": "VIC",
+    "Division": "Casey",
+    "Candidate": "STARKEY, Wendy",
+    "Party": "United Australia Party",
+    "Position": 5
+  },
+  {
+    "State": "VIC",
+    "Division": "Casey",
+    "Candidate": "CLARK, Ryan Leslie",
+    "Party": "Derryn Hinch's Justice Party",
+    "Position": 6
+  },
+  {
+    "State": "VIC",
+    "Division": "Casey",
+    "Candidate": "SMITH, Tony",
+    "Party": "Liberal",
+    "Position": 7
+  },
+  {
+    "State": "VIC",
+    "Division": "Casey",
+    "Candidate": "BRINDLE, Bill",
+    "Party": "Australian Labor Party",
+    "Position": 8
+  },
+  {
+    "State": "VIC",
+    "Division": "Casey",
+    "Candidate": "GAME-LOPATA, Jenny",
+    "Party": "The Greens",
+    "Position": 9
+  },
+  {
+    "State": "VIC",
+    "Division": "Casey",
+    "Candidate": "O'CONNOR, Jayden",
+    "Party": "The Great Australian Party",
+    "Position": 10
+  },
+  {
+    "State": "VIC",
+    "Division": "Chisholm",
+    "Candidate": "DOBBY, Ian",
+    "Party": "Independent",
+    "Position": 1
+  },
+  {
+    "State": "VIC",
+    "Division": "Chisholm",
+    "Candidate": "DORIAN, Angela Mary",
+    "Party": "Rise Up Australia Party",
+    "Position": 2
+  },
+  {
+    "State": "VIC",
+    "Division": "Chisholm",
+    "Candidate": "ARTHUR, Luke",
+    "Party": "The Greens",
+    "Position": 3
+  },
+  {
+    "State": "VIC",
+    "Division": "Chisholm",
+    "Candidate": "LIU, Gladys",
+    "Party": "Liberal",
+    "Position": 4
+  },
+  {
+    "State": "VIC",
+    "Division": "Chisholm",
+    "Candidate": "LAVIN, Rosemary",
+    "Party": "Animal Justice Party",
+    "Position": 5
+  },
+  {
+    "State": "VIC",
+    "Division": "Chisholm",
+    "Candidate": "WICKS, Anne",
+    "Party": "Derryn Hinch's Justice Party",
+    "Position": 6
+  },
+  {
+    "State": "VIC",
+    "Division": "Chisholm",
+    "Candidate": "ZORAYA, George",
+    "Party": "United Australia Party",
+    "Position": 7
+  },
+  {
+    "State": "VIC",
+    "Division": "Chisholm",
+    "Candidate": "YANG, Jennifer",
+    "Party": "Australian Labor Party",
+    "Position": 8
+  },
+  {
+    "State": "VIC",
+    "Division": "Chisholm",
+    "Candidate": "JENKINS, Philip",
+    "Party": "Labour DLP",
+    "Position": 9
+  },
+  {
+    "State": "VIC",
+    "Division": "Cooper",
+    "Candidate": "VAN LIESHOUT, Teresa",
+    "Party": "Independent",
+    "Position": 1
+  },
+  {
+    "State": "VIC",
+    "Division": "Cooper",
+    "Candidate": "RUSSELL, Sarah",
+    "Party": "Reason Australia",
+    "Position": 2
+  },
+  {
+    "State": "VIC",
+    "Division": "Cooper",
+    "Candidate": "NANGLE, Brett",
+    "Party": "United Australia Party",
+    "Position": 3
+  },
+  {
+    "State": "VIC",
+    "Division": "Cooper",
+    "Candidate": "RICHINGS, Nadine",
+    "Party": "Animal Justice Party",
+    "Position": 4
+  },
+  {
+    "State": "VIC",
+    "Division": "Cooper",
+    "Candidate": "RISSTROM, David",
+    "Party": "The Greens",
+    "Position": 5
+  },
+  {
+    "State": "VIC",
+    "Division": "Cooper",
+    "Candidate": "LARKIN, Kath",
+    "Party": "Victorian Socialists",
+    "Position": 6
+  },
+  {
+    "State": "VIC",
+    "Division": "Cooper",
+    "Candidate": "KEARNEY, Ged",
+    "Party": "Australian Labor Party",
+    "Position": 7
+  },
+  {
+    "State": "VIC",
+    "Division": "Cooper",
+    "Candidate": "BELL, Andrew",
+    "Party": "Liberal",
+    "Position": 8
+  },
+  {
+    "State": "VIC",
+    "Division": "Corangamite",
+    "Candidate": "ERSKINE, Ian",
+    "Party": "Rise Up Australia Party",
+    "Position": 1
+  },
+  {
+    "State": "VIC",
+    "Division": "Corangamite",
+    "Candidate": "COKER, Libby",
+    "Party": "Australian Labor Party",
+    "Position": 2
+  },
+  {
+    "State": "VIC",
+    "Division": "Corangamite",
+    "Candidate": "NORTHEAST, Simon",
+    "Party": "The Greens",
+    "Position": 3
+  },
+  {
+    "State": "VIC",
+    "Division": "Corangamite",
+    "Candidate": "ADAMS, Naomi",
+    "Party": "Animal Justice Party",
+    "Position": 4
+  },
+  {
+    "State": "VIC",
+    "Division": "Corangamite",
+    "Candidate": "COLE, Damien",
+    "Party": "Independent",
+    "Position": 5
+  },
+  {
+    "State": "VIC",
+    "Division": "Corangamite",
+    "Candidate": "HENDERSON, Sarah",
+    "Party": "Liberal",
+    "Position": 6
+  },
+  {
+    "State": "VIC",
+    "Division": "Corangamite",
+    "Candidate": "HARVEY, Neil",
+    "Party": "United Australia Party",
+    "Position": 7
+  },
+  {
+    "State": "VIC",
+    "Division": "Corangamite",
+    "Candidate": "GRIMLEY, Mandy",
+    "Party": "Derryn Hinch's Justice Party",
+    "Position": 8
+  },
+  {
+    "State": "VIC",
+    "Division": "Corio",
+    "Candidate": "MARLES, Richard",
+    "Party": "Australian Labor Party",
+    "Position": 1
+  },
+  {
+    "State": "VIC",
+    "Division": "Corio",
+    "Candidate": "THOMSON, Alastair",
+    "Party": "Liberal",
+    "Position": 2
+  },
+  {
+    "State": "VIC",
+    "Division": "Corio",
+    "Candidate": "FORBES, Amber",
+    "Party": "The Greens",
+    "Position": 3
+  },
+  {
+    "State": "VIC",
+    "Division": "Corio",
+    "Candidate": "SANBORN, Desmond",
+    "Party": "United Australia Party",
+    "Position": 4
+  },
+  {
+    "State": "VIC",
+    "Division": "Deakin",
+    "Candidate": "SULLIVAN, Ellie Jean",
+    "Party": "Derryn Hinch's Justice Party",
+    "Position": 1
+  },
+  {
+    "State": "VIC",
+    "Division": "Deakin",
+    "Candidate": "JANSON, Vickie",
+    "Party": "Independent",
+    "Position": 2
+  },
+  {
+    "State": "VIC",
+    "Division": "Deakin",
+    "Candidate": "SUN, Sophia",
+    "Party": "The Greens",
+    "Position": 3
+  },
+  {
+    "State": "VIC",
+    "Division": "Deakin",
+    "Candidate": "SUKKAR, Michael",
+    "Party": "Liberal",
+    "Position": 4
+  },
+  {
+    "State": "VIC",
+    "Division": "Deakin",
+    "Candidate": "WILDE, Milton",
+    "Party": "United Australia Party",
+    "Position": 5
+  },
+  {
+    "State": "VIC",
+    "Division": "Deakin",
+    "Candidate": "COSTANTINO, Vinita",
+    "Party": "Animal Justice Party",
+    "Position": 6
+  },
+  {
+    "State": "VIC",
+    "Division": "Deakin",
+    "Candidate": "MORRIS, Shireen",
+    "Party": "Australian Labor Party",
+    "Position": 7
+  },
+  {
+    "State": "VIC",
+    "Division": "Deakin",
+    "Candidate": "van der HORST, Joel",
+    "Party": "Labour DLP",
+    "Position": 8
+  },
+  {
+    "State": "VIC",
+    "Division": "Dunkley",
+    "Candidate": "O'CONNELL, Lachlan Andrew",
+    "Party": "Derryn Hinch's Justice Party",
+    "Position": 1
+  },
+  {
+    "State": "VIC",
+    "Division": "Dunkley",
+    "Candidate": "JOHNSTON, Elizabeth",
+    "Party": "Animal Justice Party",
+    "Position": 2
+  },
+  {
+    "State": "VIC",
+    "Division": "Dunkley",
+    "Candidate": "JEAN, Ron",
+    "Party": "United Australia Party",
+    "Position": 3
+  },
+  {
+    "State": "VIC",
+    "Division": "Dunkley",
+    "Candidate": "MURPHY, Peta",
+    "Party": "Australian Labor Party",
+    "Position": 4
+  },
+  {
+    "State": "VIC",
+    "Division": "Dunkley",
+    "Candidate": "GREEN, Emily",
+    "Party": "The Greens",
+    "Position": 5
+  },
+  {
+    "State": "VIC",
+    "Division": "Dunkley",
+    "Candidate": "CREWTHER, Chris",
+    "Party": "Liberal",
+    "Position": 6
+  },
+  {
+    "State": "VIC",
+    "Division": "Dunkley",
+    "Candidate": "JAMES, Christopher Ronald",
+    "Party": "Fraser Anning's Conservative National Party",
+    "Position": 7
+  },
+  {
+    "State": "VIC",
+    "Division": "Dunkley",
+    "Candidate": "GENTLE, Yvonne",
+    "Party": "Rise Up Australia Party",
+    "Position": 8
+  },
+  {
+    "State": "VIC",
+    "Division": "Flinders",
+    "Candidate": "DREGER, Harry",
+    "Party": "Independent",
+    "Position": 1
+  },
+  {
+    "State": "VIC",
+    "Division": "Flinders",
+    "Candidate": "PERSSON, James",
+    "Party": "Animal Justice Party",
+    "Position": 2
+  },
+  {
+    "State": "VIC",
+    "Division": "Flinders",
+    "Candidate": "HUNT, Greg",
+    "Party": "Liberal",
+    "Position": 3
+  },
+  {
+    "State": "VIC",
+    "Division": "Flinders",
+    "Candidate": "SMITH, Reade",
+    "Party": "Sustainable Australia",
+    "Position": 4
+  },
+  {
+    "State": "VIC",
+    "Division": "Flinders",
+    "Candidate": "SINCLAIR, Josh",
+    "Party": "Australian Labor Party",
+    "Position": 5
+  },
+  {
+    "State": "VIC",
+    "Division": "Flinders",
+    "Candidate": "LESSLIE, Nathan",
+    "Party": "The Greens",
+    "Position": 6
+  },
+  {
+    "State": "VIC",
+    "Division": "Flinders",
+    "Candidate": "McSHANE, Christine",
+    "Party": "United Australia Party",
+    "Position": 7
+  },
+  {
+    "State": "VIC",
+    "Division": "Flinders",
+    "Candidate": "BANKS, Julia",
+    "Party": "Independent",
+    "Position": 8
+  },
+  {
+    "State": "VIC",
+    "Division": "Flinders",
+    "Candidate": "BEVERIDGE, Susie",
+    "Party": "Independent",
+    "Position": 9
+  },
+  {
+    "State": "VIC",
+    "Division": "Fraser",
+    "Candidate": "CHAU, Vinh Van",
+    "Party": "United Australia Party",
+    "Position": 1
+  },
+  {
+    "State": "VIC",
+    "Division": "Fraser",
+    "Candidate": "BAIN, Peter",
+    "Party": "Liberal",
+    "Position": 2
+  },
+  {
+    "State": "VIC",
+    "Division": "Fraser",
+    "Candidate": "MULINO, Daniel",
+    "Party": "Australian Labor Party",
+    "Position": 3
+  },
+  {
+    "State": "VIC",
+    "Division": "Fraser",
+    "Candidate": "DOBRAN, Tony",
+    "Party": "The Great Australian Party",
+    "Position": 4
+  },
+  {
+    "State": "VIC",
+    "Division": "Fraser",
+    "Candidate": "SCORGIE, Rebecca",
+    "Party": "The Greens",
+    "Position": 5
+  },
+  {
+    "State": "VIC",
+    "Division": "Fraser",
+    "Candidate": "TRAN, Van",
+    "Party": "Independent",
+    "Position": 6
+  },
+  {
+    "State": "VIC",
+    "Division": "Gellibrand",
+    "Candidate": "WATTS, Tim",
+    "Party": "Australian Labor Party",
+    "Position": 1
+  },
+  {
+    "State": "VIC",
+    "Division": "Gellibrand",
+    "Candidate": "THOMAS, Bernadette",
+    "Party": "The Greens",
+    "Position": 2
+  },
+  {
+    "State": "VIC",
+    "Division": "Gellibrand",
+    "Candidate": "MITCHELL, Anthony",
+    "Party": "Liberal",
+    "Position": 3
+  },
+  {
+    "State": "VIC",
+    "Division": "Gellibrand",
+    "Candidate": "BENTLEY, Lisa Maree",
+    "Party": "United Australia Party",
+    "Position": 4
+  },
+  {
+    "State": "VIC",
+    "Division": "Gippsland",
+    "Candidate": "SNELLING, David",
+    "Party": "Shooters, Fishers and Farmers",
+    "Position": 1
+  },
+  {
+    "State": "VIC",
+    "Division": "Gippsland",
+    "Candidate": "TICKNER, Neville Phillip",
+    "Party": "Fraser Anning's Conservative National Party",
+    "Position": 2
+  },
+  {
+    "State": "VIC",
+    "Division": "Gippsland",
+    "Candidate": "BREWER, Kerri Jane",
+    "Party": "United Australia Party",
+    "Position": 3
+  },
+  {
+    "State": "VIC",
+    "Division": "Gippsland",
+    "Candidate": "HOLM, Antoinette",
+    "Party": "Australian Labor Party",
+    "Position": 4
+  },
+  {
+    "State": "VIC",
+    "Division": "Gippsland",
+    "Candidate": "BUCKLEY, Sonia",
+    "Party": "Independent",
+    "Position": 5
+  },
+  {
+    "State": "VIC",
+    "Division": "Gippsland",
+    "Candidate": "CHESTER, Darren",
+    "Party": "The Nationals",
+    "Position": 6
+  },
+  {
+    "State": "VIC",
+    "Division": "Gippsland",
+    "Candidate": "FOSKEY, Deb",
+    "Party": "The Greens",
+    "Position": 7
+  },
+  {
+    "State": "VIC",
+    "Division": "Goldstein",
+    "Candidate": "CONNOLLY, Wayne",
+    "Party": "United Australia Party",
+    "Position": 1
+  },
+  {
+    "State": "VIC",
+    "Division": "Goldstein",
+    "Candidate": "HOULT, Brandon James",
+    "Party": "Sustainable Australia",
+    "Position": 2
+  },
+  {
+    "State": "VIC",
+    "Division": "Goldstein",
+    "Candidate": "POLLOCK, Daniel",
+    "Party": "Australian Labor Party",
+    "Position": 3
+  },
+  {
+    "State": "VIC",
+    "Division": "Goldstein",
+    "Candidate": "PENNICUIK, Sue",
+    "Party": "The Greens",
+    "Position": 4
+  },
+  {
+    "State": "VIC",
+    "Division": "Goldstein",
+    "Candidate": "WILSON, Tim",
+    "Party": "Liberal",
+    "Position": 5
+  },
+  {
+    "State": "VIC",
+    "Division": "Goldstein",
+    "Candidate": "CASLEY, John Tiger",
+    "Party": "Independent",
+    "Position": 6
+  },
+  {
+    "State": "VIC",
+    "Division": "Gorton",
+    "Candidate": "TURTON, Richard",
+    "Party": "United Australia Party",
+    "Position": 1
+  },
+  {
+    "State": "VIC",
+    "Division": "Gorton",
+    "Candidate": "BINGHAM, Jarrod",
+    "Party": "Independent",
+    "Position": 2
+  },
+  {
+    "State": "VIC",
+    "Division": "Gorton",
+    "Candidate": "SINGH, Harkirat",
+    "Party": "The Greens",
+    "Position": 3
+  },
+  {
+    "State": "VIC",
+    "Division": "Gorton",
+    "Candidate": "O'CONNOR, Brendan",
+    "Party": "Australian Labor Party",
+    "Position": 4
+  },
+  {
+    "State": "VIC",
+    "Division": "Gorton",
+    "Candidate": "DI NOIA, Nathan",
+    "Party": "Liberal",
+    "Position": 5
+  },
+  {
+    "State": "VIC",
+    "Division": "Higgins",
+    "Candidate": "BALL, Jason",
+    "Party": "The Greens",
+    "Position": 1
+  },
+  {
+    "State": "VIC",
+    "Division": "Higgins",
+    "Candidate": "MORAN, Michaela",
+    "Party": "Sustainable Australia",
+    "Position": 2
+  },
+  {
+    "State": "VIC",
+    "Division": "Higgins",
+    "Candidate": "WALKER, Alicia",
+    "Party": "Animal Justice Party",
+    "Position": 3
+  },
+  {
+    "State": "VIC",
+    "Division": "Higgins",
+    "Candidate": "ALLEN, Katie",
+    "Party": "Liberal",
+    "Position": 4
+  },
+  {
+    "State": "VIC",
+    "Division": "Higgins",
+    "Candidate": "McLEOD, Fiona",
+    "Party": "Australian Labor Party",
+    "Position": 5
+  },
+  {
+    "State": "VIC",
+    "Division": "Higgins",
+    "Candidate": "RYAN, Tim",
+    "Party": "United Australia Party",
+    "Position": 6
+  },
+  {
+    "State": "VIC",
+    "Division": "Holt",
+    "Candidate": "BYRNE, Anthony",
+    "Party": "Australian Labor Party",
+    "Position": 1
+  },
+  {
+    "State": "VIC",
+    "Division": "Holt",
+    "Candidate": "WHEELOCK, Jess",
+    "Party": "The Greens",
+    "Position": 2
+  },
+  {
+    "State": "VIC",
+    "Division": "Holt",
+    "Candidate": "SINGH, Jatinder",
+    "Party": "United Australia Party",
+    "Position": 3
+  },
+  {
+    "State": "VIC",
+    "Division": "Holt",
+    "Candidate": "VAN DEN BROEK, Jennifer",
+    "Party": "Liberal",
+    "Position": 4
+  },
+  {
+    "State": "VIC",
+    "Division": "Hotham",
+    "Candidate": "LUAN, Jin",
+    "Party": "United Australia Party",
+    "Position": 1
+  },
+  {
+    "State": "VIC",
+    "Division": "Hotham",
+    "Candidate": "O'NEIL, Clare",
+    "Party": "Australian Labor Party",
+    "Position": 2
+  },
+  {
+    "State": "VIC",
+    "Division": "Hotham",
+    "Candidate": "HUA, George",
+    "Party": "Liberal",
+    "Position": 3
+  },
+  {
+    "State": "VIC",
+    "Division": "Hotham",
+    "Candidate": "GONSALVEZ, Jess",
+    "Party": "The Greens",
+    "Position": 4
+  },
+  {
+    "State": "VIC",
+    "Division": "Hotham",
+    "Candidate": "DORIAN, Peter",
+    "Party": "Rise Up Australia Party",
+    "Position": 5
+  },
+  {
+    "State": "VIC",
+    "Division": "Hotham",
+    "Candidate": "BILIC, Dennis",
+    "Party": "Sustainable Australia",
+    "Position": 6
+  },
+  {
+    "State": "VIC",
+    "Division": "Indi",
+    "Candidate": "ROBINSON, Helen",
+    "Party": "The Greens",
+    "Position": 1
+  },
+  {
+    "State": "VIC",
+    "Division": "Indi",
+    "Candidate": "WHALLEY, Jason Peter",
+    "Party": "Derryn Hinch's Justice Party",
+    "Position": 2
+  },
+  {
+    "State": "VIC",
+    "Division": "Indi",
+    "Candidate": "HAINES, Helen",
+    "Party": "Independent",
+    "Position": 3
+  },
+  {
+    "State": "VIC",
+    "Division": "Indi",
+    "Candidate": "MARTIN, Steve",
+    "Party": "Liberal",
+    "Position": 4
+  },
+  {
+    "State": "VIC",
+    "Division": "Indi",
+    "Candidate": "BYATT, Mark",
+    "Party": "The Nationals",
+    "Position": 5
+  },
+  {
+    "State": "VIC",
+    "Division": "Indi",
+    "Candidate": "WHEATLAND, Shane",
+    "Party": "United Australia Party",
+    "Position": 6
+  },
+  {
+    "State": "VIC",
+    "Division": "Indi",
+    "Candidate": "KERR, Eric",
+    "Party": "Australian Labor Party",
+    "Position": 7
+  },
+  {
+    "State": "VIC",
+    "Division": "Isaacs",
+    "Candidate": "SAMIOTIS, Kim",
+    "Party": "The Greens",
+    "Position": 1
+  },
+  {
+    "State": "VIC",
+    "Division": "Isaacs",
+    "Candidate": "HEARN, Jeremy",
+    "Party": "Liberal",
+    "Position": 2
+  },
+  {
+    "State": "VIC",
+    "Division": "Isaacs",
+    "Candidate": "PUVIMANASINGHE, Ash",
+    "Party": "Rise Up Australia Party",
+    "Position": 3
+  },
+  {
+    "State": "VIC",
+    "Division": "Isaacs",
+    "Candidate": "CURRIE, Bronwyn",
+    "Party": "Animal Justice Party",
+    "Position": 4
+  },
+  {
+    "State": "VIC",
+    "Division": "Isaacs",
+    "Candidate": "DREYFUS, Mark",
+    "Party": "Australian Labor Party",
+    "Position": 5
+  },
+  {
+    "State": "VIC",
+    "Division": "Isaacs",
+    "Candidate": "SEALS, Tony",
+    "Party": "United Australia Party",
+    "Position": 6
+  },
+  {
+    "State": "VIC",
+    "Division": "Jagajaga",
+    "Candidate": "RIGONI, Maria Marcia",
+    "Party": "United Australia Party",
+    "Position": 1
+  },
+  {
+    "State": "VIC",
+    "Division": "Jagajaga",
+    "Candidate": "THWAITES, Kate",
+    "Party": "Australian Labor Party",
+    "Position": 2
+  },
+  {
+    "State": "VIC",
+    "Division": "Jagajaga",
+    "Candidate": "TRUSCOTT, Jeff",
+    "Party": "Rise Up Australia Party",
+    "Position": 3
+  },
+  {
+    "State": "VIC",
+    "Division": "Jagajaga",
+    "Candidate": "WELCH, Richard",
+    "Party": "Liberal",
+    "Position": 4
+  },
+  {
+    "State": "VIC",
+    "Division": "Jagajaga",
+    "Candidate": "KENNEDY, Paul",
+    "Party": "The Greens",
+    "Position": 5
+  },
+  {
+    "State": "VIC",
+    "Division": "Kooyong",
+    "Candidate": "D'ELIA, Steven",
+    "Party": "United Australia Party",
+    "Position": 1
+  },
+  {
+    "State": "VIC",
+    "Division": "Kooyong",
+    "Candidate": "YATES, Oliver",
+    "Party": "Independent",
+    "Position": 2
+  },
+  {
+    "State": "VIC",
+    "Division": "Kooyong",
+    "Candidate": "ZUBAC, Angelina",
+    "Party": "Independent",
+    "Position": 3
+  },
+  {
+    "State": "VIC",
+    "Division": "Kooyong",
+    "Candidate": "FRYDENBERG, Josh",
+    "Party": "Liberal",
+    "Position": 4
+  },
+  {
+    "State": "VIC",
+    "Division": "Kooyong",
+    "Candidate": "STEWART, Jana",
+    "Party": "Australian Labor Party",
+    "Position": 5
+  },
+  {
+    "State": "VIC",
+    "Division": "Kooyong",
+    "Candidate": "HINKLEY, Davina",
+    "Party": "Animal Justice Party",
+    "Position": 6
+  },
+  {
+    "State": "VIC",
+    "Division": "Kooyong",
+    "Candidate": "BURNSIDE, Julian",
+    "Party": "The Greens",
+    "Position": 7
+  },
+  {
+    "State": "VIC",
+    "Division": "Kooyong",
+    "Candidate": "CHANDLER, Bill",
+    "Party": "Independent",
+    "Position": 8
+  },
+  {
+    "State": "VIC",
+    "Division": "La Trobe",
+    "Candidate": "GREGOROVICH, Amy",
+    "Party": "The Greens",
+    "Position": 1
+  },
+  {
+    "State": "VIC",
+    "Division": "La Trobe",
+    "Candidate": "BAKER, Norman",
+    "Party": "Rise Up Australia Party",
+    "Position": 2
+  },
+  {
+    "State": "VIC",
+    "Division": "La Trobe",
+    "Candidate": "WOOD, Jason",
+    "Party": "Liberal",
+    "Position": 3
+  },
+  {
+    "State": "VIC",
+    "Division": "La Trobe",
+    "Candidate": "BAKER, Esther",
+    "Party": "Pauline Hanson's One Nation",
+    "Position": 4
+  },
+  {
+    "State": "VIC",
+    "Division": "La Trobe",
+    "Candidate": "DEAN, Duncan",
+    "Party": "United Australia Party",
+    "Position": 5
+  },
+  {
+    "State": "VIC",
+    "Division": "La Trobe",
+    "Candidate": "CURTIS, Simon",
+    "Party": "Australian Labor Party",
+    "Position": 6
+  },
+  {
+    "State": "VIC",
+    "Division": "La Trobe",
+    "Candidate": "CALWELL-BROWNE, Asher Joseph",
+    "Party": "Derryn Hinch's Justice Party",
+    "Position": 7
+  },
+  {
+    "State": "VIC",
+    "Division": "Lalor",
+    "Candidate": "JAKOBI, Susan",
+    "Party": "Australia First Party",
+    "Position": 1
+  },
+  {
+    "State": "VIC",
+    "Division": "Lalor",
+    "Candidate": "MURPHY, Gayle",
+    "Party": "Liberal",
+    "Position": 2
+  },
+  {
+    "State": "VIC",
+    "Division": "Lalor",
+    "Candidate": "RYAN, Joanne",
+    "Party": "Australian Labor Party",
+    "Position": 3
+  },
+  {
+    "State": "VIC",
+    "Division": "Lalor",
+    "Candidate": "ROBINSON, Jeffrey Edward",
+    "Party": "United Australia Party",
+    "Position": 4
+  },
+  {
+    "State": "VIC",
+    "Division": "Lalor",
+    "Candidate": "DESSI, Jay",
+    "Party": "The Greens",
+    "Position": 5
+  },
+  {
+    "State": "VIC",
+    "Division": "Lalor",
+    "Candidate": "MOINUDDIN, Aijaz",
+    "Party": "",
+    "Position": 6
+  },
+  {
+    "State": "VIC",
+    "Division": "Macnamara",
+    "Candidate": "O'ROURKE, Ruby",
+    "Party": "Independent",
+    "Position": 1
+  },
+  {
+    "State": "VIC",
+    "Division": "Macnamara",
+    "Candidate": "HODGINS-MAY, Steph",
+    "Party": "The Greens",
+    "Position": 2
+  },
+  {
+    "State": "VIC",
+    "Division": "Macnamara",
+    "Candidate": "ARMSTRONG, Steven",
+    "Party": "Sustainable Australia",
+    "Position": 3
+  },
+  {
+    "State": "VIC",
+    "Division": "Macnamara",
+    "Candidate": "ASHMOR, Kate",
+    "Party": "Liberal",
+    "Position": 4
+  },
+  {
+    "State": "VIC",
+    "Division": "Macnamara",
+    "Candidate": "WALLIS, Chris",
+    "Party": "Independent",
+    "Position": 5
+  },
+  {
+    "State": "VIC",
+    "Division": "Macnamara",
+    "Candidate": "McPHERSON, Craig",
+    "Party": "Animal Justice Party",
+    "Position": 6
+  },
+  {
+    "State": "VIC",
+    "Division": "Macnamara",
+    "Candidate": "KAY, Christine",
+    "Party": "Rise Up Australia Party",
+    "Position": 7
+  },
+  {
+    "State": "VIC",
+    "Division": "Macnamara",
+    "Candidate": "PATON, Helen Lucy",
+    "Party": "United Australia Party",
+    "Position": 8
+  },
+  {
+    "State": "VIC",
+    "Division": "Macnamara",
+    "Candidate": "BURNS, Josh",
+    "Party": "Australian Labor Party",
+    "Position": 9
+  },
+  {
+    "State": "VIC",
+    "Division": "Mallee",
+    "Candidate": "PETROVICH, Serge",
+    "Party": "Liberal",
+    "Position": 1
+  },
+  {
+    "State": "VIC",
+    "Division": "Mallee",
+    "Candidate": "MOAR, Cecilia",
+    "Party": "Independent",
+    "Position": 2
+  },
+  {
+    "State": "VIC",
+    "Division": "Mallee",
+    "Candidate": "MODICA, Jason Mark",
+    "Party": "Independent",
+    "Position": 3
+  },
+  {
+    "State": "VIC",
+    "Division": "Mallee",
+    "Candidate": "GROSVENOR, Rick",
+    "Party": "Fraser Anning's Conservative National Party",
+    "Position": 4
+  },
+  {
+    "State": "VIC",
+    "Division": "Mallee",
+    "Candidate": "WEBSTER, Anne",
+    "Party": "The Nationals",
+    "Position": 5
+  },
+  {
+    "State": "VIC",
+    "Division": "Mallee",
+    "Candidate": "LAHY, Chris",
+    "Party": "Citizens Electoral Council",
+    "Position": 6
+  },
+  {
+    "State": "VIC",
+    "Division": "Mallee",
+    "Candidate": "MOLLISON, Philip",
+    "Party": "Rise Up Australia Party",
+    "Position": 7
+  },
+  {
+    "State": "VIC",
+    "Division": "Mallee",
+    "Candidate": "HART, Carole",
+    "Party": "Australian Labor Party",
+    "Position": 8
+  },
+  {
+    "State": "VIC",
+    "Division": "Mallee",
+    "Candidate": "FIRMAN, Leigh",
+    "Party": "Science Party",
+    "Position": 9
+  },
+  {
+    "State": "VIC",
+    "Division": "Mallee",
+    "Candidate": "KINGSTON, Ray",
+    "Party": "Independent",
+    "Position": 10
+  },
+  {
+    "State": "VIC",
+    "Division": "Mallee",
+    "Candidate": "STRAUB, Dan",
+    "Party": "Shooters, Fishers and Farmers",
+    "Position": 11
+  },
+  {
+    "State": "VIC",
+    "Division": "Mallee",
+    "Candidate": "MILLAR, Rick",
+    "Party": "United Australia Party",
+    "Position": 12
+  },
+  {
+    "State": "VIC",
+    "Division": "Mallee",
+    "Candidate": "ROWAN, Nicole",
+    "Party": "The Greens",
+    "Position": 13
+  },
+  {
+    "State": "VIC",
+    "Division": "Maribyrnong",
+    "Candidate": "HASAN, MD Sarwar",
+    "Party": "United Australia Party",
+    "Position": 1
+  },
+  {
+    "State": "VIC",
+    "Division": "Maribyrnong",
+    "Candidate": "WILLIAMS, James",
+    "Party": "The Greens",
+    "Position": 2
+  },
+  {
+    "State": "VIC",
+    "Division": "Maribyrnong",
+    "Candidate": "SHORTEN, Bill",
+    "Party": "Australian Labor Party",
+    "Position": 3
+  },
+  {
+    "State": "VIC",
+    "Division": "Maribyrnong",
+    "Candidate": "STOW, Christine",
+    "Party": "Liberal",
+    "Position": 4
+  },
+  {
+    "State": "VIC",
+    "Division": "McEwen",
+    "Candidate": "BARKER, Neil",
+    "Party": "The Greens",
+    "Position": 1
+  },
+  {
+    "State": "VIC",
+    "Division": "McEwen",
+    "Candidate": "PARRAMORE, Ruth",
+    "Party": "Animal Justice Party",
+    "Position": 2
+  },
+  {
+    "State": "VIC",
+    "Division": "McEwen",
+    "Candidate": "MITCHELL, Rob",
+    "Party": "Australian Labor Party",
+    "Position": 3
+  },
+  {
+    "State": "VIC",
+    "Division": "McEwen",
+    "Candidate": "FUSCO, Phillip",
+    "Party": "Liberal",
+    "Position": 4
+  },
+  {
+    "State": "VIC",
+    "Division": "McEwen",
+    "Candidate": "BUTLER, Deb",
+    "Party": "Derryn Hinch's Justice Party",
+    "Position": 5
+  },
+  {
+    "State": "VIC",
+    "Division": "McEwen",
+    "Candidate": "HYNDMAN, Robert James",
+    "Party": "Independent",
+    "Position": 6
+  },
+  {
+    "State": "VIC",
+    "Division": "McEwen",
+    "Candidate": "GRAHAM, Ronnie",
+    "Party": "Pauline Hanson's One Nation",
+    "Position": 7
+  },
+  {
+    "State": "VIC",
+    "Division": "McEwen",
+    "Candidate": "HAYMAN, Chris",
+    "Party": "United Australia Party",
+    "Position": 8
+  },
+  {
+    "State": "VIC",
+    "Division": "Melbourne",
+    "Candidate": "RYAN, Judy",
+    "Party": "Reason Australia",
+    "Position": 1
+  },
+  {
+    "State": "VIC",
+    "Division": "Melbourne",
+    "Candidate": "BANDT, Adam",
+    "Party": "The Greens",
+    "Position": 2
+  },
+  {
+    "State": "VIC",
+    "Division": "Melbourne",
+    "Candidate": "BLAKE, Dave",
+    "Party": "Independent",
+    "Position": 3
+  },
+  {
+    "State": "VIC",
+    "Division": "Melbourne",
+    "Candidate": "POPE, Lawrence",
+    "Party": "Animal Justice Party",
+    "Position": 4
+  },
+  {
+    "State": "VIC",
+    "Division": "Melbourne",
+    "Candidate": "SHERSON, Lauren",
+    "Party": "Liberal",
+    "Position": 5
+  },
+  {
+    "State": "VIC",
+    "Division": "Melbourne",
+    "Candidate": "CREASEY, Luke",
+    "Party": "Australian Labor Party",
+    "Position": 6
+  },
+  {
+    "State": "VIC",
+    "Division": "Melbourne",
+    "Candidate": "PECORA, Tony",
+    "Party": "United Australia Party",
+    "Position": 7
+  },
+  {
+    "State": "VIC",
+    "Division": "Menzies",
+    "Candidate": "KELLEHER, Teresa Mary",
+    "Party": "Labour DLP",
+    "Position": 1
+  },
+  {
+    "State": "VIC",
+    "Division": "Menzies",
+    "Candidate": "ANDREWS, Kevin",
+    "Party": "Liberal",
+    "Position": 2
+  },
+  {
+    "State": "VIC",
+    "Division": "Menzies",
+    "Candidate": "YEE, Stella",
+    "Party": "Australian Labor Party",
+    "Position": 3
+  },
+  {
+    "State": "VIC",
+    "Division": "Menzies",
+    "Candidate": "PAYNE, Rachel",
+    "Party": "Reason Australia",
+    "Position": 4
+  },
+  {
+    "State": "VIC",
+    "Division": "Menzies",
+    "Candidate": "FULLER, Brett Stephen",
+    "Party": "United Australia Party",
+    "Position": 5
+  },
+  {
+    "State": "VIC",
+    "Division": "Menzies",
+    "Candidate": "HUMPHREYS, Robert",
+    "Party": "The Greens",
+    "Position": 6
+  },
+  {
+    "State": "VIC",
+    "Division": "Monash",
+    "Candidate": "VERHOEVEN, John",
+    "Party": "Independent",
+    "Position": 1
+  },
+  {
+    "State": "VIC",
+    "Division": "Monash",
+    "Candidate": "FOZARD, Michael Stewart",
+    "Party": "Independent",
+    "Position": 2
+  },
+  {
+    "State": "VIC",
+    "Division": "Monash",
+    "Candidate": "WADDELL, Jeff",
+    "Party": "Pauline Hanson's One Nation",
+    "Position": 3
+  },
+  {
+    "State": "VIC",
+    "Division": "Monash",
+    "Candidate": "O'DONNELL, Jessica",
+    "Party": "Australian Labor Party",
+    "Position": 4
+  },
+  {
+    "State": "VIC",
+    "Division": "Monash",
+    "Candidate": "HORNSTRA, William",
+    "Party": "The Greens",
+    "Position": 5
+  },
+  {
+    "State": "VIC",
+    "Division": "Monash",
+    "Candidate": "BROADBENT, Russell",
+    "Party": "Liberal",
+    "Position": 6
+  },
+  {
+    "State": "VIC",
+    "Division": "Monash",
+    "Candidate": "SHERRY, Matthew",
+    "Party": "United Australia Party",
+    "Position": 7
+  },
+  {
+    "State": "VIC",
+    "Division": "Nicholls",
+    "Candidate": "DRUM, Damian",
+    "Party": "The Nationals",
+    "Position": 1
+  },
+  {
+    "State": "VIC",
+    "Division": "Nicholls",
+    "Candidate": "PARKER, Jeremy",
+    "Party": "Independent",
+    "Position": 2
+  },
+  {
+    "State": "VIC",
+    "Division": "Nicholls",
+    "Candidate": "BOCK, Andrew",
+    "Party": "Independent",
+    "Position": 3
+  },
+  {
+    "State": "VIC",
+    "Division": "Nicholls",
+    "Candidate": "HINE, Stewart John",
+    "Party": "United Australia Party",
+    "Position": 4
+  },
+  {
+    "State": "VIC",
+    "Division": "Nicholls",
+    "Candidate": "LODWICK, Bill",
+    "Party": "Australian Labor Party",
+    "Position": 5
+  },
+  {
+    "State": "VIC",
+    "Division": "Nicholls",
+    "Candidate": "FREEMAN, Nickee",
+    "Party": "The Greens",
+    "Position": 6
+  },
+  {
+    "State": "VIC",
+    "Division": "Nicholls",
+    "Candidate": "TYRRELL, Rikkie-Lee",
+    "Party": "Pauline Hanson's One Nation",
+    "Position": 7
+  },
+  {
+    "State": "VIC",
+    "Division": "Nicholls",
+    "Candidate": "HICKS, Nigel",
+    "Party": "Independent",
+    "Position": 8
+  },
+  {
+    "State": "VIC",
+    "Division": "Scullin",
+    "Candidate": "GILES, Andrew",
+    "Party": "Australian Labor Party",
+    "Position": 1
+  },
+  {
+    "State": "VIC",
+    "Division": "Scullin",
+    "Candidate": "HASAN, Firas",
+    "Party": "United Australia Party",
+    "Position": 2
+  },
+  {
+    "State": "VIC",
+    "Division": "Scullin",
+    "Candidate": "SMITH, Cynthia",
+    "Party": "The Greens",
+    "Position": 3
+  },
+  {
+    "State": "VIC",
+    "Division": "Scullin",
+    "Candidate": "WHITFIELD, Rod",
+    "Party": "Animal Justice Party",
+    "Position": 4
+  },
+  {
+    "State": "VIC",
+    "Division": "Scullin",
+    "Candidate": "SINGH, Gurpal",
+    "Party": "Liberal",
+    "Position": 5
+  },
+  {
+    "State": "VIC",
+    "Division": "Scullin",
+    "Candidate": "ALBARRI, Yassin Akram",
+    "Party": "Independent",
+    "Position": 6
+  },
+  {
+    "State": "VIC",
+    "Division": "Wannon",
+    "Candidate": "TAYLOR, Zephlyn",
+    "Party": "The Greens",
+    "Position": 1
+  },
+  {
+    "State": "VIC",
+    "Division": "Wannon",
+    "Candidate": "WALLACE, Joshua",
+    "Party": "United Australia Party",
+    "Position": 2
+  },
+  {
+    "State": "VIC",
+    "Division": "Wannon",
+    "Candidate": "BILLI, Maurice",
+    "Party": "Australian Labor Party",
+    "Position": 3
+  },
+  {
+    "State": "VIC",
+    "Division": "Wannon",
+    "Candidate": "DYSON, Alex",
+    "Party": "Independent",
+    "Position": 4
+  },
+  {
+    "State": "VIC",
+    "Division": "Wannon",
+    "Candidate": "TEHAN, Dan",
+    "Party": "Liberal",
+    "Position": 5
+  },
+  {
+    "State": "VIC",
+    "Division": "Wills",
+    "Candidate": "MILES, Chris",
+    "Party": "Animal Justice Party",
+    "Position": 1
+  },
+  {
+    "State": "VIC",
+    "Division": "Wills",
+    "Candidate": "BOLTON, Sue",
+    "Party": "Victorian Socialists",
+    "Position": 2
+  },
+  {
+    "State": "VIC",
+    "Division": "Wills",
+    "Candidate": "KILLIN, Peter",
+    "Party": "Liberal",
+    "Position": 3
+  },
+  {
+    "State": "VIC",
+    "Division": "Wills",
+    "Candidate": "PULFORD, Adam",
+    "Party": "The Greens",
+    "Position": 4
+  },
+  {
+    "State": "VIC",
+    "Division": "Wills",
+    "Candidate": "VENKAT, Manju",
+    "Party": "United Australia Party",
+    "Position": 5
+  },
+  {
+    "State": "VIC",
+    "Division": "Wills",
+    "Candidate": "KHALIL, Peter",
+    "Party": "Australian Labor Party",
+    "Position": 6
+  },
+  {
+    "State": "WA",
+    "Division": "Brand",
+    "Candidate": "VANDER VEN, Janine Joy",
+    "Party": "Australian Christians",
+    "Position": 1
+  },
+  {
+    "State": "WA",
+    "Division": "Brand",
+    "Candidate": "KING, Madeleine",
+    "Party": "Australian Labor Party",
+    "Position": 2
+  },
+  {
+    "State": "WA",
+    "Division": "Brand",
+    "Candidate": "PLEITER, Jack",
+    "Party": "Liberal",
+    "Position": 3
+  },
+  {
+    "State": "WA",
+    "Division": "Brand",
+    "Candidate": "MILLS, Karen-Lee",
+    "Party": "Fraser Anning's Conservative National Party",
+    "Position": 4
+  },
+  {
+    "State": "WA",
+    "Division": "Brand",
+    "Candidate": "FREEMAN, Jody",
+    "Party": "The Greens",
+    "Position": 5
+  },
+  {
+    "State": "WA",
+    "Division": "Brand",
+    "Candidate": "JONES, Trevor",
+    "Party": "United Australia Party",
+    "Position": 6
+  },
+  {
+    "State": "WA",
+    "Division": "Brand",
+    "Candidate": "PHELAN, Blake",
+    "Party": "Western Australia Party",
+    "Position": 7
+  },
+  {
+    "State": "WA",
+    "Division": "Brand",
+    "Candidate": "CARTER, Travis",
+    "Party": "Pauline Hanson's One Nation",
+    "Position": 8
+  },
+  {
+    "State": "WA",
+    "Division": "Burt",
+    "Candidate": "COLLINS, Simone",
+    "Party": "The Greens",
+    "Position": 1
+  },
+  {
+    "State": "WA",
+    "Division": "Burt",
+    "Candidate": "KEOGH, Matt",
+    "Party": "Australian Labor Party",
+    "Position": 2
+  },
+  {
+    "State": "WA",
+    "Division": "Burt",
+    "Candidate": "DEVINCENTIS, Nicole",
+    "Party": "Pauline Hanson's One Nation",
+    "Position": 3
+  },
+  {
+    "State": "WA",
+    "Division": "Burt",
+    "Candidate": "SAGISAKA, Sarcha",
+    "Party": "Western Australia Party",
+    "Position": 4
+  },
+  {
+    "State": "WA",
+    "Division": "Burt",
+    "Candidate": "NATION, Naomi",
+    "Party": "Independent",
+    "Position": 5
+  },
+  {
+    "State": "WA",
+    "Division": "Burt",
+    "Candidate": "GOODE, David",
+    "Party": "Liberal",
+    "Position": 6
+  },
+  {
+    "State": "WA",
+    "Division": "Burt",
+    "Candidate": "CHAWLA, Sahil",
+    "Party": "United Australia Party",
+    "Position": 7
+  },
+  {
+    "State": "WA",
+    "Division": "Burt",
+    "Candidate": "SPYKER, Warnar",
+    "Party": "Australian Christians",
+    "Position": 8
+  },
+  {
+    "State": "WA",
+    "Division": "Burt",
+    "Candidate": "RAFFAELLI, Peter Joseph",
+    "Party": "Shooters, Fishers and Farmers",
+    "Position": 9
+  },
+  {
+    "State": "WA",
+    "Division": "Canning",
+    "Candidate": "HEFFERNAN, Malcolm Phillip",
+    "Party": "Fraser Anning's Conservative National Party",
+    "Position": 1
+  },
+  {
+    "State": "WA",
+    "Division": "Canning",
+    "Candidate": "WREFORD, Jackson",
+    "Party": "Pauline Hanson's One Nation",
+    "Position": 2
+  },
+  {
+    "State": "WA",
+    "Division": "Canning",
+    "Candidate": "van BURGEL, Jamie",
+    "Party": "Australian Christians",
+    "Position": 3
+  },
+  {
+    "State": "WA",
+    "Division": "Canning",
+    "Candidate": "MOFFAT, Jodie",
+    "Party": "The Greens",
+    "Position": 4
+  },
+  {
+    "State": "WA",
+    "Division": "Canning",
+    "Candidate": "VEEVERS, Steve",
+    "Party": "United Australia Party",
+    "Position": 5
+  },
+  {
+    "State": "WA",
+    "Division": "Canning",
+    "Candidate": "HASTIE, Andrew",
+    "Party": "Liberal",
+    "Position": 6
+  },
+  {
+    "State": "WA",
+    "Division": "Canning",
+    "Candidate": "TEEDE, Mellisa",
+    "Party": "Australian Labor Party",
+    "Position": 7
+  },
+  {
+    "State": "WA",
+    "Division": "Canning",
+    "Candidate": "CLARKE, Brett",
+    "Party": "Western Australia Party",
+    "Position": 8
+  },
+  {
+    "State": "WA",
+    "Division": "Cowan",
+    "Candidate": "COOPER, Mark",
+    "Party": "The Greens",
+    "Position": 1
+  },
+  {
+    "State": "WA",
+    "Division": "Cowan",
+    "Candidate": "ALY, Anne",
+    "Party": "Australian Labor Party",
+    "Position": 2
+  },
+  {
+    "State": "WA",
+    "Division": "Cowan",
+    "Candidate": "WESTCOTT, Peter",
+    "Party": "United Australia Party",
+    "Position": 3
+  },
+  {
+    "State": "WA",
+    "Division": "Cowan",
+    "Candidate": "LEBRASSE, Andre",
+    "Party": "Australian Christians",
+    "Position": 4
+  },
+  {
+    "State": "WA",
+    "Division": "Cowan",
+    "Candidate": "MUNDY, Sheila",
+    "Party": "Pauline Hanson's One Nation",
+    "Position": 5
+  },
+  {
+    "State": "WA",
+    "Division": "Cowan",
+    "Candidate": "BEDFORD, Paul James",
+    "Party": "Shooters, Fishers and Farmers",
+    "Position": 6
+  },
+  {
+    "State": "WA",
+    "Division": "Cowan",
+    "Candidate": "STEWART, Isaac",
+    "Party": "Liberal",
+    "Position": 7
+  },
+  {
+    "State": "WA",
+    "Division": "Curtin",
+    "Candidate": "LEVER, Joan Anne",
+    "Party": "United Australia Party",
+    "Position": 1
+  },
+  {
+    "State": "WA",
+    "Division": "Curtin",
+    "Candidate": "PIDGEON, Cameron",
+    "Party": "The Greens",
+    "Position": 2
+  },
+  {
+    "State": "WA",
+    "Division": "Curtin",
+    "Candidate": "HAMMOND, Celia",
+    "Party": "Liberal",
+    "Position": 3
+  },
+  {
+    "State": "WA",
+    "Division": "Curtin",
+    "Candidate": "STEWART, Louise",
+    "Party": "Independent",
+    "Position": 4
+  },
+  {
+    "State": "WA",
+    "Division": "Curtin",
+    "Candidate": "EDGAR, Bill",
+    "Party": "Pauline Hanson's One Nation",
+    "Position": 5
+  },
+  {
+    "State": "WA",
+    "Division": "Curtin",
+    "Candidate": "KINGSFORD, Deonne",
+    "Party": "Australian Christians",
+    "Position": 6
+  },
+  {
+    "State": "WA",
+    "Division": "Curtin",
+    "Candidate": "MEECHAM, Rob",
+    "Party": "Australian Labor Party",
+    "Position": 7
+  },
+  {
+    "State": "WA",
+    "Division": "Curtin",
+    "Candidate": "MANGANO, Andrew",
+    "Party": "Western Australia Party",
+    "Position": 8
+  },
+  {
+    "State": "WA",
+    "Division": "Durack",
+    "Candidate": "PRICE, Melissa",
+    "Party": "Liberal",
+    "Position": 1
+  },
+  {
+    "State": "WA",
+    "Division": "Durack",
+    "Candidate": "MOUNSEY, Gary",
+    "Party": "Western Australia Party",
+    "Position": 2
+  },
+  {
+    "State": "WA",
+    "Division": "Durack",
+    "Candidate": "GOULD, Grahame",
+    "Party": "Pauline Hanson's One Nation",
+    "Position": 3
+  },
+  {
+    "State": "WA",
+    "Division": "Durack",
+    "Candidate": "MAMID, Johani",
+    "Party": "The Greens",
+    "Position": 4
+  },
+  {
+    "State": "WA",
+    "Division": "Durack",
+    "Candidate": "MORROW, Sharyn",
+    "Party": "Australian Labor Party",
+    "Position": 5
+  },
+  {
+    "State": "WA",
+    "Division": "Durack",
+    "Candidate": "HATTON, Brenden",
+    "Party": "United Australia Party",
+    "Position": 6
+  },
+  {
+    "State": "WA",
+    "Division": "Durack",
+    "Candidate": "BOURNE, Scott",
+    "Party": "The Nationals",
+    "Position": 7
+  },
+  {
+    "State": "WA",
+    "Division": "Forrest",
+    "Candidate": "BOSHAMMER, Nerilee",
+    "Party": "The Greens",
+    "Position": 1
+  },
+  {
+    "State": "WA",
+    "Division": "Forrest",
+    "Candidate": "McCALL, Mark",
+    "Party": "Shooters, Fishers and Farmers",
+    "Position": 2
+  },
+  {
+    "State": "WA",
+    "Division": "Forrest",
+    "Candidate": "MARINO, Nola",
+    "Party": "Liberal",
+    "Position": 3
+  },
+  {
+    "State": "WA",
+    "Division": "Forrest",
+    "Candidate": "JAMIESON, Kalven Wayne",
+    "Party": "Pauline Hanson's One Nation",
+    "Position": 4
+  },
+  {
+    "State": "WA",
+    "Division": "Forrest",
+    "Candidate": "MARSDEN, Alexander",
+    "Party": "Independent",
+    "Position": 5
+  },
+  {
+    "State": "WA",
+    "Division": "Forrest",
+    "Candidate": "MOLYNEUX, Ian Bruce",
+    "Party": "Western Australia Party",
+    "Position": 6
+  },
+  {
+    "State": "WA",
+    "Division": "Forrest",
+    "Candidate": "SANFORD, Wayne",
+    "Party": "Australian Labor Party",
+    "Position": 7
+  },
+  {
+    "State": "WA",
+    "Division": "Forrest",
+    "Candidate": "BROMLEY, Dale Geoffrey",
+    "Party": "United Australia Party",
+    "Position": 8
+  },
+  {
+    "State": "WA",
+    "Division": "Fremantle",
+    "Candidate": "KNAPP, Janetia",
+    "Party": "Western Australia Party",
+    "Position": 1
+  },
+  {
+    "State": "WA",
+    "Division": "Fremantle",
+    "Candidate": "WILSON, Josh",
+    "Party": "Australian Labor Party",
+    "Position": 2
+  },
+  {
+    "State": "WA",
+    "Division": "Fremantle",
+    "Candidate": "WEARY, Brett",
+    "Party": "Pauline Hanson's One Nation",
+    "Position": 3
+  },
+  {
+    "State": "WA",
+    "Division": "Fremantle",
+    "Candidate": "LEVER, Fatima",
+    "Party": "United Australia Party",
+    "Position": 4
+  },
+  {
+    "State": "WA",
+    "Division": "Fremantle",
+    "Candidate": "WAINWRIGHT, Sam",
+    "Party": "Socialist Alliance",
+    "Position": 5
+  },
+  {
+    "State": "WA",
+    "Division": "Fremantle",
+    "Candidate": "ROBINS, Nicole",
+    "Party": "Liberal",
+    "Position": 6
+  },
+  {
+    "State": "WA",
+    "Division": "Fremantle",
+    "Candidate": "HUTCHINSON, Jesse",
+    "Party": "The Greens",
+    "Position": 7
+  },
+  {
+    "State": "WA",
+    "Division": "Fremantle",
+    "Candidate": "MULDER, Laetisia",
+    "Party": "Australian Christians",
+    "Position": 8
+  },
+  {
+    "State": "WA",
+    "Division": "Hasluck",
+    "Candidate": "WHITE-HARTIG, Fiona",
+    "Party": "Shooters, Fishers and Farmers",
+    "Position": 1
+  },
+  {
+    "State": "WA",
+    "Division": "Hasluck",
+    "Candidate": "PHELAN, Stephen",
+    "Party": "Western Australia Party",
+    "Position": 2
+  },
+  {
+    "State": "WA",
+    "Division": "Hasluck",
+    "Candidate": "WYATT, Ken",
+    "Party": "Liberal",
+    "Position": 3
+  },
+  {
+    "State": "WA",
+    "Division": "Hasluck",
+    "Candidate": "MARTIN, James",
+    "Party": "Australian Labor Party",
+    "Position": 4
+  },
+  {
+    "State": "WA",
+    "Division": "Hasluck",
+    "Candidate": "WILLIAMS, Brady John",
+    "Party": "Australian Christians",
+    "Position": 5
+  },
+  {
+    "State": "WA",
+    "Division": "Hasluck",
+    "Candidate": "ORR, Tim",
+    "Party": "Pauline Hanson's One Nation",
+    "Position": 6
+  },
+  {
+    "State": "WA",
+    "Division": "Hasluck",
+    "Candidate": "DALE, Mike",
+    "Party": "United Australia Party",
+    "Position": 7
+  },
+  {
+    "State": "WA",
+    "Division": "Hasluck",
+    "Candidate": "MILES, Lee-Anne",
+    "Party": "The Greens",
+    "Position": 8
+  },
+  {
+    "State": "WA",
+    "Division": "Moore",
+    "Candidate": "WALSH, Tyler",
+    "Party": "Pauline Hanson's One Nation",
+    "Position": 1
+  },
+  {
+    "State": "WA",
+    "Division": "Moore",
+    "Candidate": "GOODENOUGH, Ian",
+    "Party": "Liberal",
+    "Position": 2
+  },
+  {
+    "State": "WA",
+    "Division": "Moore",
+    "Candidate": "VUJCICH, Daniel",
+    "Party": "The Greens",
+    "Position": 3
+  },
+  {
+    "State": "WA",
+    "Division": "Moore",
+    "Candidate": "HOST, Rex",
+    "Party": "Australian Christians",
+    "Position": 4
+  },
+  {
+    "State": "WA",
+    "Division": "Moore",
+    "Candidate": "JACOBS, Jen",
+    "Party": "Western Australia Party",
+    "Position": 5
+  },
+  {
+    "State": "WA",
+    "Division": "Moore",
+    "Candidate": "O'GORMAN, Tony",
+    "Party": "Australian Labor Party",
+    "Position": 6
+  },
+  {
+    "State": "WA",
+    "Division": "Moore",
+    "Candidate": "MURPHY, Ziggi",
+    "Party": "Independent",
+    "Position": 7
+  },
+  {
+    "State": "WA",
+    "Division": "Moore",
+    "Candidate": "CHILCOTT, Rod",
+    "Party": "United Australia Party",
+    "Position": 8
+  },
+  {
+    "State": "WA",
+    "Division": "O'Connor",
+    "Candidate": "HASSELL, John",
+    "Party": "The Nationals",
+    "Position": 1
+  },
+  {
+    "State": "WA",
+    "Division": "O'Connor",
+    "Candidate": "GILMOUR, Nelson Blake",
+    "Party": "The Greens",
+    "Position": 2
+  },
+  {
+    "State": "WA",
+    "Division": "O'Connor",
+    "Candidate": "PAYNE, Shelley",
+    "Party": "Australian Labor Party",
+    "Position": 3
+  },
+  {
+    "State": "WA",
+    "Division": "O'Connor",
+    "Candidate": "FELS, Anthony James",
+    "Party": "United Australia Party",
+    "Position": 4
+  },
+  {
+    "State": "WA",
+    "Division": "O'Connor",
+    "Candidate": "WILSON, Rick",
+    "Party": "Liberal",
+    "Position": 5
+  },
+  {
+    "State": "WA",
+    "Division": "O'Connor",
+    "Candidate": "'t HART, Ian",
+    "Party": "Australian Christians",
+    "Position": 6
+  },
+  {
+    "State": "WA",
+    "Division": "O'Connor",
+    "Candidate": "SWIFT, Peter",
+    "Party": "Western Australia Party",
+    "Position": 7
+  },
+  {
+    "State": "WA",
+    "Division": "O'Connor",
+    "Candidate": "SMITH, Dean",
+    "Party": "Pauline Hanson's One Nation",
+    "Position": 8
+  },
+  {
+    "State": "WA",
+    "Division": "O'Connor",
+    "Candidate": "ROBINSON, Nicholas Andrew",
+    "Party": "The Great Australian Party",
+    "Position": 9
+  },
+  {
+    "State": "WA",
+    "Division": "Pearce",
+    "Candidate": "OLD, Sandy",
+    "Party": "Pauline Hanson's One Nation",
+    "Position": 1
+  },
+  {
+    "State": "WA",
+    "Division": "Pearce",
+    "Candidate": "TRAVERS, Kim",
+    "Party": "Australian Labor Party",
+    "Position": 2
+  },
+  {
+    "State": "WA",
+    "Division": "Pearce",
+    "Candidate": "PORTER, Christian",
+    "Party": "Liberal",
+    "Position": 3
+  },
+  {
+    "State": "WA",
+    "Division": "Pearce",
+    "Candidate": "CALAUTTI, Michael",
+    "Party": "Western Australia Party",
+    "Position": 4
+  },
+  {
+    "State": "WA",
+    "Division": "Pearce",
+    "Candidate": "STRAUSS, Magdeleen",
+    "Party": "Australian Christians",
+    "Position": 5
+  },
+  {
+    "State": "WA",
+    "Division": "Pearce",
+    "Candidate": "MARSHALL, Eugene",
+    "Party": "The Greens",
+    "Position": 6
+  },
+  {
+    "State": "WA",
+    "Division": "Pearce",
+    "Candidate": "BLYTH, Steve",
+    "Party": "The Nationals",
+    "Position": 7
+  },
+  {
+    "State": "WA",
+    "Division": "Pearce",
+    "Candidate": "FORSTER, Rob",
+    "Party": "United Australia Party",
+    "Position": 8
+  },
+  {
+    "State": "WA",
+    "Division": "Pearce",
+    "Candidate": "WILLIAMSON, Ross",
+    "Party": "Shooters, Fishers and Farmers",
+    "Position": 9
+  },
+  {
+    "State": "WA",
+    "Division": "Pearce",
+    "Candidate": "BUTLAND, Colin",
+    "Party": "Independent",
+    "Position": 10
+  },
+  {
+    "State": "WA",
+    "Division": "Perth",
+    "Candidate": "BOXALL, Jane",
+    "Party": "Western Australia Party",
+    "Position": 1
+  },
+  {
+    "State": "WA",
+    "Division": "Perth",
+    "Candidate": "GORMAN, Patrick",
+    "Party": "Australian Labor Party",
+    "Position": 2
+  },
+  {
+    "State": "WA",
+    "Division": "Perth",
+    "Candidate": "GRAYDEN, Jim",
+    "Party": "Liberal",
+    "Position": 3
+  },
+  {
+    "State": "WA",
+    "Division": "Perth",
+    "Candidate": "DAVIES, Gary",
+    "Party": "Science Party",
+    "Position": 4
+  },
+  {
+    "State": "WA",
+    "Division": "Perth",
+    "Candidate": "HOPKINS, Chas",
+    "Party": "United Australia Party",
+    "Position": 5
+  },
+  {
+    "State": "WA",
+    "Division": "Perth",
+    "Candidate": "PERKS, Caroline",
+    "Party": "The Greens",
+    "Position": 6
+  },
+  {
+    "State": "WA",
+    "Division": "Perth",
+    "Candidate": "LOWNDS, Mel",
+    "Party": "Pauline Hanson's One Nation",
+    "Position": 7
+  },
+  {
+    "State": "WA",
+    "Division": "Perth",
+    "Candidate": "GREENING, Curtis",
+    "Party": "VOTEFLUX.ORG | Upgrade Democracy!",
+    "Position": 8
+  },
+  {
+    "State": "WA",
+    "Division": "Stirling",
+    "Candidate": "YOUNG, Angus",
+    "Party": "Pauline Hanson's One Nation",
+    "Position": 1
+  },
+  {
+    "State": "WA",
+    "Division": "Stirling",
+    "Candidate": "CULLITY, Judith",
+    "Party": "The Greens",
+    "Position": 2
+  },
+  {
+    "State": "WA",
+    "Division": "Stirling",
+    "Candidate": "HUTTON, Dorothy",
+    "Party": "United Australia Party",
+    "Position": 3
+  },
+  {
+    "State": "WA",
+    "Division": "Stirling",
+    "Candidate": "CONNELLY, Vince",
+    "Party": "Liberal",
+    "Position": 4
+  },
+  {
+    "State": "WA",
+    "Division": "Stirling",
+    "Candidate": "RE, Elizabeth",
+    "Party": "Western Australia Party",
+    "Position": 5
+  },
+  {
+    "State": "WA",
+    "Division": "Stirling",
+    "Candidate": "HOST, Kevin",
+    "Party": "Australian Christians",
+    "Position": 6
+  },
+  {
+    "State": "WA",
+    "Division": "Stirling",
+    "Candidate": "MARKEY, Melita",
+    "Party": "Australian Labor Party",
+    "Position": 7
+  },
+  {
+    "State": "WA",
+    "Division": "Swan",
+    "Candidate": "IRONS, Steve",
+    "Party": "Liberal",
+    "Position": 1
+  },
+  {
+    "State": "WA",
+    "Division": "Swan",
+    "Candidate": "KLOMP, Steve",
+    "Party": "Australian Christians",
+    "Position": 2
+  },
+  {
+    "State": "WA",
+    "Division": "Swan",
+    "Candidate": "THOMAS-WURTH, Virginia Anne",
+    "Party": "Animal Justice Party",
+    "Position": 3
+  },
+  {
+    "State": "WA",
+    "Division": "Swan",
+    "Candidate": "ADDINK, Carmel",
+    "Party": "Fraser Anning's Conservative National Party",
+    "Position": 4
+  },
+  {
+    "State": "WA",
+    "Division": "Swan",
+    "Candidate": "HAWKINS ZEEB, Sharron",
+    "Party": "Western Australia Party",
+    "Position": 5
+  },
+  {
+    "State": "WA",
+    "Division": "Swan",
+    "Candidate": "CRAMER, Liberty",
+    "Party": "The Greens",
+    "Position": 6
+  },
+  {
+    "State": "WA",
+    "Division": "Swan",
+    "Candidate": "CHEHOFF, Michael",
+    "Party": "Australia First Party",
+    "Position": 7
+  },
+  {
+    "State": "WA",
+    "Division": "Swan",
+    "Candidate": "McLERNON, Peter",
+    "Party": "United Australia Party",
+    "Position": 8
+  },
+  {
+    "State": "WA",
+    "Division": "Swan",
+    "Candidate": "CHANG, Tshung-Hui",
+    "Party": "Pauline Hanson's One Nation",
+    "Position": 9
+  },
+  {
+    "State": "WA",
+    "Division": "Swan",
+    "Candidate": "BEAZLEY, Hannah",
+    "Party": "Australian Labor Party",
+    "Position": 10
+  },
+  {
+    "State": "WA",
+    "Division": "Tangney",
+    "Candidate": "BOSWELL, Marion",
+    "Party": "Australian Labor Party",
+    "Position": 1
+  },
+  {
+    "State": "WA",
+    "Division": "Tangney",
+    "Candidate": "RAFFERTY, Scott Rodney",
+    "Party": "Pauline Hanson's One Nation",
+    "Position": 2
+  },
+  {
+    "State": "WA",
+    "Division": "Tangney",
+    "Candidate": "HORTON, Jillian",
+    "Party": "Independent",
+    "Position": 3
+  },
+  {
+    "State": "WA",
+    "Division": "Tangney",
+    "Candidate": "STAER, Mark",
+    "Party": "Australian Christians",
+    "Position": 4
+  },
+  {
+    "State": "WA",
+    "Division": "Tangney",
+    "Candidate": "WADDY, Paul Stephen",
+    "Party": "Independent",
+    "Position": 5
+  },
+  {
+    "State": "WA",
+    "Division": "Tangney",
+    "Candidate": "SPENCER, Martin",
+    "Party": "The Greens",
+    "Position": 6
+  },
+  {
+    "State": "WA",
+    "Division": "Tangney",
+    "Candidate": "MORTON, Ben",
+    "Party": "Liberal",
+    "Position": 7
+  },
+  {
+    "State": "WA",
+    "Division": "Tangney",
+    "Candidate": "FERNANDEZ, Chris",
+    "Party": "United Australia Party",
+    "Position": 8
+  },
+  {
+    "State": "WA",
+    "Division": "Tangney",
+    "Candidate": "WAUGH, Gavin",
+    "Party": "Western Australia Party",
+    "Position": 9
+  }
+]

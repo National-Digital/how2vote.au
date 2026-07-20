@@ -1,0 +1,2312 @@
+[
+  {
+    "State": "ACT",
+    "Group": "A",
+    "Candidate": "HOLGATE, James",
+    "Party": "Sustainable Australia Party - Universal Basic Income",
+    "Position": 1
+  },
+  {
+    "State": "ACT",
+    "Group": "A",
+    "Candidate": "HAYDON, John",
+    "Party": "Sustainable Australia Party - Universal Basic Income",
+    "Position": 2
+  },
+  {
+    "State": "ACT",
+    "Group": "B",
+    "Candidate": "POCOCK, David",
+    "Party": "David Pocock",
+    "Position": 1
+  },
+  {
+    "State": "ACT",
+    "Group": "B",
+    "Candidate": "VARDY, Hannah",
+    "Party": "David Pocock",
+    "Position": 2
+  },
+  {
+    "State": "ACT",
+    "Group": "C",
+    "Candidate": "SOXSMITH, Robyn",
+    "Party": "Animal Justice Party",
+    "Position": 1
+  },
+  {
+    "State": "ACT",
+    "Group": "C",
+    "Candidate": "KUDRYCZ, Walter",
+    "Party": "Animal Justice Party",
+    "Position": 2
+  },
+  {
+    "State": "ACT",
+    "Group": "D",
+    "Candidate": "GALLAGHER, Katy",
+    "Party": "Australian Labor Party",
+    "Position": 1
+  },
+  {
+    "State": "ACT",
+    "Group": "D",
+    "Candidate": "OH, Janaline",
+    "Party": "Australian Labor Party",
+    "Position": 2
+  },
+  {
+    "State": "ACT",
+    "Group": "E",
+    "Candidate": "VADAKKEDATHU, Jacob",
+    "Party": "Liberal",
+    "Position": 1
+  },
+  {
+    "State": "ACT",
+    "Group": "E",
+    "Candidate": "LEE, Hayune",
+    "Party": "Liberal",
+    "Position": 2
+  },
+  {
+    "State": "ACT",
+    "Group": "F",
+    "Candidate": "SEARSON-PRAKAASH, Elise",
+    "Party": "HEART Party",
+    "Position": 1
+  },
+  {
+    "State": "ACT",
+    "Group": "F",
+    "Candidate": "BROWN, Martin",
+    "Party": "Libertarian",
+    "Position": 2
+  },
+  {
+    "State": "ACT",
+    "Group": "G",
+    "Candidate": "HOBBS, Christina",
+    "Party": "Australian Greens",
+    "Position": 1
+  },
+  {
+    "State": "ACT",
+    "Group": "G",
+    "Candidate": "ROCKE, Jo",
+    "Party": "Australian Greens",
+    "Position": 2
+  },
+  {
+    "State": "NSW",
+    "Group": "A",
+    "Candidate": "SHELDON, Tony",
+    "Party": "Labor",
+    "Position": 1
+  },
+  {
+    "State": "NSW",
+    "Group": "A",
+    "Candidate": "AYRES, Tim",
+    "Party": "Labor",
+    "Position": 2
+  },
+  {
+    "State": "NSW",
+    "Group": "A",
+    "Candidate": "BELJIC, Emilija",
+    "Party": "Labor",
+    "Position": 3
+  },
+  {
+    "State": "NSW",
+    "Group": "A",
+    "Candidate": "MCGREGOR, Victoria",
+    "Party": "Labor",
+    "Position": 4
+  },
+  {
+    "State": "NSW",
+    "Group": "A",
+    "Candidate": "SEWELL, Sharon",
+    "Party": "Labor",
+    "Position": 5
+  },
+  {
+    "State": "NSW",
+    "Group": "A",
+    "Candidate": "ROARTY, Heather",
+    "Party": "Labor",
+    "Position": 6
+  },
+  {
+    "State": "NSW",
+    "Group": "B",
+    "Candidate": "BODDY, Max",
+    "Party": "",
+    "Position": 1
+  },
+  {
+    "State": "NSW",
+    "Group": "B",
+    "Candidate": "DOVE, Warwick",
+    "Party": "",
+    "Position": 2
+  },
+  {
+    "State": "NSW",
+    "Group": "C",
+    "Candidate": "DARWICHE, Emanie Samira",
+    "Party": "Australia's Voice",
+    "Position": 1
+  },
+  {
+    "State": "NSW",
+    "Group": "C",
+    "Candidate": "GEORGE, Graham",
+    "Party": "Australia's Voice",
+    "Position": 2
+  },
+  {
+    "State": "NSW",
+    "Group": "D",
+    "Candidate": "WHITICKER, Miles",
+    "Party": "FUSION | Planet Rescue | Whistleblower Protection | Innovation",
+    "Position": 1
+  },
+  {
+    "State": "NSW",
+    "Group": "D",
+    "Candidate": "POTTS, Andrew",
+    "Party": "FUSION | Planet Rescue | Whistleblower Protection | Innovation",
+    "Position": 2
+  },
+  {
+    "State": "NSW",
+    "Group": "E",
+    "Candidate": "SHELTON, Lyle",
+    "Party": "Family First",
+    "Position": 1
+  },
+  {
+    "State": "NSW",
+    "Group": "E",
+    "Candidate": "MASTERS, Roseanne",
+    "Party": "Family First",
+    "Position": 2
+  },
+  {
+    "State": "NSW",
+    "Group": "F",
+    "Candidate": "STACEY, Warwick",
+    "Party": "Pauline Hanson's One Nation",
+    "Position": 1
+  },
+  {
+    "State": "NSW",
+    "Group": "F",
+    "Candidate": "THOMPSON, Rebecca",
+    "Party": "Pauline Hanson's One Nation",
+    "Position": 2
+  },
+  {
+    "State": "NSW",
+    "Group": "G",
+    "Candidate": "KERIN, Emma",
+    "Party": "Animal Justice Party",
+    "Position": 1
+  },
+  {
+    "State": "NSW",
+    "Group": "G",
+    "Candidate": "STELLINO, Matt",
+    "Party": "Animal Justice Party",
+    "Position": 2
+  },
+  {
+    "State": "NSW",
+    "Group": "H",
+    "Candidate": "WOLFSON, Asher",
+    "Party": "Australian Christians",
+    "Position": 1
+  },
+  {
+    "State": "NSW",
+    "Group": "H",
+    "Candidate": "FISCHER, Duncan Gregg",
+    "Party": "Australian Christians",
+    "Position": 2
+  },
+  {
+    "State": "NSW",
+    "Group": "I",
+    "Candidate": "KELLY, Craig",
+    "Party": "Libertarian",
+    "Position": 1
+  },
+  {
+    "State": "NSW",
+    "Group": "I",
+    "Candidate": "O'NEILL, Michael",
+    "Party": "HEART Party",
+    "Position": 2
+  },
+  {
+    "State": "NSW",
+    "Group": "I",
+    "Candidate": "SEDMAN, Tracy",
+    "Party": "Gerard Rennick People First",
+    "Position": 3
+  },
+  {
+    "State": "NSW",
+    "Group": "I",
+    "Candidate": "CHRISTOU, Steve",
+    "Party": "Libertarian",
+    "Position": 4
+  },
+  {
+    "State": "NSW",
+    "Group": "I",
+    "Candidate": "QUTAMI, Sonia",
+    "Party": "HEART Party",
+    "Position": 5
+  },
+  {
+    "State": "NSW",
+    "Group": "J",
+    "Candidate": "HUNT, Miles",
+    "Party": "Legalise Cannabis Party",
+    "Position": 1
+  },
+  {
+    "State": "NSW",
+    "Group": "J",
+    "Candidate": "BALDERSTONE, Michael",
+    "Party": "Legalise Cannabis Party",
+    "Position": 2
+  },
+  {
+    "State": "NSW",
+    "Group": "J",
+    "Candidate": "ELLISTON, Tia",
+    "Party": "Legalise Cannabis Party",
+    "Position": 3
+  },
+  {
+    "State": "NSW",
+    "Group": "K",
+    "Candidate": "BOURKE, William",
+    "Party": "Sustainable Australia Party - Universal Basic Income",
+    "Position": 1
+  },
+  {
+    "State": "NSW",
+    "Group": "K",
+    "Candidate": "CAMPBELL, Petra",
+    "Party": "Sustainable Australia Party - Universal Basic Income",
+    "Position": 2
+  },
+  {
+    "State": "NSW",
+    "Group": "L",
+    "Candidate": "WHYMAN, Owen D",
+    "Party": "Indigenous - Aboriginal Party of Australia",
+    "Position": 1
+  },
+  {
+    "State": "NSW",
+    "Group": "L",
+    "Candidate": "BROOKE, Lawrence John",
+    "Party": "Indigenous - Aboriginal Party of Australia",
+    "Position": 2
+  },
+  {
+    "State": "NSW",
+    "Group": "M",
+    "Candidate": "NILE, Silvana",
+    "Party": "Trumpet of Patriots",
+    "Position": 1
+  },
+  {
+    "State": "NSW",
+    "Group": "M",
+    "Candidate": "ROBERTSON, Andrew",
+    "Party": "Trumpet of Patriots",
+    "Position": 2
+  },
+  {
+    "State": "NSW",
+    "Group": "M",
+    "Candidate": "MARTIN, Michelle",
+    "Party": "Trumpet of Patriots",
+    "Position": 3
+  },
+  {
+    "State": "NSW",
+    "Group": "N",
+    "Candidate": "BRAGG, Andrew",
+    "Party": "Liberal",
+    "Position": 1
+  },
+  {
+    "State": "NSW",
+    "Group": "N",
+    "Candidate": "COLLINS, Jessica",
+    "Party": "Liberal",
+    "Position": 2
+  },
+  {
+    "State": "NSW",
+    "Group": "N",
+    "Candidate": "DAVEY, Perin",
+    "Party": "The Nationals",
+    "Position": 3
+  },
+  {
+    "State": "NSW",
+    "Group": "N",
+    "Candidate": "HUGHES, Hollie",
+    "Party": "Liberal",
+    "Position": 4
+  },
+  {
+    "State": "NSW",
+    "Group": "N",
+    "Candidate": "McARTHUR, Juliana",
+    "Party": "The Nationals",
+    "Position": 5
+  },
+  {
+    "State": "NSW",
+    "Group": "N",
+    "Candidate": "BRINSMEAD, Rhiannon",
+    "Party": "Liberal",
+    "Position": 6
+  },
+  {
+    "State": "NSW",
+    "Group": "O",
+    "Candidate": "KOLOMEITZ, Glenn Raymond",
+    "Party": "Jacqui Lambie Network",
+    "Position": 1
+  },
+  {
+    "State": "NSW",
+    "Group": "O",
+    "Candidate": "SAHAY, Nikhita",
+    "Party": "Jacqui Lambie Network",
+    "Position": 2
+  },
+  {
+    "State": "NSW",
+    "Group": "P",
+    "Candidate": "SCHMULOW, Andy",
+    "Party": "Citizens Party",
+    "Position": 1
+  },
+  {
+    "State": "NSW",
+    "Group": "P",
+    "Candidate": "LAWLER, Ann",
+    "Party": "Citizens Party",
+    "Position": 2
+  },
+  {
+    "State": "NSW",
+    "Group": "Q",
+    "Candidate": "BOYLE, Peter",
+    "Party": "Socialist Alliance",
+    "Position": 1
+  },
+  {
+    "State": "NSW",
+    "Group": "Q",
+    "Candidate": "CHUTER, Andrew",
+    "Party": "Socialist Alliance",
+    "Position": 2
+  },
+  {
+    "State": "NSW",
+    "Group": "R",
+    "Candidate": "FARUQI, Mehreen",
+    "Party": "The Greens",
+    "Position": 1
+  },
+  {
+    "State": "NSW",
+    "Group": "R",
+    "Candidate": "LLOYD, Eddie",
+    "Party": "The Greens",
+    "Position": 2
+  },
+  {
+    "State": "NSW",
+    "Group": "R",
+    "Candidate": "SELVENTHIRAN, Sujan",
+    "Party": "The Greens",
+    "Position": 3
+  },
+  {
+    "State": "NSW",
+    "Group": "R",
+    "Candidate": "BLOCH, Barbara",
+    "Party": "The Greens",
+    "Position": 4
+  },
+  {
+    "State": "NSW",
+    "Group": "R",
+    "Candidate": "FLOYD, Ethan",
+    "Party": "The Greens",
+    "Position": 5
+  },
+  {
+    "State": "NSW",
+    "Group": "R",
+    "Candidate": "JACOBS, Rachael",
+    "Party": "The Greens",
+    "Position": 6
+  },
+  {
+    "State": "NSW",
+    "Group": "UG",
+    "Candidate": "HARRIS, Kerrie Christina",
+    "Party": "Independent",
+    "Position": 1
+  },
+  {
+    "State": "NSW",
+    "Group": "UG",
+    "Candidate": "PRICE, Shawn",
+    "Party": "",
+    "Position": 2
+  },
+  {
+    "State": "NSW",
+    "Group": "UG",
+    "Candidate": "GRZIC, Warren",
+    "Party": "Independent",
+    "Position": 3
+  },
+  {
+    "State": "NT",
+    "Group": "A",
+    "Candidate": "CHIVERS, Ian",
+    "Party": "Sustainable Australia Party - Universal Basic Income",
+    "Position": 1
+  },
+  {
+    "State": "NT",
+    "Group": "A",
+    "Candidate": "WHYTE, Lamaan",
+    "Party": "Sustainable Australia Party - Universal Basic Income",
+    "Position": 2
+  },
+  {
+    "State": "NT",
+    "Group": "B",
+    "Candidate": "LAWRENCE, Lance Alfred",
+    "Party": "Legalise Cannabis Party",
+    "Position": 1
+  },
+  {
+    "State": "NT",
+    "Group": "B",
+    "Candidate": "LUYKEN, Suzette",
+    "Party": "Legalise Cannabis Party",
+    "Position": 2
+  },
+  {
+    "State": "NT",
+    "Group": "C",
+    "Candidate": "McCARTHY, Malarndirri",
+    "Party": "Australian Labor Party (Northern Territory) Branch",
+    "Position": 1
+  },
+  {
+    "State": "NT",
+    "Group": "C",
+    "Candidate": "ALSOP, Michael William",
+    "Party": "Australian Labor Party (Northern Territory) Branch",
+    "Position": 2
+  },
+  {
+    "State": "NT",
+    "Group": "D",
+    "Candidate": "PRICE, Jacinta Nampijinpa",
+    "Party": "NT CLP",
+    "Position": 1
+  },
+  {
+    "State": "NT",
+    "Group": "D",
+    "Candidate": "HERSEY, Dean",
+    "Party": "NT CLP",
+    "Position": 2
+  },
+  {
+    "State": "NT",
+    "Group": "E",
+    "Candidate": "NEWPORT, Aia",
+    "Party": "Australian Greens",
+    "Position": 1
+  },
+  {
+    "State": "NT",
+    "Group": "E",
+    "Candidate": "WELLS, Hugo",
+    "Party": "Australian Greens",
+    "Position": 2
+  },
+  {
+    "State": "NT",
+    "Group": "F",
+    "Candidate": "NUGENT, Darren",
+    "Party": "Pauline Hanson's One Nation",
+    "Position": 1
+  },
+  {
+    "State": "NT",
+    "Group": "F",
+    "Candidate": "HEWES, Caine",
+    "Party": "Pauline Hanson's One Nation",
+    "Position": 2
+  },
+  {
+    "State": "NT",
+    "Group": "G",
+    "Candidate": "WYLIE, Lionel",
+    "Party": "Citizens Party",
+    "Position": 1
+  },
+  {
+    "State": "NT",
+    "Group": "G",
+    "Candidate": "CAMPBELL, Trudy",
+    "Party": "Citizens Party",
+    "Position": 2
+  },
+  {
+    "State": "NT",
+    "Group": "H",
+    "Candidate": "HANSEN, Jed",
+    "Party": "Libertarian",
+    "Position": 1
+  },
+  {
+    "State": "NT",
+    "Group": "H",
+    "Candidate": "SMITH, Trevor",
+    "Party": "Libertarian",
+    "Position": 2
+  },
+  {
+    "State": "NT",
+    "Group": "UG",
+    "Candidate": "KENNY, Que",
+    "Party": "Independent",
+    "Position": 1
+  },
+  {
+    "State": "QLD",
+    "Group": "A",
+    "Candidate": "STRAUSS, Jonathan",
+    "Party": "Socialist Alliance",
+    "Position": 1
+  },
+  {
+    "State": "QLD",
+    "Group": "A",
+    "Candidate": "EMANUEL, Kamala",
+    "Party": "Socialist Alliance",
+    "Position": 2
+  },
+  {
+    "State": "QLD",
+    "Group": "B",
+    "Candidate": "FONG, Harry",
+    "Party": "Trumpet of Patriots",
+    "Position": 1
+  },
+  {
+    "State": "QLD",
+    "Group": "B",
+    "Candidate": "McMULLAN, Robert",
+    "Party": "Trumpet of Patriots",
+    "Position": 2
+  },
+  {
+    "State": "QLD",
+    "Group": "B",
+    "Candidate": "McCLAER, David",
+    "Party": "Trumpet of Patriots",
+    "Position": 3
+  },
+  {
+    "State": "QLD",
+    "Group": "C",
+    "Candidate": "WHARTON, Wayne CoCo",
+    "Party": "Indigenous - Aboriginal Party of Australia",
+    "Position": 1
+  },
+  {
+    "State": "QLD",
+    "Group": "C",
+    "Candidate": "DAVIS, Marnie Laree",
+    "Party": "Indigenous - Aboriginal Party of Australia",
+    "Position": 2
+  },
+  {
+    "State": "QLD",
+    "Group": "D",
+    "Candidate": "SIMPSON, Chris",
+    "Party": "FUSION | Planet Rescue | Whistleblower Protection | Innovation",
+    "Position": 1
+  },
+  {
+    "State": "QLD",
+    "Group": "D",
+    "Candidate": "JORDAN, Frank",
+    "Party": "FUSION | Planet Rescue | Whistleblower Protection | Innovation",
+    "Position": 2
+  },
+  {
+    "State": "QLD",
+    "Group": "E",
+    "Candidate": "McDONALD, Michelle",
+    "Party": "Australia's Voice",
+    "Position": 1
+  },
+  {
+    "State": "QLD",
+    "Group": "E",
+    "Candidate": "LECKIE, Cameron McClure",
+    "Party": "Australia's Voice",
+    "Position": 2
+  },
+  {
+    "State": "QLD",
+    "Group": "E",
+    "Candidate": "McGUIRE, Aidan",
+    "Party": "Australia's Voice",
+    "Position": 3
+  },
+  {
+    "State": "QLD",
+    "Group": "F",
+    "Candidate": "HARPER, Ange",
+    "Party": "Jacqui Lambie Network",
+    "Position": 1
+  },
+  {
+    "State": "QLD",
+    "Group": "F",
+    "Candidate": "SCHRAMM, Craig",
+    "Party": "Jacqui Lambie Network",
+    "Position": 2
+  },
+  {
+    "State": "QLD",
+    "Group": "G",
+    "Candidate": "RENNICK, Gerard",
+    "Party": "Gerard Rennick People First",
+    "Position": 1
+  },
+  {
+    "State": "QLD",
+    "Group": "G",
+    "Candidate": "LYON, Robert",
+    "Party": "Katter's Australian Party (KAP)",
+    "Position": 2
+  },
+  {
+    "State": "QLD",
+    "Group": "H",
+    "Candidate": "ROBERTS, Scott Frazer",
+    "Party": "Australian Democrats",
+    "Position": 1
+  },
+  {
+    "State": "QLD",
+    "Group": "H",
+    "Candidate": "PULLAR, Luke Daniel",
+    "Party": "Australian Democrats",
+    "Position": 2
+  },
+  {
+    "State": "QLD",
+    "Group": "I",
+    "Candidate": "SCARR, Paul",
+    "Party": "LNP",
+    "Position": 1
+  },
+  {
+    "State": "QLD",
+    "Group": "I",
+    "Candidate": "McDONALD, Susan",
+    "Party": "LNP",
+    "Position": 2
+  },
+  {
+    "State": "QLD",
+    "Group": "I",
+    "Candidate": "FRASER, Stuart",
+    "Party": "LNP",
+    "Position": 3
+  },
+  {
+    "State": "QLD",
+    "Group": "I",
+    "Candidate": "LI, Sophia",
+    "Party": "LNP",
+    "Position": 4
+  },
+  {
+    "State": "QLD",
+    "Group": "I",
+    "Candidate": "TUNNEY, Yvonne",
+    "Party": "LNP",
+    "Position": 5
+  },
+  {
+    "State": "QLD",
+    "Group": "I",
+    "Candidate": "ZHUANG, Peter",
+    "Party": "LNP",
+    "Position": 6
+  },
+  {
+    "State": "QLD",
+    "Group": "J",
+    "Candidate": "GREEN, Nita",
+    "Party": "Australian Labor Party",
+    "Position": 1
+  },
+  {
+    "State": "QLD",
+    "Group": "J",
+    "Candidate": "MULHOLLAND, Corinne",
+    "Party": "Australian Labor Party",
+    "Position": 2
+  },
+  {
+    "State": "QLD",
+    "Group": "J",
+    "Candidate": "CASEY, Peter",
+    "Party": "Australian Labor Party",
+    "Position": 3
+  },
+  {
+    "State": "QLD",
+    "Group": "J",
+    "Candidate": "SHANKEY, Danielle",
+    "Party": "Australian Labor Party",
+    "Position": 4
+  },
+  {
+    "State": "QLD",
+    "Group": "J",
+    "Candidate": "CHISHOLM, Melinda",
+    "Party": "Australian Labor Party",
+    "Position": 5
+  },
+  {
+    "State": "QLD",
+    "Group": "J",
+    "Candidate": "BAILEY, Brianna",
+    "Party": "Australian Labor Party",
+    "Position": 6
+  },
+  {
+    "State": "QLD",
+    "Group": "K",
+    "Candidate": "BAY, William",
+    "Party": "The Great Australian Party",
+    "Position": 1
+  },
+  {
+    "State": "QLD",
+    "Group": "K",
+    "Candidate": "SMITH, Catherine",
+    "Party": "HEART Party",
+    "Position": 2
+  },
+  {
+    "State": "QLD",
+    "Group": "L",
+    "Candidate": "PUKALLUS, Jan",
+    "Party": "Citizens Party",
+    "Position": 1
+  },
+  {
+    "State": "QLD",
+    "Group": "L",
+    "Candidate": "HEALY, Richard Frederick",
+    "Party": "Citizens Party",
+    "Position": 2
+  },
+  {
+    "State": "QLD",
+    "Group": "M",
+    "Candidate": "JENSZ, Michelle",
+    "Party": "Animal Justice Party",
+    "Position": 1
+  },
+  {
+    "State": "QLD",
+    "Group": "M",
+    "Candidate": "DILLON, Gregory",
+    "Party": "Animal Justice Party",
+    "Position": 2
+  },
+  {
+    "State": "QLD",
+    "Group": "N",
+    "Candidate": "LUSH, Katie",
+    "Party": "Family First",
+    "Position": 1
+  },
+  {
+    "State": "QLD",
+    "Group": "N",
+    "Candidate": "FULLER, Karen",
+    "Party": "Family First",
+    "Position": 2
+  },
+  {
+    "State": "QLD",
+    "Group": "O",
+    "Candidate": "JONES, Belinda",
+    "Party": "Legalise Cannabis Party",
+    "Position": 1
+  },
+  {
+    "State": "QLD",
+    "Group": "O",
+    "Candidate": "LINDSAY, Melody",
+    "Party": "Legalise Cannabis Party",
+    "Position": 2
+  },
+  {
+    "State": "QLD",
+    "Group": "P",
+    "Candidate": "WATERS, Larissa",
+    "Party": "The Greens",
+    "Position": 1
+  },
+  {
+    "State": "QLD",
+    "Group": "P",
+    "Candidate": "SIDHU, Navdeep Singh",
+    "Party": "The Greens",
+    "Position": 2
+  },
+  {
+    "State": "QLD",
+    "Group": "P",
+    "Candidate": "GARTON, Claire",
+    "Party": "The Greens",
+    "Position": 3
+  },
+  {
+    "State": "QLD",
+    "Group": "P",
+    "Candidate": "COX, Jennifer",
+    "Party": "The Greens",
+    "Position": 4
+  },
+  {
+    "State": "QLD",
+    "Group": "P",
+    "Candidate": "McARDLE, Melissa",
+    "Party": "The Greens",
+    "Position": 5
+  },
+  {
+    "State": "QLD",
+    "Group": "P",
+    "Candidate": "KENNEDY, Kirsten",
+    "Party": "The Greens",
+    "Position": 6
+  },
+  {
+    "State": "QLD",
+    "Group": "Q",
+    "Candidate": "ROBERTS, Malcolm",
+    "Party": "Pauline Hanson's One Nation",
+    "Position": 1
+  },
+  {
+    "State": "QLD",
+    "Group": "Q",
+    "Candidate": "COURT, Geena",
+    "Party": "Pauline Hanson's One Nation",
+    "Position": 2
+  },
+  {
+    "State": "QLD",
+    "Group": "R",
+    "Candidate": "MARTIN, Rhett",
+    "Party": "Sustainable Australia Party - Universal Basic Income",
+    "Position": 1
+  },
+  {
+    "State": "QLD",
+    "Group": "R",
+    "Candidate": "HONNIBALL, Ross",
+    "Party": "Sustainable Australia Party - Universal Basic Income",
+    "Position": 2
+  },
+  {
+    "State": "QLD",
+    "Group": "S",
+    "Candidate": "WILLMOTT, Jim",
+    "Party": "Libertarian",
+    "Position": 1
+  },
+  {
+    "State": "QLD",
+    "Group": "S",
+    "Candidate": "LADE, Lachlan",
+    "Party": "Libertarian",
+    "Position": 2
+  },
+  {
+    "State": "QLD",
+    "Group": "UG",
+    "Candidate": "HOLMES, Gilbert",
+    "Party": "Independent",
+    "Position": 1
+  },
+  {
+    "State": "QLD",
+    "Group": "UG",
+    "Candidate": "DONOHUE, Danny",
+    "Party": "Independent",
+    "Position": 2
+  },
+  {
+    "State": "QLD",
+    "Group": "UG",
+    "Candidate": "WONG, Duke",
+    "Party": "Independent",
+    "Position": 3
+  },
+  {
+    "State": "QLD",
+    "Group": "UG",
+    "Candidate": "BROWN, Jason",
+    "Party": "Independent",
+    "Position": 4
+  },
+  {
+    "State": "SA",
+    "Group": "A",
+    "Candidate": "GREEN, Tyler Bradley",
+    "Party": "Libertarian",
+    "Position": 1
+  },
+  {
+    "State": "SA",
+    "Group": "A",
+    "Candidate": "VAN RAALTE, Jacob Nicholas",
+    "Party": "Libertarian",
+    "Position": 2
+  },
+  {
+    "State": "SA",
+    "Group": "B",
+    "Candidate": "ADAMSON AGARS, Imelda",
+    "Party": "FUSION | Planet Rescue | Whistleblower Protection | Innovation",
+    "Position": 1
+  },
+  {
+    "State": "SA",
+    "Group": "B",
+    "Candidate": "WOLFENDALE, Drew",
+    "Party": "FUSION | Planet Rescue | Whistleblower Protection | Innovation",
+    "Position": 2
+  },
+  {
+    "State": "SA",
+    "Group": "C",
+    "Candidate": "ANTIC, Alex",
+    "Party": "Liberal",
+    "Position": 1
+  },
+  {
+    "State": "SA",
+    "Group": "C",
+    "Candidate": "RUSTON, Anne",
+    "Party": "Liberal",
+    "Position": 2
+  },
+  {
+    "State": "SA",
+    "Group": "C",
+    "Candidate": "FAWCETT, David",
+    "Party": "Liberal",
+    "Position": 3
+  },
+  {
+    "State": "SA",
+    "Group": "C",
+    "Candidate": "WYLD, Damian",
+    "Party": "Liberal",
+    "Position": 4
+  },
+  {
+    "State": "SA",
+    "Group": "D",
+    "Candidate": "SMITH, Marielle",
+    "Party": "Australian Labor Party",
+    "Position": 1
+  },
+  {
+    "State": "SA",
+    "Group": "D",
+    "Candidate": "GROGAN, Karen",
+    "Party": "Australian Labor Party",
+    "Position": 2
+  },
+  {
+    "State": "SA",
+    "Group": "D",
+    "Candidate": "WALKER, Charlotte",
+    "Party": "Australian Labor Party",
+    "Position": 3
+  },
+  {
+    "State": "SA",
+    "Group": "D",
+    "Candidate": "ALLISON, Jennifer",
+    "Party": "Australian Labor Party",
+    "Position": 4
+  },
+  {
+    "State": "SA",
+    "Group": "E",
+    "Candidate": "BRAY, Frankie",
+    "Party": "Animal Justice Party",
+    "Position": 1
+  },
+  {
+    "State": "SA",
+    "Group": "E",
+    "Candidate": "PASTRO, Julie",
+    "Party": "Animal Justice Party",
+    "Position": 2
+  },
+  {
+    "State": "SA",
+    "Group": "F",
+    "Candidate": "PATRICK, Rex",
+    "Party": "Jacqui Lambie Network",
+    "Position": 1
+  },
+  {
+    "State": "SA",
+    "Group": "F",
+    "Candidate": "FORDHAM, Anne Elizabeth",
+    "Party": "Jacqui Lambie Network",
+    "Position": 2
+  },
+  {
+    "State": "SA",
+    "Group": "G",
+    "Candidate": "SMELTZ, Nicole",
+    "Party": "Trumpet of Patriots",
+    "Position": 1
+  },
+  {
+    "State": "SA",
+    "Group": "G",
+    "Candidate": "DAY, Bob",
+    "Party": "Trumpet of Patriots",
+    "Position": 2
+  },
+  {
+    "State": "SA",
+    "Group": "G",
+    "Candidate": "REA, Antonio",
+    "Party": "Trumpet of Patriots",
+    "Position": 3
+  },
+  {
+    "State": "SA",
+    "Group": "G",
+    "Candidate": "BAWDEN, Matilda",
+    "Party": "Trumpet of Patriots",
+    "Position": 4
+  },
+  {
+    "State": "SA",
+    "Group": "H",
+    "Candidate": "CROSSLING, Monique",
+    "Party": "National Party",
+    "Position": 1
+  },
+  {
+    "State": "SA",
+    "Group": "H",
+    "Candidate": "AZZOPARDI, Emma",
+    "Party": "National Party",
+    "Position": 2
+  },
+  {
+    "State": "SA",
+    "Group": "I",
+    "Candidate": "SHANE, Jordan",
+    "Party": "Australia's Voice",
+    "Position": 1
+  },
+  {
+    "State": "SA",
+    "Group": "I",
+    "Candidate": "NIELSEN, Craig Michael",
+    "Party": "Australia's Voice",
+    "Position": 2
+  },
+  {
+    "State": "SA",
+    "Group": "J",
+    "Candidate": "LONIE, Rob",
+    "Party": "Gerard Rennick People First",
+    "Position": 1
+  },
+  {
+    "State": "SA",
+    "Group": "J",
+    "Candidate": "AMADIO, Patrick J",
+    "Party": "Gerard Rennick People First",
+    "Position": 2
+  },
+  {
+    "State": "SA",
+    "Group": "K",
+    "Candidate": "NIES, Jessica",
+    "Party": "Legalise Cannabis Party",
+    "Position": 1
+  },
+  {
+    "State": "SA",
+    "Group": "K",
+    "Candidate": "HALL, Timothy John",
+    "Party": "Legalise Cannabis Party",
+    "Position": 2
+  },
+  {
+    "State": "SA",
+    "Group": "L",
+    "Candidate": "ACKLAND, Louise",
+    "Party": "Citizens Party",
+    "Position": 1
+  },
+  {
+    "State": "SA",
+    "Group": "L",
+    "Candidate": "FREER, Mark",
+    "Party": "Citizens Party",
+    "Position": 2
+  },
+  {
+    "State": "SA",
+    "Group": "M",
+    "Candidate": "BROHIER, Frederick Christopher",
+    "Party": "Family First",
+    "Position": 1
+  },
+  {
+    "State": "SA",
+    "Group": "M",
+    "Candidate": "MATHEW, Deepa",
+    "Party": "Family First",
+    "Position": 2
+  },
+  {
+    "State": "SA",
+    "Group": "N",
+    "Candidate": "HANSON-YOUNG, Sarah",
+    "Party": "The Greens",
+    "Position": 1
+  },
+  {
+    "State": "SA",
+    "Group": "N",
+    "Candidate": "SCHULTZ-BYARD, Noah",
+    "Party": "The Greens",
+    "Position": 2
+  },
+  {
+    "State": "SA",
+    "Group": "O",
+    "Candidate": "WEARNE, Madeleine",
+    "Party": "Sustainable Australia Party - Universal Basic Income",
+    "Position": 1
+  },
+  {
+    "State": "SA",
+    "Group": "O",
+    "Candidate": "DWYER, Michael",
+    "Party": "Sustainable Australia Party - Universal Basic Income",
+    "Position": 2
+  },
+  {
+    "State": "SA",
+    "Group": "P",
+    "Candidate": "GAME, Jennifer",
+    "Party": "Pauline Hanson's One Nation",
+    "Position": 1
+  },
+  {
+    "State": "SA",
+    "Group": "P",
+    "Candidate": "QUAREMBA, Carlos",
+    "Party": "Pauline Hanson's One Nation",
+    "Position": 2
+  },
+  {
+    "State": "SA",
+    "Group": "UG",
+    "Candidate": "HADJIMARKOU, Kosta",
+    "Party": "Independent",
+    "Position": 1
+  },
+  {
+    "State": "SA",
+    "Group": "UG",
+    "Candidate": "FRANCIS, Janette Gail",
+    "Party": "Independent",
+    "Position": 2
+  },
+  {
+    "State": "TAS",
+    "Group": "A",
+    "Candidate": "BILIC, Dennis",
+    "Party": "Sustainable Australia Party - Universal Basic Income",
+    "Position": 1
+  },
+  {
+    "State": "TAS",
+    "Group": "A",
+    "Candidate": "RICHARDSON, Pierre",
+    "Party": "Sustainable Australia Party - Universal Basic Income",
+    "Position": 2
+  },
+  {
+    "State": "TAS",
+    "Group": "B",
+    "Candidate": "CHANDLER, Claire",
+    "Party": "Liberal",
+    "Position": 1
+  },
+  {
+    "State": "TAS",
+    "Group": "B",
+    "Candidate": "COLBECK, Richard Mansell",
+    "Party": "Liberal",
+    "Position": 2
+  },
+  {
+    "State": "TAS",
+    "Group": "B",
+    "Candidate": "MARTIN, Jacki",
+    "Party": "Liberal",
+    "Position": 3
+  },
+  {
+    "State": "TAS",
+    "Group": "C",
+    "Candidate": "MOORE, Wayne Leslie",
+    "Party": "Trumpet of Patriots",
+    "Position": 1
+  },
+  {
+    "State": "TAS",
+    "Group": "C",
+    "Candidate": "KELLY, Matt",
+    "Party": "Trumpet of Patriots",
+    "Position": 2
+  },
+  {
+    "State": "TAS",
+    "Group": "C",
+    "Candidate": "SMITH, Greg",
+    "Party": "Trumpet of Patriots",
+    "Position": 3
+  },
+  {
+    "State": "TAS",
+    "Group": "D",
+    "Candidate": "OWEN, Matt",
+    "Party": "Legalise Cannabis Party",
+    "Position": 1
+  },
+  {
+    "State": "TAS",
+    "Group": "D",
+    "Candidate": "HESTER, Gail",
+    "Party": "Legalise Cannabis Party",
+    "Position": 2
+  },
+  {
+    "State": "TAS",
+    "Group": "E",
+    "Candidate": "DAVIES, Casey",
+    "Party": "Animal Justice Party",
+    "Position": 1
+  },
+  {
+    "State": "TAS",
+    "Group": "E",
+    "Candidate": "LUCAS, Kate Elizabeth",
+    "Party": "Animal Justice Party",
+    "Position": 2
+  },
+  {
+    "State": "TAS",
+    "Group": "F",
+    "Candidate": "McKIM, Nick",
+    "Party": "The Greens",
+    "Position": 1
+  },
+  {
+    "State": "TAS",
+    "Group": "F",
+    "Candidate": "BLEYER, Vanessa",
+    "Party": "The Greens",
+    "Position": 2
+  },
+  {
+    "State": "TAS",
+    "Group": "F",
+    "Candidate": "JORDAN, Scott",
+    "Party": "The Greens",
+    "Position": 3
+  },
+  {
+    "State": "TAS",
+    "Group": "F",
+    "Candidate": "HOARE, Trenton",
+    "Party": "The Greens",
+    "Position": 4
+  },
+  {
+    "State": "TAS",
+    "Group": "G",
+    "Candidate": "LAMBIE, Jacqui",
+    "Party": "Jacqui Lambie Network",
+    "Position": 1
+  },
+  {
+    "State": "TAS",
+    "Group": "G",
+    "Candidate": "HANNAN, Christine",
+    "Party": "Jacqui Lambie Network",
+    "Position": 2
+  },
+  {
+    "State": "TAS",
+    "Group": "H",
+    "Candidate": "ABRAHAM, Chrysten",
+    "Party": "Libertarian",
+    "Position": 1
+  },
+  {
+    "State": "TAS",
+    "Group": "H",
+    "Candidate": "ARMSTRONG, Nicole",
+    "Party": "Libertarian",
+    "Position": 2
+  },
+  {
+    "State": "TAS",
+    "Group": "I",
+    "Candidate": "HANSON, Lee",
+    "Party": "Pauline Hanson's One Nation",
+    "Position": 1
+  },
+  {
+    "State": "TAS",
+    "Group": "I",
+    "Candidate": "DUNN, James",
+    "Party": "Pauline Hanson's One Nation",
+    "Position": 2
+  },
+  {
+    "State": "TAS",
+    "Group": "J",
+    "Candidate": "STAGGARD, Daryl",
+    "Party": "Citizens Party",
+    "Position": 1
+  },
+  {
+    "State": "TAS",
+    "Group": "J",
+    "Candidate": "WILLIAMS, Ray",
+    "Party": "Citizens Party",
+    "Position": 2
+  },
+  {
+    "State": "TAS",
+    "Group": "K",
+    "Candidate": "BROWN, Carol",
+    "Party": "Australian Labor Party",
+    "Position": 1
+  },
+  {
+    "State": "TAS",
+    "Group": "K",
+    "Candidate": "DOWLING, Richard",
+    "Party": "Australian Labor Party",
+    "Position": 2
+  },
+  {
+    "State": "TAS",
+    "Group": "K",
+    "Candidate": "FALLS, Bailey",
+    "Party": "Australian Labor Party",
+    "Position": 3
+  },
+  {
+    "State": "TAS",
+    "Group": "K",
+    "Candidate": "O'DONNELL, Saxon",
+    "Party": "Australian Labor Party",
+    "Position": 4
+  },
+  {
+    "State": "TAS",
+    "Group": "K",
+    "Candidate": "LUCKMAN, Greg",
+    "Party": "Australian Labor Party",
+    "Position": 5
+  },
+  {
+    "State": "TAS",
+    "Group": "K",
+    "Candidate": "MEYERS, Amelia Louise",
+    "Party": "Australian Labor Party",
+    "Position": 6
+  },
+  {
+    "State": "TAS",
+    "Group": "L",
+    "Candidate": "BIGG, Phillip",
+    "Party": "Shooters, Fishers and Farmers Party",
+    "Position": 1
+  },
+  {
+    "State": "TAS",
+    "Group": "L",
+    "Candidate": "ROACH, Melanie",
+    "Party": "Shooters, Fishers and Farmers Party",
+    "Position": 2
+  },
+  {
+    "State": "TAS",
+    "Group": "UG",
+    "Candidate": "EDWARDS, Fenella",
+    "Party": "Independent",
+    "Position": 1
+  },
+  {
+    "State": "VIC",
+    "Group": "A",
+    "Candidate": "PATERSON, James",
+    "Party": "Liberal",
+    "Position": 1
+  },
+  {
+    "State": "VIC",
+    "Group": "A",
+    "Candidate": "HUME, Jane",
+    "Party": "Liberal",
+    "Position": 2
+  },
+  {
+    "State": "VIC",
+    "Group": "A",
+    "Candidate": "HOPPITT, Kyle",
+    "Party": "Liberal",
+    "Position": 3
+  },
+  {
+    "State": "VIC",
+    "Group": "A",
+    "Candidate": "ARNOLD, Glenn",
+    "Party": "The Nationals",
+    "Position": 4
+  },
+  {
+    "State": "VIC",
+    "Group": "A",
+    "Candidate": "MIRABELLA, Greg",
+    "Party": "Liberal",
+    "Position": 5
+  },
+  {
+    "State": "VIC",
+    "Group": "A",
+    "Candidate": "KMETJ, Chrestyna",
+    "Party": "Liberal",
+    "Position": 6
+  },
+  {
+    "State": "VIC",
+    "Group": "B",
+    "Candidate": "PATTEN, Fiona",
+    "Party": "Legalise Cannabis Party",
+    "Position": 1
+  },
+  {
+    "State": "VIC",
+    "Group": "B",
+    "Candidate": "DAVY, Alice",
+    "Party": "Legalise Cannabis Party",
+    "Position": 2
+  },
+  {
+    "State": "VIC",
+    "Group": "B",
+    "Candidate": "EVANS, Shea",
+    "Party": "Legalise Cannabis Party",
+    "Position": 3
+  },
+  {
+    "State": "VIC",
+    "Group": "C",
+    "Candidate": "JEGES, Helen",
+    "Party": "Animal Justice Party",
+    "Position": 1
+  },
+  {
+    "State": "VIC",
+    "Group": "C",
+    "Candidate": "McMILLAN, Benjamin",
+    "Party": "Animal Justice Party",
+    "Position": 2
+  },
+  {
+    "State": "VIC",
+    "Group": "D",
+    "Candidate": "AUSTIN-ABDULLAH, Racquel",
+    "Party": "Indigenous - Aboriginal Party of Australia",
+    "Position": 1
+  },
+  {
+    "State": "VIC",
+    "Group": "D",
+    "Candidate": "AL-SAIMARY, Laylah",
+    "Party": "Indigenous - Aboriginal Party of Australia",
+    "Position": 2
+  },
+  {
+    "State": "VIC",
+    "Group": "E",
+    "Candidate": "EL-MASRI, Mohamed",
+    "Party": "Australia's Voice",
+    "Position": 1
+  },
+  {
+    "State": "VIC",
+    "Group": "E",
+    "Candidate": "KAUR, Harsimran",
+    "Party": "Australia's Voice",
+    "Position": 2
+  },
+  {
+    "State": "VIC",
+    "Group": "E",
+    "Candidate": "EL ACHKAR, Rasheed",
+    "Party": "Australia's Voice",
+    "Position": 3
+  },
+  {
+    "State": "VIC",
+    "Group": "F",
+    "Candidate": "CORDNER HUNT, Kammy",
+    "Party": "FUSION | Planet Rescue | Whistleblower Protection | Innovation",
+    "Position": 1
+  },
+  {
+    "State": "VIC",
+    "Group": "F",
+    "Candidate": "GNIESLAW, Simon Mark Simcha",
+    "Party": "FUSION | Planet Rescue | Whistleblower Protection | Innovation",
+    "Position": 2
+  },
+  {
+    "State": "VIC",
+    "Group": "G",
+    "Candidate": "VONGVIXAY, Keo",
+    "Party": "",
+    "Position": 1
+  },
+  {
+    "State": "VIC",
+    "Group": "G",
+    "Candidate": "HERNAN, Taylor",
+    "Party": "",
+    "Position": 2
+  },
+  {
+    "State": "VIC",
+    "Group": "H",
+    "Candidate": "UNKLES, James William",
+    "Party": "Trumpet of Patriots",
+    "Position": 1
+  },
+  {
+    "State": "VIC",
+    "Group": "H",
+    "Candidate": "JEAN, Ron",
+    "Party": "Trumpet of Patriots",
+    "Position": 2
+  },
+  {
+    "State": "VIC",
+    "Group": "H",
+    "Candidate": "McKAY, Roger Ivan",
+    "Party": "Trumpet of Patriots",
+    "Position": 3
+  },
+  {
+    "State": "VIC",
+    "Group": "I",
+    "Candidate": "CICCONE, Raffaele",
+    "Party": "Australian Labor Party",
+    "Position": 1
+  },
+  {
+    "State": "VIC",
+    "Group": "I",
+    "Candidate": "WALSH, Jess",
+    "Party": "Australian Labor Party",
+    "Position": 2
+  },
+  {
+    "State": "VIC",
+    "Group": "I",
+    "Candidate": "ANANDA-RAJAH, Michelle",
+    "Party": "Australian Labor Party",
+    "Position": 3
+  },
+  {
+    "State": "VIC",
+    "Group": "I",
+    "Candidate": "PSAILA, Lynn",
+    "Party": "Australian Labor Party",
+    "Position": 4
+  },
+  {
+    "State": "VIC",
+    "Group": "I",
+    "Candidate": "KELLEY, Stephenie",
+    "Party": "Australian Labor Party",
+    "Position": 5
+  },
+  {
+    "State": "VIC",
+    "Group": "I",
+    "Candidate": "BAKER, David",
+    "Party": "Australian Labor Party",
+    "Position": 6
+  },
+  {
+    "State": "VIC",
+    "Group": "J",
+    "Candidate": "FINN, Bernie",
+    "Party": "Family First",
+    "Position": 1
+  },
+  {
+    "State": "VIC",
+    "Group": "J",
+    "Candidate": "FOREMAN, Jane",
+    "Party": "Family First",
+    "Position": 2
+  },
+  {
+    "State": "VIC",
+    "Group": "K",
+    "Candidate": "PICKERING, Warren",
+    "Party": "Pauline Hanson's One Nation",
+    "Position": 1
+  },
+  {
+    "State": "VIC",
+    "Group": "K",
+    "Candidate": "BRADBURY, Christopher",
+    "Party": "Pauline Hanson's One Nation",
+    "Position": 2
+  },
+  {
+    "State": "VIC",
+    "Group": "L",
+    "Candidate": "McKENZIE, Heath",
+    "Party": "Australian Democrats",
+    "Position": 1
+  },
+  {
+    "State": "VIC",
+    "Group": "L",
+    "Candidate": "NOBLE, Carly",
+    "Party": "Australian Democrats",
+    "Position": 2
+  },
+  {
+    "State": "VIC",
+    "Group": "M",
+    "Candidate": "VAN DEN LAMB, Jordan",
+    "Party": "Victorian Socialists",
+    "Position": 1
+  },
+  {
+    "State": "VIC",
+    "Group": "M",
+    "Candidate": "PRICE, Steph",
+    "Party": "Victorian Socialists",
+    "Position": 2
+  },
+  {
+    "State": "VIC",
+    "Group": "N",
+    "Candidate": "ACKERLY, Celeste",
+    "Party": "Sustainable Australia Party - Universal Basic Income",
+    "Position": 1
+  },
+  {
+    "State": "VIC",
+    "Group": "N",
+    "Candidate": "JESSUP, Bert",
+    "Party": "Sustainable Australia Party - Universal Basic Income",
+    "Position": 2
+  },
+  {
+    "State": "VIC",
+    "Group": "O",
+    "Candidate": "NEIL, Chris",
+    "Party": "Gerard Rennick People First",
+    "Position": 1
+  },
+  {
+    "State": "VIC",
+    "Group": "O",
+    "Candidate": "CLONARIDIS, Nick",
+    "Party": "HEART Party",
+    "Position": 2
+  },
+  {
+    "State": "VIC",
+    "Group": "P",
+    "Candidate": "DITTLOFF, Jordan",
+    "Party": "Libertarian",
+    "Position": 1
+  },
+  {
+    "State": "VIC",
+    "Group": "P",
+    "Candidate": "FORD, Matthew",
+    "Party": "Libertarian",
+    "Position": 2
+  },
+  {
+    "State": "VIC",
+    "Group": "P",
+    "Candidate": "MATULEC, Stephen",
+    "Party": "Libertarian",
+    "Position": 3
+  },
+  {
+    "State": "VIC",
+    "Group": "Q",
+    "Candidate": "HODGINS-MAY, Steph",
+    "Party": "The Greens",
+    "Position": 1
+  },
+  {
+    "State": "VIC",
+    "Group": "Q",
+    "Candidate": "ARI, Navera",
+    "Party": "The Greens",
+    "Position": 2
+  },
+  {
+    "State": "VIC",
+    "Group": "Q",
+    "Candidate": "IAMPOLSKI, Rachel",
+    "Party": "The Greens",
+    "Position": 3
+  },
+  {
+    "State": "VIC",
+    "Group": "Q",
+    "Candidate": "SLATER, Maddie",
+    "Party": "The Greens",
+    "Position": 4
+  },
+  {
+    "State": "VIC",
+    "Group": "Q",
+    "Candidate": "HENDERSON, Brittney",
+    "Party": "The Greens",
+    "Position": 5
+  },
+  {
+    "State": "VIC",
+    "Group": "Q",
+    "Candidate": "YAWARI, Nasser",
+    "Party": "The Greens",
+    "Position": 6
+  },
+  {
+    "State": "VIC",
+    "Group": "R",
+    "Candidate": "BARWICK, Robert",
+    "Party": "Citizens Party",
+    "Position": 1
+  },
+  {
+    "State": "VIC",
+    "Group": "R",
+    "Candidate": "YOHANNA, Sleiman",
+    "Party": "Citizens Party",
+    "Position": 2
+  },
+  {
+    "State": "VIC",
+    "Group": "S",
+    "Candidate": "CONSTANTINOU, Ethan",
+    "Party": "Shooters, Fishers and Farmers Party",
+    "Position": 1
+  },
+  {
+    "State": "VIC",
+    "Group": "S",
+    "Candidate": "VICKERS, Ken",
+    "Party": "Shooters, Fishers and Farmers Party",
+    "Position": 2
+  },
+  {
+    "State": "VIC",
+    "Group": "T",
+    "Candidate": "SAINI, Raj",
+    "Party": "",
+    "Position": 1
+  },
+  {
+    "State": "VIC",
+    "Group": "T",
+    "Candidate": "ALLE, Kirti",
+    "Party": "",
+    "Position": 2
+  },
+  {
+    "State": "VIC",
+    "Group": "T",
+    "Candidate": "KANAKAGIRI, Yashaswini Srinivas",
+    "Party": "",
+    "Position": 3
+  },
+  {
+    "State": "VIC",
+    "Group": "UG",
+    "Candidate": "CHEUNG, Heena Sinha",
+    "Party": "Independent",
+    "Position": 1
+  },
+  {
+    "State": "VIC",
+    "Group": "UG",
+    "Candidate": "ABEYSINGHE, Susantha",
+    "Party": "Independent",
+    "Position": 2
+  },
+  {
+    "State": "VIC",
+    "Group": "UG",
+    "Candidate": "LEWAND, Viesha",
+    "Party": "Independent",
+    "Position": 3
+  },
+  {
+    "State": "VIC",
+    "Group": "UG",
+    "Candidate": "HARVEY, Lawrence",
+    "Party": "Independent",
+    "Position": 4
+  },
+  {
+    "State": "VIC",
+    "Group": "UG",
+    "Candidate": "CORBETT, Cory",
+    "Party": "Independent",
+    "Position": 5
+  },
+  {
+    "State": "VIC",
+    "Group": "UG",
+    "Candidate": "BLACK, K",
+    "Party": "Independent",
+    "Position": 6
+  },
+  {
+    "State": "VIC",
+    "Group": "UG",
+    "Candidate": "VAN, David",
+    "Party": "Independent",
+    "Position": 7
+  },
+  {
+    "State": "VIC",
+    "Group": "UG",
+    "Candidate": "RITTER, Nate",
+    "Party": "Independent",
+    "Position": 8
+  },
+  {
+    "State": "WA",
+    "Group": "A",
+    "Candidate": "CULLERTON, Rodney",
+    "Party": "The Great Australian Party",
+    "Position": 1
+  },
+  {
+    "State": "WA",
+    "Group": "A",
+    "Candidate": "NEWTON-WORDSWORTH, William",
+    "Party": "The Great Australian Party",
+    "Position": 2
+  },
+  {
+    "State": "WA",
+    "Group": "B",
+    "Candidate": "KLOMP, Steve",
+    "Party": "Australian Christians",
+    "Position": 1
+  },
+  {
+    "State": "WA",
+    "Group": "B",
+    "Candidate": "NG, Joan Lee",
+    "Party": "Australian Christians",
+    "Position": 2
+  },
+  {
+    "State": "WA",
+    "Group": "C",
+    "Candidate": "NOVAKOVICH, Aisha Nancy",
+    "Party": "Citizens Party",
+    "Position": 1
+  },
+  {
+    "State": "WA",
+    "Group": "C",
+    "Candidate": "RYLES, Rex Michael",
+    "Party": "Citizens Party",
+    "Position": 2
+  },
+  {
+    "State": "WA",
+    "Group": "D",
+    "Candidate": "BANNISTER, Melissa",
+    "Party": "Trumpet of Patriots",
+    "Position": 1
+  },
+  {
+    "State": "WA",
+    "Group": "D",
+    "Candidate": "MONGAN, Trent Kenneth",
+    "Party": "Trumpet of Patriots",
+    "Position": 2
+  },
+  {
+    "State": "WA",
+    "Group": "D",
+    "Candidate": "ROBINS, Peter",
+    "Party": "Trumpet of Patriots",
+    "Position": 3
+  },
+  {
+    "State": "WA",
+    "Group": "D",
+    "Candidate": "STEWART, Lincoln",
+    "Party": "Trumpet of Patriots",
+    "Position": 4
+  },
+  {
+    "State": "WA",
+    "Group": "E",
+    "Candidate": "OBORN, Karen",
+    "Party": "Sustainable Australia Party - Universal Basic Income",
+    "Position": 1
+  },
+  {
+    "State": "WA",
+    "Group": "E",
+    "Candidate": "OOSTRYCK, Ryan",
+    "Party": "Sustainable Australia Party - Universal Basic Income",
+    "Position": 2
+  },
+  {
+    "State": "WA",
+    "Group": "F",
+    "Candidate": "MITCHELL, Elana",
+    "Party": "Australian Democrats",
+    "Position": 1
+  },
+  {
+    "State": "WA",
+    "Group": "F",
+    "Candidate": "SIMSON, Simon",
+    "Party": "Australian Democrats",
+    "Position": 2
+  },
+  {
+    "State": "WA",
+    "Group": "G",
+    "Candidate": "BURNS, Ryan",
+    "Party": "Libertarian",
+    "Position": 1
+  },
+  {
+    "State": "WA",
+    "Group": "G",
+    "Candidate": "NICOL, Gary",
+    "Party": "Libertarian",
+    "Position": 2
+  },
+  {
+    "State": "WA",
+    "Group": "H",
+    "Candidate": "KING, Madison",
+    "Party": "Gerard Rennick People First",
+    "Position": 1
+  },
+  {
+    "State": "WA",
+    "Group": "H",
+    "Candidate": "CLUNE, Jody",
+    "Party": "Gerard Rennick People First",
+    "Position": 2
+  },
+  {
+    "State": "WA",
+    "Group": "I",
+    "Candidate": "STEELE-JOHN, Jordon",
+    "Party": "The Greens (WA) Inc",
+    "Position": 1
+  },
+  {
+    "State": "WA",
+    "Group": "I",
+    "Candidate": "COLLINS, Simone",
+    "Party": "The Greens (WA) Inc",
+    "Position": 2
+  },
+  {
+    "State": "WA",
+    "Group": "I",
+    "Candidate": "CLARKE, Donald",
+    "Party": "The Greens (WA) Inc",
+    "Position": 3
+  },
+  {
+    "State": "WA",
+    "Group": "I",
+    "Candidate": "IVES, Verity",
+    "Party": "The Greens (WA) Inc",
+    "Position": 4
+  },
+  {
+    "State": "WA",
+    "Group": "I",
+    "Candidate": "LONSDALE, Heather",
+    "Party": "The Greens (WA) Inc",
+    "Position": 5
+  },
+  {
+    "State": "WA",
+    "Group": "J",
+    "Candidate": "CARRIE-WILSON, Tian",
+    "Party": "FUSION | Planet Rescue | Whistleblower Protection | Innovation",
+    "Position": 1
+  },
+  {
+    "State": "WA",
+    "Group": "J",
+    "Candidate": "ALDERDICE, Tamara",
+    "Party": "FUSION | Planet Rescue | Whistleblower Protection | Innovation",
+    "Position": 2
+  },
+  {
+    "State": "WA",
+    "Group": "K",
+    "Candidate": "SOBIERALSKI, Jade",
+    "Party": "Socialist Alliance",
+    "Position": 1
+  },
+  {
+    "State": "WA",
+    "Group": "K",
+    "Candidate": "BREEN, Riley",
+    "Party": "Socialist Alliance",
+    "Position": 2
+  },
+  {
+    "State": "WA",
+    "Group": "L",
+    "Candidate": "WHITEAKER, Ellie",
+    "Party": "Australian Labor Party",
+    "Position": 1
+  },
+  {
+    "State": "WA",
+    "Group": "L",
+    "Candidate": "GHOSH, Varun",
+    "Party": "Australian Labor Party",
+    "Position": 2
+  },
+  {
+    "State": "WA",
+    "Group": "L",
+    "Candidate": "SINGH, Deep",
+    "Party": "Australian Labor Party",
+    "Position": 3
+  },
+  {
+    "State": "WA",
+    "Group": "L",
+    "Candidate": "DEWAN, Tarun",
+    "Party": "Australian Labor Party",
+    "Position": 4
+  },
+  {
+    "State": "WA",
+    "Group": "L",
+    "Candidate": "WHITE, Ally",
+    "Party": "Australian Labor Party",
+    "Position": 5
+  },
+  {
+    "State": "WA",
+    "Group": "L",
+    "Candidate": "OSWALD, Brock",
+    "Party": "Australian Labor Party",
+    "Position": 6
+  },
+  {
+    "State": "WA",
+    "Group": "M",
+    "Candidate": "WHITTEN, Tyron",
+    "Party": "Pauline Hanson's One Nation",
+    "Position": 1
+  },
+  {
+    "State": "WA",
+    "Group": "M",
+    "Candidate": "DOYLE, Conor",
+    "Party": "Pauline Hanson's One Nation",
+    "Position": 2
+  },
+  {
+    "State": "WA",
+    "Group": "N",
+    "Candidate": "MEOTTI, Jason",
+    "Party": "Legalise Cannabis Party",
+    "Position": 1
+  },
+  {
+    "State": "WA",
+    "Group": "N",
+    "Candidate": "D'ATH, Melissa Rose",
+    "Party": "Legalise Cannabis Party",
+    "Position": 2
+  },
+  {
+    "State": "WA",
+    "Group": "O",
+    "Candidate": "ANAGNO, Michael",
+    "Party": "Animal Justice Party",
+    "Position": 1
+  },
+  {
+    "State": "WA",
+    "Group": "O",
+    "Candidate": "STEWART, Grant",
+    "Party": "Animal Justice Party",
+    "Position": 2
+  },
+  {
+    "State": "WA",
+    "Group": "P",
+    "Candidate": "KRAKOUER, Megan",
+    "Party": "Australia's Voice",
+    "Position": 1
+  },
+  {
+    "State": "WA",
+    "Group": "P",
+    "Candidate": "LA MACCHIA, Tano",
+    "Party": "Australia's Voice",
+    "Position": 2
+  },
+  {
+    "State": "WA",
+    "Group": "Q",
+    "Candidate": "BROCKMAN, Slade",
+    "Party": "Liberal",
+    "Position": 1
+  },
+  {
+    "State": "WA",
+    "Group": "Q",
+    "Candidate": "O'SULLIVAN, Matt",
+    "Party": "Liberal",
+    "Position": 2
+  },
+  {
+    "State": "WA",
+    "Group": "Q",
+    "Candidate": "BOTHA, Trish",
+    "Party": "Liberal",
+    "Position": 3
+  },
+  {
+    "State": "WA",
+    "Group": "Q",
+    "Candidate": "MATHEWS, Jennifer",
+    "Party": "Liberal",
+    "Position": 4
+  },
+  {
+    "State": "WA",
+    "Group": "R",
+    "Candidate": "BROWN, Paul",
+    "Party": "The Nationals",
+    "Position": 1
+  },
+  {
+    "State": "WA",
+    "Group": "R",
+    "Candidate": "MILES, Jeremy",
+    "Party": "The Nationals",
+    "Position": 2
+  },
+  {
+    "State": "WA",
+    "Group": "UG",
+    "Candidate": "CAO, Ky",
+    "Party": "Independent",
+    "Position": 1
+  },
+  {
+    "State": "WA",
+    "Group": "UG",
+    "Candidate": "MUBARAK, Kim",
+    "Party": "Independent",
+    "Position": 2
+  }
+]

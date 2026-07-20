@@ -1,0 +1,29 @@
+{
+  "schemaVersion": 1,
+  "updated": "2026-07-18",
+  "notes": "Per-proposition content-rights matrix (control-13, ADR 0008/0010). Every proposition (survey question) shown in the app derives its wording and party-vote positions from a LOCKED They Vote For You API v1 snapshot (data/snapshots/tvfy/<election>/v<version>/). This register records, per election, the content-rights class that governs those propositions and the OpenAustralia Foundation (OAF) content-permission position. scripts/check-proposition-rights.mjs (blocking, Data CI group) proves every proposition maps to a locked snapshot policy and to a defined rights class, so no proposition can ship without a settled content-rights position. The class must match the rights register's vote-positions domain (data/rights/rights-classes.json). Approval of this matrix is recorded as EV-TVFY-SNAPSHOT-LOCK in docs/legal/control-register.json.",
+  "contentRightsClass": "tvfy-odbl",
+  "elections": [
+    {
+      "electionId": "2019",
+      "snapshotVersion": 1,
+      "contentRightsClass": "tvfy-odbl",
+      "oafContentPermission": "not-required",
+      "oafPermissionBasis": "Proposition wording and party positions are factual parliamentary-vote data obtained from the They Vote For You API v1 under the ODbL and used with ODbL attribution. No separate OpenAustralia Foundation content permission is required."
+    },
+    {
+      "electionId": "2022",
+      "snapshotVersion": 1,
+      "contentRightsClass": "tvfy-odbl",
+      "oafContentPermission": "not-required",
+      "oafPermissionBasis": "Proposition wording and party positions are factual parliamentary-vote data obtained from the They Vote For You API v1 under the ODbL and used with ODbL attribution. No separate OpenAustralia Foundation content permission is required."
+    },
+    {
+      "electionId": "2025",
+      "snapshotVersion": 1,
+      "contentRightsClass": "tvfy-odbl",
+      "oafContentPermission": "not-required",
+      "oafPermissionBasis": "Proposition wording and party positions are factual parliamentary-vote data obtained from the They Vote For You API v1 under the ODbL and used with ODbL attribution. No separate OpenAustralia Foundation content permission is required."
+    }
+  ]
+}

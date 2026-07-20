@@ -1,0 +1,63 @@
+{
+  "schemaVersion": 1,
+  "updated": "2026-07-20",
+  "notes": "Public aggregate-provenance record for the how2vote research dataset (ADR-0008). The research store holds ONLY aggregate counters — no per-person record is created or stored. This record states, in the open, the cohort model, the schema and consent versions the aggregates were collected under, the aggregation method, the verification of the aggregate conversion, the counter-export hash, and the explicit assertion that no person-level source is retained. It is validated by scripts/check-aggregate-only.mjs (blocking) and its aggregateTables list is cross-checked against the migration schema allowlist. The signed aggregate-conversion export and destruction certificate live in the restricted legal records and are referenced here by evidence ID only.",
+  "researchPayloadSchemaVersion": 1,
+  "consentVersions": ["2026-07.2"],
+  "cohortModel": {
+    "description": "Every time-varying counter is keyed by the collection cohort, classified server-side from the arrival time against the election's AEC timetable. A placeholder election that has no timetable yet (an upcoming comparison targeting a parliament period) instead reports its provisional lifecycle stage (pending → provisional → drawn), so a pre-lock wave is never mixed with a post-lock one — a deliberate series break. Cohorts are never silently combined; the generator's per-cohort k-anonymity suppression is exact by construction.",
+    "cohorts": [
+      "pre-declaration",
+      "live",
+      "post-election",
+      "historical",
+      "unknown",
+      "pending",
+      "provisional",
+      "drawn"
+    ]
+  },
+  "aggregationMethod": {
+    "summary": "Aggregate-only by construction. The client derives the top-party match (@how2vote/engine topPartyMatch) and reduces each answered proposition to a stance (agree/neutral/disagree) on-device; the raw answer vector never leaves the device. The server only ever executes UPSERT ... SET n = n + 1 against the counter tables. No counter keys an opinion value together with a sensitive attribute and a sub-national geography (sensitive dimensions are national-only). The coarsest time anywhere in the store is the calendar quarter.",
+    "estimandRegistry": "docs/research/analysis-plan.md",
+    "engine": "@how2vote/engine topPartyMatch (per-wave fixed scoring; no retroactive re-scoring)"
+  },
+  "aggregateTables": [
+    "response_total",
+    "demographic_count",
+    "proposition_count",
+    "proposition_party_count",
+    "weighting_frame_count",
+    "consent_count",
+    "collection_period_count",
+    "geography_count"
+  ],
+  "conversionVerification": {
+    "description": "Any earlier per-person contributions were converted to de-identified aggregate counters and the per-person records destroyed; the committed schema (migration 0001) is aggregate-only. The full record is held at evidence-ID level in the PIA (§6) and restricted legal records.",
+    "verifiedDate": "2026-07-14",
+    "counterExportHash": "pending:EV-AGGREGATE-CONVERSION",
+    "counterExportHashAlgorithm": "sha256",
+    "evidence": [
+      {
+        "id": "EV-AGGREGATE-CONVERSION",
+        "description": "Signed aggregate-conversion verification + counter-export hash (restricted legal records)",
+        "status": "current",
+        "reviewer": "cameron-young",
+        "secondReviewer": "tara-buckley",
+        "approvedAt": "2026-07-20",
+        "expiresAt": "2029-07-20"
+      },
+      {
+        "id": "EV-DESTRUCTION-CERT",
+        "description": "Signed destruction certificate for the earlier per-person data (restricted legal records)",
+        "status": "current",
+        "reviewer": "cameron-young",
+        "secondReviewer": "tara-buckley",
+        "approvedAt": "2026-07-20",
+        "expiresAt": "2029-07-20"
+      }
+    ]
+  },
+  "noPersonLevelSourceRetained": true,
+  "noPersonLevelSourceRetainedStatement": "No person-level source is retained. The research store contains only aggregate counters; the raw answer vector never reaches the server, and no per-person table is ever created (migration 0001). A particular contribution cannot be located, exported or deleted, because no per-person record exists."
+}

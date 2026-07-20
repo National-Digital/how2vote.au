@@ -1,0 +1,64 @@
+{
+  "schemaVersion": 1,
+  "electionId": "2019",
+  "rightsClass": "aec-candidate-data",
+  "recordedAt": "2026-07-18",
+  "outputHash": "d70c1ab8b53d1f06dbbda2feb72a40555e095f104a4e4909808af4c015dbaba9",
+  "coverage": {
+    "houseCandidates": 1056,
+    "senateCandidates": 458,
+    "houseElectorates": 151,
+    "senateJurisdictions": 8,
+    "electorates": 151
+  },
+  "sources": [
+    {
+      "id": "house-nominations",
+      "title": "2019 federal election — House of Representatives candidates (declared nominations)",
+      "publisher": "Australian Electoral Commission",
+      "url": "https://www.aec.gov.au/election/candidates.htm",
+      "publishedAt": "2019-04-24",
+      "retrievedAt": "2026-07-18",
+      "sourceSha256": "21cac1708e1d3e00a44e8dca82e2f71a33b4f8afb0ef6f9579c8ea131423cab7",
+      "rawPath": "data/raw/aec/2019/house-nominations.csv",
+      "rawRetained": true,
+      "parserVersion": "packages/data-pipeline/src/aec.ts parseCsv+normaliseName v1",
+      "status": "verified",
+      "reviewer": "cameron-young",
+      "reviewedAt": "2026-07-18",
+      "note": "House of Representatives candidate set and ballot order for the 18 May 2019 poll (declaration of nominations). Columns StateAb, DivisionNm, CandidateNm, PartyNm, BallotPosition round-trip to ballots.json verbatim. This raw CSV is a byte-faithful, lossless export of the committed 2019 ballots.json, retained in-repo and pinned by SHA-256. It is a dated snapshot captured on 2026-07-18 — NOT an independent contemporaneous AEC download from 2019. From the 2025 election onward the AEC nominations feed is captured live at nomination time (see data/source/2025), giving a true point-in-time snapshot; 2019 and 2022 predate that practice, so these records honestly capture the dataset as we now hold it rather than the AEC record as it stood at the time. Rights: AEC candidate data (CC BY 4.0). The two-person ballot-ORDER review is tracked separately in ballot-verification.json."
+    },
+    {
+      "id": "senate-nominations",
+      "title": "2019 federal election — Senate candidates (declared nominations)",
+      "publisher": "Australian Electoral Commission",
+      "url": "https://www.aec.gov.au/election/candidates.htm",
+      "publishedAt": "2019-04-24",
+      "retrievedAt": "2026-07-18",
+      "sourceSha256": "498959a3272ab16177177b324c839a2583ab9b219cc4c407c42b0ac43997a577",
+      "rawPath": "data/raw/aec/2019/senate-nominations.csv",
+      "rawRetained": true,
+      "parserVersion": "packages/data-pipeline/src/aec.ts parseCsv+normaliseName v1",
+      "status": "verified",
+      "reviewer": "cameron-young",
+      "reviewedAt": "2026-07-18",
+      "note": "Senate candidate set, ticket columns and within-group ballot order for the 18 May 2019 poll. Columns StateAb, Ticket, CandidateNm, PartyNm, BallotPosition round-trip to ballots.json verbatim. This raw CSV is a byte-faithful, lossless export of the committed 2019 ballots.json, retained in-repo and pinned by SHA-256. It is a dated snapshot captured on 2026-07-18 — NOT an independent contemporaneous AEC download from 2019. From the 2025 election onward the AEC nominations feed is captured live at nomination time (see data/source/2025), giving a true point-in-time snapshot; 2019 and 2022 predate that practice, so these records honestly capture the dataset as we now hold it rather than the AEC record as it stood at the time."
+    },
+    {
+      "id": "electorates",
+      "title": "2019 federal election — electoral divisions",
+      "publisher": "Australian Electoral Commission",
+      "url": "https://www.aec.gov.au/electorates/",
+      "publishedAt": "2019-04-24",
+      "retrievedAt": "2026-07-18",
+      "sourceSha256": "ded98de91df3643e77dba1cfcb4736274d350f3717c6f917582a0210da2572f2",
+      "rawPath": "data/raw/aec/2019/electorates.csv",
+      "rawRetained": true,
+      "parserVersion": "packages/data-pipeline/src/aec.ts v1",
+      "status": "verified",
+      "reviewer": "cameron-young",
+      "reviewedAt": "2026-07-18",
+      "note": "Set of contesting electoral divisions (StateAb, DivisionNm) for the 18 May 2019 poll. This raw CSV is a byte-faithful, lossless export of the committed 2019 ballots.json, retained in-repo and pinned by SHA-256. It is a dated snapshot captured on 2026-07-18 — NOT an independent contemporaneous AEC download from 2019. From the 2025 election onward the AEC nominations feed is captured live at nomination time (see data/source/2025), giving a true point-in-time snapshot; 2019 and 2022 predate that practice, so these records honestly capture the dataset as we now hold it rather than the AEC record as it stood at the time."
+    }
+  ]
+}

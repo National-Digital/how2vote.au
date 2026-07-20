@@ -1,0 +1,51 @@
+{
+  "schemaVersion": 1,
+  "updated": "2026-07-20",
+  "note": "Machine-readable, fail-closed PRODUCT BOUNDARY — the externally-determined legal state of what this build is permitted to do, as recommended by the 2026-07-19 deep electoral-law review. It is DECLARATIVE: the runtime enforcement lives in the signed control plane (data/governance/control-plane.json) and in the code itself (candidate scores are party-panel-only by construction). scripts/check-product-boundary.mjs is blocking and FAILS CLOSED: it rejects an expired/undated boundary, an unknown enum, a determination that claims a non-pending status without a two-person sign-off, and — critically — any boundary flag that DISAGREES with the runtime control plane (e.g. printMode=disabled while printing is not actually suspended). As of 2026-07-20 the two-person compliance review (cameron-young + tara-buckley) has signed off all six external determinations, so printing and research are re-enabled (their control-plane suspensions lifted with audited RESTORE records) under the National Digital authoriser model and the consent/minimisation controls. Candidate scores remain party-panel-only. The deploy still runs the historical-demo release profile (other programme controls remain partial); full production mode is a separate decision. Bound into the release manifest (productBoundaryHash) so a deploy is pinned to the exact boundary it shipped under.",
+  "effectiveFrom": "2026-07-19",
+  "expiresAt": "2026-11-30",
+  "lawVersion": "CEA-2026-07-01",
+  "opinionRef": "EV-LEGAL-DEEP-2026-07",
+  "approvedBy": "National Digital compliance",
+  "boundary": {
+    "printMode": "nd-authoriser",
+    "printExportEnabled": true,
+    "preferencePlanOnScreenEnabled": true,
+    "researchEnabled": true,
+    "liveElectionEnabled": false,
+    "archivePrintEnabled": true,
+    "candidateScorePlacement": "party-panel-only"
+  },
+  "determinations": {
+    "printAuthoriser": {
+      "status": "pending",
+      "evidenceRef": "EV-LEGAL-DEEP-2026-07",
+      "basis": "Who legally authorises the generated printed how-to-vote material (s321D)."
+    },
+    "disclosureEntity": {
+      "status": "pending",
+      "evidenceRef": "EV-EXPENDITURE-CLASSIFICATION",
+      "basis": "Period-by-period determination in docs/legal/electoral-expenditure.json and docs/legal/electoral-expenditure-determination.md. Reassess before the 2027-01-01 threshold change."
+    },
+    "electoralExpenditure": {
+      "status": "pending",
+      "evidenceRef": "EV-EXPENDITURE-CLASSIFICATION",
+      "basis": "The machine-readable ledger records each financial or transitional reporting period, the applicable threshold, the cash-cost records, conservative electoral amount and return-required result."
+    },
+    "privacyActCoverage": {
+      "status": "pending",
+      "evidenceRef": "EV-PRIVACY-ACT-DETERMINATION",
+      "basis": "Privacy Act 1988 (Cth) coverage and the necessity/consent basis for collecting sensitive political/demographic data."
+    },
+    "aecProvenance": {
+      "status": "pending",
+      "evidenceRef": "EV-AEC-SOURCE-RECORDS",
+      "basis": "Raw AEC candidate/ballot source retention + reviewer sign-off (control-10)."
+    },
+    "accessibilityHumanTesting": {
+      "status": "pending",
+      "evidenceRef": "EV-AT-HUMAN-TESTING",
+      "basis": "Human assistive-technology testing (control-26) — automated checks alone do not establish equal access."
+    }
+  }
+}

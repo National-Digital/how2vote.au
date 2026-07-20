@@ -1,0 +1,606 @@
+[
+  {
+    "State": "ACT",
+    "Electorate": "Bean"
+  },
+  {
+    "State": "ACT",
+    "Electorate": "Canberra"
+  },
+  {
+    "State": "ACT",
+    "Electorate": "Fenner"
+  },
+  {
+    "State": "NSW",
+    "Electorate": "Banks"
+  },
+  {
+    "State": "NSW",
+    "Electorate": "Barton"
+  },
+  {
+    "State": "NSW",
+    "Electorate": "Bennelong"
+  },
+  {
+    "State": "NSW",
+    "Electorate": "Berowra"
+  },
+  {
+    "State": "NSW",
+    "Electorate": "Blaxland"
+  },
+  {
+    "State": "NSW",
+    "Electorate": "Bradfield"
+  },
+  {
+    "State": "NSW",
+    "Electorate": "Calare"
+  },
+  {
+    "State": "NSW",
+    "Electorate": "Chifley"
+  },
+  {
+    "State": "NSW",
+    "Electorate": "Cook"
+  },
+  {
+    "State": "NSW",
+    "Electorate": "Cowper"
+  },
+  {
+    "State": "NSW",
+    "Electorate": "Cunningham"
+  },
+  {
+    "State": "NSW",
+    "Electorate": "Dobell"
+  },
+  {
+    "State": "NSW",
+    "Electorate": "Eden-Monaro"
+  },
+  {
+    "State": "NSW",
+    "Electorate": "Farrer"
+  },
+  {
+    "State": "NSW",
+    "Electorate": "Fowler"
+  },
+  {
+    "State": "NSW",
+    "Electorate": "Gilmore"
+  },
+  {
+    "State": "NSW",
+    "Electorate": "Grayndler"
+  },
+  {
+    "State": "NSW",
+    "Electorate": "Greenway"
+  },
+  {
+    "State": "NSW",
+    "Electorate": "Hughes"
+  },
+  {
+    "State": "NSW",
+    "Electorate": "Hume"
+  },
+  {
+    "State": "NSW",
+    "Electorate": "Hunter"
+  },
+  {
+    "State": "NSW",
+    "Electorate": "Kingsford Smith"
+  },
+  {
+    "State": "NSW",
+    "Electorate": "Lindsay"
+  },
+  {
+    "State": "NSW",
+    "Electorate": "Lyne"
+  },
+  {
+    "State": "NSW",
+    "Electorate": "Macarthur"
+  },
+  {
+    "State": "NSW",
+    "Electorate": "Mackellar"
+  },
+  {
+    "State": "NSW",
+    "Electorate": "Macquarie"
+  },
+  {
+    "State": "NSW",
+    "Electorate": "McMahon"
+  },
+  {
+    "State": "NSW",
+    "Electorate": "Mitchell"
+  },
+  {
+    "State": "NSW",
+    "Electorate": "New England"
+  },
+  {
+    "State": "NSW",
+    "Electorate": "Newcastle"
+  },
+  {
+    "State": "NSW",
+    "Electorate": "North Sydney"
+  },
+  {
+    "State": "NSW",
+    "Electorate": "Page"
+  },
+  {
+    "State": "NSW",
+    "Electorate": "Parkes"
+  },
+  {
+    "State": "NSW",
+    "Electorate": "Parramatta"
+  },
+  {
+    "State": "NSW",
+    "Electorate": "Paterson"
+  },
+  {
+    "State": "NSW",
+    "Electorate": "Reid"
+  },
+  {
+    "State": "NSW",
+    "Electorate": "Richmond"
+  },
+  {
+    "State": "NSW",
+    "Electorate": "Riverina"
+  },
+  {
+    "State": "NSW",
+    "Electorate": "Robertson"
+  },
+  {
+    "State": "NSW",
+    "Electorate": "Shortland"
+  },
+  {
+    "State": "NSW",
+    "Electorate": "Sydney"
+  },
+  {
+    "State": "NSW",
+    "Electorate": "Warringah"
+  },
+  {
+    "State": "NSW",
+    "Electorate": "Watson"
+  },
+  {
+    "State": "NSW",
+    "Electorate": "Wentworth"
+  },
+  {
+    "State": "NSW",
+    "Electorate": "Werriwa"
+  },
+  {
+    "State": "NSW",
+    "Electorate": "Whitlam"
+  },
+  {
+    "State": "NT",
+    "Electorate": "Lingiari"
+  },
+  {
+    "State": "NT",
+    "Electorate": "Solomon"
+  },
+  {
+    "State": "QLD",
+    "Electorate": "Blair"
+  },
+  {
+    "State": "QLD",
+    "Electorate": "Bonner"
+  },
+  {
+    "State": "QLD",
+    "Electorate": "Bowman"
+  },
+  {
+    "State": "QLD",
+    "Electorate": "Brisbane"
+  },
+  {
+    "State": "QLD",
+    "Electorate": "Capricornia"
+  },
+  {
+    "State": "QLD",
+    "Electorate": "Dawson"
+  },
+  {
+    "State": "QLD",
+    "Electorate": "Dickson"
+  },
+  {
+    "State": "QLD",
+    "Electorate": "Fadden"
+  },
+  {
+    "State": "QLD",
+    "Electorate": "Fairfax"
+  },
+  {
+    "State": "QLD",
+    "Electorate": "Fisher"
+  },
+  {
+    "State": "QLD",
+    "Electorate": "Flynn"
+  },
+  {
+    "State": "QLD",
+    "Electorate": "Forde"
+  },
+  {
+    "State": "QLD",
+    "Electorate": "Griffith"
+  },
+  {
+    "State": "QLD",
+    "Electorate": "Groom"
+  },
+  {
+    "State": "QLD",
+    "Electorate": "Herbert"
+  },
+  {
+    "State": "QLD",
+    "Electorate": "Hinkler"
+  },
+  {
+    "State": "QLD",
+    "Electorate": "Kennedy"
+  },
+  {
+    "State": "QLD",
+    "Electorate": "Leichhardt"
+  },
+  {
+    "State": "QLD",
+    "Electorate": "Lilley"
+  },
+  {
+    "State": "QLD",
+    "Electorate": "Longman"
+  },
+  {
+    "State": "QLD",
+    "Electorate": "Maranoa"
+  },
+  {
+    "State": "QLD",
+    "Electorate": "McPherson"
+  },
+  {
+    "State": "QLD",
+    "Electorate": "Moncrieff"
+  },
+  {
+    "State": "QLD",
+    "Electorate": "Moreton"
+  },
+  {
+    "State": "QLD",
+    "Electorate": "Oxley"
+  },
+  {
+    "State": "QLD",
+    "Electorate": "Petrie"
+  },
+  {
+    "State": "QLD",
+    "Electorate": "Rankin"
+  },
+  {
+    "State": "QLD",
+    "Electorate": "Ryan"
+  },
+  {
+    "State": "QLD",
+    "Electorate": "Wide Bay"
+  },
+  {
+    "State": "QLD",
+    "Electorate": "Wright"
+  },
+  {
+    "State": "SA",
+    "Electorate": "Adelaide"
+  },
+  {
+    "State": "SA",
+    "Electorate": "Barker"
+  },
+  {
+    "State": "SA",
+    "Electorate": "Boothby"
+  },
+  {
+    "State": "SA",
+    "Electorate": "Grey"
+  },
+  {
+    "State": "SA",
+    "Electorate": "Hindmarsh"
+  },
+  {
+    "State": "SA",
+    "Electorate": "Kingston"
+  },
+  {
+    "State": "SA",
+    "Electorate": "Makin"
+  },
+  {
+    "State": "SA",
+    "Electorate": "Mayo"
+  },
+  {
+    "State": "SA",
+    "Electorate": "Spence"
+  },
+  {
+    "State": "SA",
+    "Electorate": "Sturt"
+  },
+  {
+    "State": "TAS",
+    "Electorate": "Bass"
+  },
+  {
+    "State": "TAS",
+    "Electorate": "Braddon"
+  },
+  {
+    "State": "TAS",
+    "Electorate": "Clark"
+  },
+  {
+    "State": "TAS",
+    "Electorate": "Franklin"
+  },
+  {
+    "State": "TAS",
+    "Electorate": "Lyons"
+  },
+  {
+    "State": "VIC",
+    "Electorate": "Aston"
+  },
+  {
+    "State": "VIC",
+    "Electorate": "Ballarat"
+  },
+  {
+    "State": "VIC",
+    "Electorate": "Bendigo"
+  },
+  {
+    "State": "VIC",
+    "Electorate": "Bruce"
+  },
+  {
+    "State": "VIC",
+    "Electorate": "Calwell"
+  },
+  {
+    "State": "VIC",
+    "Electorate": "Casey"
+  },
+  {
+    "State": "VIC",
+    "Electorate": "Chisholm"
+  },
+  {
+    "State": "VIC",
+    "Electorate": "Cooper"
+  },
+  {
+    "State": "VIC",
+    "Electorate": "Corangamite"
+  },
+  {
+    "State": "VIC",
+    "Electorate": "Corio"
+  },
+  {
+    "State": "VIC",
+    "Electorate": "Deakin"
+  },
+  {
+    "State": "VIC",
+    "Electorate": "Dunkley"
+  },
+  {
+    "State": "VIC",
+    "Electorate": "Flinders"
+  },
+  {
+    "State": "VIC",
+    "Electorate": "Fraser"
+  },
+  {
+    "State": "VIC",
+    "Electorate": "Gellibrand"
+  },
+  {
+    "State": "VIC",
+    "Electorate": "Gippsland"
+  },
+  {
+    "State": "VIC",
+    "Electorate": "Goldstein"
+  },
+  {
+    "State": "VIC",
+    "Electorate": "Gorton"
+  },
+  {
+    "State": "VIC",
+    "Electorate": "Hawke"
+  },
+  {
+    "State": "VIC",
+    "Electorate": "Higgins"
+  },
+  {
+    "State": "VIC",
+    "Electorate": "Holt"
+  },
+  {
+    "State": "VIC",
+    "Electorate": "Hotham"
+  },
+  {
+    "State": "VIC",
+    "Electorate": "Indi"
+  },
+  {
+    "State": "VIC",
+    "Electorate": "Isaacs"
+  },
+  {
+    "State": "VIC",
+    "Electorate": "Jagajaga"
+  },
+  {
+    "State": "VIC",
+    "Electorate": "Kooyong"
+  },
+  {
+    "State": "VIC",
+    "Electorate": "La Trobe"
+  },
+  {
+    "State": "VIC",
+    "Electorate": "Lalor"
+  },
+  {
+    "State": "VIC",
+    "Electorate": "Macnamara"
+  },
+  {
+    "State": "VIC",
+    "Electorate": "Mallee"
+  },
+  {
+    "State": "VIC",
+    "Electorate": "Maribyrnong"
+  },
+  {
+    "State": "VIC",
+    "Electorate": "McEwen"
+  },
+  {
+    "State": "VIC",
+    "Electorate": "Melbourne"
+  },
+  {
+    "State": "VIC",
+    "Electorate": "Menzies"
+  },
+  {
+    "State": "VIC",
+    "Electorate": "Monash"
+  },
+  {
+    "State": "VIC",
+    "Electorate": "Nicholls"
+  },
+  {
+    "State": "VIC",
+    "Electorate": "Scullin"
+  },
+  {
+    "State": "VIC",
+    "Electorate": "Wannon"
+  },
+  {
+    "State": "VIC",
+    "Electorate": "Wills"
+  },
+  {
+    "State": "WA",
+    "Electorate": "Brand"
+  },
+  {
+    "State": "WA",
+    "Electorate": "Burt"
+  },
+  {
+    "State": "WA",
+    "Electorate": "Canning"
+  },
+  {
+    "State": "WA",
+    "Electorate": "Cowan"
+  },
+  {
+    "State": "WA",
+    "Electorate": "Curtin"
+  },
+  {
+    "State": "WA",
+    "Electorate": "Durack"
+  },
+  {
+    "State": "WA",
+    "Electorate": "Forrest"
+  },
+  {
+    "State": "WA",
+    "Electorate": "Fremantle"
+  },
+  {
+    "State": "WA",
+    "Electorate": "Hasluck"
+  },
+  {
+    "State": "WA",
+    "Electorate": "Moore"
+  },
+  {
+    "State": "WA",
+    "Electorate": "O'Connor"
+  },
+  {
+    "State": "WA",
+    "Electorate": "Pearce"
+  },
+  {
+    "State": "WA",
+    "Electorate": "Perth"
+  },
+  {
+    "State": "WA",
+    "Electorate": "Swan"
+  },
+  {
+    "State": "WA",
+    "Electorate": "Tangney"
+  }
+]

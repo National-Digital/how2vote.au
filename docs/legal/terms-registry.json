@@ -1,0 +1,46 @@
+{
+  "schemaVersion": 1,
+  "currentVersion": "2026-07.1",
+  "versions": [
+    {
+      "version": "2026-07.1",
+      "sha256": "66589bbfc34577999a64dc07eab2b61d3f9707c40ab66ac9bcc1de71e6dec734",
+      "effectiveDate": "2026-07-16"
+    }
+  ],
+  "requiredWording": [
+    {
+      "id": "who-may-use",
+      "text": "The Service is for use by individual voters (natural persons) only. It is not for use by an organisation, and it is not for use by a foreign campaigner or foreign government."
+    },
+    {
+      "id": "owner-only-builder",
+      "text": "Only the browser session that created a comparison can build or print a voting plan from it."
+    },
+    {
+      "id": "shared-read-only",
+      "text": "A shared link is read-only. A voting plan cannot be built from a link you receive — build your own comparison first."
+    },
+    {
+      "id": "no-expiry-no-revoke",
+      "text": "a shared link does not expire and cannot be revoked or deactivated."
+    },
+    {
+      "id": "local-only-authorisation",
+      "text": "The authorisation particulars you type are held only on your device, in memory, for that print. They are never saved and never transmitted to National Digital or anyone else."
+    },
+    {
+      "id": "no-aggregate-withdrawal",
+      "text": "Once a contribution has been merged into the aggregate counts it cannot be identified, withdrawn or deleted, because no per-person record exists."
+    },
+    {
+      "id": "separate-map-licence",
+      "text": "The federal electorate boundary maps are a separate matter with a separate licence."
+    },
+    {
+      "id": "consumer-guarantees",
+      "text": "Nothing in these terms excludes, restricts or modifies any consumer guarantee, right, remedy or liability that cannot lawfully be excluded, restricted or modified, including under the Australian Consumer Law."
+    }
+  ],
+  "notes": "Content-addressed hash registry for the Terms of Use. Each version records the SHA-256 of the canonical Terms body (scripts/check-terms.mjs extractTermsBody: the +page.svelte with <script>/<style> stripped and markup normalised). The guard fails closed if the current wording no longer hashes to the recorded value for currentVersion — a version's text cannot silently change. requiredWording binds the clauses the implemented design depends on so they cannot be removed. Bump apps/web/src/lib/terms/terms.ts TERMS_VERSION, surface it on the Terms page, then run `node scripts/check-terms.mjs --write` to add the new version's hash."
+}

@@ -1,0 +1,29 @@
+{
+  "schemaVersion": 1,
+  "legalName": "General Consulting Services Pty Ltd as trustee for the Australian Business Trust, trading as National Digital",
+  "tradingName": "National Digital",
+  "abn": "13 744 838 758",
+  "acn": "658 447 280",
+  "phone": "1300 800 855",
+  "email": "how2vote@nationaldigital.com.au",
+  "privacyContactEmail": "how2vote@nationaldigital.com.au",
+  "website": "https://nationaldigital.com.au",
+  "authorisation": {
+    "locality": "Gold Coast",
+    "state": "Queensland"
+  },
+  "country": "Australia",
+  "governingLaw": "Queensland, Australia",
+  "dataControllerRole": "operator",
+  "privacyAct": {
+    "status": "signed-off",
+    "determination": "voluntary-app-compliance",
+    "legalBasis": "National Digital voluntarily applies APP-level controls to this application irrespective of any small-business or other exemption under the Privacy Act 1988 (Cth). Confirmed by the two-person compliance review on 2026-07-19 (EV-LEGAL-DEEP-2026-07); optional research collection proceeds under opt-in-off-by-default, field minimisation, per-category consent for sensitive attributes, and aggregate-only at-rest storage.",
+    "voluntarilyAppliesApps": true,
+    "determinationDate": "2026-07-19",
+    "reviewer": "cameron-young",
+    "secondReviewer": "tara-buckley",
+    "nextReviewDate": "2027-07-15",
+    "evidenceRef": "EV-PRIVACY-ACT-DETERMINATION"
+  }
+}

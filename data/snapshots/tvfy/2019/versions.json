@@ -1,0 +1,12 @@
+{
+  "schemaVersion": 1,
+  "electionId": "2019",
+  "active": 1,
+  "history": [
+    {
+      "version": 1,
+      "createdAt": "2026-07-15T06:30:43.598Z",
+      "lockedAt": "2026-07-15T06:31:26.642Z"
+    }
+  ]
+}

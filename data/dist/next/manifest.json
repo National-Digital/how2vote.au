@@ -1,0 +1,15 @@
+{
+  "checksum": "47151da83625281e9f6441e250757f440add47137018922ff396eaf692a8d96d",
+  "dataVersion": "2026-06-23",
+  "methodologyVersion": "2026.1",
+  "compliancePolicyVersion": "2026.2",
+  "attribution": "Vote data © They Vote For You (OpenAustralia Foundation), ODbL",
+  "builtFrom": "They Vote For You (ODbL) + Australian Electoral Commission nominations",
+  "counts": {
+    "questions": 29,
+    "parties": 51,
+    "house": 0,
+    "senate": 0,
+    "electorates": 0
+  }
+}

@@ -1,0 +1,14 @@
+{
+  "schemaVersion": 1,
+  "electionId": "2019",
+  "partiesSourceHash": "f896e9fd0f45ca7772022d7aed140b2624c524237e6434eb373ef1fd5dede152",
+  "coverage": {
+    "parties": 14,
+    "independents": 7,
+    "noRecordNames": 41
+  },
+  "status": "approved",
+  "reviewer": "cameron-young",
+  "reviewedAt": "2026-07-18",
+  "note": "Candidate↔party mapping for 2019 approved (parties.json: aecName/alias→key + the noRecord acknowledgement list) against the AEC party register. partiesSourceHash ties this record to the exact parties.json bytes — any mapping change invalidates it and forces re-review (fail-closed). Reviewed by cameron-young and countersigned by tara-buckley (this schema records a single reviewer id; the joint sign-off is also recorded as EV-CANDIDATE-MAPPING in docs/legal/control-register.json)."
+}

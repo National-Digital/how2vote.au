@@ -1,0 +1,24 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-07-15T22:50:59.389Z",
+  "elections": [
+    {
+      "id": "2025",
+      "label": "2025 Federal Election",
+      "published": false,
+      "totalResponses": 0
+    },
+    {
+      "id": "2022",
+      "label": "2022 Federal Election",
+      "published": false,
+      "totalResponses": 0
+    },
+    {
+      "id": "2019",
+      "label": "2019 Federal Election",
+      "published": false,
+      "totalResponses": 0
+    }
+  ]
+}

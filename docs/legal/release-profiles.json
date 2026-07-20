@@ -1,0 +1,25 @@
+{
+  "schemaVersion": 1,
+  "note": "Release profiles for scripts/check-release-manifest.mjs. A profile names the control-register controls (control-N) that MUST be implemented/verified before a release under that profile can ship, even while the wider programme still has pending controls. This is the fail-closed middle ground between --mode draft (permits any incomplete control) and --mode production (requires every control complete). The deploy workflow selects a profile with --profile <name>.",
+  "profiles": {
+    "historical-demo": {
+      "description": "Public historical-only service (past elections; no live ballot). Blocks release on the legally-material controls identified in legal review: print authorisation, ballot + candidate-mapping verification, public privacy representations, source and data licensing, operator identity, and the security controls publicly described as operational. Other controls may remain partial/pending.",
+      "requiredControls": [
+        "control-1",
+        "control-4",
+        "control-5",
+        "control-6",
+        "control-10",
+        "control-11",
+        "control-13",
+        "control-14",
+        "control-15",
+        "control-16",
+        "control-18",
+        "control-20",
+        "control-21",
+        "control-28"
+      ]
+    }
+  }
+}
