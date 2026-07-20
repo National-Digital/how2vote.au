@@ -1,6 +1,6 @@
 # how2vote research survey — codebook
 
-Status: **v3** — the research-schema version (see Version history) · Election coverage: 2019 / 2022 / 2025 ·
+Status: **v1** — the research-schema version (see Version history) · Election coverage: 2019 / 2022 / 2025 ·
 Decisions: [ADR-0007](../adr/0007-same-origin-research-backend.md),
 [ADR-0008](../adr/0008-aggregate-counters.md) ·
 Estimand registry: [analysis-plan.md](analysis-plan.md)

@@ -56,8 +56,8 @@ regardless (D1 of ADR 0006 gating), so a provisional order can never be printed 
 
 **D3 — Provisional share links are pinned to the quiz version and keyed by policy id.** A shared
 comparison encodes only the answers (never a chosen order — unchanged from ADR 0006). For a provisional
-quiz the codec is version `v3` (`packages/engine/src/share.ts`):
-`v3.<election-id>.<data-version>.<electorate-slug>.<payload>`.
+quiz the codec is version `v2` (`packages/engine/src/share.ts`):
+`v2.<election-id>.<data-version>.<electorate-slug>.<payload>`.
 
 - The payload names each answer by its **They Vote For You policy id** (the question `id`, which _is_
   the TVFY policy id — `questionSchema`), not by position. An answer's binding to a proposition never

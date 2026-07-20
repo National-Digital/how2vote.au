@@ -234,7 +234,7 @@ verification `[ops]` is re-run whenever a purpose-based deletion occurs.
 - `functions/api/research/geography.test.ts` — the geography ping carries and stores nothing but
   election + electorate.
 - `e2e/research.spec.ts` — skipping uploads nothing; consent alone uploads nothing; opting in posts
-  exactly one v3 contribution with **no raw answers/weights on the wire** plus one unlinkable
+  exactly one v1 contribution with **no raw answers/weights on the wire** plus one unlinkable
   geography ping; failed uploads are not retried; navigation away sends nothing.
 - `e2e/consent.spec.ts` — no electorate/state/fragment/answer reaches analytics or any tracking host
   (the site transmits no client-side errors at all — there is no error beacon).

@@ -23,7 +23,7 @@ flowchart TD
     D -->|"opt-in consent + 18+ confirmed<br/>fire-and-forget, keepalive"| SPLIT{"TWO independent requests<br/>(share no key)"}
   end
 
-  SPLIT -->|"POST /api/research (payload v3)<br/>match + stances + demographics + state<br/>+ election id + timetable + versions + consentVersion<br/>NO raw answers · NO electorate · NO IP sent by app"| R["Pages Function<br/>research.ts"]
+  SPLIT -->|"POST /api/research (payload v1)<br/>match + stances + demographics + state<br/>+ election id + timetable + versions + consentVersion<br/>NO raw answers · NO electorate · NO IP sent by app"| R["Pages Function<br/>research.ts"]
   SPLIT -->|"POST /api/research/geography<br/>election id + electorate ONLY<br/>NO results/demographics/state/date"| G["Pages Function<br/>geography.ts"]
 
   R -->|"validate + allowlist<br/>classify cohort (server clock)<br/>ONE atomic batch of UPSERT +1<br/>uniform 204 · nothing logged"| RT
@@ -51,7 +51,7 @@ automatically, never on skip, never on tab-close. At upload the client:
 - **derives on device**: `topPartyMatch` (the same engine scoring the card shows) reduces the
   answers to a single best-match party key, and `stanceOf` reduces each answered proposition to
   agree / neutral / disagree. **The `{id, points, important}` vector is never serialised into any
-  request** — this is the primary minimisation control (payload v3, ADR-0008);
+  request** — this is the primary minimisation control (payload v1, ADR-0008);
 - **splits into two independent `fetch` requests that share no key or token**: the derived
   contribution → `POST /api/research`; the electorate → `POST /api/research/geography`.
 
