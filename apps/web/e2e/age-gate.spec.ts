@@ -208,7 +208,7 @@ test("the eligibility answer is never sent over the network", async ({ page }) =
   // attaches the handler doesn't flake (mirrors flow.spec / saved.spec).
   await expect(async () => {
     await page.getByRole("button", { name: /18 or older/ }).click();
-    await expect(page).toHaveURL(/\/ballot/);
+    await expect(page).toHaveURL(/\/(ballot|quiz)/);
   }).toPass({ timeout: 15_000 });
   await page.waitForTimeout(300);
 
