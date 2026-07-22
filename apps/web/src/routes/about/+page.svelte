@@ -19,12 +19,6 @@
   /** The LinkedIn profile from a signatory's verified external identities, if any. */
   const linkedinOf = (sameAs: string[]) => sameAs.find((u) => u.includes("linkedin.com"));
 
-  // AGPL network-use: a visible link to the EXACT deployed source. The deploy tags each release
-  // v<version> (deploy.yml), so link the running version's tag; fall back to the repo for a dev build.
-  const sourceUrl = $derived(
-    version && !version.includes("dev") ? `${SOURCE_REPO_URL}/tree/v${version}` : SOURCE_REPO_URL,
-  );
-
   const manifest = $derived(election.manifest);
   const label = $derived(election.meta.label);
 
@@ -118,8 +112,8 @@
     comparison was built from.
   </p>
   <p>
-    You can read the exact deployed source at
-    <a href={sourceUrl} target="_blank" rel="noopener noreferrer">{sourceUrl}</a>
+    You can read the source at
+    <a href={SOURCE_REPO_URL} target="_blank" rel="noopener noreferrer">{SOURCE_REPO_URL}</a>
     (with its build instructions and per-domain data licences). The versions and content hashes this build
     was made from are recorded below.
   </p>
@@ -131,8 +125,8 @@
   </p>
   <ul>
     <li>
-      <strong>Application</strong> — {version}{#if buildDate}, built {buildDate}{#if shortCommit}
-          (commit <code>{shortCommit}</code>){/if}{/if}
+      <strong>Application</strong> — {version}{#if buildDate}, built {buildDate}{#if shortCommit}{" "}(commit
+          <code>{shortCommit}</code>){/if}{/if}
     </li>
     <li>
       <strong>Scoring methodology</strong> — {manifest.methodologyVersion} (for the {label} card)
@@ -233,8 +227,7 @@
     {#each PUBLIC_SIGNATORIES as person (person.id)}
       {@const linkedin = linkedinOf(person.sameAs)}
       <li id={person.id}>
-        <strong>{person.legalName}</strong> — {person.jobTitle}, {person.org}{#if linkedin}
-          (<a
+        <strong>{person.legalName}</strong> — {person.jobTitle}, {person.org}{#if linkedin}{" "}(<a
             href={linkedin}
             target="_blank"
             rel="noopener noreferrer"
