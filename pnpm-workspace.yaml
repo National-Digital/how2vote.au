@@ -26,6 +26,14 @@ overrides:
   # client. mapshaper still pins adm-zip@^0.5.9 (excludes the fix), so forced to the patched line —
   # a durable fix rather than an expiring risk acceptance (docs/legal/security-register.json).
   adm-zip@<0.6.0: ">=0.6.0"
+  # fast-uri 3.x < 3.1.4 has a host-confusion flaw via a literal backslash authority delimiter
+  # (GHSA-v2hh-gcrm-f6hx, high). Only reached transitively via eslint-plugin-tsdoc ->
+  # @microsoft/tsdoc-config -> ajv in the dev-only lint toolchain; forced to the patched line.
+  fast-uri@>=3.0.0 <3.1.4: "3.1.4"
+  # sharp < 0.35.0 inherits libvips CVEs (GHSA-f88m-g3jw-g9cj, high). The app's own sharp is
+  # already 0.35.3; this forces the second instance pulled in via wrangler -> miniflare
+  # (dev-only Workers emulation) onto the same patched line.
+  sharp@<0.35.0: "0.35.3"
 
 allowBuilds:
   # mapshaper optionals for formats we don't use (sqlite/msgpack); never build their natives.
