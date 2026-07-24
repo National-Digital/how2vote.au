@@ -92,8 +92,8 @@ export function normalisePageText(raw) {
 export function extractTermsBody(svelteSource) {
   if (typeof svelteSource !== "string") return "";
   const withoutBlocks = svelteSource
-    .replace(/<script[\s\S]*?<\/script>/gi, " ")
-    .replace(/<style[\s\S]*?<\/style>/gi, " ");
+    .replace(/<script[\s\S]*?<\/script\s*>/gi, " ")
+    .replace(/<style[\s\S]*?<\/style\s*>/gi, " ");
   return normalisePageText(withoutBlocks);
 }
 
@@ -151,7 +151,7 @@ export function scanContradictions(raw) {
   if (typeof raw !== "string" || raw.length === 0) return [];
   // Scan the visible copy only (drop script/style, keep it as text with clause delimiters intact).
   const text = normalisePageText(
-    raw.replace(/<script[\s\S]*?<\/script>/gi, " ").replace(/<style[\s\S]*?<\/style>/gi, " "),
+    raw.replace(/<script[\s\S]*?<\/script\s*>/gi, " ").replace(/<style[\s\S]*?<\/style\s*>/gi, " "),
   );
   const hits = [];
   for (const { label, re } of CONTRADICTIONS) {
