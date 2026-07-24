@@ -64,6 +64,9 @@ const APPLIES_WHEN = ["always", "indigenous-status-collected"];
 /** @param {unknown} v */
 const isNonEmptyString = (v) => typeof v === "string" && v.trim().length > 0;
 
+/** Escape a string for literal use inside a RegExp. */
+const escapeRegExp = (s) => String(s).replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+
 /**
  * Parse an ISO-8601 date (YYYY-MM-DD or full timestamp) to epoch ms, or null.
  * @param {unknown} v
@@ -253,7 +256,7 @@ export function verdict(input = {}) {
     const skipRoute = (vol && vol.skipRoute) || "/card";
     // A skip() that navigates to the core output, and a skip button that is NOT consent-gated.
     const skipsToCore = new RegExp(
-      `function skip\\([^)]*\\)[^}]*goto\\(\\s*["']${skipRoute.replace(/[/]/g, "\\/")}["']`,
+      `function skip\\([^)]*\\)[^}]*goto\\(\\s*["']${escapeRegExp(skipRoute)}["']`,
     ).test(surveyPage);
     if (!skipsToCore) {
       push(`survey page: no un-gated skip() navigating to the core output ${skipRoute}`);
