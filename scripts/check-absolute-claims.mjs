@@ -62,9 +62,9 @@ export function normalise(raw) {
   return raw
     .replace(/<[^>]*>/g, " ")
     .replace(/&nbsp;/g, " ")
-    .replace(/&amp;/g, "&")
     .replace(/&lt;/g, "<")
     .replace(/&gt;/g, ">")
+    .replace(/&amp;/g, "&") // unescape last so it cannot re-form another entity
     .replace(/\s+/g, " ")
     .trim();
 }
