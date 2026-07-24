@@ -48,7 +48,9 @@ describe("registry validation", () => {
 
   it("requires sameAs to include the GitHub URL", () => {
     const r = clone(REGISTRY);
-    r.signatories[0].sameAs = r.signatories[0].sameAs.filter((u) => !u.includes("github.com"));
+    r.signatories[0].sameAs = r.signatories[0].sameAs.filter(
+      (u) => !u.startsWith("https://github.com/"),
+    );
     expect(hasError(verdict(r, opts()), "must include the GitHub URL")).toBe(true);
   });
 
