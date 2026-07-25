@@ -13,7 +13,7 @@ overrides:
   # (avoid auto-adopting the very newest transitive patches). NOTE: no repo-wide `minimumReleaseAge`
   # gate is enabled — with the current lockfile pnpm rejects several recently-published entries
   # (eslint, mapshaper, …), so turning it on needs the lockfile to settle or those pinned first.
-  postcss: 8.5.16
+  postcss: 8.5.18
   es-module-lexer: 2.3.0
   # file-type < 21.3.1 has an infinite-loop DoS in its ASF parser on malformed input
   # (GHSA-5v7r-6r5c-r473). Only reached transitively via mapshaper -> @ngageoint/geopackage
@@ -34,6 +34,10 @@ overrides:
   # already 0.35.3; this forces the second instance pulled in via wrangler -> miniflare
   # (dev-only Workers emulation) onto the same patched line.
   sharp@<0.35.0: "0.35.3"
+  # brace-expansion <= 5.0.7 has an unbounded-expansion DoS (GHSA-mh99-v99m-4gvg, high) — a crafted
+  # brace pattern can OOM the process. Reached only in dev tooling glob matching (single 5.x instance
+  # in the tree), never on user input, but forced to the patched line to keep the gate clean.
+  brace-expansion@<5.0.8: ">=5.0.8"
 
 allowBuilds:
   # mapshaper optionals for formats we don't use (sqlite/msgpack); never build their natives.
