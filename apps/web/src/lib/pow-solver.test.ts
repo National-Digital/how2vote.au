@@ -50,4 +50,20 @@ describe("in-page solver ↔ altcha-lib server verification interop", () => {
     });
     expect(await solvePow(challenge as PowChallenge, 250)).toBeNull();
   });
+
+  it("rejects a malformed challenge in microseconds instead of spinning the timeout", async () => {
+    const base = { algorithm: "PBKDF2/SHA-256", cost: 10, keyLength: 32, keyPrefix: "00" };
+    const bad = [
+      { nonce: "abc", salt: "00", ...base }, // odd-length nonce
+      { nonce: "", salt: "", ...base, keyPrefix: "0000" }, // empty hex
+      { nonce: "zz", salt: "00", ...base }, // non-hex
+      { nonce: "00", salt: "00", ...base, keyPrefix: "00".repeat(33) }, // prefix longer than the key
+    ];
+    for (const parameters of bad) {
+      const started = performance.now();
+      // A long timeout would be burned entirely without the shape guard; assert it returns fast.
+      expect(await solvePow({ parameters } as PowChallenge, 30_000)).toBeNull();
+      expect(performance.now() - started).toBeLessThan(1_000);
+    }
+  });
 });

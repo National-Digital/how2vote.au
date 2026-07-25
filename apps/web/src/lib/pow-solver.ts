@@ -35,6 +35,11 @@ export interface PowSolution {
   time: number;
 }
 
+/** Non-empty, even-length string of hex digit pairs. Guards hexToBuffer, whose silent truncation of
+ *  odd/non-hex input would otherwise derive against a corrupt nonce/salt that no verifier can
+ *  reproduce — the solver would then burn the whole timeout on an unsolvable challenge. */
+const isHex = (s: string): boolean => s.length >= 2 && s.length % 2 === 0 && /^[0-9a-f]+$/i.test(s);
+
 function hexToBuffer(hex: string): Uint8Array {
   const out = new Uint8Array(hex.length >> 1);
   for (let i = 0; i < out.length; i++) out[i] = parseInt(hex.slice(i * 2, i * 2 + 2), 16);
@@ -59,6 +64,19 @@ export async function solvePow(
   timeoutMs = 30_000,
 ): Promise<PowSolution | null> {
   const { nonce, salt, keyPrefix } = challenge.parameters;
+  // Reject a malformed challenge in microseconds rather than spinning the full timeout on inputs
+  // hexToBuffer would silently corrupt. keyPrefix must also fit within the derived key.
+  if (
+    typeof nonce !== "string" ||
+    typeof salt !== "string" ||
+    typeof keyPrefix !== "string" ||
+    !isHex(nonce) ||
+    !isHex(salt) ||
+    !/^[0-9a-f]*$/i.test(keyPrefix) ||
+    keyPrefix.length > challenge.parameters.keyLength * 2
+  ) {
+    return null;
+  }
   const nonceBuf = hexToBuffer(nonce);
   const saltBuf = hexToBuffer(salt);
   // An even-length prefix compares as bytes; an odd-length one falls back to hex-string compare

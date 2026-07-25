@@ -50,6 +50,8 @@ async function post(
       body: JSON.stringify({ kind, ...compact(fields), ...(challenge ? { challenge } : {}) }),
       cache: "no-store",
       credentials: "omit",
+      // Bound the round-trip so a captive portal / half-open connection can't hang "Sending…".
+      signal: AbortSignal.timeout(20_000),
     });
     return res.ok ? "ok" : "error";
   } catch {

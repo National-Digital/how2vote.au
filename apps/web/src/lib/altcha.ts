@@ -33,13 +33,22 @@ const CHALLENGE_ENDPOINT = "/api/challenge";
 /** Give slow devices ample room while still bounding a pathological challenge. The expected solve
  *  is well under a second; the challenge itself expires server-side after 10 minutes. */
 const SOLVE_TIMEOUT_MS = 30_000;
+/** Bound the network round-trip so a captive portal or half-open connection (where navigator.onLine
+ *  is still true) can't leave the submit button stuck on "Sending…" forever. */
+const FETCH_TIMEOUT_MS = 15_000;
 
 /**
  * Obtain a challenge solution for a purpose: fetch a signed challenge, solve it on-device, return
- * the base64 payload the server verifies. Returns undefined when not in the browser or when the
- * challenge layer is not provisioned (HTTP 204/4xx — the caller then posts without a solution and
- * the server's verifier decides); rejects only when the layer IS reachable but fetching or solving
- * failed, which callers treat as an ordinary submit error.
+ * the base64 payload the server verifies.
+ *
+ * Returns undefined ONLY when there is genuinely nothing to solve — not in the browser, or the
+ * challenge layer is not provisioned (HTTP 204) / the Functions aren't deployed (404). In those
+ * cases the caller posts without a solution and the server's verifier decides.
+ *
+ * REJECTS on any real failure — a 4xx/5xx that isn't 404 (e.g. 429 rate-limited, 5xx), a network
+ * error/timeout, or a challenge that can't be solved in time — so the caller surfaces a genuine,
+ * retryable error rather than silently proceeding tokenless (which in production is an automatic
+ * refusal the user would see as an unexplained failure).
  */
 export async function solveChallenge(purpose: ChallengePurpose): Promise<string | undefined> {
   if (!browser) return undefined;
@@ -49,10 +58,13 @@ export async function solveChallenge(purpose: ChallengePurpose): Promise<string 
     body: JSON.stringify({ purpose }),
     cache: "no-store",
     credentials: "omit",
+    signal: AbortSignal.timeout(FETCH_TIMEOUT_MS),
   });
   // 204 = challenge layer not provisioned; 404 = Functions not deployed (static preview). Either
-  // way there is nothing to solve — proceed without a solution rather than breaking the submit.
-  if (res.status === 204 || !res.ok) return undefined;
+  // way there is nothing to solve — degrade to no solution. Any OTHER non-ok status (429/5xx) is a
+  // real, transient failure: throw so the caller reports it rather than posting tokenless.
+  if (res.status === 204 || res.status === 404) return undefined;
+  if (!res.ok) throw new Error(`Challenge request failed (${res.status})`);
   const body = (await res.json()) as { challenge?: unknown };
   const challenge = body.challenge;
   if (typeof challenge !== "object" || challenge === null) return undefined;

@@ -48,6 +48,16 @@ export const CHALLENGE_ALGORITHM = "PBKDF2/SHA-256";
 export const CHALLENGE_COST = 10_000;
 /** Derived-key length in bytes (the altcha-lib default, pinned so the accepted shape is explicit). */
 export const CHALLENGE_KEY_LENGTH = 32;
+/** The required derived-key prefix — the actual proof-of-work target. A 1-byte ("00") prefix means
+ *  ~256 expected derivations to solve. CRITICAL: altcha-lib's verifySolution does NOT check the
+ *  prefix (it only re-derives the submitted counter and compares to the submitted key, both
+ *  attacker-controlled), so the verifier below MUST enforce this itself — otherwise counter=0 with
+ *  its honestly-derived key passes with zero work done. Pinned here and asserted at both issue and
+ *  verify time so a challenge can never be minted or accepted at an easier difficulty. */
+export const CHALLENGE_KEY_PREFIX = "00";
+/** Largest counter the solver can submit (big-endian uint32, per the ALTCHA v2 protocol). Anything
+ *  outside [0, 2^32) is not a value the solver could have produced, so reject it before deriving. */
+const MAX_COUNTER = 0xffffffff;
 /** Challenge validity window. Issued at submit time and solved within seconds; the window allows
  *  slow devices and a retry without letting a solved challenge live long. Also bounds how long the
  *  spent-nonce marker must be retained. */
@@ -76,6 +86,7 @@ export function issueChallenge(purpose: ChallengePurpose, secret: string): Promi
     algorithm: CHALLENGE_ALGORITHM,
     cost: CHALLENGE_COST,
     keyLength: CHALLENGE_KEY_LENGTH,
+    keyPrefix: CHALLENGE_KEY_PREFIX,
     deriveKey,
     expiresAt: new Date(Date.now() + CHALLENGE_TTL_SECONDS * 1_000),
     data: { purpose },
@@ -163,18 +174,30 @@ export class AltchaVerifier implements ChallengeVerifier {
     if (!payload) return false;
     const { challenge, solution: sol } = payload;
     const p = challenge.parameters;
+    // Pin the ENTIRE accepted shape, difficulty included. keyPrefix is the difficulty and MUST be
+    // pinned here: it is signed, but nothing downstream checks it, so an easier-prefix challenge
+    // would otherwise be accepted. (The HMAC signature, verified below, proves we issued these
+    // values; these checks are belt-and-braces against a future issuance drift.)
     if (
       p.algorithm !== CHALLENGE_ALGORITHM ||
       p.cost !== CHALLENGE_COST ||
       p.keyLength !== CHALLENGE_KEY_LENGTH ||
+      p.keyPrefix !== CHALLENGE_KEY_PREFIX ||
       typeof p.expiresAt !== "number" ||
       p.data?.purpose !== this.purpose
     ) {
       return false;
     }
+    // The counter must be a value the solver could have produced — a big-endian uint32. Reject
+    // NaN/float/negative/oversized before deriving (setUint32 would silently alias them onto another
+    // counter otherwise).
+    if (!Number.isInteger(sol.counter) || sol.counter < 0 || sol.counter > MAX_COUNTER) {
+      return false;
+    }
     try {
       // Checks, in order: expiry, the HMAC signature over the parameters (tamper check), then one
-      // key re-derivation to prove the counter actually solves the challenge. No network.
+      // key re-derivation to prove the submitted key really is the derivation of the submitted
+      // counter. No network.
       const result = await verifySolution({
         challenge,
         solution: sol,
@@ -182,15 +205,21 @@ export class AltchaVerifier implements ChallengeVerifier {
         hmacSignatureSecret: this.secret,
       });
       if (!result.verified) return false;
+      // CRITICAL — the actual proof-of-work. verifySolution proves derivedKey == derive(counter) but
+      // NOT that it hits the target prefix, so without this check counter=0 with its honest key
+      // passes having done zero search. derivedKey is lowercase hex and keyPrefix is even-length hex,
+      // so the string-prefix test is equivalent to the byte-prefix test.
+      if (!sol.derivedKey.startsWith(CHALLENGE_KEY_PREFIX)) return false;
+      // Single-use: burn the (signed, random) challenge nonce. `consume` is true exactly once, so a
+      // captured solved challenge cannot be replayed inside its validity window. Inside the try so a
+      // store error fails CLOSED (reject) rather than escaping as an unhandled 500.
+      if (!this.nonces) return true;
+      const ttl = p.expiresAt - Math.floor(Date.now() / 1_000);
+      return await this.nonces.consume(NONCE_KEY_PREFIX + p.nonce, ttl);
     } catch {
-      // Fail closed on any malformed input the shape check above did not anticipate.
+      // Fail closed on any malformed input the shape check above did not anticipate, or a store error.
       return false;
     }
-    // Single-use: burn the (signed, random) challenge nonce. `consume` is true exactly once, so a
-    // captured solved challenge cannot be replayed inside its validity window.
-    if (!this.nonces) return true;
-    const ttl = p.expiresAt - Math.floor(Date.now() / 1_000);
-    return this.nonces.consume(NONCE_KEY_PREFIX + p.nonce, ttl);
   }
 }
 

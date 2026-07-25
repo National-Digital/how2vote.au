@@ -4,7 +4,7 @@
     {
       "id": "strictly-necessary",
       "label": "Strictly necessary",
-      "description": "Needed for the site to work — serving the app, remembering your answers on your own device, and security. These are always active and cannot be switched off, and require no consent. They set no third-party cookies: the contact form, feedback widget and survey are protected by a self-hosted, cookieless anti-spam check that runs entirely on your device, only when you submit one of them — no third-party service is involved.",
+      "description": "Needed for the site to work — serving the app, remembering your answers on your own device, and security. These are always active and cannot be switched off, and require no consent. They set no third-party cookies: the contact form, feedback widget and survey are protected by a self-hosted, cookieless anti-spam check — a short computation your device runs only when you submit one of them, with no third-party CAPTCHA or tracker loaded.",
       "consentRequired": false,
       "consentModeSignals": ["security_storage"]
     },

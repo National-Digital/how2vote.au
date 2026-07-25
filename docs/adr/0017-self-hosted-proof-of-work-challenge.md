@@ -92,10 +92,15 @@ distinguish payload paths, not channels.
   proprietary JS, no per-variant feature drop ([store-distribution](../store-distribution.md)).
 - **Honest trade-off: PoW is a weaker bot deterrent than Turnstile's behavioural signals.** A
   proof-of-work only prices submissions (CPU time per attempt); it cannot distinguish a human from
-  a well-funded bot the way behavioural analysis can. Mitigations already in place: the edge
-  rate-limit + Bot Fight Mode on the ingestion path, single-use purpose-bound challenges burned in
-  the atomic nonce store, the single-use signed submission token, and registry validation — abuse
-  is bounded and priced, not merely detected.
+  a well-funded bot the way behavioural analysis can. Because it prices but does not *cap volume*,
+  the per-IP edge rate-limit rule is load-bearing and **must be extended to `/api/challenge` and
+  `/api/forms`**, not only the research routes — otherwise `/api/forms` can be flooded to exhaust
+  the email quota. Mitigations, together: the edge rate-limit + Bot Fight Mode across every `/api`
+  route, single-use purpose-bound challenges burned in the atomic nonce store, the single-use signed
+  submission token, and registry validation — abuse is bounded and priced, not merely detected.
+  (The prefix difficulty is enforced server-side in `AltchaVerifier` — altcha-lib's `verifySolution`
+  checks only that the submitted key derives from the submitted counter, so the app asserts the
+  key-prefix hit itself; without that, the work would be unverified.)
 - **New operational dependency: Cloudflare Email Sending.** Form delivery now rides our own
   Cloudflare account (domain onboarding, token scope, sending quotas) instead of Formspree's SLA.
   It fails closed in production, and an outage affects only form delivery — never the quiz,

@@ -5,6 +5,7 @@ import type { Challenge } from "altcha-lib/types";
 import {
   AllowAllVerifier,
   AltchaVerifier,
+  CHALLENGE_KEY_PREFIX,
   CHALLENGE_TTL_SECONDS,
   DenyAllVerifier,
   issueChallenge,
@@ -20,6 +21,22 @@ async function solved(challenge: Challenge): Promise<string> {
   const solution = await solveChallenge({ challenge, deriveKey });
   if (!solution) throw new Error("test solve timed out");
   return btoa(JSON.stringify({ challenge, solution }));
+}
+
+/** Honestly derive the key for a specific counter (nonce ‖ big-endian uint32), regardless of
+ *  whether it hits the prefix — used to forge a "did no work" payload. */
+async function deriveAt(challenge: Challenge, counter: number): Promise<string> {
+  const hex = (s: string) => Uint8Array.from(s.match(/../g)!.map((h) => parseInt(h, 16)));
+  const nonce = hex(challenge.parameters.nonce);
+  const password = new Uint8Array(nonce.length + 4);
+  password.set(nonce, 0);
+  new DataView(password.buffer).setUint32(nonce.length, counter, false);
+  const { derivedKey } = await deriveKey(
+    challenge.parameters,
+    hex(challenge.parameters.salt),
+    password,
+  );
+  return Array.from(derivedKey, (b) => b.toString(16).padStart(2, "0")).join("");
 }
 
 // One real research-purpose solve, shared by every test that needs a valid payload (each test uses
@@ -116,6 +133,47 @@ describe("AltchaVerifier — issue → solve → verify, in-process", () => {
     expect(await verifier.verify(btoa(JSON.stringify(forged)))).toBe(false);
     // Neither attempt burned the genuine payload.
     expect(await verifier.verify(researchPayload)).toBe(true);
+  });
+
+  it("REJECTS a no-work solution: valid signature + honest key for a counter that misses the prefix", async () => {
+    // The core proof-of-work regression guard. altcha-lib's verifySolution only checks
+    // derivedKey === derive(counter); it does NOT check the prefix. Without the app's own prefix
+    // enforcement this payload — one honest derivation at a counter that did NOT solve — would pass
+    // having done zero search. Find such a counter (any key not starting with the prefix).
+    const challenge = await issueChallenge("research", SECRET);
+    let counter = 0;
+    let derivedKey = "";
+    for (; counter < 1024; counter++) {
+      derivedKey = await deriveAt(challenge, counter);
+      if (!derivedKey.startsWith(CHALLENGE_KEY_PREFIX)) break;
+    }
+    expect(derivedKey.startsWith(CHALLENGE_KEY_PREFIX)).toBe(false); // it is genuinely NOT a solution
+    const payload = btoa(JSON.stringify({ challenge, solution: { counter, derivedKey, time: 1 } }));
+    const verifier = new AltchaVerifier(SECRET, "research", new MemoryNonceStore());
+    expect(await verifier.verify(payload)).toBe(false);
+  }, 60_000);
+
+  it("rejects a counter outside the big-endian uint32 range", async () => {
+    const base = JSON.parse(atob(researchPayload)) as {
+      challenge: Challenge;
+      solution: { counter: number; derivedKey: string };
+    };
+    for (const bad of [-1, 0.5, 4294967296, 1e30]) {
+      const p = structuredClone(base);
+      p.solution.counter = bad;
+      const verifier = new AltchaVerifier(SECRET, "research", new MemoryNonceStore());
+      expect(await verifier.verify(btoa(JSON.stringify(p)))).toBe(false);
+    }
+  });
+
+  it("fails closed (false, no throw) when the single-use store errors", async () => {
+    const throwingStore = {
+      consume: async () => {
+        throw new Error("nonce store unavailable");
+      },
+    };
+    const verifier = new AltchaVerifier(SECRET, "research", throwingStore as never);
+    expect(await verifier.verify(researchPayload)).toBe(false);
   });
 
   it("rejects an expired challenge", async () => {

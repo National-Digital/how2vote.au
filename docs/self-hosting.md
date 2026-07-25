@@ -167,6 +167,18 @@ Everything above fails closed in production — the research endpoints and the f
 Cloudflare values are set, the build still runs and the deploy step skips, so a fork can build and
 test with no Cloudflare account at all.
 
+- **Edge rate limit (required for the API routes):** the anti-abuse proof-of-work raises the cost
+  of each submission but does not cap request volume. Configure a Cloudflare WAF per-IP rate-limit
+  rule (and Bot Fight Mode) covering **`/api/research`, `/api/research/geography`, `/api/research/token`,
+  `/api/challenge` and `/api/forms`** — not just the research routes. Without it, `/api/forms` can be
+  flooded to exhaust the Email Sending quota (a self-inflicted-inbox / cost DoS), and the challenge
+  issuer can be hammered. Verifying `FORMS_DELIVERY_ADDRESS` as a destination address also keeps
+  sends on the free tier.
+- **Non-production note:** a *deployed* non-production build (marker `preview`/`staging`) with the
+  relay secrets set but the challenge secret unset accepts form submits inertly (204) and sends
+  nothing — provision `ALTCHA_HMAC_SECRET` there too if you want the relay actually exercised, or
+  expect forms to no-op silently on that deployment.
+
 ---
 
 ## Summary checklist

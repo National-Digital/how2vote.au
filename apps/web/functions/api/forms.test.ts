@@ -139,6 +139,25 @@ describe("forms endpoint — self-hosted intake, challenge-gated, relay-only", (
     expect(fetchMock).not.toHaveBeenCalled();
   });
 
+  it("NEVER relays when the challenge verifier is not enforced, even with the relay provisioned", async () => {
+    // Non-production with the EMAIL_* relay secrets set but NO challenge secret → AllowAll verifier
+    // (verify(null) === true). Without the enforced-gate this would send unauthenticated mail from a
+    // public preview URL. It must inert-accept (204) and send nothing.
+    const fetchMock = vi.spyOn(globalThis, "fetch");
+    const relayButNoChallenge = {
+      EMAIL_API_TOKEN: "cf-api-token",
+      EMAIL_ACCOUNT_ID: "acct-123",
+      FORMS_FROM_ADDRESS: "forms@send.how2vote.au",
+      FORMS_DELIVERY_ADDRESS: "inbox@example.org",
+    };
+    const res = await post(
+      { kind: "contact", message: "unauthenticated", challenge: null },
+      relayButNoChallenge,
+    );
+    expect(res.status).toBe(204);
+    expect(fetchMock).not.toHaveBeenCalled();
+  });
+
   it("FAILS CLOSED (503) in production when the challenge or relay is unprovisioned", async () => {
     const production = { RESEARCH_ENVIRONMENT: "production" };
     expect((await post(validContact(), production)).status).toBe(503);

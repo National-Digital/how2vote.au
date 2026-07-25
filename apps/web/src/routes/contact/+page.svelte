@@ -65,9 +65,9 @@
       </button>
 
       <p class="challenge-note">
-        This form is protected by a privacy-preserving anti-spam check that runs entirely on your
-        device — no third-party service is involved. Your message is delivered to us by email and is
-        not stored anywhere else.
+        This form is protected by a privacy-preserving anti-spam check computed on your device — no
+        third-party CAPTCHA or tracker is loaded. Your message is sent to us by email through our
+        hosting provider and is not stored by this site.
       </p>
     </form>
   {/if}

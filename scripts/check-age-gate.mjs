@@ -151,6 +151,9 @@ const ROOT = new URL("../", import.meta.url);
 const PAYLOAD_FILES = [
   "apps/web/src/routes/survey/+page.svelte",
   "apps/web/src/lib/survey.ts",
+  // The question set + option allowlists moved here (leaf module the ingestion Function imports
+  // directly); it sits on the payload path, so it must stay isolated from the age gate too.
+  "apps/web/src/lib/survey-questions.ts",
   "apps/web/functions/api/research.ts",
   "apps/web/functions/api/research/geography.ts",
 ];

@@ -53,9 +53,18 @@ const invalid = (): Response => new Response(null, { status: 400 });
 const serviceUnavailable = (): Response => new Response(null, { status: 503 });
 const relayFailed = (): Response => new Response(null, { status: 502 });
 
-/** One header-safe token with a single at-sign: enough to be a usable Reply-To, and impossible to
- *  smuggle a CR/LF or a second header through. Anything else is relayed inside the body text only. */
-const REPLY_TO_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+/** A conservative RFC-shaped address used ONLY to decide whether the sender's email is safe to put
+ *  in the Reply-To. Deliberately a tight ASCII charset (not just "no whitespace"): it rejects
+ *  display-name/group syntax like `"x"<a@b>` or `undisclosed:a@b;` that would otherwise ride through
+ *  into the mail header. The value only ever reaches a JSON string field of the REST API (which
+ *  escapes any control char), so this is defence in depth, not the sole barrier. */
+const REPLY_TO_PATTERN = /^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,63}$/;
+
+/** Collapse CR/LF (and other control chars) out of a single-line body field so a crafted `name`/
+ *  `email`/`page` cannot forge header-looking lines in the plain-text mail the operator reads. */
+const sanitizeLine = (s: string): string =>
+  // eslint-disable-next-line no-control-regex
+  s.replace(/[\x00-\x1f\x7f\u0085\u2028\u2029]+/g, " ").trim();
 
 /** Trimmed string field, empty → undefined, hard-capped; null when present but not a string. */
 function field(value: unknown, max: number): string | undefined | null {
@@ -110,6 +119,11 @@ export const onRequestPost: PagesFunction<Env> = async ({ request, env }) => {
   // this form kind and single-use (the solved challenge is burned atomically).
   const challenge = typeof body.challenge === "string" ? body.challenge : null;
   const verifier = resolveChallengeVerifier(env, kind);
+  // NEVER relay without an ENFORCED challenge. A non-production deployment with the EMAIL_* relay
+  // secrets set but no challenge secret resolves to an inert AllowAll verifier (verify(null)===true);
+  // without this guard that would be an unauthenticated mail-injection path on a public preview URL.
+  // Accept inertly (nothing sent) instead — the same posture as an unprovisioned relay below.
+  if (!verifier.enforced) return accepted();
   if (!(await verifier.verify(challenge))) return refused();
 
   // Relay unprovisioned in NON-PRODUCTION → inert accept (nothing sent), so dev works secret-free.
@@ -127,9 +141,9 @@ export const onRequestPost: PagesFunction<Env> = async ({ request, env }) => {
   const lines = [
     `New ${kind} message via how2vote.au`,
     "",
-    ...(name ? [`Name: ${name}`] : []),
-    ...(email ? [`Email: ${email}`] : []),
-    ...(page ? [`Page: ${page}`] : []),
+    ...(name ? [`Name: ${sanitizeLine(name)}`] : []),
+    ...(email ? [`Email: ${sanitizeLine(email)}`] : []),
+    ...(page ? [`Page: ${sanitizeLine(page)}`] : []),
     "",
     "Message:",
     message,

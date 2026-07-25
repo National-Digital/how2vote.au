@@ -124,8 +124,8 @@
       </div>
 
       <p class="challenge-note">
-        Protected by a privacy-preserving anti-spam check that runs entirely on your device — no
-        third-party service is involved.
+        Protected by a privacy-preserving anti-spam check computed on your device — no third-party
+        CAPTCHA or tracker.
       </p>
     </form>
   {/if}
