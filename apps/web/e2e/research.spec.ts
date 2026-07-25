@@ -1,11 +1,11 @@
 import { expect, test, type Page, type Request } from "@playwright/test";
-import { seedEligibility, stubTurnstile } from "./flow-helpers";
+import { seedEligibility, stubChallenge } from "./flow-helpers";
 
 // Start every test past the age-first gate — the gate itself is proven in age-gate.spec.ts — and
-// stub Turnstile so the invisible research challenge resolves on the 127.0.0.1 test origin.
+// stub the challenge issuer so the invisible research proof-of-work solves on the test origin.
 test.beforeEach(async ({ page }) => {
   await seedEligibility(page);
-  await stubTurnstile(page);
+  await stubChallenge(page);
 });
 
 // Compliance guarantee (ADR 0006): a research record is uploaded

@@ -72,9 +72,19 @@
       "usedBy": "HMAC signing secret for single-use research submission tokens (wrangler pages secret put)"
     },
     {
-      "name": "TURNSTILE_RESEARCH_SECRET",
+      "name": "ALTCHA_HMAC_SECRET",
       "store": "cloudflare-secret",
-      "usedBy": "Cloudflare Turnstile secret for the token-issue anti-abuse challenge (wrangler pages secret put)"
+      "usedBy": "HMAC signing secret for the self-hosted ALTCHA proof-of-work anti-abuse challenge (wrangler pages secret put)"
+    },
+    {
+      "name": "EMAIL_API_TOKEN",
+      "store": "cloudflare-secret",
+      "usedBy": "Cloudflare API token scoped to Email Sending, used by the self-hosted forms relay (wrangler pages secret put)"
+    },
+    {
+      "name": "EMAIL_ACCOUNT_ID",
+      "store": "cloudflare-secret",
+      "usedBy": "Cloudflare account id the Email Sending API is called under (injected, not committed — public repo)"
     }
   ],
   "previewIsolation": {

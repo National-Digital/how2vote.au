@@ -125,19 +125,9 @@ jobs:
           APP_VERSION: ${{ steps.target.outputs.version }}
           # Empty on production; "1" on previews -> robots noindex (see +layout.svelte).
           PUBLIC_NOINDEX: ${{ steps.target.outputs.noindex }}
-          # Formspree form IDs baked into the static bundle (PUBLIC_ vars, read via
-          # $env/dynamic/public). Not secret, so they live in repo variables; unset -> the
-          # Feedback widget and Contact form render as "not configured".
-          PUBLIC_FEEDBACK_FORM_ID: ${{ vars.PUBLIC_FEEDBACK_FORM_ID }}
-          PUBLIC_CONTACT_FORM_ID: ${{ vars.PUBLIC_CONTACT_FORM_ID }}
-          # Cloudflare Turnstile site keys — two SEPARATE widgets. Public (they ship in the client),
-          # so like the form IDs they live in repo variables; an unset key -> that path posts without
-          # a token, disabling its Turnstile for that build.
-          #  - PUBLIC_TURNSTILE_SITE_KEY: the contact/feedback forms; matching secret lives only on Formspree.
-          #  - PUBLIC_TURNSTILE_RESEARCH_SITE_KEY: the survey; matching secret is the TURNSTILE_RESEARCH_SECRET
-          #    Pages secret, verified server-side at /api/research/token.
-          PUBLIC_TURNSTILE_SITE_KEY: ${{ vars.PUBLIC_TURNSTILE_SITE_KEY }}
-          PUBLIC_TURNSTILE_RESEARCH_SITE_KEY: ${{ vars.PUBLIC_TURNSTILE_RESEARCH_SITE_KEY }}
+          # The forms and the anti-abuse challenge need NO build-time PUBLIC_ configuration: both
+          # post to our own Pages Functions and the self-hosted challenge is issued/verified
+          # server-side (see apps/web/wrangler.toml — ALTCHA_HMAC_SECRET, EMAIL_* secrets).
 
       - name: Verify production infra config (fail-closed)
         # FAIL CLOSED before anything ships: every required production id (D1 database id, KV namespace
@@ -296,13 +286,15 @@ jobs:
         run: node scripts/check-vuln-gate.mjs
 
       - name: Assert research integrity secrets are provisioned (fail-closed, production only)
-        # The token + Turnstile layers are inert when their secrets are unset (acceptToken returns true;
+        # The token + challenge layers are inert when their secrets are unset (acceptToken returns true;
         # the challenge verifier falls back to AllowAll), which is fine for previews/local but a silent
-        # fail-open in production: a misprovision would disable single-use token enforcement and bot
-        # verification invisibly. The endpoints themselves now also refuse production submissions when
-        # these are missing (fail closed), but assert here too so a misprovision fails the deploy loudly
-        # rather than shipping a fail-closed-but-broken research surface. Skips cleanly if the Pages
-        # secret list cannot be read only on a non-production trigger; on main it fails closed.
+        # fail-open in production: a misprovision would disable single-use token enforcement and the
+        # anti-abuse challenge invisibly. The endpoints themselves now also refuse production submissions
+        # when these are missing (fail closed), but assert here too so a misprovision fails the deploy
+        # loudly rather than shipping a fail-closed-but-broken research surface. EMAIL_API_TOKEN /
+        # EMAIL_ACCOUNT_ID are asserted with them so the self-hosted forms relay cannot ship 503ing.
+        # Skips cleanly if the Pages secret list cannot be read only on a non-production trigger; on
+        # main it fails closed.
         if: steps.secrets.outputs.ready == 'true' && github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
@@ -314,16 +306,16 @@ jobs:
             exit 1
           fi
           missing=""
-          for secret in RESEARCH_TOKEN_SECRET TURNSTILE_RESEARCH_SECRET; do
+          for secret in RESEARCH_TOKEN_SECRET ALTCHA_HMAC_SECRET EMAIL_API_TOKEN EMAIL_ACCOUNT_ID; do
             if ! echo "$secrets" | grep -q "$secret"; then
               missing="$missing $secret"
             fi
           done
           if [ -n "$missing" ]; then
-            echo "::error::Missing production secret(s):$missing — the research token/Turnstile layer would fail open. Set each with: wrangler pages secret put <NAME>"
+            echo "::error::Missing production secret(s):$missing — the research token/challenge layer (or the forms relay) would be broken. Set each with: wrangler pages secret put <NAME>"
             exit 1
           fi
-          echo "Research integrity secrets (RESEARCH_TOKEN_SECRET, TURNSTILE_RESEARCH_SECRET) are provisioned."
+          echo "Integrity secrets (RESEARCH_TOKEN_SECRET, ALTCHA_HMAC_SECRET, EMAIL_API_TOKEN, EMAIL_ACCOUNT_ID) are provisioned."
 
       - name: Inject D1 + KV ids into wrangler.toml for the Pages deploy
         # The functions ship with their bindings only if the real ids replace the committed

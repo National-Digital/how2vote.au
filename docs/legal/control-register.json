@@ -694,7 +694,7 @@
           "owner": "privacy-eng",
           "status": "passing",
           "enforcedBy": "scripts/check-research-integrity.mjs + scripts/generate-research-registry.mjs",
-          "note": "The ingestion endpoints (apps/web/functions/api/research.ts + research/geography.ts) validate every contribution against the SIGNED election registry (apps/web/src/lib/research/election-registry.json — valid election ids + per-election party/proposition allowlists, generated from the datasets by generate-research-registry.mjs and drift-gated, plus stance/demographic allowlists from survey.ts and an open flag), dropping any out-of-registry value; and against a short-lived, single-use HMAC-signed submission token (token.ts) issued by /api/research/token only after the consent gate + a provider-neutral challenge (challenge.ts, Cloudflare Turnstile today, swappable), bound to election/schema/consent/purpose, its nonce consumed exactly once in a payload-free KV store (nonce-store.ts). A missing/forged/expired/replayed token, or a missing nonce store, fails closed. check-research-integrity.mjs verifies the registry integrity digest, the integrity-alert record, and that the stats generator honours the fail-closed suspension; generate-research-registry.mjs drift-gates the registry against the datasets."
+          "note": "The ingestion endpoints (apps/web/functions/api/research.ts + research/geography.ts) validate every contribution against the SIGNED election registry (apps/web/src/lib/research/election-registry.json — valid election ids + per-election party/proposition allowlists, generated from the datasets by generate-research-registry.mjs and drift-gated, plus stance/demographic allowlists from survey.ts and an open flag), dropping any out-of-registry value; and against a short-lived, single-use HMAC-signed submission token (token.ts) issued by /api/research/token only after the consent gate + a provider-neutral challenge (challenge.ts, a self-hosted ALTCHA proof-of-work challenge issued and verified by our own Pages Functions, swappable), bound to election/schema/consent/purpose, its nonce consumed exactly once in a payload-free KV store (nonce-store.ts). A missing/forged/expired/replayed token, or a missing nonce store, fails closed. check-research-integrity.mjs verifies the registry integrity digest, the integrity-alert record, and that the stats generator honours the fail-closed suspension; generate-research-registry.mjs drift-gates the registry against the datasets."
         },
         {
           "id": "research-integrity-suspends-stats",
@@ -716,7 +716,7 @@
       "evidence": [
         {
           "id": "EV-RESEARCH-INTEGRITY-CONFIG",
-          "description": "Provider challenge/rate-limit configuration attestation (Cloudflare Turnstile site/secret keys, Workers Rate Limiting + Bot Fight Mode config, and the RESEARCH_TOKEN_SECRET + RESEARCH_NONCES KV binding provisioned in production)",
+          "description": "Challenge/rate-limit configuration attestation (the self-hosted challenge's ALTCHA_HMAC_SECRET, Workers Rate Limiting + Bot Fight Mode config, and the RESEARCH_TOKEN_SECRET + RESEARCH_NONCES KV binding provisioned in production)",
           "status": "current",
           "reviewer": "cameron-young",
           "secondReviewer": "tara-buckley",

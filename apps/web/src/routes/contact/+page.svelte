@@ -1,7 +1,7 @@
 <script lang="ts">
   import ContentPage from "$lib/components/ContentPage.svelte";
   import Meta from "$lib/components/Meta.svelte";
-  import { contactConfigured, submitContact, type SubmitResult } from "$lib/formspree";
+  import { submitContact, type SubmitResult } from "$lib/forms";
 
   let name = $state("");
   let email = $state("");
@@ -33,9 +33,7 @@
     For a quick note on any screen you can also use the <strong>Feedback</strong> button.
   </p>
 
-  {#if !contactConfigured}
-    <p>The contact form isn't configured on this build. Please try again from the live site.</p>
-  {:else if status === "ok"}
+  {#if status === "ok"}
     <p class="ok" role="status">
       Thanks for getting in touch — your message has been sent. If you left an email, we'll reply
       there.
@@ -67,18 +65,9 @@
       </button>
 
       <p class="challenge-note">
-        This form is protected by Cloudflare Turnstile; the Cloudflare
-        <a
-          href="https://www.cloudflare.com/privacypolicy/"
-          target="_blank"
-          rel="noopener noreferrer">Privacy Policy</a
-        >
-        and
-        <a
-          href="https://www.cloudflare.com/website-terms/"
-          target="_blank"
-          rel="noopener noreferrer">Terms of Service</a
-        > apply.
+        This form is protected by a privacy-preserving anti-spam check computed on your device — no
+        third-party CAPTCHA or tracker is loaded. Your message is sent to us by email through our
+        hosting provider and is not stored by this site.
       </p>
     </form>
   {/if}

@@ -92,7 +92,7 @@ describe("verdict — accessible anti-abuse", () => {
     const reg = clone(REGISTRY);
     reg.antiAbuse.push({
       id: "hard-captcha",
-      service: "turnstile",
+      service: "cloudflare",
       mechanism: "Image-selection challenge",
       interactive: true,
       accessible: false,
@@ -105,12 +105,12 @@ describe("verdict — accessible anti-abuse", () => {
     const reg = clone(REGISTRY);
     reg.antiAbuse.push({
       id: "hard-captcha",
-      service: "turnstile",
+      service: "cloudflare",
       mechanism: "Image-selection challenge",
       interactive: true,
       accessible: false,
-      accessibleAlternative: "turnstile",
-      note: "Falls back to the non-interactive Turnstile challenge.",
+      accessibleAlternative: "altcha-pow",
+      note: "Falls back to the non-interactive self-hosted proof-of-work challenge.",
     });
     expect(verdict(reg, opts()).ok).toBe(true);
   });

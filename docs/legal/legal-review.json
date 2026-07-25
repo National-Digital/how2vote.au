@@ -83,6 +83,11 @@
       "date": "2026-07-22",
       "change": "Correction: reviewer descriptor changed from 'Australian legal practitioner' to 'Australian lawyer' (in the reviewer field and the 2026-07-20 baseline entry). 'Australian legal practitioner' is the statutory term for an Australian lawyer who holds a current practising certificate. The reviewer was admitted as a Lawyer of the Supreme Court of New South Wales on 13 April 2012 (roll number L12/0636) and does not hold a current practising certificate. No control positions, sign-offs or review dates change.",
       "affectedControls": []
+    },
+    {
+      "date": "2026-07-25",
+      "change": "Anti-abuse and forms self-hosting: Cloudflare Turnstile and Formspree removed. The anti-abuse challenge is now a self-hosted proof-of-work (open ALTCHA protocol, altcha-lib, MIT) issued and verified by our own Pages Functions — purpose-bound, single-use (burned in the atomic nonce store) and identical on every channel, with no third-party script, iframe or verification call and therefore no visitor data leaving our infrastructure for it (ADR-0017). The contact/feedback forms post to our own /api/forms endpoint, which verifies the same challenge and relays the message to the operator inbox via Cloudflare Email Sending (relay-only: nothing stored, no IP/UA read, no logging). The browser Content-Security-Policy now contains no third-party origin at all; the third-party services register is empty. Anti-abuse remains non-interactive and accessible (a background computation, never a puzzle). Provider-neutrality of the challenge layer is retained (control-19).",
+      "affectedControls": ["control-19"]
     }
   ],
   "nextMandatoryReviewDate": "2027-07-15",

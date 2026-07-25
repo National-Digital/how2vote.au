@@ -493,7 +493,9 @@ function main() {
     process.exit(1);
   }
 
-  const surveySrc = safeRead("apps/web/src/lib/survey.ts");
+  // The SURVEY array + SENSITIVE_DIMENSIONS moved to the survey-questions leaf module (so the
+  // Pages Functions can bundle them); survey.ts only re-exports them since.
+  const surveySrc = safeRead("apps/web/src/lib/survey-questions.ts");
   const statsSrc = safeRead("packages/data-pipeline/src/stats.ts");
   // RESEARCH_CONSENT_VERSION is defined in research/consent.ts (survey.ts only re-exports it), so
   // read the binding from its definition site — otherwise the check silently no-ops.

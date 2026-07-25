@@ -234,10 +234,10 @@ button {
   border: 0;
 }
 
-/* The anti-abuse (Cloudflare Turnstile) disclosure line shown beneath each protected form. Turnstile
-   runs cookielessly in its non-interactive/invisible mode and adds no floating badge, so — unlike
-   reCAPTCHA — there is nothing to hide; the disclosure text (with links to Cloudflare's Privacy
-   Policy and Terms) is carried near each form (see FeedbackWidget and the Contact page). */
+/* The anti-abuse disclosure line shown beneath each protected form. The self-hosted proof-of-work
+   check runs cookielessly and invisibly on the visitor's own device and adds no badge, so — unlike
+   reCAPTCHA — there is nothing to hide; the disclosure text is carried near each form (see
+   FeedbackWidget and the Contact page). */
 .challenge-note {
   font-family: var(--ui);
   font-size: 12px;

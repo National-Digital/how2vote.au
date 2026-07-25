@@ -46,7 +46,7 @@
  *  - The card never depends on this: the browser posts fire-and-forget.
  */
 
-import { DEMOGRAPHIC_OPTIONS, SENSITIVE_DIMENSIONS } from "../../src/lib/survey";
+import { DEMOGRAPHIC_OPTIONS, SENSITIVE_DIMENSIONS } from "../../src/lib/survey-questions";
 import { RESEARCH_SCHEMA_VERSION, STANCES as STANCE_LIST } from "../../src/lib/research/consent";
 import { checkAgainstRegistry } from "../../src/lib/research/registry";
 import { verifyToken } from "../../src/lib/research/token";
@@ -78,10 +78,10 @@ interface Env {
    *  REQUIRED (fail-closed); when unset the layer is inert in non-production, but a PRODUCTION
    *  deployment REFUSES (503) rather than accepting unverified. Never committed — a Cloudflare secret. */
   RESEARCH_TOKEN_SECRET?: string;
-  /** Turnstile secret for the anti-abuse challenge minted at the token endpoint. Not read here, but its
-   *  presence is required in production: the ingestion endpoint refuses (503) when it is unset so the
-   *  pipeline never runs without the challenge the tokens depend on. */
-  TURNSTILE_RESEARCH_SECRET?: string;
+  /** HMAC secret for the self-hosted ALTCHA anti-abuse challenge verified at the token endpoint. Not
+   *  read here, but its presence is required in production: the ingestion endpoint refuses (503) when
+   *  it is unset so the pipeline never runs without the challenge the tokens depend on. */
+  ALTCHA_HMAC_SECRET?: string;
   /** Payload-free KV store of spent nonces (single-use enforcement). The non-atomic (get-then-put)
    *  store; usable in non-production only — production REQUIRES the atomic D1 store below. */
   RESEARCH_NONCES?: KVNamespace;
@@ -425,7 +425,7 @@ export const onRequestPost: PagesFunction<Env> = async ({ request, env }) => {
     if (
       !env.RESEARCH_DB ||
       !env.RESEARCH_TOKEN_SECRET ||
-      !env.TURNSTILE_RESEARCH_SECRET ||
+      !env.ALTCHA_HMAC_SECRET ||
       !env.RESEARCH_NONCES_DB
     ) {
       return serviceUnavailable();

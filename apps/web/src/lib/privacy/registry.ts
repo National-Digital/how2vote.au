@@ -238,8 +238,8 @@ export function hasConfigurableConsentIn(reg: ThirdPartyRegistry): boolean {
  * its components remain intact and dormant. It is derived purely from the registry, so adding a
  * consent-required service back to the JSON flips it true and the UI returns with no code change —
  * and removing the last one hides it again. Today it is false: usage is measured by cookieless
- * Cloudflare Web Analytics at the edge and the only browser-loaded third party is Turnstile
- * (cookieless, strictly necessary), so no category both requires consent and has a service.
+ * Cloudflare Web Analytics at the edge and NO third party loads in the browser at all (the
+ * anti-abuse check is self-hosted), so no category both requires consent and has a service.
  */
 export const hasConfigurableConsent: boolean = hasConfigurableConsentIn(registry);
 

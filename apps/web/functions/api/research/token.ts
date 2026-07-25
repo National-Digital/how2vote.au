@@ -9,7 +9,7 @@
  *   - the consent version is one the server currently ACCEPTS (server-enforced consent — a
  *     stale/unknown/future consent version is refused here, so a client on old wording cannot obtain a
  *     token at all);
- *   - the anti-abuse challenge (provider-neutral; Turnstile today) passes when configured.
+ *   - the anti-abuse challenge (the self-hosted ALTCHA proof-of-work) passes when configured.
  *
  * It returns TWO tokens — one per unlinkable request (the detailed record and the electorate ping) —
  * each with its own nonce, so consuming them cannot relink the two. Tokens are minted only when a
@@ -26,15 +26,14 @@ import {
 } from "../../../src/lib/research/consent";
 import { isElectionOpen } from "../../../src/lib/research/registry";
 import { newNonce, signToken, type TokenClaims } from "../../../src/lib/research/token";
-import { resolveChallengeVerifier } from "../../../src/lib/research/challenge";
+import { resolveChallengeVerifier, type ChallengeEnv } from "../../../src/lib/research/challenge";
 
-interface Env {
+/** ChallengeEnv carries ALTCHA_HMAC_SECRET, the single-use store bindings and the deployment
+ *  marker read by isProductionDeployment(). In production the anti-abuse challenge fails closed:
+ *  with the challenge layer unprovisioned, resolveChallengeVerifier returns a DenyAll verifier
+ *  instead of a pass-through, so no token is minted without a challenge. */
+interface Env extends ChallengeEnv {
   RESEARCH_TOKEN_SECRET?: string;
-  TURNSTILE_RESEARCH_SECRET?: string;
-  /** Explicit deployment marker read by isProductionDeployment(). In production the anti-abuse
-   *  challenge fails closed: with TURNSTILE_RESEARCH_SECRET unset, resolveChallengeVerifier returns a DenyAll
-   *  verifier instead of a pass-through, so no token is minted without a challenge. */
-  RESEARCH_ENVIRONMENT?: string;
 }
 type PagesFunction<E> = (context: { request: Request; env: E }) => Response | Promise<Response>;
 
@@ -68,10 +67,11 @@ export const onRequestPost: PagesFunction<Env> = async ({ request, env }) => {
   if (schemaVersion !== RESEARCH_SCHEMA_VERSION) return refused();
   if (!isAcceptedConsentVersion(consentVersion)) return refused();
 
-  // Anti-abuse challenge. In non-production it is inert unless a provider secret is configured; in
-  // PRODUCTION it fails closed — with no provider secret the resolver returns a DenyAll verifier, so
-  // a token is never minted without a challenge.
-  const verifier = resolveChallengeVerifier(env);
+  // Anti-abuse challenge (self-hosted ALTCHA proof-of-work, single-use). In non-production it is
+  // inert unless the challenge secret is configured; in PRODUCTION it fails closed — with the
+  // challenge layer unprovisioned the resolver returns a DenyAll verifier, so a token is never
+  // minted without a challenge.
+  const verifier = resolveChallengeVerifier(env, "research");
   if (!(await verifier.verify(challenge))) return refused();
 
   // Integrity layer not provisioned → inert. The ingestion endpoints then stand on registry

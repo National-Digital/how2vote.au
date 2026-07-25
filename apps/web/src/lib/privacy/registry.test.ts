@@ -2,12 +2,14 @@ import { describe, expect, it } from "vitest";
 import { mergeRegistryCsp } from "./csp.js";
 import {
   allGrantedState,
+  antiAbuse,
   categories,
   consentModeDefaults,
   consentModeSignals,
   defaultConsentState,
   hasConfigurableConsent,
   hasConfigurableConsentIn,
+  infrastructureServices,
   services,
   servicesForCategory,
   visibleCategories,
@@ -42,16 +44,24 @@ describe("third-party registry integrity", () => {
     }
   });
 
-  it("declares Cloudflare Turnstile as a strictly-necessary form-protection service", () => {
-    const turnstile = services.find((s) => s.id === "turnstile");
-    expect(turnstile).toBeDefined();
-    // Anti-abuse runs only on form submit and is cookieless, so it needs no consent (like Formspree).
-    expect(turnstile!.category).toBe("strictly-necessary");
-    expect(turnstile!.consentRequired).toBe(false);
-    expect(turnstile!.cookies).toEqual([]);
-    // The CSP sources the Turnstile loader + challenge frame need.
-    expect(turnstile!.csp["script-src"]).toContain("https://challenges.cloudflare.com");
-    expect(turnstile!.csp["frame-src"]).toContain("https://challenges.cloudflare.com");
+  it("declares NO browser-loaded third-party service at all (forms + anti-abuse are self-hosted)", () => {
+    // Turnstile and Formspree are gone: the anti-abuse challenge is a self-hosted proof-of-work and
+    // the forms post to our own /api/forms — nothing third-party loads in the browser, so the
+    // services list is empty and the CSP gains no external origin from it.
+    expect(services).toEqual([]);
+    expect(services.find((s) => s.id === "turnstile")).toBeUndefined();
+    expect(services.find((s) => s.id === "formspree")).toBeUndefined();
+  });
+
+  it("registers the self-hosted proof-of-work as the accessible anti-abuse mechanism", () => {
+    const pow = antiAbuse.find((a) => a.id === "altcha-pow");
+    expect(pow).toBeDefined();
+    expect(pow!.interactive).toBe(false);
+    expect(pow!.accessible).toBe(true);
+    // Attributed to a registered vendor (the Pages Functions run on Cloudflare infrastructure).
+    expect(infrastructureServices.map((v) => v.id)).toContain(pow!.service);
+    // And no anti-abuse mechanism references the removed Turnstile service.
+    expect(antiAbuse.find((a) => a.id === "turnstile")).toBeUndefined();
   });
 });
 
@@ -76,12 +86,9 @@ describe("consent state", () => {
     expect(ids).not.toContain("analytics");
   });
 
-  it("lists Formspree and Turnstile under strictly-necessary, and nothing under analytics", () => {
+  it("lists nothing under any category — no browser-loaded service remains", () => {
     expect(servicesForCategory("analytics")).toEqual([]);
-    const necessary = servicesForCategory("strictly-necessary");
-    expect(necessary.map((s) => s.name)).toContain("Formspree");
-    expect(necessary.map((s) => s.name)).toContain("Cloudflare Turnstile");
-    expect(necessary.every((s) => s.consentRequired === false)).toBe(true);
+    expect(servicesForCategory("strictly-necessary")).toEqual([]);
   });
 });
 
@@ -143,17 +150,23 @@ describe("CSP derived from the registry", () => {
     "font-src": ["self"],
   };
 
-  it("appends registry third-party origins after the base tokens", () => {
+  it("adds NO third-party origin from the shipped registry (fully first-party CSP)", () => {
     const merged = mergeRegistryCsp(base);
-    // 'self' leads; the only script-src third party is the Turnstile challenge host.
-    expect(merged["script-src"]).toEqual(["self", "https://challenges.cloudflare.com"]);
-    // Formspree (strictly-necessary) contributes its connect-src origin through the same merge.
-    expect(merged["connect-src"]).toContain("https://formspree.io");
-    // Turnstile contributes its challenge host to connect-src too.
-    expect(merged["connect-src"]).toContain("https://challenges.cloudflare.com");
-    // No Google/analytics origin appears anywhere.
-    expect(merged["script-src"].some((s) => /google/i.test(s))).toBe(false);
-    expect(merged["img-src"][0]).toBe("self");
+    // With no browser-loaded service registered, every directive keeps only its base tokens: no
+    // challenges.cloudflare.com, no formspree.io, no external origin at all.
+    expect(merged["script-src"]).toEqual(["self"]);
+    expect(merged["connect-src"]).toEqual(["self"]);
+    expect(merged["img-src"]).toEqual(["self", "data:"]);
+    for (const sources of Object.values(merged)) {
+      expect(sources.some((s) => /^https?:\/\//i.test(s))).toBe(false);
+    }
+  });
+
+  it("appends a service's origins after the base tokens (mechanism, synthetic registry)", () => {
+    const merged = mergeRegistryCsp(base, {
+      services: [{ csp: { "script-src": ["https://widget.example"] } }],
+    });
+    expect(merged["script-src"]).toEqual(["self", "https://widget.example"]);
   });
 
   it("leaves directives with no registry sources untouched", () => {
@@ -161,16 +174,21 @@ describe("CSP derived from the registry", () => {
     expect(merged["font-src"]).toEqual(["self"]);
   });
 
-  it("drops a base 'none' when a registry service adds a real source (frame-src)", () => {
-    // Turnstile's challenge frame must override the locked-down frame-src: ['none'] default.
-    const merged = mergeRegistryCsp({ "frame-src": ["none"] });
-    expect(merged["frame-src"]).toEqual(["https://challenges.cloudflare.com"]);
+  it("drops a base 'none' when a registry service adds a real source (mechanism, synthetic registry)", () => {
+    // A future embed's frame must be able to override a locked-down frame-src: ['none'] default.
+    const merged = mergeRegistryCsp(
+      { "frame-src": ["none"] },
+      { services: [{ csp: { "frame-src": ["https://frame.example"] } }] },
+    );
+    expect(merged["frame-src"]).toEqual(["https://frame.example"]);
     expect(merged["frame-src"]).not.toContain("none");
   });
 
   it("keeps a lone 'none' when no service contributes to that directive", () => {
-    const merged = mergeRegistryCsp({ "object-src": ["none"] });
+    // frame-src is 'none' in the SHIPPED registry too, now that no challenge iframe exists.
+    const merged = mergeRegistryCsp({ "object-src": ["none"], "frame-src": ["none"] });
     expect(merged["object-src"]).toEqual(["none"]);
+    expect(merged["frame-src"]).toEqual(["none"]);
   });
 
   it("does not mutate the base object", () => {

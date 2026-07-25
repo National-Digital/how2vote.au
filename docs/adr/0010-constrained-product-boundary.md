@@ -85,7 +85,7 @@ The two most material findings were:
    never as a percentage beside an individual candidate's name.
 
 5. **Fail-closed production surfaces.** The research and geography endpoints refuse production
-   submissions when a mandatory integrity control (token secret, Turnstile, atomic D1 nonce store,
+   submissions when a mandatory integrity control (token secret, challenge secret, atomic D1 nonce store,
    research DB) is absent, rather than failing open. Production deploys fail on missing D1
    infrastructure credentials rather than skipping their verification steps.
 

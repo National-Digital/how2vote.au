@@ -26,7 +26,7 @@
   //     deletion remain; there is no fixed maximum.
   // The third-party inventory is rendered straight from the registry that also drives the CSP and
   // the consent UI, so the three can never disagree about what this site loads.
-  const lastUpdated = "14 July 2026";
+  const lastUpdated = "26 July 2026";
   const categoryLabel = new Map(categories.map((c) => [c.id, c.label]));
   const inventory = [...services].sort((a, b) =>
     a.name.localeCompare(b.name, "en", { sensitivity: "base" }),
@@ -324,11 +324,12 @@
     obligation.
   </p>
   <p>
-    The forms may use Formspree for delivery and Cloudflare Turnstile for spam and abuse prevention.
-    Turnstile is cookieless and non-interactive — there is no puzzle to solve — and runs only when
-    you submit one of those forms; it processes technical information about the request to tell
-    humans from bots and sets no cookie. You can contact us by email or telephone instead of using a
-    Turnstile-protected form.
+    The forms post to our own service, which sends your message to us by email through our hosting
+    provider's email service; there is no third-party form provider, and this site stores no copy of
+    the message. Spam and abuse prevention is a self-hosted, cookieless check that is
+    non-interactive — there is no puzzle to solve — and is computed on your device when you submit
+    one of those forms; it loads no third-party CAPTCHA or tracker. You can contact us by email or
+    telephone instead of using a form.
   </p>
 
   <h2>8. Hosting, security and technical logs</h2>
@@ -402,6 +403,12 @@
           </div>
         </dl>
       </article>
+    {:else}
+      <p class="none">
+        None — no third-party service loads in your browser. The anti-spam check is self-hosted and
+        usage is measured by cookieless edge analytics; infrastructure providers we rely on
+        (hosting, source control, data sources) are listed in the providers table below.
+      </p>
     {/each}
   </div>
 

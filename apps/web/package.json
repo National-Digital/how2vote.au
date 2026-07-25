@@ -18,7 +18,8 @@
   },
   "dependencies": {
     "@how2vote/data-schema": "workspace:*",
-    "@how2vote/engine": "workspace:*"
+    "@how2vote/engine": "workspace:*",
+    "altcha-lib": "^2.3.1"
   },
   "devDependencies": {
     "@axe-core/playwright": "^4.12.1",
