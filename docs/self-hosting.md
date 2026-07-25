@@ -149,13 +149,23 @@ enforced by `scripts/check-infra-config.mjs`:
   fetches nothing).
 - **Variables** (same page, *Variables* tab): `CLOUDFLARE_ACCOUNT_ID`, `CF_D1_DATABASE_ID`,
   `CF_D1_PREVIEW_DATABASE_ID`, `CF_KV_RESEARCH_NONCES_ID`, `CF_KV_RESEARCH_NONCES_PREVIEW_ID`,
-  `SMOKE_URL`, `PUBLIC_CONTACT_FORM_ID`, `PUBLIC_FEEDBACK_FORM_ID`, `PUBLIC_TURNSTILE_SITE_KEY`,
-  and `PUBLIC_TURNSTILE_RESEARCH_SITE_KEY`.
+  and `SMOKE_URL`. No `PUBLIC_` variables exist — the anti-abuse challenge and the
+  contact/feedback forms are self-hosted, with no third-party site keys or form ids.
 - **Cloudflare Pages project secrets** (not GitHub — set with `wrangler pages secret put`):
-  `RESEARCH_TOKEN_SECRET` and `TURNSTILE_RESEARCH_SECRET`.
+  `RESEARCH_TOKEN_SECRET` and `ALTCHA_HMAC_SECRET` (the HMAC key for the self-hosted
+  proof-of-work challenge — generate ≥32 random bytes, e.g. `openssl rand -hex 32`).
+- **Forms relay (optional):** the contact/feedback endpoint (`/api/forms`) relays messages to the
+  project inbox via Cloudflare Email Sending. Onboard a DEDICATED sending subdomain once
+  (`wrangler email sending enable send.<domain>`) rather than the apex — that keeps an apex
+  hardened as a no-mail domain (null SPF/MX + DMARC reject) intact, and the subdomain's own
+  SPF/DKIM still pass a strict-alignment DMARC. Then set the `EMAIL_API_TOKEN` (scoped to Email
+  Sending only) and `EMAIL_ACCOUNT_ID` Pages secrets. The from/delivery addresses are ordinary
+  committed vars (`FORMS_FROM_ADDRESS`, `FORMS_DELIVERY_ADDRESS` in `apps/web/wrangler.toml`).
 
-If none of the Cloudflare values are set, the build still runs and the deploy step skips, so a fork can
-build and test with no Cloudflare account at all.
+Everything above fails closed in production — the research endpoints and the forms relay refuse
+(503) when a required secret or store is missing — and runs inert in dev/preview. If none of the
+Cloudflare values are set, the build still runs and the deploy step skips, so a fork can build and
+test with no Cloudflare account at all.
 
 ---
 

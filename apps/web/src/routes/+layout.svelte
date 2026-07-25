@@ -169,7 +169,8 @@
      shows until a choice is made; the preferences modal is reachable any time from the footer.
      Both are additionally gated on hasConfigurableConsent — a registry-derived flag that is true
      only when some consent-required category has a live service. Today nothing on the site needs
-     consent (analytics is edge-side + cookieless, Turnstile is cookieless), so the flag is false
+     consent (analytics is edge-side + cookieless; the anti-spam check is self-hosted and
+     cookieless), so the flag is false
      and neither surfaces; adding a consent-gated service back to the registry flips it true and the
      UI returns with no code change. -->
 {#if hasConfigurableConsent && consent.ready && !consent.hasDecided && !consent.isSettingsOpen}

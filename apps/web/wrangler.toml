@@ -35,14 +35,16 @@
 #   - RESEARCH_TOKEN_SECRET — HMAC signing secret for the submission tokens. Set as a Cloudflare
 #     SECRET (never committed): `wrangler pages secret put RESEARCH_TOKEN_SECRET`. When unset the
 #     token layer is inert and the endpoints stand on registry validation + the edge rate-limit.
-#   - TURNSTILE_RESEARCH_SECRET — Cloudflare Turnstile secret for the anti-abuse challenge at token-issue time
-#     (also a Cloudflare SECRET: `wrangler pages secret put TURNSTILE_RESEARCH_SECRET`). Provision it in
-#     production so the research-token endpoint verifies a Turnstile solution server-side before
-#     minting a submission token (see functions/api/research/token.ts + research/challenge.ts). When
-#     unset the challenge is an inert pass-through and the endpoint stands on registry validation +
-#     the edge rate-limit. This is a SEPARATE Turnstile widget/secret from the one Formspree uses for
-#     the contact/feedback forms (that secret lives only on Formspree). Its public site key is the
-#     PUBLIC_TURNSTILE_RESEARCH_SITE_KEY build variable (the survey renders that widget on submit).
+#   - ALTCHA_HMAC_SECRET — HMAC signing secret for the SELF-HOSTED anti-abuse proof-of-work
+#     challenge (the open ALTCHA protocol; see functions/api/challenge.ts +
+#     src/lib/research/challenge.ts). Also a Cloudflare SECRET:
+#     `wrangler pages secret put ALTCHA_HMAC_SECRET` (generate ≥32 random bytes, e.g.
+#     `openssl rand -hex 32`). One secret serves every challenge purpose (research token issue +
+#     the contact/feedback forms) and every channel — the challenge is issued and verified entirely
+#     by our own Pages Functions, no third-party service or client-side site key exists. When unset
+#     the challenge layer is inert in non-production and the endpoints FAIL CLOSED in production.
+#     Verified solutions are burned in the single-use nonce store (below), so production also
+#     requires the atomic D1 store for the challenge, not just for tokens.
 #   - RESEARCH_NONCES_DB — the ATOMIC D1 nonce store below (its OWN dedicated database, separate from
 #     RESEARCH_DB). A PAYLOAD-FREE store of spent nonces: it holds only opaque nonce keys with a short
 #     TTL — no PII, never joined to the aggregate research database. This is the store REQUIRED in
@@ -67,13 +69,31 @@ compatibility_date = "2025-06-01"
 
 # Deployment mode for the research ingestion Functions. "production" makes the research/geography/
 # token endpoints FAIL CLOSED: they refuse (503) rather than silently drop or accept unverified when
-# any mandatory integrity control is missing (token signing secret, Turnstile secret, the ATOMIC D1
-# nonce store, or the research database). See apps/web/src/lib/research/environment.ts. A PREVIEW
+# any mandatory integrity control is missing (token signing secret, challenge HMAC secret, the ATOMIC
+# D1 nonce store, or the research database). See apps/web/src/lib/research/environment.ts. A PREVIEW
 # environment that wants the inert/dev behaviour should override this to a non-production value (e.g.
 # "preview") via `[env.preview.vars]` here or in the Cloudflare dashboard; local `pnpm dev` / vitest
 # have no var and are non-production by default.
+# NOTE — self-hosted contact/feedback forms (functions/api/forms.ts). The endpoint verifies the
+# same self-hosted challenge and RELAYS the message to the project inbox via Cloudflare's Email
+# Sending REST API (api.cloudflare.com — the registry's allowlisted egress host); it stores nothing.
+# Operator setup (one-time): onboard the DEDICATED SENDING SUBDOMAIN
+# (`wrangler email sending enable send.how2vote.au`) — never the apex: how2vote.au is deliberately
+# a no-mail domain (null SPF `v=spf1 -all`, null MX, DMARC p=reject/sp=reject with strict
+# alignment), and apex sending would force that anti-spoofing hardening to be loosened. The
+# subdomain gets its own SPF/DKIM from onboarding and still passes the strict DMARC (the From
+# domain and the DKIM d= are both send.how2vote.au). Then provision two SECRETS (never committed):
+#   wrangler pages secret put EMAIL_API_TOKEN    # API token scoped to Email Sending only
+#   wrangler pages secret put EMAIL_ACCOUNT_ID   # the Cloudflare account id (not strictly secret,
+#                                                # but the repo is public so it is injected, not committed)
+# The two addresses below are public facts (operator.json publishes the inbox) so they are ordinary
+# committed vars. In production the endpoint refuses (503) until the relay is fully provisioned;
+# in non-production it accepts inertly without sending, so dev/preview work secret-free.
+
 [vars]
 RESEARCH_ENVIRONMENT = "production"
+FORMS_FROM_ADDRESS = "forms@send.how2vote.au"
+FORMS_DELIVERY_ADDRESS = "how2vote@nationaldigital.com.au"
 
 [[d1_databases]]
 binding = "RESEARCH_DB"

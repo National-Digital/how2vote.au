@@ -197,6 +197,10 @@ pnpm exec wrangler kv namespace create RESEARCH_NONCES --preview # → CF_KV_RES
 # HMAC secret for single-use submission tokens — a Pages *project* secret, not a GitHub secret.
 # The production deploy fails closed if it is absent.
 pnpm exec wrangler pages secret put RESEARCH_TOKEN_SECRET --project-name how2vote-au
+
+# HMAC secret for the self-hosted anti-abuse proof-of-work challenge (generate with
+# `openssl rand -hex 32`). Production fails closed without it; dev/preview run inert.
+pnpm exec wrangler pages secret put ALTCHA_HMAC_SECRET --project-name how2vote-au
 ```
 
 The Pages project name (`how2vote-au`) and D1 database name (`how2vote-research`) are set in
@@ -223,9 +227,11 @@ are injected into `wrangler.toml` from the variables below at deploy time.
 | `CF_KV_RESEARCH_NONCES_ID` | Production nonce KV namespace id. |
 | `CF_KV_RESEARCH_NONCES_PREVIEW_ID` | Preview nonce KV namespace id. |
 | `SMOKE_URL` | Post-deploy smoke-test target — the site's Cloudflare Pages URL (e.g. `https://<project>.pages.dev`). |
-| `PUBLIC_CONTACT_FORM_ID` / `PUBLIC_FEEDBACK_FORM_ID` | Formspree form ids for the contact and feedback forms. |
-| `PUBLIC_TURNSTILE_SITE_KEY` | Cloudflare Turnstile site key for the contact/feedback forms. |
-| `PUBLIC_TURNSTILE_RESEARCH_SITE_KEY` | Cloudflare Turnstile site key for the survey (a separate widget from the forms one; its secret is the `TURNSTILE_RESEARCH_SECRET` Pages secret). |
+
+The contact/feedback forms and the anti-abuse challenge are fully self-hosted (our own Pages
+Functions, no third-party service or site key), so no `PUBLIC_` configuration exists. The forms
+relay delivery via Cloudflare Email Sending — an optional, fail-closed setup described in
+[**docs/self-hosting.md**](docs/self-hosting.md).
 
 With those set, a push to `main` (or a manual dispatch) deploys to production and pull requests get an
 isolated `noindex` preview — the same pipeline this repo uses. If none of the Cloudflare values are

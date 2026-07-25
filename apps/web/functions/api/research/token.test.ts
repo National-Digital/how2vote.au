@@ -11,11 +11,25 @@ vi.mock("../../../../../data/governance/control-plane.json", () => ({
     integrity: "sha256-284295c891854ce87d99ec3e98e66f48d542cba2008375a321497ac11d21b8ce",
   },
 }));
+import { solveChallenge } from "altcha-lib";
+import { deriveKey } from "altcha-lib/algorithms/web/pbkdf2";
+import { beforeAll } from "vitest";
 import { onRequestPost } from "./token";
 import { verifyToken } from "../../../src/lib/research/token";
 import { RESEARCH_CONSENT_VERSION } from "../../../src/lib/research/consent";
+import { issueChallenge } from "../../../src/lib/research/challenge";
 
 const SECRET = "test-token-secret";
+const CHALLENGE_SECRET = "test-challenge-hmac-secret";
+
+// One real, solved research-purpose challenge payload (genuine proof-of-work, so minted once for
+// the whole file; without a nonce-store binding in the test env nothing burns it between tests).
+let solvedChallenge: string;
+beforeAll(async () => {
+  const challenge = await issueChallenge("research", CHALLENGE_SECRET);
+  const solution = await solveChallenge({ challenge, deriveKey });
+  solvedChallenge = btoa(JSON.stringify({ challenge, solution }));
+}, 60_000);
 
 const validBody = () => ({
   schemaVersion: 1,
@@ -87,27 +101,28 @@ describe("token issue endpoint — server-enforced consent gate", () => {
     expect((await onRequestPost({ request, env } as never)).status).toBe(403);
   });
 
-  it("enforces the challenge when a provider secret is configured", async () => {
-    vi.spyOn(globalThis, "fetch").mockResolvedValue(
-      new Response(JSON.stringify({ success: false }), { status: 200 }),
-    );
-    const env = { RESEARCH_TOKEN_SECRET: SECRET, TURNSTILE_RESEARCH_SECRET: "cf" };
-    // No/failed challenge solution → refused.
+  it("enforces the challenge when the challenge secret is configured", async () => {
+    const fetchMock = vi.spyOn(globalThis, "fetch");
+    const env = { RESEARCH_TOKEN_SECRET: SECRET, ALTCHA_HMAC_SECRET: CHALLENGE_SECRET };
+    // No/garbage challenge solution → refused; verification is in-process (no network at all).
     expect((await post({ ...validBody(), challenge: "bad" }, env)).status).toBe(403);
-  });
-
-  it("issues tokens once the challenge passes", async () => {
-    vi.spyOn(globalThis, "fetch").mockResolvedValue(
-      new Response(JSON.stringify({ success: true }), { status: 200 }),
-    );
-    const env = { RESEARCH_TOKEN_SECRET: SECRET, TURNSTILE_RESEARCH_SECRET: "cf" };
-    expect((await post({ ...validBody(), challenge: "good" }, env)).status).toBe(200);
-  });
-
-  it("FAILS CLOSED in production when no Turnstile secret is configured (no AllowAll fallback)", async () => {
-    // In production the challenge must be enforced: with no provider secret the resolver denies, so no
-    // token is minted (403) rather than passing through. Non-production keeps the inert pass-through.
-    const env = { RESEARCH_TOKEN_SECRET: SECRET, RESEARCH_ENVIRONMENT: "production" };
     expect((await post({ ...validBody(), challenge: null }, env)).status).toBe(403);
+    expect(fetchMock).not.toHaveBeenCalled();
+  });
+
+  it("issues tokens once a genuinely solved challenge passes", async () => {
+    const env = { RESEARCH_TOKEN_SECRET: SECRET, ALTCHA_HMAC_SECRET: CHALLENGE_SECRET };
+    expect((await post({ ...validBody(), challenge: solvedChallenge }, env)).status).toBe(200);
+  });
+
+  it("FAILS CLOSED in production when the challenge layer is unprovisioned (no AllowAll fallback)", async () => {
+    // In production the challenge must be enforced: with no challenge secret the resolver denies, so
+    // no token is minted (403) rather than passing through. Non-production keeps the inert
+    // pass-through. Likewise with a secret but no ATOMIC single-use store, a solved challenge would
+    // be replayable, so production denies there too.
+    const noSecret = { RESEARCH_TOKEN_SECRET: SECRET, RESEARCH_ENVIRONMENT: "production" };
+    expect((await post({ ...validBody(), challenge: null }, noSecret)).status).toBe(403);
+    const noStore = { ...noSecret, ALTCHA_HMAC_SECRET: CHALLENGE_SECRET };
+    expect((await post({ ...validBody(), challenge: solvedChallenge }, noStore)).status).toBe(403);
   });
 });

@@ -57,8 +57,8 @@ export function mergeRegistryCsp(base, reg = readRegistry()) {
       }
     }
     // 'none' means "match nothing" and, per the CSP spec, must be the ONLY value in a directive.
-    // If a service contributes a real source to a directive the base pinned to ['none'] (e.g.
-    // frame-src for the Turnstile challenge), drop 'none' so the added source actually takes effect.
+    // If a service contributes a real source to a directive the base pinned to ['none'] (e.g. a
+    // future embed needing frame-src), drop 'none' so the added source actually takes effect.
     out[name] = merged.length > 1 ? merged.filter((source) => source !== "none") : merged;
   }
   return out;

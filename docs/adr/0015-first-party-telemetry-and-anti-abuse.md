@@ -1,6 +1,8 @@
 # 0015 — First-party / Cloudflare telemetry and anti-abuse
 
-- Status: Accepted
+- Status: Accepted — **D2 superseded in part (2026-07) by
+  [0017](0017-self-hosted-proof-of-work-challenge.md)** (Turnstile and the Formspree forms are
+  replaced by a self-hosted proof-of-work challenge and forms relay; D1, D3 and D4 stand)
 - Deciders: National Digital
 
 This ADR records the decision to remove Google from the runtime and consolidate usage
@@ -53,6 +55,11 @@ paths:
 Both run only on submit and are lazily loaded. The non-interactive mode preserves the registry's
 accessible anti-abuse posture (`interactive: false`) and keeps the blocking accessibility CI green.
 The `_GRECAPTCHA` cookie is gone.
+
+> **Superseded in part (2026-07).** D2 — and the Formspree form delivery it attached to — is
+> replaced by a fully self-hosted proof-of-work challenge and first-party forms relay; no
+> third-party script, iframe or verification endpoint remains. See
+> [0017](0017-self-hosted-proof-of-work-challenge.md). D1, D3 and D4 stand unchanged.
 
 **D3 — Consent UI gated, not deleted.** With nothing consent-gated left (cookieless analytics,
 cookieless Turnstile), the consent banner and preferences UI are hidden behind a registry-derived

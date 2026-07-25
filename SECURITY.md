@@ -30,9 +30,10 @@ particular test is within scope, ask us first through the private channel above.
 - The workspace packages (`packages/*`) and data pipeline.
 - The GitHub Actions workflows in `.github/workflows/`.
 
-Out of scope: the third-party services the site declares on its privacy page (Cloudflare — including
-Web Analytics and Turnstile — and Formspree) — report those to their vendors — and volumetric
-denial-of-service findings.
+Out of scope: the infrastructure the site declares on its privacy page (Cloudflare — including
+Web Analytics and Email Sending) — report those to the vendor — and volumetric
+denial-of-service findings. The anti-abuse challenge and the contact/feedback forms are
+self-hosted (`/api/challenge`, `/api/forms`) and **in** scope.
 
 ## What we especially care about
 

@@ -24,7 +24,7 @@ import registryData from "./election-registry.json";
 // or unsigned plane, so a suspended `research` global scope or a suspended election closes intake.
 import { isAllowed } from "../governance/control-plane";
 import controlPlane from "../../../../../data/governance/control-plane.json";
-import { DEMOGRAPHIC_OPTIONS } from "../survey";
+import { DEMOGRAPHIC_OPTIONS } from "../survey-questions";
 import {
   ACCEPTED_CONSENT_VERSIONS,
   RESEARCH_SCHEMA_VERSION,

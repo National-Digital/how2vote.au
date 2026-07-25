@@ -17,7 +17,7 @@ const INTRO = `# how2vote
 
 how2vote is a fully static, offline-capable web app. It sets no third-party cookies at all: usage is
 measured by cookieless Cloudflare Web Analytics at the edge, and the contact/feedback forms are
-protected by cookieless Cloudflare Turnstile that runs only on submit. The quiz, scoring and card
+protected by a cookieless, self-hosted anti-spam check that runs only on submit. The quiz, scoring and card
 generation run entirely in the browser. The methodology is public and deterministic.`;
 
 const DATA = `## Data

@@ -12,7 +12,7 @@ import {
 const read = (p) => readFileSync(new URL(`../${p}`, import.meta.url), "utf8");
 
 const REGISTER = JSON.parse(read("docs/research/standards-register.json"));
-const SURVEY_SRC = read("apps/web/src/lib/survey.ts");
+const SURVEY_SRC = read("apps/web/src/lib/survey-questions.ts");
 const CONSENT_SRC = read("apps/web/src/lib/research/consent.ts");
 const STATS_SRC = read("packages/data-pipeline/src/stats.ts");
 const PAGE_PATHS = [

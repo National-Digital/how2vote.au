@@ -622,14 +622,14 @@ describe("onRequestPost — PRODUCTION integrity gate (503, never a silent 204)"
     const res = await post(registryBody(), {
       ...prod,
       RESEARCH_DB: db,
-      TURNSTILE_RESEARCH_SECRET: "cf",
+      ALTCHA_HMAC_SECRET: "cf",
       RESEARCH_NONCES_DB: fakeNonceDb(),
     });
     expect(res.status).toBe(503);
     expect(calls.length).toBe(0);
   });
 
-  it("refuses (503) when Turnstile is not configured", async () => {
+  it("refuses (503) when the anti-abuse challenge is not configured", async () => {
     const { db, calls } = fakeDb();
     const res = await post(registryBody(), {
       ...prod,
@@ -647,7 +647,7 @@ describe("onRequestPost — PRODUCTION integrity gate (503, never a silent 204)"
       ...prod,
       RESEARCH_DB: db,
       RESEARCH_TOKEN_SECRET: SECRET,
-      TURNSTILE_RESEARCH_SECRET: "cf",
+      ALTCHA_HMAC_SECRET: "cf",
       RESEARCH_NONCES: fakeKv(),
     });
     expect(res.status).toBe(503);
@@ -660,7 +660,7 @@ describe("onRequestPost — PRODUCTION integrity gate (503, never a silent 204)"
     const common = {
       ...prod,
       RESEARCH_TOKEN_SECRET: SECRET,
-      TURNSTILE_RESEARCH_SECRET: "cf",
+      ALTCHA_HMAC_SECRET: "cf",
       RESEARCH_NONCES_DB: nonceDb,
     };
     const first = fakeDb();

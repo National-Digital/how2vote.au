@@ -24,7 +24,7 @@ the following recorded, so the conformance state is defensible independent of an
 | 2.5.7 Dragging Movements (AA) | **Met.** No interaction requires dragging; the electorate map pans/zooms but selection is by single-pointer tap and all data is reachable without the map. |
 | 2.5.8 Target Size (Minimum) (AA) | **Met** — see below. |
 | 3.3.7 Redundant Entry (A) | **Met.** The flow never asks for information already provided in the same process. |
-| 3.3.8 Accessible Authentication (Minimum) (AA) | **Met.** There is no login; the only challenge is Cloudflare Turnstile (a managed, non-interactive challenge), not a cognitive-function test / solved-puzzle CAPTCHA. |
+| 3.3.8 Accessible Authentication (Minimum) (AA) | **Met.** There is no login; the only challenge is the self-hosted proof-of-work challenge (ALTCHA), solved entirely by a background computation on the device — fully non-interactive, no puzzle, no third party, never a cognitive-function test / solved-puzzle CAPTCHA. |
 | 3.2.6 Consistent Help (A) | **Met.** The contact/feedback affordance is in a consistent relative location. |
 
 ### 2.5.8 Target Size — controls enlarged and exceptions recorded

@@ -3,30 +3,18 @@
   "source": "apps/web/src/lib/privacy/third-party-services.json",
   "registryVersion": 1,
   "csp": {
-    "connect-src": [
-      "challenges.cloudflare.com",
-      "formspree.io"
-    ],
-    "script-src": [
-      "challenges.cloudflare.com"
-    ],
+    "connect-src": [],
+    "script-src": [],
     "img-src": [],
-    "frame-src": [
-      "challenges.cloudflare.com"
-    ]
+    "frame-src": []
   },
-  "browserHosts": [
-    "challenges.cloudflare.com",
-    "formspree.io"
-  ],
+  "browserHosts": [],
   "infrastructureHosts": [
     "api.cloudflare.com",
     "theyvoteforyou.org.au"
   ],
   "networkAllowlist": [
     "api.cloudflare.com",
-    "challenges.cloudflare.com",
-    "formspree.io",
     "theyvoteforyou.org.au"
   ],
   "providers": [
@@ -37,22 +25,6 @@
       "surface": "infrastructure",
       "dataLocation": "Global — Cloudflare edge network; may be processed outside Australia.",
       "contractStatus": "pending"
-    },
-    {
-      "id": "turnstile",
-      "name": "Cloudflare Turnstile",
-      "provider": "Cloudflare, Inc.",
-      "surface": "browser",
-      "dataLocation": "Global — Cloudflare edge network; may be processed outside Australia.",
-      "contractStatus": null
-    },
-    {
-      "id": "formspree",
-      "name": "Formspree",
-      "provider": "Formspree, Inc.",
-      "surface": "browser",
-      "dataLocation": "United States",
-      "contractStatus": null
     },
     {
       "id": "github",

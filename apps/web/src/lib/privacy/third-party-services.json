@@ -4,7 +4,7 @@
     {
       "id": "strictly-necessary",
       "label": "Strictly necessary",
-      "description": "Needed for the site to work — serving the app, remembering your answers on your own device, and security. These are always active and cannot be switched off, and require no consent. They set no third-party cookies: the contact form, feedback widget and survey are protected by Cloudflare Turnstile, which is cookieless and runs only when you submit one of them.",
+      "description": "Needed for the site to work — serving the app, remembering your answers on your own device, and security. These are always active and cannot be switched off, and require no consent. They set no third-party cookies: the contact form, feedback widget and survey are protected by a self-hosted, cookieless anti-spam check that runs entirely on your device, only when you submit one of them — no third-party service is involved.",
       "consentRequired": false,
       "consentModeSignals": ["security_storage"]
     },
@@ -16,46 +16,15 @@
       "consentModeSignals": ["analytics_storage"]
     }
   ],
-  "services": [
-    {
-      "id": "formspree",
-      "name": "Formspree",
-      "provider": "Formspree, Inc.",
-      "category": "strictly-necessary",
-      "consentRequired": false,
-      "purpose": "Delivers the feedback widget and contact form to us. Only processes what you type into those forms, and only when you submit one; it is never used for tracking.",
-      "csp": {
-        "connect-src": ["https://formspree.io"]
-      },
-      "cookies": [],
-      "privacyPolicyUrl": "https://formspree.io/legal/privacy-policy/",
-      "dataLocation": "United States"
-    },
-    {
-      "id": "turnstile",
-      "name": "Cloudflare Turnstile",
-      "provider": "Cloudflare, Inc.",
-      "category": "strictly-necessary",
-      "consentRequired": false,
-      "purpose": "Protects the contact form, feedback widget and survey from spam and automated abuse. It is cookieless and non-interactive (no puzzle to solve) and runs only when you submit one of them, returning a token we verify to drop automated submissions. The survey uses a separate Turnstile widget from the forms, so a survey submission shares neither configuration nor per-widget analytics with a form submission. It is never used for advertising or cross-site tracking.",
-      "csp": {
-        "script-src": ["https://challenges.cloudflare.com"],
-        "frame-src": ["https://challenges.cloudflare.com"],
-        "connect-src": ["https://challenges.cloudflare.com"]
-      },
-      "cookies": [],
-      "privacyPolicyUrl": "https://www.cloudflare.com/privacypolicy/",
-      "dataLocation": "Global — Cloudflare edge network; may be processed outside Australia."
-    }
-  ],
+  "services": [],
   "infrastructure": [
     {
       "id": "cloudflare",
       "name": "Cloudflare",
       "provider": "Cloudflare, Inc.",
       "surface": "infrastructure",
-      "role": "Website hosting and CDN (Cloudflare Pages), edge compute (Pages Functions), the consented research counter database (Cloudflare D1), cookieless aggregate usage measurement (Cloudflare Web Analytics, measured at the edge with no client tag or cookie), the Turnstile anti-abuse challenge, and edge security including rate limiting and Bot Fight Mode. The site is served from our own origin through Cloudflare; the only browser-loaded Cloudflare surface is the Turnstile challenge on form or survey submit (declared as its own service), so this infrastructure entry adds no Content-Security-Policy source.",
-      "dataProcessing": "Serves all site content and runs the /api/research endpoints. Stores consented aggregate research counters in Cloudflare D1. Measures aggregate site usage with cookieless Cloudflare Web Analytics (no per-person identifier). May process request metadata (including IP address) transiently for delivery and security; the application does not read, log or persist it.",
+      "role": "Website hosting and CDN (Cloudflare Pages), edge compute (Pages Functions), the consented research counter database (Cloudflare D1), cookieless aggregate usage measurement (Cloudflare Web Analytics, measured at the edge with no client tag or cookie), the transactional email relay for the contact/feedback forms (Cloudflare Email Sending, called server-side at api.cloudflare.com), and edge security including rate limiting and Bot Fight Mode. The anti-abuse challenge is self-hosted (an in-app proof-of-work issued and verified by our own Pages Functions) — no Cloudflare or other third-party code loads in the browser for it, so this infrastructure entry adds no Content-Security-Policy source.",
+      "dataProcessing": "Serves all site content and runs the /api endpoints. Stores consented aggregate research counters in Cloudflare D1. Relays contact/feedback form messages to the project inbox as transactional email (relay only — the application stores no copy). Measures aggregate site usage with cookieless Cloudflare Web Analytics (no per-person identifier). May process request metadata (including IP address) transiently for delivery and security; the application does not read, log or persist it.",
       "retention": "Operational hosting: for the life of the service. Research data: aggregate-only counters retained per docs/privacy/retention.md (no per-person record exists). Cloudflare's own transient network/security logs per its data-processing terms.",
       "subprocessors": [],
       "subprocessorsUrl": "https://www.cloudflare.com/gdpr/subprocessors/",
@@ -118,12 +87,12 @@
   ],
   "antiAbuse": [
     {
-      "id": "turnstile",
-      "service": "turnstile",
-      "mechanism": "Cloudflare Turnstile (non-interactive / invisible)",
+      "id": "altcha-pow",
+      "service": "cloudflare",
+      "mechanism": "Self-hosted proof-of-work challenge (ALTCHA protocol, non-interactive / invisible)",
       "interactive": false,
       "accessible": true,
-      "note": "Turnstile runs in its non-interactive/invisible mode when a form or the survey is submitted; it never presents a visual or audio puzzle the user must solve, so it imposes no interactive challenge and no accessibility barrier. The survey uses a separate Turnstile widget/secret from the forms. (Managed mode, which can show a checkbox, is deliberately not used — it would make this interactive.)"
+      "note": "A self-hosted, cookieless proof-of-work challenge (the open ALTCHA protocol, issued and verified by our own Pages Functions — attributed to the Cloudflare vendor entry because that is where the verifier runs; no third-party code or endpoint is involved). It runs invisibly when a form or the survey is submitted: a short background computation on the visitor's own device, never a visual or audio puzzle, so it imposes no interactive challenge and no accessibility barrier. Each challenge is purpose-bound (research, contact or feedback) and single-use."
     },
     {
       "id": "cloudflare-edge",

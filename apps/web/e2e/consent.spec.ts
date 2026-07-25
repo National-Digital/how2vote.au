@@ -2,8 +2,8 @@ import { expect, test, type Page } from "@playwright/test";
 import { seedEligibility } from "./flow-helpers";
 
 // The site is cookieless and consent-free by construction: usage is measured by cookieless
-// Cloudflare Web Analytics at the edge (no client tag, no cookie) and form protection is cookieless
-// Cloudflare Turnstile, run only on submit. Nothing the browser loads is consent-gated, so the
+// Cloudflare Web Analytics at the edge (no client tag, no cookie) and form protection is a
+// cookieless, self-hosted check run only on submit. Nothing the browser loads is consent-gated, so the
 // consent banner + preferences UI stay hidden (gated on hasConfigurableConsent — see
 // registry.test.ts, which proves the flag and the fact that the UI re-activates if a consent-gated
 // service is ever added back). These tests pin that shipped posture:

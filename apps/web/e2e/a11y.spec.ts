@@ -254,8 +254,8 @@ test("a large-state Senate below-the-line ballot has no accessibility violations
 test("no consent banner or preferences control surfaces (nothing is consent-gated)", async ({
   page,
 }) => {
-  // Usage is measured by cookieless Cloudflare Web Analytics at the edge and form protection is
-  // cookieless Turnstile, so nothing the browser loads is consent-gated: the consent banner and its
+  // Usage is measured by cookieless Cloudflare Web Analytics at the edge and form protection is a
+  // cookieless self-hosted check, so nothing the browser loads is consent-gated: the consent banner and its
   // footer preferences trigger stay hidden (gated on hasConfigurableConsent). The consent components
   // remain in the codebase, dormant, ready to re-activate if a consent-gated service is added back
   // (the gate flag + re-activation are unit-tested in registry.test.ts). Assert the shipped build
@@ -384,12 +384,13 @@ test("the survey consent forms are accessible and keyboard-operable (age + resea
 test("the anti-abuse challenge presents no inaccessible in-page widget (accessible path)", async ({
   page,
 }) => {
-  // Anti-abuse is enforced by server-side siteverify at token issue, not by an in-page
-  // CAPTCHA the user must solve — so nothing inaccessible ever blocks the accessible submission path.
-  // (If the provider's managed challenge is ever shown, it carries its own accessible fallback.)
+  // Anti-abuse is a self-hosted, invisible proof-of-work verified server-side at token issue — a
+  // background computation, never an in-page CAPTCHA the user must solve — so nothing inaccessible
+  // ever blocks the accessible submission path. Assert no challenge iframe or widget of any kind
+  // is rendered (Turnstile is gone; the ALTCHA widget UI is deliberately not used).
   await reachSurveyGate(page);
   await expect(
-    page.locator("iframe[src*='challenges.cloudflare.com'], .cf-turnstile, [data-sitekey]"),
+    page.locator("iframe, altcha-widget, .cf-turnstile, [data-sitekey]"),
     "no in-page challenge widget is rendered on the submission path",
   ).toHaveCount(0);
 

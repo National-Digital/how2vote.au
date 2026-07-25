@@ -1,8 +1,9 @@
 <script lang="ts">
   // A lightweight feedback helper anchored to the paper sheet on every screen. Opens a native
-  // <dialog> (built-in focus trap + Escape) with a short message box; posts to Formspree via
-  // $lib/formspree. Offline is expected on this PWA and is surfaced as a plain, calm message.
-  import { feedbackConfigured, submitFeedback, type SubmitResult } from "$lib/formspree";
+  // <dialog> (built-in focus trap + Escape) with a short message box; posts to our own self-hosted
+  // forms endpoint via $lib/forms. Offline is expected on this PWA and is surfaced as a plain,
+  // calm message.
+  import { submitFeedback, type SubmitResult } from "$lib/forms";
 
   let dialog = $state<HTMLDialogElement | null>(null);
   let name = $state("");
@@ -48,99 +49,87 @@
   }
 </script>
 
-{#if feedbackConfigured}
-  <button
-    type="button"
-    class="fab ui"
-    onclick={open}
-    aria-haspopup="dialog"
-    aria-label="Send feedback"
-    title="Send feedback"
+<button
+  type="button"
+  class="fab ui"
+  onclick={open}
+  aria-haspopup="dialog"
+  aria-label="Send feedback"
+  title="Send feedback"
+>
+  <svg
+    viewBox="0 0 24 24"
+    width="20"
+    height="20"
+    fill="none"
+    stroke="currentColor"
+    stroke-width="1.6"
+    stroke-linecap="round"
+    stroke-linejoin="round"
+    aria-hidden="true"
   >
-    <svg
-      viewBox="0 0 24 24"
-      width="20"
-      height="20"
-      fill="none"
-      stroke="currentColor"
-      stroke-width="1.6"
-      stroke-linecap="round"
-      stroke-linejoin="round"
-      aria-hidden="true"
-    >
-      <path
-        d="M20 4H4a1 1 0 0 0-1 1v10a1 1 0 0 0 1 1h3v3.5L11.5 16H20a1 1 0 0 0 1-1V5a1 1 0 0 0-1-1Z"
-      />
-      <path d="M7.5 9h9" />
-      <path d="M7.5 12h6" />
-    </svg>
-  </button>
+    <path
+      d="M20 4H4a1 1 0 0 0-1 1v10a1 1 0 0 0 1 1h3v3.5L11.5 16H20a1 1 0 0 0 1-1V5a1 1 0 0 0-1-1Z"
+    />
+    <path d="M7.5 9h9" />
+    <path d="M7.5 12h6" />
+  </svg>
+</button>
 
-  <dialog bind:this={dialog} class="sheet-dialog" aria-labelledby="fb-title" onclose={reset}>
-    <div class="head">
-      <h2 id="fb-title">Send feedback</h2>
-      <button type="button" class="x" onclick={close} aria-label="Close feedback">×</button>
+<dialog bind:this={dialog} class="sheet-dialog" aria-labelledby="fb-title" onclose={reset}>
+  <div class="head">
+    <h2 id="fb-title">Send feedback</h2>
+    <button type="button" class="x" onclick={close} aria-label="Close feedback">×</button>
+  </div>
+
+  {#if status === "ok"}
+    <p class="msg" role="status">Thanks — your feedback is on its way.</p>
+    <div class="actions">
+      <button type="button" class="btn" onclick={close}>Done</button>
     </div>
+  {:else}
+    <form onsubmit={send}>
+      <label class="ui" for="fb-name">Name <span class="opt">(optional)</span></label>
+      <input id="fb-name" type="text" bind:value={name} autocomplete="name" />
 
-    {#if status === "ok"}
-      <p class="msg" role="status">Thanks — your feedback is on its way.</p>
-      <div class="actions">
-        <button type="button" class="btn" onclick={close}>Done</button>
-      </div>
-    {:else}
-      <form onsubmit={send}>
-        <label class="ui" for="fb-name">Name <span class="opt">(optional)</span></label>
-        <input id="fb-name" type="text" bind:value={name} autocomplete="name" />
+      <label class="ui" for="fb-email"
+        >Email <span class="opt">(optional, if you'd like a reply)</span></label
+      >
+      <input id="fb-email" type="email" bind:value={email} autocomplete="email" />
 
-        <label class="ui" for="fb-email"
-          >Email <span class="opt">(optional, if you'd like a reply)</span></label
-        >
-        <input id="fb-email" type="email" bind:value={email} autocomplete="email" />
+      <label class="ui" for="fb-message">Your feedback</label>
+      <textarea
+        id="fb-message"
+        bind:value={message}
+        rows="4"
+        required
+        placeholder="What's working, what isn't, what's missing?"></textarea>
 
-        <label class="ui" for="fb-message">Your feedback</label>
-        <textarea
-          id="fb-message"
-          bind:value={message}
-          rows="4"
-          required
-          placeholder="What's working, what isn't, what's missing?"></textarea>
-
-        {#if status === "offline"}
-          <p class="msg warn" role="status">
-            You're offline. This page works without a connection, but sending feedback needs one —
-            please try again when you're back online.
-          </p>
-        {:else if status === "error"}
-          <p class="msg warn" role="status">
-            Sorry, that didn't send. Please check your connection and try again.
-          </p>
-        {/if}
-
-        <div class="actions">
-          <button type="button" class="btn ghost" onclick={close}>Cancel</button>
-          <button type="submit" class="btn" disabled={status === "sending" || !message.trim()}>
-            {status === "sending" ? "Sending…" : "Send"}
-          </button>
-        </div>
-
-        <p class="challenge-note">
-          Protected by Cloudflare Turnstile; the Cloudflare
-          <a
-            href="https://www.cloudflare.com/privacypolicy/"
-            target="_blank"
-            rel="noopener noreferrer">Privacy Policy</a
-          >
-          and
-          <a
-            href="https://www.cloudflare.com/website-terms/"
-            target="_blank"
-            rel="noopener noreferrer">Terms</a
-          > apply.
+      {#if status === "offline"}
+        <p class="msg warn" role="status">
+          You're offline. This page works without a connection, but sending feedback needs one —
+          please try again when you're back online.
         </p>
-      </form>
-    {/if}
-  </dialog>
-{/if}
+      {:else if status === "error"}
+        <p class="msg warn" role="status">
+          Sorry, that didn't send. Please check your connection and try again.
+        </p>
+      {/if}
+
+      <div class="actions">
+        <button type="button" class="btn ghost" onclick={close}>Cancel</button>
+        <button type="submit" class="btn" disabled={status === "sending" || !message.trim()}>
+          {status === "sending" ? "Sending…" : "Send"}
+        </button>
+      </div>
+
+      <p class="challenge-note">
+        Protected by a privacy-preserving anti-spam check that runs entirely on your device — no
+        third-party service is involved.
+      </p>
+    </form>
+  {/if}
+</dialog>
 
 <style>
   /* A compact circular icon button. On phones it's fixed to the viewport's bottom-right corner as a

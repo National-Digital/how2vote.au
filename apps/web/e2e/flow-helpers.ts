@@ -1,4 +1,5 @@
 import type { Page } from "@playwright/test";
+import { createChallenge } from "altcha-lib";
 
 /**
  * Pre-seed the age-first eligibility acknowledgement (docs/adr/0011) so a spec that is NOT
@@ -21,25 +22,29 @@ export async function seedEligibility(page: Page): Promise<void> {
 }
 
 /**
- * Stub Cloudflare Turnstile's cross-origin `api.js` with a local fake so the invisible research
- * challenge resolves deterministically in tests. The real widget cannot run on the `127.0.0.1` test
- * origin (not an allowlisted Turnstile domain), and its script load would otherwise stall the
- * fire-and-forget research submission. The fake resolves `execute()` synchronously with a dummy
- * token, exercising the true "obtain a challenge → send it to /api/research/token" path. Anti-abuse
- * enforcement itself is server-side (siteverify), out of scope for a static-preview e2e.
+ * Stub our `/api/challenge` issuer (a Pages Function, absent from the static e2e preview) with a
+ * REAL, signed, deliberately low-cost ALTCHA challenge minted in the test process. The bundled
+ * in-page solver then genuinely solves it — exercising the true "fetch a challenge → solve
+ * on-device → attach the payload to /api/research/token" path, just cheaply (cost 10 instead of
+ * the production 10k, so the solve is instant). Anti-abuse enforcement itself is server-side
+ * (in-process verification + single-use burn), out of scope for a static-preview e2e.
  */
-export async function stubTurnstile(page: Page): Promise<void> {
-  await page.route("https://challenges.cloudflare.com/turnstile/v0/api.js*", (route) =>
-    route.fulfill({
-      contentType: "application/javascript",
-      body: `
-        window.turnstile = {
-          ready: (cb) => cb(),
-          render: (_el, params) => { window.__tsCallback = params && params.callback; return "test-widget"; },
-          execute: () => { if (window.__tsCallback) window.__tsCallback("test-challenge-token"); },
-          reset: () => {},
-        };
-      `,
-    }),
-  );
+export async function stubChallenge(page: Page): Promise<void> {
+  await page.route("**/api/challenge", async (route) => {
+    const body = JSON.parse(route.request().postData() ?? "{}") as { purpose?: string };
+    const challenge = await createChallenge({
+      algorithm: "PBKDF2/SHA-256",
+      cost: 10,
+      // The client never derives at issue time (no counter), so any deriveKey satisfies the type.
+      deriveKey: async () => ({ derivedKey: new Uint8Array(32) }),
+      expiresAt: new Date(Date.now() + 10 * 60 * 1_000),
+      data: { purpose: body.purpose ?? "research" },
+      hmacSignatureSecret: "e2e-challenge-secret",
+    });
+    await route.fulfill({
+      contentType: "application/json",
+      headers: { "cache-control": "no-store" },
+      body: JSON.stringify({ challenge }),
+    });
+  });
 }

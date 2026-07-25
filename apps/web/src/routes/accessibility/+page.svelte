@@ -76,7 +76,7 @@
     <li>electorate maps, which remain optional and have a complete text alternative;</li>
     <li>long Senate candidate lists and preference-order controls;</li>
     <li>print, PDF or image versions of a voting plan;</li>
-    <li>third-party form protection such as Cloudflare Turnstile; and</li>
+    <li>the invisible, non-interactive anti-spam check on the forms; and</li>
     <li>content or data supplied by third parties.</li>
   </ul>
   <p>

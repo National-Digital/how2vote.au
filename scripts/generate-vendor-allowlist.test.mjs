@@ -38,11 +38,11 @@ describe("hostFromSource", () => {
 });
 
 describe("derivation is a pure function of the registry", () => {
-  it("projects each CSP directive from the registry services", () => {
+  it("projects each CSP directive from the registry services — all empty (no browser third party)", () => {
     const csp = deriveCsp(REGISTRY);
     expect(Object.keys(csp).sort()).toEqual([...CSP_DIRECTIVES].sort());
-    expect(csp["connect-src"]).toContain("formspree.io");
-    expect(csp["script-src"]).toContain("challenges.cloudflare.com");
+    // Forms + anti-abuse are self-hosted now, so NO directive carries any third-party host.
+    for (const hosts of Object.values(csp)) expect(hosts).toEqual([]);
   });
 
   it("returns sorted, de-duplicated host lists", () => {
@@ -53,11 +53,14 @@ describe("derivation is a pure function of the registry", () => {
     );
   });
 
-  it("includes infrastructure egress hosts in the network allowlist but not the browser hosts", () => {
+  it("includes infrastructure egress hosts in the network allowlist but no browser hosts", () => {
     expect(deriveInfrastructureHosts(REGISTRY)).toContain("theyvoteforyou.org.au");
-    expect(deriveBrowserHosts(REGISTRY)).not.toContain("theyvoteforyou.org.au");
+    expect(deriveBrowserHosts(REGISTRY)).toEqual([]);
     expect(deriveNetworkAllowlist(REGISTRY)).toContain("theyvoteforyou.org.au");
-    expect(deriveNetworkAllowlist(REGISTRY)).toContain("formspree.io");
+    expect(deriveNetworkAllowlist(REGISTRY)).toContain("api.cloudflare.com");
+    // The removed third parties never reappear in the allowlist.
+    expect(deriveNetworkAllowlist(REGISTRY)).not.toContain("formspree.io");
+    expect(deriveNetworkAllowlist(REGISTRY)).not.toContain("challenges.cloudflare.com");
   });
 
   it("lists every vendor (browser + infrastructure) in the provider table", () => {
@@ -65,7 +68,9 @@ describe("derivation is a pure function of the registry", () => {
     expect(ids).toContain("cloudflare");
     expect(ids).toContain("github");
     expect(ids).toContain("tvfy");
-    expect(ids).toContain("formspree");
+    // Formspree is gone (forms are self-hosted); no browser vendor remains.
+    expect(ids).not.toContain("formspree");
+    expect(ids).not.toContain("turnstile");
   });
 });
 

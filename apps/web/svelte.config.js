@@ -38,10 +38,10 @@ const config = {
     // hydration script (mode "hash"); that hash differs per prerendered page, so the policy cannot be
     // a single static header — it lives here. Header-only directives that <meta> cannot express
     // (frame-ancestors, upgrade-insecure-requests) are set alongside in static/_headers.
-    // Third-party origins come from the registry via mergeRegistryCsp. Today the only browser-loaded
-    // third party is the Cloudflare Turnstile challenge (challenges.cloudflare.com), added only when
-    // a form is submitted; usage is measured cookielessly by Cloudflare Web Analytics at the edge, so
-    // no analytics origin appears in the client CSP at all.
+    // Third-party origins come from the registry via mergeRegistryCsp. Today NO browser-loaded
+    // third party exists at all (the anti-abuse challenge is self-hosted and the forms post to our
+    // own /api/forms), so the merge adds nothing; usage is measured cookielessly by Cloudflare Web
+    // Analytics at the edge, so no analytics origin appears in the client CSP either.
     csp: {
       mode: "hash",
       directives: mergeRegistryCsp(BASE_CSP),

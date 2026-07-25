@@ -324,11 +324,11 @@
     obligation.
   </p>
   <p>
-    The forms may use Formspree for delivery and Cloudflare Turnstile for spam and abuse prevention.
-    Turnstile is cookieless and non-interactive — there is no puzzle to solve — and runs only when
-    you submit one of those forms; it processes technical information about the request to tell
-    humans from bots and sets no cookie. You can contact us by email or telephone instead of using a
-    Turnstile-protected form.
+    The forms post to our own service and are delivered to us by email; no third-party form provider
+    is involved and we store no copy outside that email. Spam and abuse prevention is a self-hosted,
+    cookieless check that is non-interactive — there is no puzzle to solve — and runs entirely on
+    your device, only when you submit one of those forms; nothing about you is sent to any third
+    party for it. You can contact us by email or telephone instead of using a form.
   </p>
 
   <h2>8. Hosting, security and technical logs</h2>

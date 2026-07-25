@@ -233,7 +233,15 @@ export function verdict(register, options = {}) {
     if (!vendorRegistry || !Array.isArray(vendorRegistry.services)) {
       push("vendorRegistry must contain a services array");
     } else {
-      for (const service of vendorRegistry.services) {
+      // EVERY registry vendor — browser-loaded services AND infrastructure vendors — must have a
+      // matching ledger record. (Originally services-only; with the forms + anti-abuse now
+      // self-hosted that list is empty, so the infrastructure vendors are what keeps this
+      // completeness gate live.)
+      const vendors = [
+        ...vendorRegistry.services,
+        ...(Array.isArray(vendorRegistry.infrastructure) ? vendorRegistry.infrastructure : []),
+      ];
+      for (const service of vendors) {
         if (!serviceIsCovered(service, allRecords)) {
           push(`vendor completeness: ${service?.name ?? service?.id ?? "unknown service"}`);
         }

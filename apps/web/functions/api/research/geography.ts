@@ -41,7 +41,7 @@ interface Env {
    *  production it is mandatory (the endpoint refuses 503 when it is unset). */
   RESEARCH_TOKEN_SECRET?: string;
   /** See research.ts — required in production (the pipeline never runs without the challenge). */
-  TURNSTILE_RESEARCH_SECRET?: string;
+  ALTCHA_HMAC_SECRET?: string;
   /** Non-atomic KV nonce store; usable in non-production only. */
   RESEARCH_NONCES?: KVNamespace;
   /** Atomic D1 nonce store, mirroring research.ts. Preferred when bound and REQUIRED in production
@@ -137,7 +137,7 @@ export const onRequestPost: PagesFunction<Env> = async ({ request, env }) => {
     if (
       !env.RESEARCH_DB ||
       !env.RESEARCH_TOKEN_SECRET ||
-      !env.TURNSTILE_RESEARCH_SECRET ||
+      !env.ALTCHA_HMAC_SECRET ||
       !env.RESEARCH_NONCES_DB
     ) {
       return serviceUnavailable();

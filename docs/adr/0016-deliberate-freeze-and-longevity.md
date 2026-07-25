@@ -106,11 +106,15 @@ scratch:
   `StructuredData`, `insights`) set `innerHTML` with a plain string. That would throw under enforced
   TT, but the value is build-time, first-party schema.org data, so it can be routed through a small
   passthrough policy (`{@html policy.createHTML(json)}`) — Svelte supports this explicitly.
-- **The blocker is the third-party challenge on a frozen build.** Cloudflare Turnstile loads on
-  form submit and is reachable from any page (the feedback widget is global). Under enforced TT with a
-  restrictive `trusted-types` policy list, any TT-incompatible sink or unlisted policy a *future*
-  Turnstile build introduces would break the contact/feedback forms **silently, with no maintainer for
-  ~3 years** — and its behaviour cannot be verified locally (it needs the live Cloudflare challenge).
+- **The blocker was the third-party challenge on a frozen build.** At the time of this decision,
+  Cloudflare Turnstile loaded on form submit and was reachable from any page (the feedback widget is
+  global). Under enforced TT with a restrictive `trusted-types` policy list, any TT-incompatible sink
+  or unlisted policy a *future* Turnstile build introduced would break the contact/feedback forms
+  **silently, with no maintainer for ~3 years** — and its behaviour could not be verified locally (it
+  needed the live Cloudflare challenge). *Since
+  [0017](0017-self-hosted-proof-of-work-challenge.md) (2026-07) the challenge is self-hosted,
+  first-party code, so this specific blocker no longer applies; the deferral now rests on the modest
+  marginal value below and is still re-evaluated at the dated re-review.*
 - **The marginal value here is modest.** `script-src` is already hash-locked (no host allowlist, no
   `unsafe-inline` fallback that CSP3 honours), so script injection is already blocked; TT would add
   DOM-sink depth over a small, first-party, no-user-HTML surface.
@@ -118,8 +122,9 @@ scratch:
   Report-Only header just goes unread for the life of the freeze.
 
 **Decision:** do not ship Trusted Types (enforced or Report-Only) into the frozen build. Re-evaluate at
-the [dated re-review](#decision) — by then the tree is being actively worked (next election), Turnstile
-can be exercised against an enforced policy in a preview, and the JSON-LD policy shim can be added and
-verified in the same pass. If TT is adopted then, note it must be delivered as an **HTTP header** in
+the [dated re-review](#decision) — by then the tree is being actively worked (next election), the
+challenge (now self-hosted, first-party code —
+[0017](0017-self-hosted-proof-of-work-challenge.md)) can be exercised against an enforced policy in
+a preview, and the JSON-LD policy shim can be added and verified in the same pass. If TT is adopted then, note it must be delivered as an **HTTP header** in
 `static/_headers`: the app's CSP is emitted as a `<meta>` tag, and browsers ignore
 `require-trusted-types-for` / `trusted-types` in meta policies.

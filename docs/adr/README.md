@@ -21,5 +21,6 @@ design built on them, then the product-level decisions.
 | [0012](0012-under-18-explore-mode.md) | Under-18 explore-only mode (comparison yes, how-to-vote card no) | Accepted |
 | [0013](0013-provisional-upcoming-quiz.md) | Provisional quiz for an upcoming election | Accepted |
 | [0014](0014-election-day-notice.md) | Close the Insights page on election day | Accepted |
-| [0015](0015-first-party-telemetry-and-anti-abuse.md) | First-party/Cloudflare telemetry & anti-abuse | Accepted |
+| [0015](0015-first-party-telemetry-and-anti-abuse.md) | First-party/Cloudflare telemetry & anti-abuse | Accepted (D2 superseded in part by 0017) |
 | [0016](0016-deliberate-freeze-and-longevity.md) | Deliberate freeze posture and a longevity re-review | Accepted |
+| [0017](0017-self-hosted-proof-of-work-challenge.md) | Self-hosted proof-of-work challenge and forms relay | Accepted |

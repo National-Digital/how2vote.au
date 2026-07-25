@@ -22,8 +22,9 @@ Cloudflare secrets that carry the real values:
 
 - Live resource ids (`CF_D1_DATABASE_ID`, `CF_KV_RESEARCH_NONCES_ID`, `CLOUDFLARE_ACCOUNT_ID`) are
   GitHub Actions **variables**, injected into the wrangler placeholders at deploy time.
-- Credentials (`CLOUDFLARE_API_TOKEN`, `CF_D1_API_TOKEN`, `RESEARCH_TOKEN_SECRET`, `TURNSTILE_RESEARCH_SECRET`)
-  are GitHub Actions **secrets** / Cloudflare **secrets**, never rendered into any committed file.
+- Credentials (`CLOUDFLARE_API_TOKEN`, `CF_D1_API_TOKEN`, `RESEARCH_TOKEN_SECRET`, `ALTCHA_HMAC_SECRET`,
+  `EMAIL_API_TOKEN`, `EMAIL_ACCOUNT_ID`) are GitHub Actions **secrets** / Cloudflare **secrets**,
+  never rendered into any committed file.
 
 The account id is not sensitive (it appears in every dashboard URL) but is still never hardcoded.
 
@@ -37,8 +38,16 @@ Requires Cloudflare account access:
 ```sh
 wrangler d1 create how2vote-research                 # copy the returned database_id
 wrangler kv namespace create RESEARCH_NONCES         # + --preview for the preview namespace
-wrangler pages secret put RESEARCH_TOKEN_SECRET      # HMAC signing secret
-wrangler pages secret put TURNSTILE_RESEARCH_SECRET           # anti-abuse challenge secret
+wrangler pages secret put RESEARCH_TOKEN_SECRET      # HMAC signing secret (submission tokens)
+wrangler pages secret put ALTCHA_HMAC_SECRET         # self-hosted challenge secret (openssl rand -hex 32)
+
+# Optional — self-hosted forms relay (Cloudflare Email Sending):
+wrangler email sending enable send.how2vote.au       # one-time onboarding of the DEDICATED sending
+                                                      # subdomain — never the apex (how2vote.au is a
+                                                      # hardened no-mail domain: null SPF/MX, DMARC
+                                                      # p=reject/sp=reject; see wrangler.toml NOTE)
+wrangler pages secret put EMAIL_API_TOKEN            # token scoped to Email Sending only
+wrangler pages secret put EMAIL_ACCOUNT_ID           # account id (injected, not committed)
 ```
 
 Then set the repo variables (`CF_D1_DATABASE_ID`, `CF_KV_RESEARCH_NONCES_ID`,

@@ -215,7 +215,7 @@ describe("onRequestPost — PRODUCTION integrity gate (503, never a silent 204)"
 
   it("refuses (503) when a mandatory integrity control is missing", async () => {
     const { db, calls } = fakeDb();
-    // Missing Turnstile secret.
+    // Missing challenge HMAC secret.
     const res = await post(base(), {
       ...prod,
       RESEARCH_DB: db,
@@ -232,7 +232,7 @@ describe("onRequestPost — PRODUCTION integrity gate (503, never a silent 204)"
       ...prod,
       RESEARCH_DB: db,
       RESEARCH_TOKEN_SECRET: SECRET,
-      TURNSTILE_RESEARCH_SECRET: "cf",
+      ALTCHA_HMAC_SECRET: "cf",
       RESEARCH_NONCES: fakeKv(),
     });
     expect(res.status).toBe(503);
@@ -245,7 +245,7 @@ describe("onRequestPost — PRODUCTION integrity gate (503, never a silent 204)"
     const common = {
       ...prod,
       RESEARCH_TOKEN_SECRET: SECRET,
-      TURNSTILE_RESEARCH_SECRET: "cf",
+      ALTCHA_HMAC_SECRET: "cf",
       RESEARCH_NONCES_DB: nonceDb,
     };
     const first = fakeDb();

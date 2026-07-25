@@ -1,5 +1,5 @@
 import { expect, test, type Page, type Request } from "@playwright/test";
-import { seedEligibility, stubTurnstile } from "./flow-helpers";
+import { seedEligibility, stubChallenge } from "./flow-helpers";
 import { TRANSMITTABLE_FIELDS } from "../src/lib/research/transport-policy";
 
 // In-transit transport policy: a real opt-in flow must put ONLY the allowlisted fields on
@@ -10,7 +10,7 @@ import { TRANSMITTABLE_FIELDS } from "../src/lib/research/transport-policy";
 
 test.beforeEach(async ({ page }) => {
   await seedEligibility(page);
-  await stubTurnstile(page);
+  await stubChallenge(page);
 });
 
 async function reachSurvey(page: Page): Promise<void> {

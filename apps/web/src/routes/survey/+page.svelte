@@ -23,7 +23,7 @@
     surveyFor,
     type Stance,
   } from "$lib/survey";
-  import { researchTurnstileToken } from "$lib/turnstile";
+  import { solveChallenge } from "$lib/altcha";
 
   // -1 = the research opt-in gate; 0..n-1 = the optional demographic questions (index into the full
   // question set). The gate is reached only AFTER the comparison result exists; nothing about it
@@ -120,14 +120,14 @@
     const t = election.meta.timetable;
     const electorate = quiz.electorate;
     // Reached only after the explicit age + consent opt-in above, so this is the point to mint the
-    // short-lived single-use tokens. First run the invisible research Turnstile challenge on demand
-    // (a SEPARATE widget from the contact/feedback forms); its solution is passed to the token
-    // endpoint, which verifies it server-side before issuing. The challenge is best-effort — a
-    // failure or an unconfigured widget resolves to undefined and the token request proceeds without
-    // it (the server's verifier is inert unless its secret is set). Two independent tokens keep the
-    // detailed record and the electorate ping separated by design rather than a guaranteed-unlinkable
-    // pair. Never blocks the plan.
-    void researchTurnstileToken("research")
+    // short-lived single-use tokens. First solve the invisible, self-hosted proof-of-work challenge
+    // on demand (purpose-bound to "research", so a forms challenge can never be spent here); its
+    // solution is passed to the token endpoint, which verifies it in-process before issuing. The
+    // challenge is best-effort — a failure or an unprovisioned challenge layer resolves to undefined
+    // and the token request proceeds without it (the server's verifier then decides). Two
+    // independent tokens keep the detailed record and the electorate ping separated by design rather
+    // than a guaranteed-unlinkable pair. Never blocks the plan.
+    void solveChallenge("research")
       .catch(() => undefined)
       .then((challenge) => requestResearchToken(electionId, challenge))
       .then((tokens) =>

@@ -106,7 +106,7 @@ describe("governance", () => {
   it("fails if a current vendor disappears from the ledger", () => {
     const register = clone(REAL);
     for (const period of register.periods) {
-      period.records = period.records.filter((record) => !record.supplier.includes("Formspree"));
+      period.records = period.records.filter((record) => !record.supplier.includes("GitHub"));
       period.totalActualCashCost =
         Math.round(period.records.reduce((sum, record) => sum + record.actualAmount, 0) * 100) /
         100;
@@ -114,9 +114,7 @@ describe("governance", () => {
         Math.round(period.records.reduce((sum, record) => sum + record.electoralAmount, 0) * 100) /
         100;
     }
-    expect(hasError(verdict(register, { now: NOW, vendorRegistry: VENDORS }), "Formspree")).toBe(
-      true,
-    );
+    expect(hasError(verdict(register, { now: NOW, vendorRegistry: VENDORS }), "GitHub")).toBe(true);
   });
 });
 

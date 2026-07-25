@@ -271,7 +271,9 @@ function main() {
   }
   const consentSrc = safeRead("apps/web/src/lib/research/consent.ts");
   const statsSrc = safeRead("packages/data-pipeline/src/stats.ts");
-  const surveySrc = safeRead("apps/web/src/lib/survey.ts");
+  // SENSITIVE_DIMENSIONS is defined in the survey-questions leaf (survey.ts only re-exports it) —
+  // read the definition site, otherwise this binding silently no-ops.
+  const surveySrc = safeRead("apps/web/src/lib/survey-questions.ts");
 
   const result = verdict({
     claimsRegister,

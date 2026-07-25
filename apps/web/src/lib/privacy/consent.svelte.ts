@@ -13,8 +13,8 @@
  * browser), so it never appears in the statically-prerendered HTML and cannot
  * cause a hydration mismatch. It is additionally gated in the layout on
  * `hasConfigurableConsent`, so with no consent-gated service registered (the
- * state today — analytics is cookieless Cloudflare edge, Turnstile is
- * cookieless) the UI stays hidden. The store is kept fully intact and dormant:
+ * state today — analytics is cookieless Cloudflare edge; the anti-spam check
+ * is self-hosted and cookieless) the UI stays hidden. The store is kept fully intact and dormant:
  * it still hydrates and persists a decision so that adding a consent-gated
  * service back to the registry — and wiring it into applyConsent() below — is a
  * one-line change, not a rebuild.
