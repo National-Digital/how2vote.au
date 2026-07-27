@@ -8,6 +8,7 @@
     "dev": "vite dev",
     "og:generate": "node scripts/generate-og.mjs",
     "budget:check": "node scripts/check-bundle-budget.mjs",
+    "precache:check": "node scripts/check-precache.mjs",
     "prebuild:assets": "node scripts/generate-og.mjs && node scripts/generate-icons.mjs && node scripts/generate-security-txt.mjs && node scripts/generate-error-pages.mjs",
     "build": "pnpm prebuild:assets && vite build",
     "preview": "vite preview",

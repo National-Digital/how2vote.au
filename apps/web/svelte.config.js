@@ -2,6 +2,7 @@ import process from "node:process";
 import adapter from "@sveltejs/adapter-static";
 import { vitePreprocess } from "@sveltejs/vite-plugin-svelte";
 import { mergeRegistryCsp } from "./src/lib/privacy/csp.js";
+import { PAGES_CONTROL_FILES } from "./src/lib/pages-control-files.js";
 
 // Hand-owned base Content-Security-Policy: the first-party ('self') tokens and keywords every
 // policy shares. Third-party origins are NOT listed here — they are merged in from the
@@ -45,6 +46,15 @@ const config = {
     csp: {
       mode: "hash",
       directives: mergeRegistryCsp(BASE_CSP),
+    },
+    serviceWorker: {
+      // Which `static/` files reach the `files` list in $service-worker, and so the precache. The
+      // Pages control files are excluded because Pages does not serve them and the service worker's
+      // atomic addAll would reject (see src/lib/pages-control-files.js). The `.DS_Store` clause
+      // reproduces SvelteKit's own default, which setting this option replaces.
+      files: (filename) =>
+        !/(^|\/)\.DS_Store$/.test(filename) &&
+        !PAGES_CONTROL_FILES.some((name) => filename === name || filename.endsWith(`/${name}`)),
     },
     alias: {
       $data: "../../data",

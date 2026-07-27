@@ -93,6 +93,11 @@
       "date": "2026-07-27",
       "change": "Brand name set in text as How2Vote (BRAND.md): the product name is title-cased wherever it is rendered as glyphs by a font or read aloud, while the wordmark artwork keeps its drawn lower-case lockup and identifiers stay lower-case how2vote in every case. Terms of Use reissued as version 2026-07.2 (effective 2026-07-27) to carry the name change: the amendment is confined to the product name's capitalisation in clauses 1 and 'Who may use the Service' — no right, obligation, permitted use, licence or liability position is altered, and every clause bound by terms-registry.json requiredWording is unchanged. Because acceptance is recorded against an exact version, the bump re-prompts every user to accept 2026-07.2. The prior 2026-07.1 hash is retained in the registry so the superseded wording stays auditable. Reviewed and approved 2026-07-27 (cameron-young, tara-buckley); control-25 evidence EV-LEGAL-TERMS-REVIEW re-approved for version 2026-07.2.",
       "affectedControls": ["control-25"]
+    },
+    {
+      "date": "2026-07-28",
+      "change": "Non-substantive engineering change under packages/data-schema/src/, recorded because the data-change gate matches that path prefix. A Zod runtime setting (zod-runtime.ts) disables JIT schema compilation in the browser only, so Zod stops probing for eval and no longer trips the site Content-Security-Policy; the same module is imported by schemas.ts, elections.ts and snapshots.ts purely to fix evaluation order. No schema, field, validation rule, election metadata value or scoring input is added, removed or altered, and validation outcomes are identical on both paths (Zod falls back to the interpreted validator, which the Node data pipeline already exercises against the whole committed dataset). No legal or compliance position is affected and no control evidence changes; no legal review was sought or is required.",
+      "affectedControls": []
     }
   ],
   "nextMandatoryReviewDate": "2027-07-15",
