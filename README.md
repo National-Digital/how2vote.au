@@ -2,7 +2,7 @@
 
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="docs/brand/how2vote-wordmark-chalk.svg">
-  <img src="docs/brand/how2vote-wordmark.svg" alt="how2vote" width="380">
+  <img src="docs/brand/how2vote-wordmark.svg" alt="How2Vote" width="380">
 </picture>
 
 **Vote on their record.**
@@ -292,16 +292,16 @@ obligation to publish application source code; publishing this code under AGPL i
 
 ### Brand and name
 
-We make **no registered trade-mark claim** over the **how2vote** name or marks. The name and
+We make **no registered trade-mark claim** over the **How2Vote** name or marks. The name and
 identity are protected through copyright in the original brand assets, the tort of passing off, and
 the misleading-or-deceptive-conduct provisions of the Australian Consumer Law — not through any
 registration.
 
 The AGPL-3.0 licence applies to the software code. It does **not** grant permission to use the
-**how2vote** or **National Digital** names, logos or brand marks (including the marks under
+**How2Vote** or **National Digital** names, logos or brand marks (including the marks under
 `docs/brand/` and `apps/web/static/`), or to imply endorsement by National Digital. If you fork or
 redeploy this software, use your own name and branding, and make clear your version is not
-how2vote and is not endorsed by or affiliated with National Digital.
+How2Vote and is not endorsed by or affiliated with National Digital.
 
 Full brand rules — permitted logo use, colour/type/accessibility, fork attribution and who to
 contact about brand confusion — are in [`BRAND.md`](BRAND.md).

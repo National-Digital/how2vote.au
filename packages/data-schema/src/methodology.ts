@@ -2,7 +2,7 @@
  * Provenance constant for the scoring methodology (freeze editorial methodology per election
  * release, ADR 0005).
  *
- * A single, human-set version number for how2vote's *scoring method* — the arithmetic and editorial
+ * A single, human-set version number for How2Vote's *scoring method* — the arithmetic and editorial
  * rules described on /methodology, not the data vintage (per-election, on each manifest) nor the
  * app build. It lives in the shared schema package so BOTH the app (methodology page, corrections
  * history) and the data pipeline (which stamps it into every `data/dist/<id>/manifest.json`) read

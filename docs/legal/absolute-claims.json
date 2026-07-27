@@ -113,7 +113,7 @@
       "review_date": "2026-07-20",
       "expiry_date": "2027-07-20",
       "permitted_qualification": "Factual statement about one specific data flow — the retrieved content is public parliamentary voting records — not a blanket product-wide 'no personal information' claim.",
-      "prohibited_absolute_wording": "how2vote holds no personal information about anyone",
+      "prohibited_absolute_wording": "How2Vote holds no personal information about anyone",
       "mustContain": ["public parliamentary records"]
     }
   ]

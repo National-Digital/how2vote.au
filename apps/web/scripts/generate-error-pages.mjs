@@ -65,7 +65,7 @@ export function renderErrorPage(info, tokens) {
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
     <meta name="robots" content="noindex, nofollow" />
-    <title>${info.title} — how2vote</title>
+    <title>${info.title} — How2Vote</title>
     <style>
       /* Design tokens copied verbatim from src/app.css at build time (single source of truth). */
       :root { ${tokens.light} }
@@ -122,13 +122,13 @@ export function renderErrorPage(info, tokens) {
   <body>
     <div class="sheet">
       <header class="top">
-        <span class="logo" aria-label="how2vote">how<span class="bx"><i>2</i></span>vote</span>
+        <span class="logo" aria-label="How2Vote">how<span class="bx"><i>2</i></span>vote</span>
       </header>
       <div class="body">
         <p class="code">${info.code}</p>
         <h1>${info.title}</h1>
         <p class="lede">${info.lede}</p>
-        <div class="cta"><a class="btn" href="/">Back to how2vote</a></div>
+        <div class="cta"><a class="btn" href="/">Back to How2Vote</a></div>
       </div>
     </div>
   </body>

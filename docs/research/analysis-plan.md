@@ -1,4 +1,4 @@
-# how2vote research — pre-registered analysis plan (estimand registry)
+# How2Vote research — pre-registered analysis plan (estimand registry)
 
 Status: **v1** (2026-07-14) · Decision: [ADR-0008](../adr/0008-aggregate-counters.md) ·
 Companion: [codebook](codebook.md)

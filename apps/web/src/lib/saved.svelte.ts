@@ -4,7 +4,7 @@ import { MAX_SAVED, parseSaved, removeByUrl, upsert, type SavedCard } from "./sa
 const KEY = "how2vote:saved:v1";
 
 /**
- * The visitor's on-device library of saved how2vote cards.
+ * The visitor's on-device library of saved How2Vote cards.
  *
  * Privacy by construction: this lives only in this browser's localStorage. Nothing is ever sent to
  * a server, there is no account, and each card is just its shareable link (answers travel in the

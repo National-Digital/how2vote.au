@@ -26,7 +26,7 @@ import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 
 const BRAND_REL = "BRAND.md";
-const CANONICAL_NAME = "how2vote";
+const CANONICAL_NAME = "How2Vote";
 
 // The circled-R (U+00AE) and circled-TM (U+2122) symbols as escapes, so this guard's own source
 // contains no literal symbol to trip the scan (belt-and-suspenders with the self-exclusion below).

@@ -8,14 +8,14 @@ import { SITE_URL, indexableRoutes, pageMeta, type PageMeta } from "$lib/seo";
 export const prerender = true;
 
 // Hand-owned prose. Everything factual about the *set* of pages is generated below.
-const INTRO = `# how2vote
+const INTRO = `# How2Vote
 
 > An independent tool to compare a voter's views with parties' real parliamentary voting records for Australian federal elections. Voters answer questions that
 > parliament has actually voted on; each party is scored on its recorded parliamentary votes, and
 > that alignment is shown against the candidates on the voter's House and Senate ballot —
 > always in official ballot order. Candidates are never ranked and no preference is recommended.
 
-how2vote is a fully static, offline-capable web app. It sets no third-party cookies at all: usage is
+How2Vote is a fully static, offline-capable web app. It sets no third-party cookies at all: usage is
 measured by cookieless Cloudflare Web Analytics at the edge, and the contact/feedback forms are
 protected by a cookieless, self-hosted anti-spam check that runs only on submit. The quiz, scoring and card
 generation run entirely in the browser. The methodology is public and deterministic.`;
@@ -40,9 +40,9 @@ ${ELECTIONS.map(
     `- ${e.label}: [candidates by electorate](${SITE_URL}/${e.id}/electorates), [where parties stand](${SITE_URL}/${e.id}/issues), [party voting records](${SITE_URL}/${e.id}/parties)`,
 ).join("\n")}`;
 
-/** Link text for a page: the registered title with the redundant " — how2vote" suffix trimmed. */
+/** Link text for a page: the registered title with the redundant " — How2Vote" suffix trimmed. */
 const labelFor = (path: string, meta: PageMeta): string =>
-  path === "/" ? "Home" : meta.title.replace(/\s*[—-]\s*how2vote\s*$/i, "");
+  path === "/" ? "Home" : meta.title.replace(/\s*[—-]\s*How2Vote\s*$/i, "");
 
 export function GET() {
   const pages = indexableRoutes

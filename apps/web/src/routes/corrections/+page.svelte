@@ -40,7 +40,7 @@
   <p class="updated">Last updated: {lastUpdated}</p>
 
   <p>
-    how2vote publishes every correction it makes and every change to its scoring method, so you can
+    How2Vote publishes every correction it makes and every change to its scoring method, so you can
     see what changed and when. The current scoring method is
     <strong>methodology {METHODOLOGY_VERSION}</strong> (see
     <a href="/methodology">how it works</a>).

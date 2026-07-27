@@ -3,7 +3,7 @@
  * Build-time OpenGraph image generator.
  *
  * Renders the shared 1200×630 social-preview cards from an inline SVG using sharp, so a shared
- * how2vote link previews with a branded image on social and messaging platforms. One image per
+ * How2Vote link previews with a branded image on social and messaging platforms. One image per
  * election (`static/og-<id>.png`) plus the default `static/og.png` (the current election), each
  * labelled with the election it represents. The artwork uses only the two-tone brand palette (ink
  * on paper). The wordmark and the serif taglines are drawn from baked Newsreader paths

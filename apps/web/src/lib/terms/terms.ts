@@ -25,7 +25,7 @@
  * matching the research consent-version shape (e.g. `2026-07` or `2026-07.1`). This is the ONE place
  * the value is defined; the store, the gate components, the Terms page and the guard all read it.
  */
-export const TERMS_VERSION = "2026-07.1";
+export const TERMS_VERSION = "2026-07.2";
 
 /**
  * The exact affirmation a user ticks to accept the Terms. It is deliberately a CAPACITY declaration
@@ -36,7 +36,7 @@ export const TERMS_VERSION = "2026-07.1";
  * that capacity. Single-sourced so the card gate, the survey gate and the guard cannot drift.
  */
 export const TERMS_ACCEPTANCE_LABEL =
-  "I have read and agree to the Terms of Use, and I am using how2vote as an individual (a natural " +
+  "I have read and agree to the Terms of Use, and I am using How2Vote as an individual (a natural " +
   "person) — not on behalf of an organisation and not as a foreign campaigner.";
 
 /** Short lead-in shown above the acceptance affirmation in the reusable gate. */

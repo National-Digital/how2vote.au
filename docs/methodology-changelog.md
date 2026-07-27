@@ -1,6 +1,6 @@
 # Methodology change log
 
-A dated, versioned record of changes to how2vote's **scoring method** — the arithmetic and
+A dated, versioned record of changes to How2Vote's **scoring method** — the arithmetic and
 editorial rules published on the [methodology page](https://how2vote.au/methodology). This is
 distinct from the [correction log](corrections.md), which records fixes to *data* (a wrong
 candidate, mapping or figure). A pure data refresh (new divisions, a new election's ballots) does

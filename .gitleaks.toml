@@ -2,7 +2,7 @@
 # `gitleaks git --log-opts=--all`, scanning the full history of every ref, so a secret committed to
 # any branch — not just the current tip — fails the build. This file extends the built-in default
 # ruleset with a single, documented allowlist for one value that is public by design.
-title = "how2vote gitleaks config"
+title = "How2Vote gitleaks config"
 
 [extend]
 useDefault = true

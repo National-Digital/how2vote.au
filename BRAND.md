@@ -1,9 +1,9 @@
-# how2vote brand guidelines
+# How2Vote brand guidelines
 
-These guidelines describe how the **how2vote** name and identity may and may not be used. They
+These guidelines describe how the **How2Vote** name and identity may and may not be used. They
 exist so that people can always tell the genuine service from a fork, a mirror or an imitation.
 
-**Legal basis.** how2vote does **not** rely on a registered or pending trade mark. The name and
+**Legal basis.** How2Vote does **not** rely on a registered or pending trade mark. The name and
 identity are protected through **copyright** in the original brand assets, the tort of **passing
 off**, and the **misleading-or-deceptive-conduct** provisions of the Australian Consumer Law
 (Competition and Consumer Act 2010 (Cth), Schedule 2). Enforcement rests on those principles, not
@@ -11,16 +11,51 @@ on any claim of registration. Nothing here should be read as asserting a registe
 
 ## Product name and spelling
 
-- The canonical product name is **how2vote** — one word, all lower case, with the numeral `2`
-  (never "how to vote", "How2Vote", "how-2-vote", or "HOW2VOTE").
-- In running prose the site may be referred to as "how2vote". At the start of a sentence, keep the
-  lower-case spelling rather than capitalising it.
+Two things are protected here, and they are spelt differently on purpose: **the name**, which is
+text, and **the wordmark**, which is a drawing. Getting the difference right is the whole rule.
+
+- **In text the product name is `How2Vote`** — one word, no space or hyphen, capital `H` and
+  capital `V`, with the numeral `2` (never "how to vote", "how-2-vote", or "HOW2VOTE"). This is the
+  spelling for running prose, page titles, the app name under its icon, store listings, and
+  anything a screen reader speaks aloud.
+- **The wordmark sets the name in lower case**, as `how[2]vote`. That is a fixed piece of artwork,
+  not a spelling — the lower case is a typographic decision baked into the outlines, in the same
+  way the box around the `2` is. Reproduce it as drawn; do not "correct" its case.
+- The test for which to use: **if it is rendered as glyphs by a font, or read aloud, it is
+  `How2Vote`; if it is baked vector artwork, it is the lockup as drawn.** An `aria-label` or an
+  `alt` on the logo is therefore `How2Vote`, because it is spoken, not drawn.
 - The identity concept is `how[2]vote`: the preference numeral "2" marked inside a ballot-paper box.
   See `docs/brand/README.md` for the full description of the mark.
 
+### Identifiers are always lower case
+
+**An identifier is never the name, and is never title-cased.** Anything a machine matches on — not a
+reader — stays `how2vote`, always, with no exceptions:
+
+| Kind | Example |
+| --- | --- |
+| Domains and hosts | `how2vote.au`, `send.how2vote.au`, `how2vote.com.au` |
+| Application id / bundle id | `au.how2vote.app` |
+| Package scope | `@how2vote/engine` |
+| Storage and cache keys | `how2vote:quiz:v2`, `how2vote:consent:v1` |
+| Tool and function names | `how2vote_find_electorate` |
+| Infrastructure names | the `how2vote-au` worker, the `how2vote-research` D1 database |
+| File and asset names | `docs/brand/how2vote-wordmark.svg` |
+| Email addresses | `how2vote@nationaldigital.com.au` |
+| Repository and module paths | `National-Digital/how2vote.au` |
+
+The rule is absolute in that direction, and it is enforced: `scripts/check-brand-casing.mjs` fails
+CI on a title-cased identifier. Two reasons it matters more than tidiness. Several of these are
+**load-bearing and effectively irreversible** — re-casing a storage key silently discards every
+user's saved cards and consent, and an application id cannot be changed once published. And several
+are **case-sensitive in ways that break silently** rather than loudly.
+
+If you are adding a new identifier, spell it `how2vote`. If you are writing something a person
+reads, spell it `How2Vote`.
+
 ## Operator
 
-how2vote is operated by **National Digital** (trading name). Refer to the operator by that trading
+How2Vote is operated by **National Digital** (trading name). Refer to the operator by that trading
 name. The authoritative operator record — including the full legal entity details — lives in
 `apps/web/src/lib/operator.json` and is surfaced through `apps/web/src/lib/org.ts`; do not copy the
 legal entity name or ABN into other files.
@@ -68,23 +103,23 @@ described in [`docs/brand/README.md`](docs/brand/README.md):
 ## Attribution requirements for forks
 
 The software is licensed under AGPL-3.0 and the compiled dataset under ODbL. Those licences cover
-the code and data — **not** the how2vote name or marks. If you fork or redeploy:
+the code and data — **not** the How2Vote name or marks. If you fork or redeploy:
 
-- Use **your own** product name and branding; do not present your deployment as "how2vote".
-- Remove or replace the how2vote marks in `docs/brand/` and `apps/web/static/` with your own.
+- Use **your own** product name and branding; do not present your deployment as "How2Vote".
+- Remove or replace the How2Vote marks in `docs/brand/` and `apps/web/static/` with your own.
 - Retain the source-code and dataset attributions the AGPL and ODbL require (including the They
   Vote For You / OpenAustralia Foundation data attribution).
 - Make clear your version is a modified, independent deployment.
 
 ## No implied endorsement
 
-Do not use the how2vote name or marks, or National Digital's name, in any way that implies National
+Do not use the How2Vote name or marks, or National Digital's name, in any way that implies National
 Digital produces, sponsors, endorses or is affiliated with your fork, product or content. Do not
 suggest an official relationship that does not exist.
 
 ## Copyright ownership and licensing of the brand assets
 
-The original how2vote brand assets — the marks in `docs/brand/`, the wordmark geometry generated
+The original How2Vote brand assets — the marks in `docs/brand/`, the wordmark geometry generated
 from `apps/web/src/lib/brand/mark.mjs`, and the derived favicons, PWA icons and OpenGraph cards —
 are **original creative works whose copyright is owned by National Digital**. They are **not**
 covered by the AGPL-3.0 grant over the application source code, nor by the ODbL grant over the
@@ -95,5 +130,5 @@ its own terms govern the font, not these marks.)
 
 ## Reporting brand confusion
 
-If you believe a deployment, product or content is passing itself off as how2vote or implying an
+If you believe a deployment, product or content is passing itself off as How2Vote or implying an
 endorsement by National Digital that does not exist, contact **how2vote@nationaldigital.com.au**.

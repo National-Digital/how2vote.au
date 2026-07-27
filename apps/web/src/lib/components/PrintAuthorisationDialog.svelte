@@ -94,7 +94,7 @@
     <h2 id="print-auth-title">Before you print your how-to-vote plan</h2>
     <p class="pg-lead">
       This how-to-vote plan is published and authorised by {ORG.tradingName}, the operator of
-      how2vote. The preference order on it is your own selection — {ORG.tradingName} does not choose or
+      How2Vote. The preference order on it is your own selection — {ORG.tradingName} does not choose or
       recommend a preference order. National Digital's authorisation is printed on the plan; your numbers
       are shown as your own choice.
     </p>

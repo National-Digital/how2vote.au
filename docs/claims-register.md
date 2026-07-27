@@ -1,6 +1,6 @@
 # Claims register
 
-**Purpose.** A single index of every material, externally-visible *claim* how2vote makes
+**Purpose.** A single index of every material, externally-visible *claim* How2Vote makes
 about itself — what it is, what it does, how it is scored, and how it handles data — with
 the exact place each claim is worded and the place that substantiates it. The register
 exists so that website copy, page metadata, structured data, social cards, the onboarding
@@ -48,7 +48,7 @@ CI guard is `scripts/check-absolute-claims.mjs` (Legal group).
 |---|---|---|
 | C1 | **Independent / even-handed** — self-described as "independent" (the absolute "non-partisan" *self-label* is retired — see `docs/legal/absolute-claims.json`); "favours no party", "applies the same published, deterministic method to every party", two-tone (no colour) so match quality is never dressed as allegiance. | `/methodology`, `/about` ("Built to be even-handed"); enforced by the CSS neutrality lint, the absolute-claims gate and `content.server.test.ts`. |
 | C2 | **Scored on real parliamentary votes** — parties are scored on their *recorded* parliamentary voting record, "not what they said in a campaign". | `/methodology` ("Where the data comes from", "From members to parties"); data via They Vote For You under ODbL (`ORG.DATA_SOURCE`, `LICENCES.data`). |
-| C3 | **Does not recommend a candidate** — results are "evidence only"; "nothing is ranked, nothing is crowned"; "how2vote never suggests who to put first"; the user authors their own preference order. **[wording-sensitive]** | `/methodology` ("Your comparison, then your plan"); ADR 0006 (Commonwealth Electoral Act 1918 ss 329, 351 — must not suggest a first preference). |
+| C3 | **Does not recommend a candidate** — results are "evidence only"; "nothing is ranked, nothing is crowned"; "How2Vote never suggests who to put first"; the user authors their own preference order. **[wording-sensitive]** | `/methodology` ("Your comparison, then your plan"); ADR 0006 (Commonwealth Electoral Act 1918 ss 329, 351 — must not suggest a first preference). |
 | C4 | **Describes the party, not the candidate** — a party's score "describes the party, not any individual candidate's personal views, and does not predict how a candidate would vote in future". **[wording-sensitive]** | `/methodology` ("From members to parties", "What the method does and doesn't capture"). |
 | C5 | **Historical comparison** — results are historical comparisons of the record as it stood; past elections say so plainly. | `/terms`, Landing (`isPast` note), OG subline for past elections. |
 | C6 | **Aggregate-only by construction, never "anonymous"** — no per-person research record is created or stored (device-derived results tallied into group counts; quiz answers/weights never leave the device); residual small-count risk acknowledged rather than an absolute claim. **[wording-sensitive]** | `/privacy` ("What is collected if you opt in", "Aggregate-only storage and residual risk"), `/methodology` ("Aggregate insights"), `/survey` gate notice; ADR 0008 (counters), ADR 0006 (absolute "anonymous" claim removed). |
@@ -81,20 +81,20 @@ CI guard is `scripts/check-absolute-claims.mjs` (Legal group).
 
 | Symbol | Claim(s) | Substantiation |
 |---|---|---|
-| `pageMeta["/"]` | Title "How do your views compare with the parties? — how2vote"; desc "Answer 50 questions parliament has actually voted on and see how your views compare with the parties' recorded votes, for your House and Senate ballot." (C2, C3 framing). | `/methodology`. Note the question-count "50" is copy in the description; keep aligned with the shipped manifest. |
+| `pageMeta["/"]` | Title "How do your views compare with the parties? — How2Vote"; desc "Answer 50 questions parliament has actually voted on and see how your views compare with the parties' recorded votes, for your House and Senate ballot." (C2, C3 framing). | `/methodology`. Note the question-count "50" is copy in the description; keep aligned with the shipped manifest. |
 | `pageMeta["/about"]` | "independent voting-record comparison tool that scores parties on their real parliamentary voting record, not their promises." (C1, C2). | `/about`, `/methodology`. |
 | `pageMeta["/methodology"]` | "every party is scored on its recorded parliamentary votes, then compared question by question with your answers." (C2). | `/methodology`. |
 | `pageMeta["/privacy"]` | Data-handling summary (C6–C13). | `/privacy`. |
 | `pageMeta` (`/terms`, `/accessibility`, `/insights`, flow routes) | C3, C5 (terms); WCAG (accessibility); "Anonymised, aggregate insights" (C6); flow-route descriptions marked `index:false`. | Respective pages; `/privacy`. |
 | `electionLandingMeta(label)` | "Compare your views with the parties' real parliamentary voting record for the {label}, House and Senate." (C2). | `/methodology`. |
-| `SITE_NAME` = "how2vote", `SITE_URL` = "https://how2vote.au" | Brand + canonical origin. | Single source consumed by (c), (f), (g). |
+| `SITE_NAME` = "How2Vote", `SITE_URL` = "https://how2vote.au" | Brand + canonical origin. | Single source consumed by (c), (f), (g). |
 
 ### (c) Structured data (JSON-LD) — `apps/web/src/lib/structured-data.ts`
 
 | Symbol | Claim(s) | Substantiation |
 |---|---|---|
 | `SITE_DESCRIPTION` | "An independent tool to compare your views with parties' real parliamentary voting records for Australian federal elections." (C1, C2). Used by WebSite + WebApplication `description`. | `/methodology`, `/about`. |
-| `siteGraph()` → Organization node | **Publisher is the operating ENTITY:** `name = ORG.tradingName` ("National Digital"), `legalName = ORG.legalName`, `sameAs = [ORG.website]` (C11). Brand "how2vote" stays on WebSite/WebApplication `name`. | `org.ts` (`ORG`). See item 21. Test `structured-data.test.ts` pins the Organization `@id` only. |
+| `siteGraph()` → Organization node | **Publisher is the operating ENTITY:** `name = ORG.tradingName` ("National Digital"), `legalName = ORG.legalName`, `sameAs = [ORG.website]` (C11). Brand "How2Vote" stays on WebSite/WebApplication `name`. | `org.ts` (`ORG`). See item 21. Test `structured-data.test.ts` pins the Organization `@id` only. |
 | `siteGraph()` → WebSite/WebApplication | `name = SITE_NAME` (brand); `publisher → ORG_ID`; `isAccessibleForFree`, free `Offer` (C13); `sameAs = [SOURCE_REPO_URL]` (C12); "works offline as a PWA" (C13). | `seo.ts`, `org.ts`, `/about`, `/offline`. |
 | `insightsDatasetGraph()` | "Anonymised, aggregate results … published with k-anonymity suppression. Descriptive only — an opt-in, non-probability sample, not a representative poll." (C6); no `license` asserted (deliberate). | `/insights`, `/privacy` (thresholds); comment in-file explains the missing licence. |
 | `HOWTO_STEPS` / `methodologyHowToGraph()` | The three onboarding steps + "build your own voting plan" (C3). Single source shared with the visible `/methodology` "In short" list. | `/methodology`; `structured-data.test.ts` asserts JSON-LD == `HOWTO_STEPS`. |
@@ -115,7 +115,7 @@ CI guard is `scripts/check-absolute-claims.mjs` (Legal group).
 |---|---|---|
 | `components/Landing.svelte` | See (a) — trust list, lede, `isPast` note, steps ("Ballot / Answer / Compare"), CTA "See how my views compare" (C1, C2, C5, C9, C13). | `/methodology`, `/privacy`, `/about`. |
 | `/ballot` (meta + page) | "Choose your state and federal electorate … your House and Senate ballot paper." | `seo.ts` `pageMeta["/ballot"]`; `/methodology` step 1. |
-| `/quiz`, `/review` (meta + pages) | "Answer 50 real questions that parliament has voted on … ~5 min" (C2); "Check and change your answers before how2vote builds your personal voting comparison." | `seo.ts`; `/methodology`. |
+| `/quiz`, `/review` (meta + pages) | "Answer 50 real questions that parliament has voted on … ~5 min" (C2); "Check and change your answers before How2Vote builds your personal voting comparison." | `seo.ts`; `/methodology`. |
 | `/survey` (meta + page) | "An optional research invitation before you build your voting plan … Contributing is your choice and never changes your result." (C10). | `seo.ts` `pageMeta["/survey"]`; `/privacy` §5. |
 | `/card` (meta + page) | "See how your answers align with each candidate's party record in official ballot order, then build your own voting plan" (C3, C4). Export/authorisation note (user authors the order). | `seo.ts`; `/methodology`; `org.ts` (`AUTHORISATION` rationale), ADR 0006. |
 
@@ -131,7 +131,7 @@ CI guard is `scripts/check-absolute-claims.mjs` (Legal group).
 
 | Symbol | Claim(s) | Substantiation |
 |---|---|---|
-| `fullCorpus()` header line | "Every position below is a party's or independent's recorded parliamentary voting record, sourced from They Vote For You and placed on a 1–5 scale … It is the record, not a prediction or endorsement; how2vote is non-partisan. Candidate lists are as declared by the Australian Electoral Commission." (C1, C2, C4). | The committed dataset; `/methodology`; `org.ts` (`DATA_SOURCE`). Body is fully generated from data (no hand-authored claims) — non-partisan by construction, asserted by `content.server.test.ts`. |
+| `fullCorpus()` header line | "Every position below is a party's or independent's recorded parliamentary voting record, sourced from They Vote For You and placed on a 1–5 scale … It is the record, not a prediction or endorsement; How2Vote is non-partisan. Candidate lists are as declared by the Australian Electoral Commission." (C1, C2, C4). | The committed dataset; `/methodology`; `org.ts` (`DATA_SOURCE`). Body is fully generated from data (no hand-authored claims) — non-partisan by construction, asserted by `content.server.test.ts`. |
 | `STANCE` labels | "Strongly agrees / Agrees / Equal merits / Disagrees / Strongly disagrees" — the 1–5 scale wording, shared with the data-derived pages. | `/methodology` (the five bands). |
 
 ---

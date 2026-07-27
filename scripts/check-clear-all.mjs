@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * @fileoverview CI guard: the "clear all my how2vote data" action is COMPLETE.
+ * @fileoverview CI guard: the "clear all my How2Vote data" action is COMPLETE.
  *
  * The clear-all control (apps/web/src/lib/privacy/local-data.ts) wipes on-device state by SWEEPING a
  * namespace rather than hand-listing keys: every localStorage / sessionStorage key under

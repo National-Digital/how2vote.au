@@ -23,7 +23,7 @@
 <DataPage {crumbs} title={data.text}>
   <p class="intro">
     How every party and independent with a parliamentary record is scored on this proposition for
-    the {data.year} federal election, on the same 1–5 scale how2vote uses.
+    the {data.year} federal election, on the same 1–5 scale How2Vote uses.
   </p>
 
   {#each active as band (band.position)}
@@ -43,6 +43,6 @@
     {/if}
     See the <a href="/glossary#division">divisions</a> behind this on
     <a href={data.tvfy} target="_blank" rel="noopener noreferrer">They Vote For You</a>. Positions
-    are the recorded voting record; how2vote takes no side on any proposition.
+    are the recorded voting record; How2Vote takes no side on any proposition.
   </p>
 </DataPage>

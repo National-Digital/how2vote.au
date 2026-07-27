@@ -1,5 +1,5 @@
 {
-  "name": "how2vote",
+  "name": "How2Vote",
   "version": "0.0.0",
   "private": true,
   "description": "Non-partisan Australian federal voting-record comparison tool — offline PWA that shows how your views compare with parties' real parliamentary voting records, then lets you build your own voting plan.",
@@ -56,6 +56,7 @@
     "operator:check": "node scripts/check-operator-identity.mjs",
     "legal:check": "node scripts/check-legal-review.mjs",
     "brand:check": "node scripts/check-brand-trademark.mjs",
+    "brand-casing:check": "node scripts/check-brand-casing.mjs",
     "expenditure:check": "node scripts/check-expenditure-register.mjs",
     "manifest:build": "node scripts/build-release-manifest.mjs",
     "manifest:check": "node scripts/check-release-manifest.mjs",

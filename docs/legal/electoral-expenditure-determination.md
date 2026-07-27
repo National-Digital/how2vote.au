@@ -1,7 +1,7 @@
 # Electoral expenditure determination
 
 **Operator:** General Consulting Services Pty Ltd as trustee for the Australian Business Trust, trading as National Digital  
-**Project:** how2vote  
+**Project:** How2Vote  
 **Reviewed:** 2018-10-12 to 2026-07-12  
 **Determination date:** 2026-07-20  
 **Reviewers:** Cameron Young and Tara Buckley  
@@ -9,9 +9,9 @@
 
 ## Determination
 
-National Digital reviewed the full known how2vote cost history from commencement on 12 October 2018.
+National Digital reviewed the full known How2Vote cost history from commencement on 12 October 2018.
 
-For a conservative result, every dedicated how2vote domain and hosting cost has been treated as electoral expenditure, without relying on an argument that historical, educational or out-of-cycle work was non-electoral. On that deliberately over-inclusive basis, expenditure remained far below the applicable disclosure threshold in every period.
+For a conservative result, every dedicated How2Vote domain and hosting cost has been treated as electoral expenditure, without relying on an argument that historical, educational or out-of-cycle work was non-electoral. On that deliberately over-inclusive basis, expenditure remained far below the applicable disclosure threshold in every period.
 
 Project work by Cameron Young and Tara Buckley is recorded at **$0**. National Digital incurred no additional salary, director fee, bonus, contractor fee, invoice or other project-specific liability for that work. No commercial charge-out rate or opportunity cost has been imputed.
 

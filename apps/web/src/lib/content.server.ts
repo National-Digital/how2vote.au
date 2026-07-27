@@ -184,7 +184,7 @@ export function buildElectorateHub(electionId: string): ElectorateHub | null {
   const count = ds.ballots.electorates.length;
   return {
     seo: {
-      title: `Electorates & candidates — ${meta.shortLabel} — how2vote`,
+      title: `Electorates & candidates — ${meta.shortLabel} — How2Vote`,
       description: clampDesc(
         `Every candidate standing in all ${count} federal House electorates at the ${meta.label}, by state, plus each state's Senate ballot.`,
       ),
@@ -236,7 +236,7 @@ export function buildElectoratePage(electionId: string, slug: string): Electorat
 
   return {
     seo: {
-      title: `${electorate.electorate} candidates — ${meta.shortLabel} — how2vote`,
+      title: `${electorate.electorate} candidates — ${meta.shortLabel} — How2Vote`,
       description: clampDesc(
         `Everyone on the House of Representatives ballot in ${electorate.electorate}, ${stateName(electorate.state)}, at the ${meta.label} — ${candidates.length} candidates and their parties.`,
       ),
@@ -296,7 +296,7 @@ export function buildSenatePage(electionId: string, state: string): SenatePage |
 
   return {
     seo: {
-      title: `${stateName(code)} Senate candidates — ${meta.shortLabel} — how2vote`,
+      title: `${stateName(code)} Senate candidates — ${meta.shortLabel} — How2Vote`,
       description: clampDesc(
         `The full Senate ballot for ${stateName(code)} at the ${meta.label} — all ${total} candidates, by group, as printed on the paper.`,
       ),
@@ -326,9 +326,9 @@ export function buildIssueHub(electionId: string): IssueHub | null {
   }));
   return {
     seo: {
-      title: `Where parties stand — ${meta.shortLabel} — how2vote`,
+      title: `Where parties stand — ${meta.shortLabel} — How2Vote`,
       description: clampDesc(
-        `The ${issues.length} parliamentary propositions behind the ${meta.label} how2vote scoring, and how every party is recorded voting on each.`,
+        `The ${issues.length} parliamentary propositions behind the ${meta.label} How2Vote scoring, and how every party is recorded voting on each.`,
       ),
     },
     label: meta.label,
@@ -447,7 +447,7 @@ export function buildPartyHub(electionId: string): PartyHub | null {
     .sort((a, b) => a.name.localeCompare(b.name));
   return {
     seo: {
-      title: `Party voting records — ${meta.shortLabel} — how2vote`,
+      title: `Party voting records — ${meta.shortLabel} — How2Vote`,
       description: clampDesc(
         `Every party and independent with a federal parliamentary voting record scored for the ${meta.label} — ${parties.length} in all. See how each one voted.`,
       ),
@@ -526,7 +526,7 @@ export function buildPartyPage(electionId: string, slug: string): PartyPage | nu
 
   return {
     seo: {
-      title: `${party.displayName} voting record — ${meta.shortLabel} — how2vote`,
+      title: `${party.displayName} voting record — ${meta.shortLabel} — How2Vote`,
       description: clampDesc(
         `How ${party.displayName} is recorded voting in federal parliament across the ${rows.length} propositions scored for the ${meta.label}, linked to They Vote For You.`,
       ),
@@ -583,7 +583,7 @@ export const contentPaths = (): string[] => [
 export function fullCorpus(): string {
   const out: string[] = [
     `# ${SITE_NAME} — full data export`,
-    `Generated from the committed dataset (${SITE_URL}). Every position below is a party's or independent's recorded parliamentary voting record, sourced from They Vote For You and placed on a 1–5 scale (strongly disagree … strongly agree). It is the record, not a prediction or endorsement; how2vote does not recommend a candidate or party. Candidate lists are as declared by the Australian Electoral Commission.`,
+    `Generated from the committed dataset (${SITE_URL}). Every position below is a party's or independent's recorded parliamentary voting record, sourced from They Vote For You and placed on a 1–5 scale (strongly disagree … strongly agree). It is the record, not a prediction or endorsement; How2Vote does not recommend a candidate or party. Candidate lists are as declared by the Australian Electoral Commission.`,
   ];
 
   for (const meta of ELECTIONS) {

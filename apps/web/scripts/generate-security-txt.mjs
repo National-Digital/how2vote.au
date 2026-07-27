@@ -20,7 +20,7 @@ const ADVISORIES = "https://github.com/National-Digital/how2vote.au/security/adv
 
 const expires = new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString();
 
-const body = `# how2vote security policy (RFC 9116). Report vulnerabilities via the contact below.
+const body = `# How2Vote security policy (RFC 9116). Report vulnerabilities via the contact below.
 Contact: ${ADVISORIES}
 Expires: ${expires}
 Preferred-Languages: en

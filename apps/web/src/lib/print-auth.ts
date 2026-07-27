@@ -3,7 +3,7 @@
  * (see docs/adr/0015).
  *
  * Electoral-law review concluded that the safe position is for National Digital, the operator
- * that publishes how2vote, to authorise the fixed plan template and the comparison it contains. The
+ * that publishes How2Vote, to authorise the fixed plan template and the comparison it contains. The
  * printed how-to-vote plan therefore carries NATIONAL DIGITAL's electoral authorisation, using the
  * operator entity particulars. The voter's preference numbers are separately and clearly identified
  * as the user's own selection. This is a measured position — National Digital authorises the material

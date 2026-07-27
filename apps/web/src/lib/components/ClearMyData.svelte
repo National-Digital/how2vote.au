@@ -1,6 +1,6 @@
 <script lang="ts">
   /**
-   * The one "clear all my how2vote data on this device" control. A single action wipes
+   * The one "clear all my How2Vote data on this device" control. A single action wipes
    * every on-device store — in-progress quiz, saved comparisons, selected election, theme, Terms
    * acknowledgement, privacy choice and the age-eligibility bit — plus the offline app caches, then
    * reloads to a clean landing so nothing survives in memory either.
@@ -26,7 +26,7 @@
 <section class="clear-data ui" aria-labelledby="clear-data-h">
   <h2 id="clear-data-h">Clear all your data on this device</h2>
   <p class="lede">
-    how2vote keeps everything in this browser — there is no account and nothing is uploaded. This
+    How2Vote keeps everything in this browser — there is no account and nothing is uploaded. This
     removes all of it from this device in one step:
   </p>
   <ul class="what">
@@ -54,7 +54,7 @@
       </button>
     {:else}
       <button type="button" class="cancel start" onclick={() => (confirming = true)}>
-        Clear all how2vote data on this device
+        Clear all How2Vote data on this device
       </button>
     {/if}
   </div>

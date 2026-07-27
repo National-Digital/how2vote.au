@@ -16,7 +16,7 @@ export type OfflineItem = OfflineCheck & { available: boolean };
 export type OfflineCapability = {
   /** The Cache Storage API exists in this browser. */
   supported: boolean;
-  /** A how2vote SW cache is present (i.e. the app has been installed for offline use). */
+  /** A How2Vote SW cache is present (i.e. the app has been installed for offline use). */
   installed: boolean;
   /** Every requested step is cached — the whole card flow works with no connection. */
   ready: boolean;

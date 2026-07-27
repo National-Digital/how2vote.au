@@ -1,4 +1,4 @@
-# how2vote research survey — codebook
+# How2Vote research survey — codebook
 
 Status: **v1** — the research-schema version (see Version history) · Election coverage: 2019 / 2022 / 2025 ·
 Decisions: [ADR-0007](../adr/0007-same-origin-research-backend.md),

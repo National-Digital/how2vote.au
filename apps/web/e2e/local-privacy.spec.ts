@@ -32,7 +32,7 @@ async function buildBeanCard(page: Page): Promise<void> {
   await expect(page).toHaveURL(/\/card#v1\./);
 }
 
-test("clear-all wipes every how2vote localStorage key and service-worker cache", async ({
+test("clear-all wipes every How2Vote localStorage key and service-worker cache", async ({
   page,
 }) => {
   // Reach the gated /saved page by seeding the eligibility bit directly (not via an init script, so
@@ -57,7 +57,7 @@ test("clear-all wipes every how2vote localStorage key and service-worker cache",
   ).toBeVisible();
 
   // Two-step confirm, then the control clears everything and hard-reloads to a clean landing.
-  await page.getByRole("button", { name: "Clear all how2vote data on this device" }).click();
+  await page.getByRole("button", { name: "Clear all How2Vote data on this device" }).click();
   await page.getByRole("button", { name: "Yes, clear everything" }).click();
   await page.waitForURL("**/");
 

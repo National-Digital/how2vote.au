@@ -15,7 +15,7 @@ test("the static edge error page is branded and self-contained", async ({ page }
   await expect(page.getByRole("heading", { level: 1 })).toHaveText(
     "Something went wrong on our end",
   );
-  await expect(page.getByRole("link", { name: "Back to how2vote" })).toHaveAttribute("href", "/");
+  await expect(page.getByRole("link", { name: "Back to How2Vote" })).toHaveAttribute("href", "/");
   // It must pull in nothing external — an origin-down page has to render on its own.
   expect(await page.locator("link[rel=stylesheet], script[src]").count()).toBe(0);
 });

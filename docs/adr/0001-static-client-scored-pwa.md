@@ -5,7 +5,7 @@
 
 ## Context
 
-how2vote compares a voter's answers against parties' recorded parliamentary votes and helps them
+How2Vote compares a voter's answers against parties' recorded parliamentary votes and helps them
 build a voting plan. That comparison is a pure function of the committed dataset and the voter's own
 answers — it needs no account, no server-side state, and no per-visit computation that only a backend
 could do. The data it runs on (compiled vote positions, ballots) is fixed per election and published

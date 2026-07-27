@@ -4,7 +4,7 @@
   "claims": [
     {
       "id": "NC-NO-RECOMMENDATION",
-      "wording": "how2vote never suggests who to put first",
+      "wording": "How2Vote never suggests who to put first",
       "substantiatingControl": "Comparison is shown as evidence only; the plan builder starts from a blank ballot (apps/web/src/lib/plan.ts) with no preselection or ranking; BallotRow.svelte styles every row identically so no candidate is crowned. Enforced by content.server.test.ts (routes never touch the scoring engine) and the neutrality-claims banned-phrase scan.",
       "tests": ["neutrality-claims", "content-server-neutrality"],
       "evidence": ["EV-METHODOLOGY-BALANCE-REVIEW"],

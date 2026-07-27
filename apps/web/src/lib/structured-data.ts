@@ -43,7 +43,7 @@ export function siteGraph() {
       {
         // The publisher is the operating ENTITY, not the site/brand: the Organization node names
         // National Digital (with its full legal name) so search engines attribute the site to the
-        // real party behind it, sourced from the single-source org record. The "how2vote" brand
+        // real party behind it, sourced from the single-source org record. The "How2Vote" brand
         // lives on the WebSite/WebApplication `name` below, and this entity is linked to its own
         // corporate site via `sameAs`.
         "@type": "Organization",
@@ -99,7 +99,7 @@ export function insightsDatasetGraph() {
     "@context": "https://schema.org",
     "@type": "Dataset",
     "@id": INSIGHTS_DATASET_ID,
-    name: "how2vote survey — aggregate insights",
+    name: "How2Vote survey — aggregate insights",
     description:
       "De-identified, aggregate results from the optional survey people answer after building a voting comparison, published with k-anonymity suppression. Descriptive only — an opt-in, non-probability sample, not a representative poll.",
     url: `${SITE_URL}/insights`,
@@ -160,7 +160,7 @@ export function methodologyHowToGraph() {
   return {
     "@context": "https://schema.org",
     "@type": "HowTo",
-    name: "How to build your how2vote voting plan",
+    name: "How to build your How2Vote voting plan",
     description:
       "Compare your views with Australian parties on their recorded parliamentary votes, then build your own voting plan for your House and Senate ballot.",
     step: HOWTO_STEPS.map((s, i) => ({

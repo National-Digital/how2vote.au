@@ -1,6 +1,6 @@
 cff-version: 1.2.0
-message: "If you use how2vote or its data, please cite it as below."
-title: "how2vote"
+message: "If you use How2Vote or its data, please cite it as below."
+title: "How2Vote"
 type: software
 authors:
   - name: "National Digital"

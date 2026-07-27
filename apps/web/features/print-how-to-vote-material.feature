@@ -3,7 +3,7 @@
 #          Traceable to the legal control register entry for the print authorisation.
 #
 # Business context (readable by developers, lawyers and product owners):
-#   A deep electoral-law review concluded that National Digital — the operator that publishes how2vote
+#   A deep electoral-law review concluded that National Digital — the operator that publishes How2Vote
 #   and creates the plan template, ballot list and voting instructions — is the safe authoriser of the
 #   printed how-to-vote material. The printed plan therefore carries NATIONAL DIGITAL's electoral
 #   authorisation (the operator entity particulars), and separately states that the preference order

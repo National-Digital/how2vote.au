@@ -53,7 +53,7 @@
   <meta property="og:image" content={img} />
   <meta property="og:image:width" content={String(OG_IMAGE_WIDTH)} />
   <meta property="og:image:height" content={String(OG_IMAGE_HEIGHT)} />
-  <meta property="og:image:alt" content="how2vote — vote on their record" />
+  <meta property="og:image:alt" content="How2Vote — vote on their record" />
 
   <meta name="twitter:card" content="summary_large_image" />
   <meta name="twitter:title" content={t} />

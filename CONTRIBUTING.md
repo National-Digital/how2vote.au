@@ -1,6 +1,6 @@
-# Contributing to how2vote
+# Contributing to How2Vote
 
-Thanks for your interest in improving how2vote. This is a non-partisan public-interest tool, and
+Thanks for your interest in improving How2Vote. This is a non-partisan public-interest tool, and
 contributions are welcome — from typo fixes to new features. Please read this guide first; a few of
 the project's rules are unusual and enforced in CI.
 

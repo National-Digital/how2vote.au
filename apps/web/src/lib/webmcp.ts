@@ -192,7 +192,7 @@ export function listPropositions(ds: Dataset, election: string): string {
 
 export function methodology(): string {
   return [
-    "how2vote scores each Australian party on its recorded parliamentary votes (sourced from They Vote For You), then shows that alignment against the candidates on your House and Senate ballot — always in official ballot order. Candidates are never ranked and no preference is recommended.",
+    "How2Vote scores each Australian party on its recorded parliamentary votes (sourced from They Vote For You), then shows that alignment against the candidates on your House and Senate ballot — always in official ballot order. Candidates are never ranked and no preference is recommended.",
     "Each party's members' agreement figures (0–100) per issue are averaged and placed on a five-point scale (1 strongly disagree … 5 strongly agree). Your answers use the same scale; the match is points earned ÷ points possible. The method is public, deterministic and open-source.",
     `Full method: ${SITE_URL}/methodology`,
   ].join("\n\n");
@@ -287,7 +287,7 @@ const TOOLS: Tool[] = [
   {
     name: "how2vote_get_methodology",
     description:
-      "Explain how how2vote scores parties and builds a voting comparison and worksheet.",
+      "Explain how How2Vote scores parties and builds a voting comparison and worksheet.",
     inputSchema: { type: "object", properties: {} },
     execute: async () => text(methodology()),
   },

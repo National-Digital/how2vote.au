@@ -12,7 +12,7 @@
   // The steps we report on, in flow order. Each maps to a precached route; the dataset that powers
   // scoring is bundled into the app itself, so if these pages are cached, the card fully works.
   const CHECKS: OfflineCheck[] = [
-    { path: "/", label: "The how2vote app" },
+    { path: "/", label: "The How2Vote app" },
     { path: "/ballot", label: "Choosing your electorate" },
     { path: "/quiz", label: "The 50 questions" },
     { path: "/review", label: "Reviewing your answers" },
@@ -48,9 +48,9 @@
 
   const heading = $derived(
     online
-      ? "how2vote works offline"
+      ? "How2Vote works offline"
       : ready
-        ? "You're offline — how2vote still works"
+        ? "You're offline — How2Vote still works"
         : "You're offline",
   );
 </script>
@@ -84,7 +84,7 @@
       </p>
     {:else}
       <p class="lede">
-        This page hasn't been saved to your device yet. Reconnect once — after that, how2vote keeps
+        This page hasn't been saved to your device yet. Reconnect once — after that, How2Vote keeps
         working offline on its own.
       </p>
     {/if}

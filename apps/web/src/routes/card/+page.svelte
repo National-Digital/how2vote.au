@@ -328,11 +328,11 @@
 
   const metaTitle = $derived(
     status === "archived-link"
-      ? "A card from the old how2vote"
+      ? "A card from the old How2Vote"
       : data
         ? electorateLess
-          ? "The current Parliament — how2vote comparison"
-          : `${data.card.electorate} — how2vote ${election.meta.year} comparison`
+          ? "The current Parliament — How2Vote comparison"
+          : `${data.card.electorate} — How2Vote ${election.meta.year} comparison`
         : undefined,
   );
 
@@ -476,7 +476,7 @@
     const url = window.location.href;
     if (navigator.share) {
       try {
-        await navigator.share({ title: "My how2vote comparison", url });
+        await navigator.share({ title: "My How2Vote comparison", url });
         return;
       } catch {
         /* cancelled — fall through to copy */
@@ -620,11 +620,11 @@
     <p class="kicker ui">A link from the old how2vote.com.au</p>
     <h1>This card can't be opened any more</h1>
     <p class="ui note">
-      This link points to a how2vote card made on our old site. Cards made there were stored on that
+      This link points to a How2Vote card made on our old site. Cards made there were stored on that
       site's server, which has since been retired — so the card behind this link can't be retrieved.
     </p>
     <p class="ui note">
-      Today, how2vote works differently: your answers travel in the link itself, nothing is stored
+      Today, How2Vote works differently: your answers travel in the link itself, nothing is stored
       on a server, and a shared comparison keeps working — even offline.
     </p>
     <a class="btn" href="/ballot">Make a new card</a>
@@ -650,7 +650,7 @@
 {:else if data}
   <div class="card-head">
     <div class="ch-top ui">
-      <a class="home" href="/" aria-label="how2vote home"><Logo size="sm" /></a>
+      <a class="home" href="/" aria-label="How2Vote home"><Logo size="sm" /></a>
       <span
         >{stage === "build"
           ? isArchived
@@ -697,7 +697,7 @@
         recommendation.
       {:else}
         For each chamber, this shows how often the <b>parties'</b> recorded votes align with your
-        answers — as <b>evidence only</b>. Nothing here is ranked or recommended: how2vote does not
+        answers — as <b>evidence only</b>. Nothing here is ranked or recommended: How2Vote does not
         tell you who to put first. When you're ready, you build your own order.
       {/if}
     </p>
@@ -818,7 +818,7 @@
            material for a non-voter. Point to lawful, non-partisan ways to take part instead. -->
       <div class="advocacy ui" role="note">
         <p class="adv-head">
-          <b>This comparison is yours to explore — how2vote won't build you a how-to-vote plan.</b>
+          <b>This comparison is yours to explore — How2Vote won't build you a how-to-vote plan.</b>
         </p>
         <p>
           You told us you're under {RESEARCH_MIN_AGE}, so you can't vote at a federal election yet,
@@ -964,21 +964,21 @@
       <div class="ack ui pad-x" role="note">
         {#if isArchived}
           <p>
-            <b>These numbers are your choice.</b> how2vote does not recommend a candidate or a
+            <b>These numbers are your choice.</b> How2Vote does not recommend a candidate or a
             preference order — every box starts blank and you decide each number. This is a
             historical demonstration of the {election.meta.year} ballot: the election is over, this is
             not a ballot paper, and it cannot be used to vote.
           </p>
         {:else}
           <p>
-            <b>These numbers are your choice.</b> how2vote does not recommend a candidate or a preference
+            <b>These numbers are your choice.</b> How2Vote does not recommend a candidate or a preference
             order — every box starts blank and you decide each number. A voting plan is not a ballot paper:
             copy your numbers onto the official paper at the polling place and follow the AEC's instructions.
           </p>
         {/if}
         <p class="ack-order">
           The candidates below are listed in the same order as the official ballot paper — so you
-          can match each one box for box. That order is the ballot's, not a ranking by how2vote.
+          can match each one box for box. That order is the ballot's, not a ranking by How2Vote.
         </p>
       </div>
 
@@ -1106,7 +1106,7 @@
          once at the end of the document (National Digital authoriser model; docs/adr/0010). -->
       <div class="worksheet-foot ui">
         <p>
-          <b>Preference order selected by the user.</b> You chose every number — how2vote does not recommend
+          <b>Preference order selected by the user.</b> You chose every number — How2Vote does not recommend
           a candidate or a preference order. This how-to-vote plan is published and authorised by National
           Digital, which authorises the fixed plan template and comparison it contains. A voting plan
           is not a ballot paper and does not cast a vote.

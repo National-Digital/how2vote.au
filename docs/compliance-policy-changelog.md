@@ -1,6 +1,6 @@
 # Compliance policy change log
 
-A dated, versioned record of changes to how2vote's **compliance policy** — the product rules that
+A dated, versioned record of changes to How2Vote's **compliance policy** — the product rules that
 shape what a user sees, shares and prints: the print-authorisation (s321D) requirements, shared-link
 restrictions, attribution and licence handling, election-period publishing, corrections/suspension
 behaviour, and data retention. This is distinct from the

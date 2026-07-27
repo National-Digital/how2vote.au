@@ -1,6 +1,6 @@
 {
-  "name": "how2vote",
-  "short_name": "how2vote",
+  "name": "How2Vote",
+  "short_name": "How2Vote",
   "description": "An independent how-to-vote card for Australian federal elections, scored on parties' real parliamentary voting records.",
   "start_url": "/",
   "scope": "/",

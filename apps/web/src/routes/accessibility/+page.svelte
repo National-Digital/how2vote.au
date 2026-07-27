@@ -15,7 +15,7 @@
 
   <h2>Our commitment</h2>
   <p>
-    We want people to be able to use how2vote regardless of disability, device, input method,
+    We want people to be able to use How2Vote regardless of disability, device, input method,
     browser or assistive technology.
   </p>
   <p>

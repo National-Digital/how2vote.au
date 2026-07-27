@@ -99,7 +99,7 @@
     </header>
 
     <p class="intro">
-      Choose what how2vote may use. Strictly necessary items keep the tool working and are always
+      Choose what How2Vote may use. Strictly necessary items keep the tool working and are always
       on. Everything else is off unless you turn it on, and your choice never changes your card.
     </p>
 

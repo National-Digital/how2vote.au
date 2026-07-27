@@ -1,11 +1,16 @@
 {
   "schemaVersion": 1,
-  "currentVersion": "2026-07.1",
+  "currentVersion": "2026-07.2",
   "versions": [
     {
       "version": "2026-07.1",
       "sha256": "66589bbfc34577999a64dc07eab2b61d3f9707c40ab66ac9bcc1de71e6dec734",
       "effectiveDate": "2026-07-16"
+    },
+    {
+      "version": "2026-07.2",
+      "sha256": "035bad01e653c41e386ae26bad5af2e879481aa8b041eb94adbd01ef13352a19",
+      "effectiveDate": "2026-07-27"
     }
   ],
   "requiredWording": [

@@ -9,7 +9,7 @@
 
 ## Context
 
-how2vote builds a voting comparison and a printable how-to-vote plan for a federal election. That is
+How2Vote builds a voting comparison and a printable how-to-vote plan for a federal election. That is
 adult-facing electoral activity, so a person should confirm they are old enough to vote before any of
 it begins.
 

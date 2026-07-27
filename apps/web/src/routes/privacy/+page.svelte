@@ -40,12 +40,12 @@
 
   <h2>1. About this policy</h2>
   <p>
-    This Privacy Policy explains how how2vote handles information when you use the website, compare
+    This Privacy Policy explains how How2Vote handles information when you use the website, compare
     your views with historical parliamentary records, create a voting plan, choose to contribute to
     research, or contact us.
   </p>
   <p>
-    how2vote is operated by {ORG.legalName} (ABN {ORG.abn}, ACN {ORG.acn}) (National Digital, we, us
+    How2Vote is operated by {ORG.legalName} (ABN {ORG.abn}, ACN {ORG.acn}) (National Digital, we, us
     or our).
   </p>
   <p>

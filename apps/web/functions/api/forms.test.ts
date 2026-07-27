@@ -93,7 +93,7 @@ describe("forms endpoint — self-hosted intake, challenge-gated, relay-only", (
     expect(sent.to).toEqual(["inbox@example.org"]);
     expect(sent.from).toEqual({ address: "forms@how2vote.au", name: "how2vote.au forms" });
     expect(sent.reply_to).toBe("voter@example.net"); // header-safe sender address becomes Reply-To
-    expect(sent.subject).toBe("how2vote contact");
+    expect(sent.subject).toBe("How2Vote contact");
     expect(sent.text).toContain("Hello there");
   });
 
@@ -108,7 +108,7 @@ describe("forms endpoint — self-hosted intake, challenge-gated, relay-only", (
     expect(res.status).toBe(204);
     const sent = JSON.parse(fetchMock.mock.calls[0][1]?.body as string) as Record<string, unknown>;
     expect(sent.reply_to).toBeUndefined();
-    expect(sent.subject).toBe("how2vote feedback");
+    expect(sent.subject).toBe("How2Vote feedback");
     expect(sent.text).toContain("/ballot");
   });
 
