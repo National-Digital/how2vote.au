@@ -1,8 +1,8 @@
 {
   "schemaVersion": 1,
-  "lastReviewDate": "2026-07-20",
+  "lastReviewDate": "2026-07-27",
   "reviewer": "cameron-young — Australian lawyer (National Digital)",
-  "approvalRef": "compliance-review-2026-07-20",
+  "approvalRef": "compliance-review-2026-07-27",
   "legislationCompilation": "Commonwealth Electoral Act 1918 (Cth), current compilation as at 2026-07-15",
   "aecGuidanceVersion": "AEC authorisation + Spatial Data Download Data Licence guidance as at 2026-07-15",
   "fundingDisclosureRuleset": "pre-2027 regime; transitional rules operating from 2026-07-01",
@@ -91,7 +91,7 @@
     },
     {
       "date": "2026-07-27",
-      "change": "Brand name set in text as How2Vote (BRAND.md): the product name is title-cased wherever it is rendered as glyphs by a font or read aloud, while the wordmark artwork keeps its drawn lower-case lockup and identifiers stay lower-case how2vote in every case. Terms of Use reissued as version 2026-07.2 (effective 2026-07-27) to carry the name change: the amendment is confined to the product name's capitalisation in clauses 1 and 'Who may use the Service' — no right, obligation, permitted use, licence or liability position is altered, and every clause bound by terms-registry.json requiredWording is unchanged. Because acceptance is recorded against an exact version, the bump re-prompts every user to accept 2026-07.2. The prior 2026-07.1 hash is retained in the registry so the superseded wording stays auditable. Pending validation by cameron-young and tara-buckley.",
+      "change": "Brand name set in text as How2Vote (BRAND.md): the product name is title-cased wherever it is rendered as glyphs by a font or read aloud, while the wordmark artwork keeps its drawn lower-case lockup and identifiers stay lower-case how2vote in every case. Terms of Use reissued as version 2026-07.2 (effective 2026-07-27) to carry the name change: the amendment is confined to the product name's capitalisation in clauses 1 and 'Who may use the Service' — no right, obligation, permitted use, licence or liability position is altered, and every clause bound by terms-registry.json requiredWording is unchanged. Because acceptance is recorded against an exact version, the bump re-prompts every user to accept 2026-07.2. The prior 2026-07.1 hash is retained in the registry so the superseded wording stays auditable. Reviewed and approved 2026-07-27 (cameron-young, tara-buckley); control-25 evidence EV-LEGAL-TERMS-REVIEW re-approved for version 2026-07.2.",
       "affectedControls": ["control-25"]
     }
   ],

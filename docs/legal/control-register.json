@@ -970,12 +970,12 @@
       "evidence": [
         {
           "id": "EV-LEGAL-TERMS-REVIEW",
-          "description": "Legal review of the corrected Terms of Use (version 2026-07.1): confirmation that the incorporation-by-click-acceptance model, the consumer-law (ACL non-excludable guarantees) position, and the corrected clauses match the implemented design.",
+          "description": "Legal review of the Terms of Use (version 2026-07.2): confirmation that the incorporation-by-click-acceptance model, the consumer-law (ACL non-excludable guarantees) position, and the clauses match the implemented design. The 2026-07.2 reissue carries the How2Vote name styling in clause 1 and \"Who may use the Service\"; no right, obligation, permitted use, licence or liability position is altered, and every clause bound by terms-registry.json requiredWording is unchanged.",
           "status": "current",
           "reviewer": "cameron-young",
           "secondReviewer": "tara-buckley",
-          "approvedAt": "2026-07-20",
-          "expiresAt": "2029-07-20"
+          "approvedAt": "2026-07-27",
+          "expiresAt": "2029-07-27"
         }
       ]
     },
