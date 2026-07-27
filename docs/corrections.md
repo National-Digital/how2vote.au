@@ -1,6 +1,6 @@
 # Corrections & emergency controls
 
-Election-period operations for how2vote (ADR
+Election-period operations for How2Vote (ADR
 [0006](adr/0006-legal-compliance-rebuild.md)). This file is the **public correction log**
 and the runbook for the emergency controls.
 

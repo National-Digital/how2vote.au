@@ -17,7 +17,7 @@
   {crumbs}
   title="Where parties stand — {data.label}"
   intro="The {data.issues
-    .length} parliamentary propositions behind the {data.year} how2vote scoring. Open any one to see how every party is recorded voting on it."
+    .length} parliamentary propositions behind the {data.year} How2Vote scoring. Open any one to see how every party is recorded voting on it."
 >
   <div class="switch"><ElectionToggle active={page.params.election!} section="issues" /></div>
 
@@ -29,6 +29,6 @@
 
   <p class="source">
     Each proposition links to the parliamentary <a href="/glossary#division">divisions</a> behind it on
-    They Vote For You. Positions are the recorded voting record — how2vote takes no side on any proposition.
+    They Vote For You. Positions are the recorded voting record — How2Vote takes no side on any proposition.
   </p>
 </DataPage>

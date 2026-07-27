@@ -173,7 +173,7 @@ jobs:
       # suppression is proven by the stats.ts unit suite.
       - name: Public k-threshold + disclosure control
         run: node scripts/check-public-stat-release.mjs
-      # Local-device clear-all completeness: the "clear all my how2vote data" sweep covers EVERY
+      # Local-device clear-all completeness: the "clear all my How2Vote data" sweep covers EVERY
       # localStorage/sessionStorage key (the "how2vote:" namespace) and EVERY service-worker cache (the
       # "how2vote-" namespace), so no store can escape the wipe; fail-closed on an unresolvable key.
       # The share-copy warning + clean-session + decoder-fuzz behaviour is the e2e job below.
@@ -217,6 +217,11 @@ jobs:
         run: node scripts/check-legal-review.mjs
       - name: Trademark + brand guidelines
         run: node scripts/check-brand-trademark.mjs
+      # Identifiers spell the brand lower-case (BRAND.md). Prose casing is a reviewer's judgement;
+      # an identifier is mechanical and fails silently — a re-cased storage key discards every
+      # user's saved cards and consent, and an application id is immutable once published.
+      - name: Brand identifiers are lower case
+        run: node scripts/check-brand-casing.mjs
       - name: Electoral expenditure register
         run: node scripts/check-expenditure-register.mjs
       # Machine-readable product boundary (deep legal review 2026-07-19): the externally-determined

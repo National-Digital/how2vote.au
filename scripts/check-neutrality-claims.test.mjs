@@ -45,7 +45,7 @@ describe("verdict — real committed register + methodology page", () => {
 
 describe("scanCopy — banned assertive constructions", () => {
   const cases = [
-    ["absolute neutrality", "how2vote is completely neutral."],
+    ["absolute neutrality", "How2Vote is completely neutral."],
     ["absolute neutrality (100%)", "Our tool is 100% objective."],
     ["absolute accuracy", "Your results are always accurate."],
     ["recommendation verb", "We recommend voting for the Greens."],
@@ -66,14 +66,14 @@ describe("scanCopy — banned assertive constructions", () => {
 
 describe("scanCopy — precision (negated / interrogative / factual copy is clean)", () => {
   const clean = [
-    "Nothing is pre-filled and how2vote never suggests who to put first.",
+    "Nothing is pre-filled and How2Vote never suggests who to put first.",
     "This is not a recommended preference.",
     "no preference is recommended.",
     "Who should I vote for?",
     "Which party would you currently be most likely to vote for?",
     "candidates are never ranked by score.",
     "factual and neutral by construction",
-    "how2vote never pre-fills, ranks or suggests it.",
+    "How2Vote never pre-fills, ranks or suggests it.",
     "nothing is ranked, nothing is crowned.",
     "At the last federal election, who did you vote for?",
   ];

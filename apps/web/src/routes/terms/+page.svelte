@@ -14,7 +14,7 @@
   // The version is surfaced verbatim below and bound to the acceptance store, the terms hash registry
   // (docs/legal/terms-registry.json) and scripts/check-terms.mjs, so the wording cannot change without
   // a version bump + a new registry entry (the copy lint fails closed otherwise).
-  const lastUpdated = "16 July 2026";
+  const lastUpdated = "27 July 2026";
 </script>
 
 <Meta />
@@ -28,7 +28,7 @@
 
   <h2>1. About these terms</h2>
   <p>
-    These Terms of Use govern your access to and use of how2vote, including the website, comparison
+    These Terms of Use govern your access to and use of How2Vote, including the website, comparison
     results and any voting plan you create using the service (the Service).
   </p>
   <p>
@@ -46,7 +46,7 @@
   <p>
     The Service is for use by individual voters (natural persons) only. It is not for use by an
     organisation, and it is not for use by a foreign campaigner or foreign government. When you
-    accept these terms you confirm you are using how2vote as an individual, not on behalf of an
+    accept these terms you confirm you are using How2Vote as an individual, not on behalf of an
     organisation and not as a foreign campaigner.
   </p>
 

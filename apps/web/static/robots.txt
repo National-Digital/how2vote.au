@@ -1,4 +1,4 @@
-# how2vote is a public, independent tool — everything is crawlable.
+# How2Vote is a public, independent tool — everything is crawlable.
 # AI crawlers are allowed by decision (the content is public and factual); this is intentional
 # and mirrored by /llms.txt (generated at build time from the route metadata).
 User-agent: *

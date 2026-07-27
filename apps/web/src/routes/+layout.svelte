@@ -182,7 +182,7 @@
 
 {#if swUpdateReady}
   <div class="sw-update ui" role="status" aria-live="polite">
-    <span>A new version of how2vote is ready.</span>
+    <span>A new version of How2Vote is ready.</span>
     <button type="button" onclick={applyUpdate}>Reload</button>
   </div>
 {/if}

@@ -1,4 +1,4 @@
-# Privacy Impact Assessment — how2vote research collection
+# Privacy Impact Assessment — How2Vote research collection
 
 Status: **Engineering assessment complete; residual-risk determination and APP sign-off require a
 qualified Australian privacy practitioner before public launch** (ADR

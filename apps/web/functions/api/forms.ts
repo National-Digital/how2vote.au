@@ -163,7 +163,7 @@ export const onRequestPost: PagesFunction<Env> = async ({ request, env }) => {
           from: { address: env.FORMS_FROM_ADDRESS, name: "how2vote.au forms" },
           to: [env.FORMS_DELIVERY_ADDRESS],
           ...(replyTo ? { reply_to: replyTo } : {}),
-          subject: `how2vote ${kind}`,
+          subject: `How2Vote ${kind}`,
           text: lines.join("\n"),
         }),
       },

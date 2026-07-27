@@ -14,7 +14,7 @@
     viewBox={MARK.viewBox}
     style="aspect-ratio: 1"
     role="img"
-    aria-label="how2vote"
+    aria-label="How2Vote"
   >
     <rect
       x={MARK.rect.x}
@@ -34,7 +34,7 @@
     viewBox={WORDMARK.viewBox}
     style="aspect-ratio: {WORDMARK.width} / {WORDMARK.height}"
     role="img"
-    aria-label="how2vote"
+    aria-label="How2Vote"
   >
     <path fill="currentColor" d={WORDMARK.textD} />
     <rect

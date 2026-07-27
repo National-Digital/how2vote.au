@@ -32,7 +32,7 @@ stages:
 - **Build my voting plan** — a **blank** ballot the voter fills in themselves via numeric
   entry or labelled move-up/down (no drag), producing an order that is theirs alone. A
   mechanical check flags unnumbered boxes only — never "your vote is formal". Terminology
-  shifts to "voting plan"/"comparison"; the "how2vote" brand stays.
+  shifts to "voting plan"/"comparison"; the "How2Vote" brand stays.
 
 **D2 — Research data: opt-in, minimised, separated.** No
 automatic upload; a genuine opt-in shown after the result (its current flow position),

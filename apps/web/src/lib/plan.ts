@@ -1,6 +1,6 @@
 /**
  * Pure logic for the user-authored voting plan (docs/adr/0006). The plan is an ORDER the voter
- * builds themselves from a blank ballot — how2vote never pre-fills, ranks or suggests it. The order
+ * builds themselves from a blank ballot — How2Vote never pre-fills, ranks or suggests it. The order
  * is the single source of truth: a candidate's preference is its 1-based index in the array, so the
  * numbering is always contiguous 1..k with no duplicates and no gaps *by construction*. Candidates
  * not in the array are simply unranked ("missing"), which the mechanical check reports.

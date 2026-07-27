@@ -3,7 +3,7 @@
 - Status: Accepted
 - Deciders: National Digital
 
-This ADR records how the codebase is expected to age. how2vote is a static, client-scored PWA for
+This ADR records how the codebase is expected to age. How2Vote is a static, client-scored PWA for
 Australian **federal elections**, which happen roughly every three years. Between elections the
 codebase may legitimately go **untouched for 3+ years** — that is a supported state, not neglect. This
 ADR names what that freeze protects, what it puts at risk, and the dated commitment that keeps the

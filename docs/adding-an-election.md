@@ -1,6 +1,6 @@
 # Runbook: adding an election
 
-This is the authoritative, step-by-step process for adding a federal election to how2vote — the
+This is the authoritative, step-by-step process for adding a federal election to How2Vote — the
 operation this project is built to repeat every ~3 years, indefinitely. If you are reading this years
 after launch with no prior context, this file is the entry point; everything else it references is in
 the repo.

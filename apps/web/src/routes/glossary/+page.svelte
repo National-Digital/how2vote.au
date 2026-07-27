@@ -16,17 +16,17 @@
     {
       id: "aggregate-counts",
       term: "Aggregate counts",
-      def: "Group totals only — for example, “about 300 people agreed” — with nothing kept about any one person. how2vote's optional research stores aggregate counts, never individual records.",
+      def: "Group totals only — for example, “about 300 people agreed” — with nothing kept about any one person. How2Vote's optional research stores aggregate counts, never individual records.",
     },
     {
       id: "agreement-figure",
       term: "Agreement figure",
-      def: "A number from 0 to 100, published by They Vote For You, for how often a member of parliament has voted the way a proposition describes. how2vote averages these to score each party.",
+      def: "A number from 0 to 100, published by They Vote For You, for how often a member of parliament has voted the way a proposition describes. How2Vote averages these to score each party.",
     },
     {
       id: "alignment",
       term: "Alignment (match)",
-      def: "How closely your answers line up with a party's recorded votes, shown as a percentage. It is background information, not a recommendation — how2vote never tells you who to put first.",
+      def: "How closely your answers line up with a party's recorded votes, shown as a percentage. It is background information, not a recommendation — How2Vote never tells you who to put first.",
     },
     {
       id: "checksum",
@@ -41,12 +41,12 @@
     {
       id: "de-identified",
       term: "De-identified",
-      def: "Held in a way that is not tied to you as a person. how2vote's research is de-identified: it keeps group totals, not a record about any individual.",
+      def: "Held in a way that is not tied to you as a person. How2Vote's research is de-identified: it keeps group totals, not a record about any individual.",
     },
     {
       id: "division",
       term: "Division",
-      def: "A formal, recorded vote in parliament, where members are counted for and against. They Vote For You publishes these votes, and how2vote's scores are built from them.",
+      def: "A formal, recorded vote in parliament, where members are counted for and against. They Vote For You publishes these votes, and How2Vote's scores are built from them.",
     },
     {
       id: "estimand",
@@ -61,7 +61,7 @@
     {
       id: "how-to-vote-plan",
       term: "How-to-vote plan",
-      def: "The order you choose to number candidates on your ballot. You build your own; how2vote never chooses it for you, and it is not an official ballot paper.",
+      def: "The order you choose to number candidates on your ballot. You build your own; How2Vote never chooses it for you, and it is not an official ballot paper.",
     },
     {
       id: "preference",
@@ -71,12 +71,12 @@
     {
       id: "proposition",
       term: "Proposition",
-      def: "A specific policy statement that parliament has actually voted on. how2vote's questions are propositions, so every answer maps to a real vote.",
+      def: "A specific policy statement that parliament has actually voted on. How2Vote's questions are propositions, so every answer maps to a real vote.",
     },
     {
       id: "they-vote-for-you",
       term: "They Vote For You",
-      def: "A free public website, run by the OpenAustralia Foundation, that records how members of parliament have voted. It is how2vote's source for voting records.",
+      def: "A free public website, run by the OpenAustralia Foundation, that records how members of parliament have voted. It is How2Vote's source for voting records.",
     },
   ];
 </script>
@@ -85,7 +85,7 @@
 
 <ContentPage title="Glossary">
   <p>
-    Plain-English meanings for the words how2vote uses. If a term on the site is unfamiliar, look it
+    Plain-English meanings for the words How2Vote uses. If a term on the site is unfamiliar, look it
     up here.
   </p>
 

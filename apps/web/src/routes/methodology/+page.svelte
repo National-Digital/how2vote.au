@@ -11,7 +11,7 @@
 
 <ContentPage title="How it works">
   <p>
-    how2vote compares your views with what parties have <strong>actually done</strong> in federal parliament
+    How2Vote compares your views with what parties have <strong>actually done</strong> in federal parliament
     — the votes their members cast, not what they said in a campaign. The method is a fixed set of arithmetic
     steps, published in full below with nothing withheld: the same answers always produce the same result,
     and every step below is exactly what the scoring engine computes. Which issues to include and how
@@ -127,7 +127,7 @@
     We compute a percentage for every party this way, then place those scores beside the candidates
     actually printed on <strong>your</strong> ballot — your House electorate and your Senate state —
     in <strong>official ballot order</strong>. This is shown as <strong>evidence only</strong>:
-    nothing is ranked, nothing is crowned, and how2vote never suggests who to put first. Every
+    nothing is ranked, nothing is crowned, and How2Vote never suggests who to put first. Every
     party's score links to the divisions behind it, so you can check any number.
   </p>
   <p>

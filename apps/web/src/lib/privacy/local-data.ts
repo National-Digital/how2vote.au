@@ -1,7 +1,7 @@
 import { browser } from "$app/environment";
 
 /**
- * One authoritative "clear all my how2vote data" action.
+ * One authoritative "clear all my How2Vote data" action.
  *
  * The site keeps everything on the visitor's own device: their in-progress quiz, saved comparisons,
  * selected election, theme, Terms acknowledgement, age-eligibility bit and privacy/consent choice all
@@ -48,7 +48,7 @@ function namespacedKeys(store: Storage): string[] {
 }
 
 /**
- * Deletes EVERY piece of how2vote state on this device: all namespaced localStorage and
+ * Deletes EVERY piece of How2Vote state on this device: all namespaced localStorage and
  * sessionStorage keys, and all service-worker caches. Best-effort and never throws — each area is
  * cleared independently so a blocked or unavailable one (private mode, no Cache API) does not stop the
  * others. A caller should reload the app afterwards so every in-memory store re-hydrates from the now

@@ -17,7 +17,7 @@
  *      ("we recommend", "you should vote for", "vote 1", "recommended preference", …) and no
  *      DEFAULT/PRESELECTED-RANK wording ("pre-filled", "pre-selected", "default ranking", …). The
  *      scan is negation-aware: the legitimate NEGATED disclaimers the product actually ships
- *      ("nothing is ranked", "how2vote never suggests who to put first", "not a recommended
+ *      ("nothing is ranked", "How2Vote never suggests who to put first", "not a recommended
  *      preference", "nothing is pre-filled") are recognised and never tripped.
  *
  *   2. METHODOLOGY BINDING — every register `wording` string, and every proposition-selection

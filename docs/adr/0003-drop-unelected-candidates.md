@@ -14,7 +14,7 @@ score those like a party's record. That introduces a second, unverifiable class 
 statements rather than the parliamentary record), a submission and moderation surface, and a server to
 accept it — none of which the tool otherwise needs.
 
-how2vote is a fully static, offline PWA with **no server-side component** for the card and a strict
+How2Vote is a fully static, offline PWA with **no server-side component** for the card and a strict
 integrity/neutrality posture. A party or candidate with no parliamentary record on the issues a user
 answered resolves to **"no data"** — it earns and risks no points and is shown as such on the ballot.
 
@@ -29,7 +29,7 @@ no parliamentary record display as "no data" on the card.
 - **Integrity.** Self-reported answers are exactly the campaign-statement class of data the tool
   exists to *avoid* — they are unverifiable against the parliamentary record. On the old site they had
   to be visually quarantined with an annotation precisely because they were a weaker kind of evidence.
-- **Architecture.** how2vote is a static PWA with no backend to accept, validate, moderate, or store
+- **Architecture.** How2Vote is a static PWA with no backend to accept, validate, moderate, or store
   candidate submissions. Adding one reintroduces a server, an authentication/verification problem, and
   a moderation surface — none of which exist today.
 - **Provenance.** The compiled dataset is published under ODbL with a checksum and a single, clean

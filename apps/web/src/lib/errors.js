@@ -70,7 +70,7 @@ export function errorInfo(status, message) {
   if (status === 503) {
     return {
       code: "503",
-      title: "how2vote is briefly unavailable",
+      title: "How2Vote is briefly unavailable",
       lede: "The site is down for a moment — most likely a short maintenance window. Please try again shortly.",
       kind: "server",
       canRetry: true,

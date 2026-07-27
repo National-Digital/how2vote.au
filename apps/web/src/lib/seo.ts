@@ -10,7 +10,7 @@
 
 /** Canonical production origin (apex). Drives canonical URLs, OG url and the sitemap. */
 export const SITE_URL = "https://how2vote.au";
-export const SITE_NAME = "how2vote";
+export const SITE_NAME = "How2Vote";
 export const OG_LOCALE = "en_AU";
 
 /** Absolute URL of the default shared social preview image (the current election). */
@@ -40,7 +40,7 @@ export type PageMeta = {
  */
 export function electionLandingMeta(label: string): PageMeta {
   return {
-    title: `${label} — how2vote`,
+    title: `${label} — How2Vote`,
     description: `Compare your views with the parties' real parliamentary voting record for the ${label}, House and Senate.`,
   };
 }
@@ -51,106 +51,106 @@ export function electionLandingMeta(label: string): PageMeta {
  */
 export const pageMeta = {
   "/": {
-    title: "How do your views compare with the parties? — how2vote",
+    title: "How do your views compare with the parties? — How2Vote",
     description:
       "Answer real questions the current Parliament has voted on and see how your views compare with the parties, scored on their recorded votes — not their promises.",
   },
   "/about": {
-    title: "About how2vote",
+    title: "About How2Vote",
     description:
-      "Who builds how2vote and why: an independent voting-record comparison tool that scores parties on their real parliamentary voting record, not their promises.",
+      "Who builds How2Vote and why: an independent voting-record comparison tool that scores parties on their real parliamentary voting record, not their promises.",
   },
   "/methodology": {
-    title: "How how2vote works",
+    title: "How How2Vote works",
     description:
-      "How how2vote works: every party is scored on its recorded parliamentary votes, then compared question by question with your answers.",
+      "How How2Vote works: every party is scored on its recorded parliamentary votes, then compared question by question with your answers.",
   },
   "/privacy": {
-    title: "Privacy — how2vote",
+    title: "Privacy — How2Vote",
     description:
-      "How how2vote handles your data and your privacy on the site, including what is stored, where your quiz answers live, and how they are used.",
+      "How How2Vote handles your data and your privacy on the site, including what is stored, where your quiz answers live, and how they are used.",
   },
   "/contact": {
-    title: "Contact — how2vote",
+    title: "Contact — How2Vote",
     description:
-      "Get in touch with the how2vote team — questions, corrections or a bug report. Send a message and we'll get back to you as soon as we can.",
+      "Get in touch with the How2Vote team — questions, corrections or a bug report. Send a message and we'll get back to you as soon as we can.",
   },
   "/terms": {
-    title: "Terms of use — how2vote",
+    title: "Terms of use — How2Vote",
     description:
       "The terms that govern using how2vote: you build your own voting plan, results are historical comparisons only, and always check your ballot before voting.",
   },
   "/accessibility": {
-    title: "Accessibility — how2vote",
+    title: "Accessibility — How2Vote",
     description:
-      "how2vote's accessibility commitment: WCAG 2.2 AA target, keyboard and screen-reader support, no drag-and-drop, text alternatives, and how to give feedback.",
+      "How2Vote's accessibility commitment: WCAG 2.2 AA target, keyboard and screen-reader support, no drag-and-drop, text alternatives, and how to give feedback.",
   },
   "/corrections": {
-    title: "Corrections — how2vote",
+    title: "Corrections — How2Vote",
     description:
-      "Report an error in a candidate, party or issue page, and see how2vote's correction log, response times and methodology version history.",
+      "Report an error in a candidate, party or issue page, and see How2Vote's correction log, response times and methodology version history.",
   },
   "/glossary": {
-    title: "Glossary — how2vote",
+    title: "Glossary — How2Vote",
     description:
-      "Short, plain-English meanings for the words how2vote uses — division, proposition, Hansard, alignment, aggregate counts, data vintage and more.",
+      "Short, plain-English meanings for the words How2Vote uses — division, proposition, Hansard, alignment, aggregate counts, data vintage and more.",
   },
   "/insights": {
-    title: "Insights — how2vote",
+    title: "Insights — How2Vote",
     description:
-      "De-identified, aggregate insights from the optional how2vote survey — how people's views and circumstances line up with parties' real voting records.",
+      "De-identified, aggregate insights from the optional How2Vote survey — how people's views and circumstances line up with parties' real voting records.",
   },
   "/research": {
-    title: "Research methods — how2vote",
+    title: "Research methods — How2Vote",
     description:
-      "How the optional how2vote survey is analysed: the estimand registry, the disclosure controls behind Insights, and the ethics and statistical standards it meets.",
+      "How the optional How2Vote survey is analysed: the estimand registry, the disclosure controls behind Insights, and the ethics and statistical standards it meets.",
   },
   "/start": {
-    title: "Before you start — how2vote",
+    title: "Before you start — How2Vote",
     description:
       "A quick eligibility check before you compare your views for a federal election. Comparing is open to everyone; a how-to-vote plan is for people 18 and over.",
     index: false,
   },
   "/ballot": {
-    title: "Find your electorate — how2vote",
+    title: "Find your electorate — How2Vote",
     description:
-      "Choose your state and federal electorate so how2vote can build your voting comparison for your House and Senate ballot paper.",
+      "Choose your state and federal electorate so How2Vote can build your voting comparison for your House and Senate ballot paper.",
     index: false,
   },
   "/quiz": {
-    title: "The questions — how2vote",
+    title: "The questions — How2Vote",
     description:
       "Answer 50 real questions that parliament has voted on. It takes about five minutes and your progress is saved as you go.",
     index: false,
   },
   "/review": {
-    title: "Review your answers — how2vote",
+    title: "Review your answers — How2Vote",
     description:
-      "Check and change your answers before how2vote builds your personal voting comparison for the House and the Senate.",
+      "Check and change your answers before How2Vote builds your personal voting comparison for the House and the Senate.",
     index: false,
   },
   "/survey": {
-    title: "Before your plan — how2vote",
+    title: "Before your plan — How2Vote",
     description:
       "An optional research invitation before you build your voting plan for your House and Senate ballot. Contributing is your choice and never changes your result.",
     index: false,
   },
   "/card": {
-    title: "Your how2vote comparison",
+    title: "Your How2Vote comparison",
     description:
       "See how your answers align with each candidate's party record in official ballot order, then build your own voting plan for your House and Senate ballot.",
     index: false,
   },
   "/offline": {
-    title: "Offline — how2vote",
+    title: "Offline — How2Vote",
     description:
-      "how2vote runs entirely on your device, so the questions, the scoring and your card keep working with no internet connection.",
+      "How2Vote runs entirely on your device, so the questions, the scoring and your card keep working with no internet connection.",
     index: false,
   },
   "/saved": {
-    title: "Saved cards — how2vote",
+    title: "Saved cards — How2Vote",
     description:
-      "The how2vote cards you've saved to this device. They are kept only in this browser, never uploaded, and you can delete them at any time.",
+      "The How2Vote cards you've saved to this device. They are kept only in this browser, never uploaded, and you can delete them at any time.",
     index: false,
   },
 } satisfies Record<string, PageMeta>;

@@ -1,6 +1,6 @@
 # Getting help
 
-how2vote is a non-partisan public-interest tool operated by National Digital. Here is how to get
+How2Vote is a non-partisan public-interest tool operated by National Digital. Here is how to get
 help, depending on what you need.
 
 ## Questions and general contact

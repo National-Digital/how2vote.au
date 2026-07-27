@@ -22,7 +22,7 @@ attribution and licence text.
 
 ODbL §4.4 (share-alike) requires a publicly-used **derived database** to be offered under a
 compatible open licence with the same attribution, and §4.6 lets that be met by publishing either
-the database itself **or the method of alteration** in machine-readable form. how2vote satisfies both
+the database itself **or the method of alteration** in machine-readable form. How2Vote satisfies both
 for the derived vote-position database:
 
 - **The derived database is published**: `data/dist/**` is committed openly in this public repo,

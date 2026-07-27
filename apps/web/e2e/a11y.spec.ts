@@ -62,7 +62,7 @@ async function reachCardCompare(
         // build stage is reachable without the gate. The version literal mirrors TERMS_VERSION.
         localStorage.setItem(
           "how2vote:terms-accept:v2",
-          JSON.stringify({ version: "2026-07.1", acceptedAt: new Date().toISOString() }),
+          JSON.stringify({ version: "2026-07.2", acceptedAt: new Date().toISOString() }),
         );
       } catch {
         /* storage blocked — the gate test covers the explicit path */

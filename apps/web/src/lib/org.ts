@@ -95,7 +95,7 @@ export const DATA_SOURCE = {
 } as const;
 
 /**
- * The eligibility rule how2vote adopts for contributing a research record: 18 or older. This is a
+ * The eligibility rule How2Vote adopts for contributing a research record: 18 or older. This is a
  * research-programme rule the project chooses (and the Privacy Act basis for handling sensitive
  * information from adults), not a claim that the law forbids under-18s from using the tool itself.
  */

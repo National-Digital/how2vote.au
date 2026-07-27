@@ -59,7 +59,7 @@
       <Logo size="sm" />
       <h1>You can still see how your views compare</h1>
       <p class="note ui">
-        Thanks for letting us know. Because you're under {RESEARCH_MIN_AGE}, how2vote won't build
+        Thanks for letting us know. Because you're under {RESEARCH_MIN_AGE}, How2Vote won't build
         you a how-to-vote plan — a how-to-vote card is material for casting a vote, and only people
         enrolled to vote can do that. But you can still take the quiz and see how your views line up
         with the parties' recorded votes. Nothing is saved or sent.
@@ -99,7 +99,7 @@
       <p class="kicker ui">Before you start</p>
       <h1>Are you {RESEARCH_MIN_AGE} or older?</h1>
       <p class="note ui">
-        how2vote builds a voting comparison and a how-to-vote plan for a federal election. Anyone
+        How2Vote builds a voting comparison and a how-to-vote plan for a federal election. Anyone
         can see how their views compare, but a how-to-vote plan is for people who are {RESEARCH_MIN_AGE}
         or over and can vote. This is the first step — nothing is created, saved or sent until you answer.
       </p>

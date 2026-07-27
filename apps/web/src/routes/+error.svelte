@@ -15,7 +15,7 @@
 </script>
 
 <svelte:head>
-  <title>{info.title} — how2vote</title>
+  <title>{info.title} — How2Vote</title>
   <meta name="robots" content="noindex, follow" />
 </svelte:head>
 

@@ -1,4 +1,4 @@
-# Self-hosting & forking how2vote
+# Self-hosting & forking How2Vote
 
 This guide is for **anyone running their own copy** of this codebase — a fork you develop against, or
 a full redeploy to your own infrastructure. It covers the parts that live outside the code: the
@@ -8,7 +8,7 @@ credentials the deploy needs.
 The source is [AGPL-3.0-or-later](../LICENSE) and you are welcome to fork it. Two things a fork does
 **not** get, and must supply for itself:
 
-- **Brand & name.** The AGPL covers the code, not the *how2vote* / *National Digital* names, logos, or
+- **Brand & name.** The AGPL covers the code, not the *How2Vote* / *National Digital* names, logos, or
   marks. Use your own — see [`BRAND.md`](../BRAND.md).
 - **Operator identity & legal posture.** The app publishes as *authorised electoral material* for a
   specific operator and jurisdiction. The fail-closed release profile

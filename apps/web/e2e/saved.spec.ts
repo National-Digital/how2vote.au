@@ -70,7 +70,7 @@ test("saving is a toggle, and Clear all needs confirmation", async ({ page }) =>
   await page.getByRole("button", { name: "Save on this device" }).click();
   await page.goto("/saved");
   await expect(page.getByText("Bean")).toBeVisible();
-  // Exact match: the saved-cards "Clear all" is distinct from the global "Clear all how2vote data on
+  // Exact match: the saved-cards "Clear all" is distinct from the global "Clear all How2Vote data on
   // this device" control that also lives on this page.
   await page.getByRole("button", { name: "Clear all", exact: true }).click();
   await page.getByRole("button", { name: "Yes, delete all" }).click();

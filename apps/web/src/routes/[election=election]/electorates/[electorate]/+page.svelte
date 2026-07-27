@@ -37,7 +37,7 @@
 
   <p class="source">
     Candidate lists as declared by the Australian Electoral Commission. Party links show that
-    party's recorded parliamentary voting record. how2vote is independent and lists every candidate
+    party's recorded parliamentary voting record. How2Vote is independent and lists every candidate
     in ballot order.
   </p>
 </DataPage>

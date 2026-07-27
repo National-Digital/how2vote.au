@@ -88,14 +88,14 @@
 
 <ContentPage title="About">
   <p>
-    how2vote is an independent tool that turns the public record of parliament into a personal
+    How2Vote is an independent tool that turns the public record of parliament into a personal
     comparison and voting plan. Its one job is to report what parliament actually did and let you
     compare it with your own views — nothing more.
   </p>
 
   <h2>Built to be even-handed</h2>
   <p>
-    how2vote aims to favour no party. It applies the same published, deterministic method to every
+    How2Vote aims to favour no party. It applies the same published, deterministic method to every
     party and candidate, and it is deliberately two-tone — ink on paper, with no colour anywhere —
     so match quality is never dressed up as party allegiance; a build-time check keeps it that way.
     We don't claim the method is the only reasonable way to read the public record: which issues to
@@ -215,14 +215,14 @@
 
   <h2>Who makes it</h2>
   <p>
-    how2vote is built by {ORG.tradingName} ({ORG.legalName}, ABN {ORG.abn}, ACN {ORG.acn}). It is
+    How2Vote is built by {ORG.tradingName} ({ORG.legalName}, ABN {ORG.abn}, ACN {ORG.acn}). It is
     not produced, approved, registered or endorsed by any political party, candidate, or the
     Australian Electoral Commission. Read our <a href="/terms">Terms of use</a>,
     <a href="/privacy">Privacy policy</a>
     and
     <a href="/accessibility">Accessibility statement</a>.
   </p>
-  <p>Accountability for how2vote's compliance sign-offs rests with:</p>
+  <p>Accountability for How2Vote's compliance sign-offs rests with:</p>
   <ul>
     {#each PUBLIC_SIGNATORIES as person (person.id)}
       {@const linkedin = linkedinOf(person.sameAs)}

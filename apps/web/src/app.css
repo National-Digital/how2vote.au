@@ -1,5 +1,5 @@
 /*
- * how2vote design system — "ink on paper".
+ * How2Vote design system — "ink on paper".
  * Strict two-tone: a warm near-black ink on warm paper (light) / warm chalk on warm slate (dark).
  * There is NO hue anywhere in the product — match quality is encoded with fill, hatch, dash and
  * text, never colour. CI greps the built CSS to enforce this (see scripts/neutrality-check.mjs).

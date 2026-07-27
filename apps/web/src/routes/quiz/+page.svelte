@@ -110,7 +110,7 @@
   );
 </script>
 
-<Meta title={total > 0 ? `Question ${index + 1} of ${total} — how2vote` : "Quiz — how2vote"} />
+<Meta title={total > 0 ? `Question ${index + 1} of ${total} — How2Vote` : "Quiz — How2Vote"} />
 <svelte:window {onkeydown} />
 
 <TopBar

@@ -23,7 +23,7 @@ describe("verdict — real committed brand guideline", () => {
 
 describe("verdict — registration claims in source", () => {
   it("flags the spelt-out registered-mark phrase (case-insensitive)", () => {
-    const sources = [{ path: "README.md", text: `The ${REGISTERED_PHRASE} how2vote.` }];
+    const sources = [{ path: "README.md", text: `The ${REGISTERED_PHRASE} How2Vote.` }];
     expect(hasError(verdict({ sources, brandMd: REAL_BRAND }), "README.md")).toBe(true);
   });
 
@@ -33,22 +33,22 @@ describe("verdict — registration claims in source", () => {
   });
 
   it("flags the circled-R symbol", () => {
-    const sources = [{ path: "a.ts", text: `const brand = "how2vote${CIRCLED_R}";` }];
+    const sources = [{ path: "a.ts", text: `const brand = "How2Vote${CIRCLED_R}";` }];
     expect(verdict({ sources, brandMd: REAL_BRAND }).ok).toBe(false);
   });
 
   it("flags the circled-TM symbol", () => {
-    const sources = [{ path: "a.md", text: `how2vote${CIRCLED_TM} is the name.` }];
+    const sources = [{ path: "a.md", text: `How2Vote${CIRCLED_TM} is the name.` }];
     expect(verdict({ sources, brandMd: REAL_BRAND }).ok).toBe(false);
   });
 
   it("flags the uppercase (TM) token", () => {
-    const sources = [{ path: "a.md", text: "how2vote(TM)" }];
+    const sources = [{ path: "a.md", text: "How2Vote(TM)" }];
     expect(verdict({ sources, brandMd: REAL_BRAND }).ok).toBe(false);
   });
 
   it("flags the uppercase (R) token", () => {
-    const sources = [{ path: "a.md", text: "how2vote (R)" }];
+    const sources = [{ path: "a.md", text: "How2Vote (R)" }];
     expect(verdict({ sources, brandMd: REAL_BRAND }).ok).toBe(false);
   });
 });
@@ -83,7 +83,7 @@ describe("verdict — BRAND.md requirements", () => {
   });
 
   it("fails when BRAND.md lacks a copyright-ownership statement", () => {
-    const brandMd = "# Brand\n\nThe product is how2vote and here are some rules.";
+    const brandMd = "# Brand\n\nThe product is How2Vote and here are some rules.";
     expect(hasError(verdict({ sources: [], brandMd }), "copyright-ownership")).toBe(true);
   });
 });

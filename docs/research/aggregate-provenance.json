@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "updated": "2026-07-20",
-  "notes": "Public aggregate-provenance record for the how2vote research dataset (ADR-0008). The research store holds ONLY aggregate counters — no per-person record is created or stored. This record states, in the open, the cohort model, the schema and consent versions the aggregates were collected under, the aggregation method, the verification of the aggregate conversion, the counter-export hash, and the explicit assertion that no person-level source is retained. It is validated by scripts/check-aggregate-only.mjs (blocking) and its aggregateTables list is cross-checked against the migration schema allowlist. The signed aggregate-conversion export and destruction certificate live in the restricted legal records and are referenced here by evidence ID only.",
+  "notes": "Public aggregate-provenance record for the How2Vote research dataset (ADR-0008). The research store holds ONLY aggregate counters — no per-person record is created or stored. This record states, in the open, the cohort model, the schema and consent versions the aggregates were collected under, the aggregation method, the verification of the aggregate conversion, the counter-export hash, and the explicit assertion that no person-level source is retained. It is validated by scripts/check-aggregate-only.mjs (blocking) and its aggregateTables list is cross-checked against the migration schema allowlist. The signed aggregate-conversion export and destruction certificate live in the restricted legal records and are referenced here by evidence ID only.",
   "researchPayloadSchemaVersion": 1,
   "consentVersions": ["2026-07.2"],
   "cohortModel": {

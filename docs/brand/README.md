@@ -1,8 +1,11 @@
-# how2vote brand marks
+# How2Vote brand marks
 
 The identity is `how[2]vote`: a preference numeral "2" marked inside a ballot-paper
 box, with the ghost `[1]` and `[3]` cells of its column above and below — the act the
 site explains, drawn in the brand face.
+
+The wordmark sets the name in lower case. That is the artwork, not the spelling: in
+text the product name is **How2Vote**. See [`BRAND.md`](../../BRAND.md) for the rule.
 
 - `how2vote-mark.svg` — the icon: the ballot column, the 2's cell dominant, ghost
   `[1]`/`[3]` cells at reduced size and opacity (64×64 grid).
