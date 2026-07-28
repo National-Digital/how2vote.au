@@ -1,7 +1,7 @@
 /**
  * WebMCP tool surface (read-only) for in-browser AI agents.
  *
- * WebMCP (the emerging W3C `navigator.modelContext` API — Edge ships it natively, Chrome runs it in
+ * WebMCP (the emerging W3C `modelContext` API — Edge ships it natively, Chrome runs it in
  * an origin trial as of 2026) lets a page expose callable tools to a browser-embedded agent. This
  * registers a small set of **read-only** tools that answer factual questions from the committed
  * dataset — find an electorate, list its candidates, look up a party's recorded position, list the
@@ -14,7 +14,12 @@
  * absent, and the ~330 KB dataset is only fetched (via {@link loadData}) the first time a tool is
  * actually invoked, so it never touches normal page load.
  *
- * NON-DURABLE / EXPERIMENTAL — do not treat as a supported surface. `navigator.modelContext` is a
+ * Read-only is a boundary, not an omission: do not add a tool that submits the contact or feedback
+ * form. Those forms are proof-of-work gated to keep unattended automation off a human inbox, so
+ * exposing them here would bypass a deliberate control. Recorded in
+ * [ADR-0016](../../../../docs/adr/0016-deliberate-freeze-and-longevity.md) §3.
+ *
+ * NON-DURABLE / EXPERIMENTAL — do not treat as a supported surface. `modelContext` is a
  * pre-standard API (Chrome origin trial; a W3C Community Group draft, NOT on the Standards Track) and
  * may change or be withdrawn. This module is deliberately built to fail safe — it no-ops where the
  * API is absent, and every fact it returns is also served by the durable surfaces (public content
@@ -38,12 +43,19 @@ type Tool = {
   execute: (args: Record<string, unknown>) => Promise<ToolResult>;
 };
 
+/** The provider object, wherever the browser happens to hang it (see {@link modelContext}). */
+type ModelContext = {
+  registerTool(tool: Tool): unknown;
+  unregisterTool?(name: string): unknown;
+};
+
 declare global {
   interface Navigator {
-    modelContext?: {
-      registerTool(tool: Tool): unknown;
-      unregisterTool?(name: string): unknown;
-    };
+    /** @deprecated Moved to `document.modelContext`; kept for browsers still on the old location. */
+    modelContext?: ModelContext;
+  }
+  interface Document {
+    modelContext?: ModelContext;
   }
 }
 
@@ -296,13 +308,24 @@ const TOOLS: Tool[] = [
 export { TOOLS as webmcpTools };
 
 /**
+ * Locate the WebMCP provider. The API moved from `navigator.modelContext` to `document.modelContext`,
+ * so both are probed. `document` must be probed first: reading the `navigator` property is what emits
+ * the deprecation warning, so this order keeps a current browser off the deprecated accessor while a
+ * browser still on the old location continues to work.
+ */
+function modelContext(): ModelContext | undefined {
+  const fromDocument = typeof document === "undefined" ? undefined : document.modelContext;
+  if (fromDocument) return fromDocument;
+  return typeof navigator === "undefined" ? undefined : navigator.modelContext;
+}
+
+/**
  * Register the read-only tools with the browser's WebMCP provider, if one is present. Safe to call
- * unconditionally on mount: it feature-detects `navigator.modelContext`, is a no-op otherwise, and
- * swallows a duplicate-registration rejection (e.g. React/Svelte re-mount in dev).
+ * unconditionally on mount: it feature-detects the provider, is a no-op otherwise, and swallows a
+ * duplicate-registration rejection (e.g. a Svelte re-mount in dev).
  */
 export function registerWebmcpTools(): void {
-  if (typeof navigator === "undefined") return;
-  const mc = navigator.modelContext;
+  const mc = modelContext();
   if (!mc || typeof mc.registerTool !== "function") return;
   for (const tool of TOOLS) {
     try {

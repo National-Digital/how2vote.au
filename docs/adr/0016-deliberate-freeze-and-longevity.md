@@ -53,11 +53,27 @@ the posture explicitly and adds the one thing a frozen project most often lacks:
    [`docs/legal/required-checks.json`](../legal/required-checks.json).
 
 3. **Pre-standard surfaces are marked non-durable.** The WebMCP tool surface
-   (`navigator.modelContext`, an Edge-native / Chrome-origin-trial, W3C **Community Group** draft — not
+   (`modelContext`, an Edge-native / Chrome-origin-trial, W3C **Community Group** draft — not
    on the Standards Track) is kept only as a progressive, read-only, no-op-when-absent mirror of the
    public content. It is **explicitly not a supported surface** and may be removed at any time with no
    user-facing loss; its rot risk is contained to itself. The durable agent-facing surfaces are
    `robots.txt`, schema.org structured data (incl. `Dataset`), and `llms.txt`/`llms-full.txt`.
+
+   Churn in this surface is absorbed rather than chased. The provider object moved from
+   `navigator.modelContext` to `document.modelContext` during the origin trial, so `$lib/webmcp` probes
+   `document` first and falls back to `navigator`; that order is required because reading the
+   `navigator` property is what emits the deprecation warning.
+
+   **The surface stays read-only; form and write tools are declined.** Browser DevTools audits pages for
+   un-annotated `<form>` elements and suggests exposing them to agents. That advice is not followed for
+   the two forms on this site (`/contact` and the feedback widget), for these reasons:
+   - Both forms are gated by the self-hosted ALTCHA proof-of-work challenge (ADR-0015), whose purpose is
+     to keep unattended automated submissions off an inbound human channel. An agent-callable submit
+     tool would bypass that control.
+   - Both carry a person's own words to a maintainer inbox. An agent-composed message is
+     unattributable, and attribution is the property a corrections channel depends on.
+   - Nothing is withheld beyond unattended submission: both forms are labelled, keyboard-accessible
+     HTML that an agent driving the page can complete with a person in the loop.
 
 4. **Do not chase build-chain majors.** Vite 8 (Rolldown), SvelteKit 3, and Svelte 6 are **not**
    adopted for a frozen tree; the static output does not need them. The one future *forced* migration

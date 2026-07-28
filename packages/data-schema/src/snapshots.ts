@@ -1,3 +1,5 @@
+// Must precede schema construction; see ./zod-runtime.ts.
+import "./zod-runtime.js";
 import { z } from "zod";
 import type { ElectionMeta } from "./elections.js";
 import type { QuestionSet } from "./schemas.js";

@@ -37,6 +37,12 @@ const PRECACHE = [...build, ...files, ...corePrerendered];
 sw.addEventListener("install", (event) => {
   // Precache the new generation, but do NOT skipWaiting: the new worker stays "waiting" so any open
   // session keeps running on the worker + cache it loaded with.
+  //
+  // addAll is deliberately atomic: a half-populated generation would serve part of one version and
+  // miss the rest. The trade-off is that a single unfetchable entry disables offline support, so every
+  // path in PRECACHE must be servable in production. Cloudflare Pages 404s the _headers/_redirects it
+  // consumes as config, so those are excluded via kit.serviceWorker.files in svelte.config.js and the
+  // built list is gated by scripts/check-precache.mjs.
   event.waitUntil(caches.open(CACHE).then((cache) => cache.addAll(PRECACHE)));
 });
 

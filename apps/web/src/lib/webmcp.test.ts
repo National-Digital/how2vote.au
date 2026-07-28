@@ -175,17 +175,46 @@ describe("tools are invocable end-to-end (through execute, as an agent calls the
 describe("registerWebmcpTools", () => {
   afterEach(() => vi.unstubAllGlobals());
 
+  /** Register against a stubbed provider at `location` and return the tool names it received. */
+  const registerVia = (location: "document" | "navigator"): string[] => {
+    const registered: { name: string }[] = [];
+    const provider = { registerTool: (t: { name: string }) => registered.push(t) };
+    vi.stubGlobal("document", location === "document" ? { modelContext: provider } : {});
+    vi.stubGlobal("navigator", location === "navigator" ? { modelContext: provider } : {});
+    registerWebmcpTools();
+    return registered.map((t) => t.name).sort();
+  };
+
   it("is a no-op (no throw) when the WebMCP API is absent", () => {
+    vi.stubGlobal("document", {});
     vi.stubGlobal("navigator", {});
     expect(() => registerWebmcpTools()).not.toThrow();
   });
 
-  it("registers all tools when a provider is present", () => {
+  it("registers all tools via document.modelContext (the current location)", () => {
+    expect(registerVia("document")).toEqual(webmcpTools.map((t) => t.name).sort());
+  });
+
+  it("still registers via the deprecated navigator.modelContext", () => {
+    expect(registerVia("navigator")).toEqual(webmcpTools.map((t) => t.name).sort());
+  });
+
+  it("never reads navigator.modelContext when document provides one", () => {
+    // Reading the deprecated accessor is what emits the browser's deprecation warning, so document
+    // must be probed first and navigator left untouched — not merely preferred as a result.
     const registered: { name: string }[] = [];
-    vi.stubGlobal("navigator", {
+    let navigatorReads = 0;
+    vi.stubGlobal("document", {
       modelContext: { registerTool: (t: { name: string }) => registered.push(t) },
     });
+    vi.stubGlobal("navigator", {
+      get modelContext() {
+        navigatorReads += 1;
+        return { registerTool: () => {} };
+      },
+    });
     registerWebmcpTools();
-    expect(registered.map((t) => t.name).sort()).toEqual(webmcpTools.map((t) => t.name).sort());
+    expect(navigatorReads).toBe(0);
+    expect(registered).toHaveLength(webmcpTools.length);
   });
 });

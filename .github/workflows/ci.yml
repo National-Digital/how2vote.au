@@ -59,6 +59,12 @@ jobs:
       - name: Performance budget (gzipped JS)
         run: pnpm --filter @how2vote/web budget:check
 
+      - name: Service-worker precache gate (no path Cloudflare Pages will not serve)
+        # The worker precaches atomically, so one unfetchable entry disables offline support. Pages
+        # 404s the _headers/_redirects it consumes as config while `vite preview` serves them, so the
+        # offline e2e specs cannot catch this.
+        run: pnpm --filter @how2vote/web precache:check
+
       - name: Action-pinning gate (every third-party action is pinned to a full commit SHA)
         # Supply-chain: a mutable tag/branch pin (@v4, @main) lets the action owner move it to
         # malicious code that runs with this repo's token — the risk is acute on a public repo where

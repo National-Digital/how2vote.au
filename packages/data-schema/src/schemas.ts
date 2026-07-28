@@ -1,3 +1,5 @@
+// Must precede schema construction; see ./zod-runtime.ts.
+import "./zod-runtime.js";
 import { z } from "zod";
 
 /**

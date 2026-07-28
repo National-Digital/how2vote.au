@@ -41,6 +41,35 @@ test("every prerendered page carries a strict CSP meta tag", async ({ page }) =>
   }
 });
 
+test("no page trips its own CSP at runtime", async ({ page }) => {
+  // Asserting the policy text is not enough — the app can still violate it while running. A caught
+  // violation is still reported to the page, so a library that probes for `eval` behind a try/catch
+  // produces console violations under a clean policy; packages/data-schema opts out of Zod's JIT probe
+  // for that reason and this test guards it.
+  //
+  // Listen before any navigation, and collect rather than fail fast so the report names the directive
+  // and blocked URI.
+  const violations: string[] = [];
+  await page.exposeFunction("__recordCspViolation", (v: string) => void violations.push(v));
+  await page.addInitScript(() => {
+    document.addEventListener("securitypolicyviolation", (e) => {
+      void (
+        window as unknown as { __recordCspViolation: (v: string) => void }
+      ).__recordCspViolation(
+        `${e.violatedDirective}: ${e.blockedURI || "inline"} (${e.sourceFile ?? "?"}:${e.lineNumber})`,
+      );
+    });
+  });
+
+  for (const path of ["/", "/quiz", "/card?res=5f2a9c1e3b7d"]) {
+    await page.goto(path);
+    // The quiz/card path constructs the dataset schemas on demand, so let the lazy work settle.
+    await page.waitForLoadState("networkidle");
+  }
+
+  expect(violations, `CSP violations fired at runtime:\n${violations.join("\n")}`).toEqual([]);
+});
+
 test("the CSP hashes the inline hydration script (no blanket inline scripts)", async ({ page }) => {
   const csp = await readMetaCsp(page, "/");
   const scriptSrc = csp
