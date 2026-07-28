@@ -54,7 +54,8 @@
           "type": "ci-suite",
           "owner": "legal-eng",
           "status": "passing",
-          "enforcedBy": "scripts/check-legal-review.mjs"
+          "enforcedBy": "scripts/check-legal-review.mjs",
+          "note": "Freshness (>12 months fails), effective-date (a passed commencement needs a review on/after it) and data-change. The data-change gate is not satisfied by touching legal-review.json: a PR changing a legally-sensitive path must ADD a changeLog entry naming an active signatory as reviewer, with a disposition of reviewed (which must also advance lastReviewDate) or no-review-required."
         }
       ],
       "evidence": [

@@ -59,6 +59,29 @@ bundle (EV-CONSENT-BUNDLE), IP assignments (EV-IP-ASSIGNMENT), and the four secu
 (EV-ACCESS-REVIEW, EV-MFA-ENFORCEMENT, EV-SECRET-MANAGER, EV-IR-PLAYBOOK — mirrored in
 `security-register.json`). Verify with `pnpm compliance:check` + `pnpm signatories:check`.
 
+### Legally-sensitive changes (sign-off recorded in `legal-review.json`)
+
+A PR that touches a legally-sensitive path — election data, rights metadata, research migrations and
+ingestion, the consent model, survey options, schemas, scoring, answers, ballot or card code (the
+`SENSITIVE_PREFIXES` list in `scripts/check-legal-review.mjs`) — must **add a `changeLog` entry** to
+[`legal-review.json`](./legal-review.json). Editing the file is not enough; the entry carries the
+approval:
+
+| Field | Requirement |
+| --- | --- |
+| `date` | `YYYY-MM-DD`, not in the future. |
+| `change` | What changed and why it is (or is not) legally material. |
+| `disposition` | `reviewed` — a legal review was performed; or `no-review-required` — a signatory determined none was needed. |
+| `reviewer` | A signatory `id`, resolving to an **active** signatory. An external free-text descriptor is **not** accepted here (unlike elsewhere): this gate exists to put a named, currently-authorised person on the record. |
+| `secondReviewer` | Optional joint sign-off; must be a different active signatory. |
+| `affectedControls` | Array of control ids, empty if none. |
+
+`disposition: "reviewed"` additionally requires `lastReviewDate` to be on or after the entry date —
+a recorded review must move the record's own review date, or the freshness gate would never see it.
+
+Verify with `pnpm legal:check`. The gate needs the PR base commit (`LEGAL_REVIEW_BASE`), so it runs
+on pull requests; freshness and effective-date run on every build and weekly on a schedule.
+
 ## Historical vs live AEC snapshots
 
 The AEC provenance model treats past and future elections differently, by design:

@@ -9,7 +9,13 @@
  *   2. Effective-date — the build fails on or after a recorded commencement date unless the last
  *      review was performed on or after that date (i.e. under the post-commencement law).
  *   3. Data-change — a PR that touches election data, rights metadata, scoring, proposition text,
- *      consent or ballot code must update legal-review.json in the same PR.
+ *      consent or ballot code must record a NAMED APPROVAL in legal-review.json in the same PR.
+ *
+ * Gate 3 is not satisfied by touching the file. The PR must ADD a changeLog entry carrying a
+ * reviewer who resolves to an active signatory in docs/legal/signatories.json, plus a date and an
+ * explicit disposition — "reviewed" (a legal review was performed, which must also advance
+ * lastReviewDate) or "no-review-required" (a named signatory determined none was needed). Whichever
+ * it is, a person is on the record for it and the build fails without one.
  *
  * The data-change gate needs the PR diff; it runs only when a base commit is available (the
  * LEGAL_REVIEW_BASE env var, set in CI on pull_request events). Freshness and effective-date run on
@@ -22,11 +28,24 @@
  *   node scripts/check-legal-review.mjs
  */
 
-import { execFileSync } from "node:child_process";
+import { execFileSync, spawnSync } from "node:child_process";
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 
+import { activeSignatoryIds, isIdReference } from "./check-signatories.mjs";
+
 const REVIEW_REL = "docs/legal/legal-review.json";
+const SIGNATORIES_REL = "docs/legal/signatories.json";
+
+/** A changeLog entry recording a legally-material change must declare one of these. */
+export const DISPOSITIONS = ["reviewed", "no-review-required"];
+
+/**
+ * A bare date parses as UTC midnight, but an approver dates an entry in their own timezone — in
+ * AEST that reads as up to ten hours ahead of UTC. One day of slack accepts any local calendar date
+ * (max offset UTC+14) while still rejecting a genuinely future-dated approval.
+ */
+const LOCAL_DATE_SKEW_MS = 24 * 60 * 60 * 1000;
 
 // Paths whose change requires a same-PR legal-review update (data-change gate). Prefixes
 // deliberately over-match (substring, not path-boundary) — a false positive just asks for a
@@ -66,10 +85,75 @@ function oneYearAfter(ms) {
 }
 
 /**
+ * Validate one changeLog entry added by this PR: it must carry a named, currently-authorised
+ * approver and an explicit disposition, so a green build always has a person behind it.
+ *
+ * @param {any} entry
+ * @param {string} at  error prefix identifying the entry
+ * @param {{ now: number, activeSignatories: Set<string>, lastReview: number | null }} ctx
+ * @returns {string[]}
+ */
+function approvalErrors(entry, at, ctx) {
+  const errors = [];
+  if (typeof entry !== "object" || entry === null || Array.isArray(entry)) {
+    return [`${at}: not an object`];
+  }
+
+  const date = parseIsoDate(entry.date);
+  if (date === null) errors.push(`${at}: date must be an ISO date`);
+  else if (date > ctx.now + LOCAL_DATE_SKEW_MS) {
+    errors.push(`${at}: date ${entry.date} is in the future`);
+  }
+  if (!isNonEmptyString(entry.change)) errors.push(`${at}: needs a change description`);
+  if (!Array.isArray(entry.affectedControls)) {
+    errors.push(`${at}: affectedControls must be an array (empty if none)`);
+  }
+
+  if (!DISPOSITIONS.includes(entry.disposition)) {
+    errors.push(
+      `${at}: disposition must be one of ${DISPOSITIONS.join(", ")}, got ${JSON.stringify(entry.disposition)}`,
+    );
+  }
+
+  // The named approver. An external descriptor is not accepted here: this gate exists to put a
+  // currently-authorised signatory on the record, so the reviewer must resolve to one.
+  for (const key of ["reviewer", "secondReviewer"]) {
+    if (key === "secondReviewer" && entry.secondReviewer === undefined) continue;
+    const value = entry[key];
+    if (!isIdReference(value)) {
+      errors.push(
+        `${at}: ${key} must be a signatory id (kebab-case), got ${JSON.stringify(value)}`,
+      );
+    } else if (!ctx.activeSignatories.has(value.trim())) {
+      errors.push(`${at}: ${key} "${value.trim()}" is not an active signatory`);
+    }
+  }
+  if (entry.secondReviewer !== undefined && entry.secondReviewer === entry.reviewer) {
+    errors.push(`${at}: secondReviewer must be a different person from reviewer`);
+  }
+
+  // A recorded review must be reflected in the record's own review date — otherwise "reviewed"
+  // would be a claim the rest of the file contradicts, and the freshness gate would never see it.
+  if (entry.disposition === "reviewed" && date !== null) {
+    if (ctx.lastReview === null || ctx.lastReview < date) {
+      errors.push(
+        `${at}: disposition "reviewed" requires lastReviewDate to be on or after ${entry.date}`,
+      );
+    }
+  }
+  return errors;
+}
+
+/**
  * Validate the legal-review record and apply the three gates.
  *
  * @param {unknown} review  parsed docs/legal/legal-review.json
- * @param {{ now?: number, changedPaths?: string[] | null }} [options]
+ * @param {{
+ *   now?: number,
+ *   changedPaths?: string[] | null,
+ *   baseChangeLog?: unknown[] | null,
+ *   activeSignatories?: Set<string> | null,
+ * }} [options]
  * @returns {{ ok: boolean, errors: string[] }}
  */
 export function verdict(review, options = {}) {
@@ -125,16 +209,45 @@ export function verdict(review, options = {}) {
     }
   }
 
-  // Gate 3 — data-change (sensitive change must touch legal-review.json in the same PR).
+  // Gate 3 — data-change (a sensitive change needs a named approval added in the same PR).
   if (Array.isArray(changedPaths)) {
     const sensitive = changedPaths.filter((p) => SENSITIVE_PREFIXES.some((s) => p.startsWith(s)));
-    const reviewTouched = changedPaths.includes(REVIEW_REL);
-    if (sensitive.length > 0 && !reviewTouched) {
+    if (sensitive.length > 0) {
       const shown = sensitive.slice(0, 5).join(", ");
       const more = sensitive.length > 5 ? ` (+${sensitive.length - 5} more)` : "";
-      push(
-        `legal-review.json: this PR changes legally-sensitive paths (${shown}${more}) but does not update ${REVIEW_REL} — record the legal-change review in the same PR`,
-      );
+      const context = `this PR changes legally-sensitive paths (${shown}${more})`;
+
+      // Fail closed: without the signatory registry we cannot tell an approver from a typed name.
+      if (!(options.activeSignatories instanceof Set)) {
+        push(`legal-review.json: ${context} but the signatory registry is unavailable`);
+      } else {
+        // "Added by this PR" is anything not byte-identical to an entry in the base revision, so an
+        // edited historical entry is re-validated rather than grandfathered.
+        const entries = Array.isArray(review.changeLog) ? review.changeLog : [];
+        const base = new Set(
+          (Array.isArray(options.baseChangeLog) ? options.baseChangeLog : []).map((e) =>
+            JSON.stringify(e),
+          ),
+        );
+        const added = entries
+          .map((entry, i) => ({ entry, i }))
+          .filter(({ entry }) => !base.has(JSON.stringify(entry)));
+
+        if (added.length === 0) {
+          push(
+            `legal-review.json: ${context} but adds no changeLog entry to ${REVIEW_REL} — record the review (or the no-review-required determination) with a named approver in the same PR`,
+          );
+        }
+        for (const { entry, i } of added) {
+          for (const e of approvalErrors(entry, `legal-review.json: changeLog[${i}]`, {
+            now,
+            activeSignatories: options.activeSignatories,
+            lastReview: last,
+          })) {
+            push(e);
+          }
+        }
+      }
     }
   }
 
@@ -142,24 +255,55 @@ export function verdict(review, options = {}) {
 }
 
 /* c8 ignore start -- CLI/git plumbing, exercised via CI not unit tests */
-function changedPathsFromBase() {
+/** @param {string[]} args @param {string} what */
+function git(args, what) {
+  // A git failure here must be FATAL, never a silent skip — otherwise a bad base object or an
+  // oversized diff (ENOBUFS) would quietly disable the gate on exactly the large PRs that most need
+  // it. 64 MB buffer comfortably covers a --name-only list or this record.
+  try {
+    return execFileSync("git", args, { encoding: "utf8", maxBuffer: 64 * 1024 * 1024 });
+  } catch (err) {
+    console.error(`::error::legal-review: ${what}: ${err.message}`);
+    process.exit(1);
+  }
+}
+
+/**
+ * The PR diff and the record as it stood at the merge base, or null off a pull request.
+ * @returns {{ changedPaths: string[], baseChangeLog: unknown[] } | null}
+ */
+function prContext() {
   // LEGAL_REVIEW_BASE is the PR base commit (set in CI). Absent on push/schedule/local, where the
   // data-change gate is intentionally skipped and only freshness + effective-date run.
   const base = process.env.LEGAL_REVIEW_BASE;
   if (!isNonEmptyString(base)) return null;
-  // Once a base IS provided, a diff failure must be FATAL, never a silent skip — otherwise a bad
-  // base object or an oversized diff (ENOBUFS) would quietly disable the gate on exactly the large
-  // PRs that most need it. 64 MB buffer comfortably covers a --name-only list.
-  try {
-    const out = execFileSync("git", ["diff", "--name-only", `${base}...HEAD`], {
-      encoding: "utf8",
-      maxBuffer: 64 * 1024 * 1024,
-    });
-    return out.split("\n").filter((p) => p.length > 0);
-  } catch (err) {
-    console.error(`::error::legal-review: cannot diff against base ${base}: ${err.message}`);
-    process.exit(1);
+
+  // Merge base, so entries that landed on the base branch since we forked are not read as ours.
+  const mergeBase = git(["merge-base", base, "HEAD"], `cannot find merge base with ${base}`).trim();
+  const changedPaths = git(
+    ["diff", "--name-only", mergeBase, "HEAD"],
+    `cannot diff against base ${base}`,
+  )
+    .split("\n")
+    .filter((p) => p.length > 0);
+
+  // A record that did not exist at the merge base has no prior entries; anything else is fatal.
+  let baseChangeLog = [];
+  const exists = spawnSync("git", ["cat-file", "-e", `${mergeBase}:${REVIEW_REL}`]).status === 0;
+  if (exists) {
+    const raw = git(
+      [`show`, `${mergeBase}:${REVIEW_REL}`],
+      `cannot read ${REVIEW_REL} at the base`,
+    );
+    try {
+      const parsed = JSON.parse(raw);
+      baseChangeLog = Array.isArray(parsed.changeLog) ? parsed.changeLog : [];
+    } catch (err) {
+      console.error(`::error::legal-review: ${REVIEW_REL} at the base is not JSON: ${err.message}`);
+      process.exit(1);
+    }
   }
+  return { changedPaths, baseChangeLog };
 }
 
 function main() {
@@ -170,7 +314,23 @@ function main() {
     console.error(`::error::cannot read ${REVIEW_REL}: ${err.message}`);
     process.exit(1);
   }
-  const result = verdict(review, { changedPaths: changedPathsFromBase() });
+  let signatories;
+  try {
+    signatories = JSON.parse(
+      readFileSync(new URL(`../${SIGNATORIES_REL}`, import.meta.url), "utf8"),
+    );
+  } catch (err) {
+    console.error(`::error::cannot read ${SIGNATORIES_REL}: ${err.message}`);
+    process.exit(1);
+  }
+  const now = Date.now();
+  const pr = prContext();
+  const result = verdict(review, {
+    now,
+    changedPaths: pr && pr.changedPaths,
+    baseChangeLog: pr && pr.baseChangeLog,
+    activeSignatories: activeSignatoryIds(signatories, now),
+  });
   if (!result.ok) {
     for (const e of result.errors) console.error(`::error::legal-review: ${e}`);
     console.error(`legal review: ${result.errors.length} problem(s)`);
