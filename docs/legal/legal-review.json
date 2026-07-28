@@ -93,6 +93,13 @@
       "date": "2026-07-27",
       "change": "Brand name set in text as How2Vote (BRAND.md): the product name is title-cased wherever it is rendered as glyphs by a font or read aloud, while the wordmark artwork keeps its drawn lower-case lockup and identifiers stay lower-case how2vote in every case. Terms of Use reissued as version 2026-07.2 (effective 2026-07-27) to carry the name change: the amendment is confined to the product name's capitalisation in clauses 1 and 'Who may use the Service' — no right, obligation, permitted use, licence or liability position is altered, and every clause bound by terms-registry.json requiredWording is unchanged. Because acceptance is recorded against an exact version, the bump re-prompts every user to accept 2026-07.2. The prior 2026-07.1 hash is retained in the registry so the superseded wording stays auditable. Reviewed and approved 2026-07-27 (cameron-young, tara-buckley); control-25 evidence EV-LEGAL-TERMS-REVIEW re-approved for version 2026-07.2.",
       "affectedControls": ["control-25"]
+    },
+    {
+      "date": "2026-07-28",
+      "change": "Data-change gate hardened (scripts/check-legal-review.mjs): a PR touching a legally-sensitive path must add a changeLog entry naming an active signatory with an explicit disposition, rather than merely touching this file; the docs/legal/ registers are now themselves sensitive paths; and reviewer ids resolve against signatories.json as it stood at the PR base, so a PR cannot add a signatory and name them as its own approver. Change to the enforcement tooling only — it narrows what CI accepts and records. No register content, legal position, obligation or permitted use is altered.",
+      "disposition": "no-review-required",
+      "reviewer": "cameron-young",
+      "affectedControls": ["control-2"]
     }
   ],
   "nextMandatoryReviewDate": "2027-07-15",
