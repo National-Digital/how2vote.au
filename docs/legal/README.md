@@ -62,8 +62,9 @@ bundle (EV-CONSENT-BUNDLE), IP assignments (EV-IP-ASSIGNMENT), and the four secu
 ### Legally-sensitive changes (sign-off recorded in `legal-review.json`)
 
 A PR that touches a legally-sensitive path — election data, rights metadata, research migrations and
-ingestion, the consent model, survey options, schemas, scoring, answers, ballot or card code (the
-`SENSITIVE_PREFIXES` list in `scripts/check-legal-review.mjs`) — must **add a `changeLog` entry** to
+ingestion, the consent model, survey options, schemas, scoring, answers, ballot or card code, or the
+`docs/legal/` registers themselves (the `SENSITIVE_PREFIXES` list in
+`scripts/check-legal-review.mjs`) — must **add a `changeLog` entry** to
 [`legal-review.json`](./legal-review.json). Editing the file is not enough; the entry carries the
 approval:
 
@@ -78,6 +79,9 @@ approval:
 
 `disposition: "reviewed"` additionally requires `lastReviewDate` to be on or after the entry date —
 a recorded review must move the record's own review date, or the freshness gate would never see it.
+
+Reviewer ids resolve against `signatories.json` **as it stood at the PR base**, so a PR cannot add
+a signatory and name them as its own approver; an approver must already be authorised.
 
 Verify with `pnpm legal:check`. The gate needs the PR base commit (`LEGAL_REVIEW_BASE`), so it runs
 on pull requests; freshness and effective-date run on every build and weekly on a schedule.

@@ -141,6 +141,23 @@ describe("gate 3 — data-change", () => {
     expect(hasError(verdict(...withEntry(future)), "is in the future")).toBe(true);
   });
 
+  it("rejects a whitespace-padded duplicate second reviewer", () => {
+    // Resolution trims before matching, so " cameron-young" is the same person — the distinctness
+    // check must compare what resolves, not the raw strings.
+    const padded = { ...APPROVED, secondReviewer: " cameron-young" };
+    expect(hasError(verdict(...withEntry(padded)), "different person")).toBe(true);
+  });
+
+  it("treats the legal registers themselves as sensitive", () => {
+    // Without this, a PR touching nothing else could advance lastReviewDate (resetting the
+    // freshness clock), rewrite changeLog history or edit the signatory registry unapproved.
+    for (const p of ["docs/legal/legal-review.json", "docs/legal/signatories.json"]) {
+      const res = verdict(REAL, unchanged({ changedPaths: [p] }));
+      expect(res.ok, `${p} should be treated as sensitive`).toBe(false);
+      expect(hasError(res, "adds no changeLog entry")).toBe(true);
+    }
+  });
+
   it("accepts an entry dated today in an ahead-of-UTC timezone", () => {
     // 09:00 AEST on the 28th is still the 27th in UTC; the local date must not read as future.
     const aest = Date.parse("2026-07-27T23:00:00Z");

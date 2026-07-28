@@ -9,7 +9,8 @@
  *   2. Effective-date — the build fails on or after a recorded commencement date unless the last
  *      review was performed on or after that date (i.e. under the post-commencement law).
  *   3. Data-change — a PR that touches election data, rights metadata, scoring, proposition text,
- *      consent or ballot code must record a NAMED APPROVAL in legal-review.json in the same PR.
+ *      consent or ballot code, or the docs/legal/ registers themselves, must record a NAMED
+ *      APPROVAL in legal-review.json in the same PR.
  *
  * Gate 3 is not satisfied by touching the file. The PR must ADD a changeLog entry carrying a
  * reviewer who resolves to an active signatory in docs/legal/signatories.json, plus a date and an
@@ -61,6 +62,10 @@ export const SENSITIVE_PREFIXES = [
   "packages/engine/src/answers", // answer → stance mapping
   "packages/engine/src/ballot", // ballot mapping / order
   "packages/engine/src/card", // card generation
+  // The legal registers themselves: without this, a PR touching nothing else could advance
+  // lastReviewDate (resetting the freshness clock), rewrite changeLog history or edit the
+  // signatory registry with no approval on the record.
+  "docs/legal/",
 ];
 
 /** @param {unknown} v */
@@ -128,7 +133,10 @@ function approvalErrors(entry, at, ctx) {
       errors.push(`${at}: ${key} "${value.trim()}" is not an active signatory`);
     }
   }
-  if (entry.secondReviewer !== undefined && entry.secondReviewer === entry.reviewer) {
+  // Compare as resolution does (trimmed) — otherwise a padded copy of the same id would count as
+  // a different person.
+  const asId = (v) => (typeof v === "string" ? v.trim() : v);
+  if (entry.secondReviewer !== undefined && asId(entry.secondReviewer) === asId(entry.reviewer)) {
     errors.push(`${at}: secondReviewer must be a different person from reviewer`);
   }
 
@@ -269,8 +277,26 @@ function git(args, what) {
 }
 
 /**
- * The PR diff and the record as it stood at the merge base, or null off a pull request.
- * @returns {{ changedPaths: string[], baseChangeLog: unknown[] } | null}
+ * A JSON file as it stood at `commit`, or null when it did not exist there. A file that exists but
+ * does not parse is fatal — anything else would quietly disable the gate.
+ * @param {string} commit @param {string} rel
+ * @returns {any}
+ */
+function jsonAt(commit, rel) {
+  if (spawnSync("git", ["cat-file", "-e", `${commit}:${rel}`]).status !== 0) return null;
+  const raw = git(["show", `${commit}:${rel}`], `cannot read ${rel} at the base`);
+  try {
+    return JSON.parse(raw);
+  } catch (err) {
+    console.error(`::error::legal-review: ${rel} at the base is not JSON: ${err.message}`);
+    process.exit(1);
+  }
+}
+
+/**
+ * The PR diff, plus the review record and signatory registry as they stood at the merge base.
+ * Null off a pull request.
+ * @returns {{ changedPaths: string[], baseChangeLog: unknown[], baseSignatories: unknown } | null}
  */
 function prContext() {
   // LEGAL_REVIEW_BASE is the PR base commit (set in CI). Absent on push/schedule/local, where the
@@ -287,23 +313,11 @@ function prContext() {
     .split("\n")
     .filter((p) => p.length > 0);
 
-  // A record that did not exist at the merge base has no prior entries; anything else is fatal.
-  let baseChangeLog = [];
-  const exists = spawnSync("git", ["cat-file", "-e", `${mergeBase}:${REVIEW_REL}`]).status === 0;
-  if (exists) {
-    const raw = git(
-      [`show`, `${mergeBase}:${REVIEW_REL}`],
-      `cannot read ${REVIEW_REL} at the base`,
-    );
-    try {
-      const parsed = JSON.parse(raw);
-      baseChangeLog = Array.isArray(parsed.changeLog) ? parsed.changeLog : [];
-    } catch (err) {
-      console.error(`::error::legal-review: ${REVIEW_REL} at the base is not JSON: ${err.message}`);
-      process.exit(1);
-    }
-  }
-  return { changedPaths, baseChangeLog };
+  // A record that did not exist at the merge base has no prior entries.
+  const baseReview = jsonAt(mergeBase, REVIEW_REL);
+  const baseChangeLog =
+    baseReview && Array.isArray(baseReview.changeLog) ? baseReview.changeLog : [];
+  return { changedPaths, baseChangeLog, baseSignatories: jsonAt(mergeBase, SIGNATORIES_REL) };
 }
 
 function main() {
@@ -325,11 +339,15 @@ function main() {
   }
   const now = Date.now();
   const pr = prContext();
+  // On a PR, approvers resolve against the registry AS IT STOOD AT THE BASE — otherwise a PR could
+  // add a signatory and name them as its own approver. No registry at the base means nobody was
+  // authorised before this PR, so the active set is empty and the gate fails closed.
+  const registry = pr ? pr.baseSignatories : signatories;
   const result = verdict(review, {
     now,
     changedPaths: pr && pr.changedPaths,
     baseChangeLog: pr && pr.baseChangeLog,
-    activeSignatories: activeSignatoryIds(signatories, now),
+    activeSignatories: activeSignatoryIds(registry, now),
   });
   if (!result.ok) {
     for (const e of result.errors) console.error(`::error::legal-review: ${e}`);
