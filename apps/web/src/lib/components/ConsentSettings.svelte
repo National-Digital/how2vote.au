@@ -1,6 +1,8 @@
 <script lang="ts">
+  import ExternalLink from "$lib/components/ExternalLink.svelte";
   import { tick } from "svelte";
   import { consent } from "$lib/privacy/consent.svelte";
+  import { modal } from "$lib/modal";
   import {
     servicesForCategory,
     visibleCategories,
@@ -16,6 +18,11 @@
 
   let dialog = $state<HTMLElement | null>(null);
   const previouslyFocused = typeof document !== "undefined" ? document.activeElement : null;
+
+  // Suspend the app's global keyboard shortcuts for as long as this is mounted. It is a custom
+  // element rather than a native <dialog>, so nothing else stops a bare digit key reaching the
+  // quiz's window handler underneath. Cleanup runs on unmount, so it cannot get stuck suspended.
+  $effect(() => modal.open());
 
   function toggle(id: ConsentCategory): void {
     draft = { ...draft, [id]: !draft[id] };
@@ -128,9 +135,9 @@
                 <li>
                   <span class="svc-name">{service.name}</span>
                   <span class="svc-desc">{service.purpose}</span>
-                  <a href={service.privacyPolicyUrl} target="_blank" rel="noopener noreferrer">
-                    {service.provider} privacy policy<span aria-hidden="true"> ↗</span>
-                  </a>
+                  <ExternalLink href={service.privacyPolicyUrl}>
+                    {service.provider} privacy policy
+                  </ExternalLink>
                 </li>
               {/each}
             </ul>
@@ -170,7 +177,7 @@
     background: var(--raise);
     border-top-left-radius: 14px;
     border-top-right-radius: 14px;
-    padding: 18px var(--gutter) calc(18px + env(safe-area-inset-bottom, 0px));
+    padding: 18px var(--gutter) calc(18px + var(--safe-bottom));
   }
   @media (min-width: 720px) {
     .backdrop {
@@ -281,7 +288,7 @@
     color: var(--ink2);
     line-height: 1.45;
   }
-  .services a {
+  .services :global(a) {
     font-size: 12px;
     color: var(--ink);
     text-decoration: underline;

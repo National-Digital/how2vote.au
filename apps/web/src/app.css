@@ -47,6 +47,20 @@
   --radius: 6px;
   --radius-box: 2px;
   --sheet: 480px;
+  /* The pinned top bar's resting height (TopBar.svelte's floor). Only a FALLBACK for the focus
+     reservation: routes/+layout publishes the bar's measured height as --chrome-h, which is what
+     the reservation actually uses once hydrated. */
+  --topbar-h: 56px;
+
+  /* Safe-area insets, resolved once for every consumer. The shells draw edge-to-edge (Android 15+
+     enforces it under targetSdk 36; iOS has always had the notch/home-indicator), so layout must
+     keep clear of the system bars. Capacitor's SystemBars plugin injects --safe-area-inset-* on
+     <html> on Android (where env() support depends on the WebView version); everywhere else —
+     iOS WKWebView and the web PWA — the env() fallback is authoritative, and on desktop it is 0. */
+  --safe-top: var(--safe-area-inset-top, env(safe-area-inset-top, 0px));
+  --safe-right: var(--safe-area-inset-right, env(safe-area-inset-right, 0px));
+  --safe-bottom: var(--safe-area-inset-bottom, env(safe-area-inset-bottom, 0px));
+  --safe-left: var(--safe-area-inset-left, env(safe-area-inset-left, 0px));
 
   --dur-confirm: 160ms;
   --dur-advance: 220ms;
@@ -104,11 +118,48 @@
 
 html {
   -webkit-text-size-adjust: 100%;
-  /* WCAG 2.2 SC 2.4.11 Focus Not Obscured (Minimum): keep keyboard focus clear of the bottom-fixed
-     consent banner when a focused control scrolls into view. The banner is dormant today (nothing
-     needs consent) but publishes --consent-banner-h when live; there is no sticky top header, so a
-     bottom inset is all that's needed (the fallback is 0). */
-  scroll-padding-bottom: var(--consent-banner-h, 0px);
+  /* WCAG 2.2 SC 2.4.11 Focus Not Obscured (Minimum): keep keyboard focus clear of everything fixed
+     to the bottom of the viewport, and of the (edge-to-edge) system gesture bar beneath it. Both
+     terms are MEASURED and published by the component that owns them, because both wrap to a
+     variable number of lines:
+       --consent-banner-h  the consent banner (dormant today — nothing needs consent — but it
+                           publishes its height whenever it is live);
+       --plan-auth-h       the plan's authorisation band on /card, whose whole purpose is to be in
+                           the frame of a screenshot, so it must never be what covers a control.
+     This matters most on the plan builder, which is the most keyboard-driven screen in the app: a
+     forward Tab reveals the next control from the BOTTOM edge, which is exactly where these sit.
+     The top inset does the same for the sticky app chrome, so an anchor jump or a focused control
+     is never revealed underneath the pinned bar.
+
+     max(), not a sum with --safe-bottom: each of these bands carries the gesture-bar inset in its
+     OWN bottom padding, so its published height already includes it. Adding the inset again would
+     reserve it twice — a visible dead strip whenever a band is present. With no band at all the
+     max falls through to the bare inset, which is what an edge-to-edge layout needs.
+
+     The 12px matches the top inset's gap and is a real one: reserving the band's height alone lands
+     a focused control with its border exactly on the band's top edge, which leaves nowhere for the
+     focus ring to be drawn (SC 2.4.7 as well as 2.4.11). It applies with no band too — a small
+     gap above the viewport edge, which is the right behaviour anyway. */
+  scroll-padding-bottom: max(
+    var(--safe-bottom),
+    calc(var(--consent-banner-h, 0px) + var(--plan-auth-h, 0px) + 12px)
+  );
+  /* Reserve whatever is actually covering the top of the viewport, so a focused control or an
+     anchor jump never lands underneath it:
+       --safe-top   the status-bar scrim, which is fixed and present on EVERY route (never drop
+                    this term — on a device with a real inset, reserving 0 puts the focused
+                    control straight under the system clock);
+       --chrome-h   the measured height of the chrome that is currently PINNED (routes/+layout
+                    publishes it; 0 where nothing is sticky, e.g. /card or the desktop card
+                    layout), falling back to the design tokens before hydration and without JS;
+       12px         the visible gap, which stays a real gap because the terms above are real. */
+  scroll-padding-top: calc(var(--safe-top) + var(--chrome-h, var(--topbar-h)) + 12px);
+}
+/* Routes with no pinned bar at all (/card, the plan builder — the most keyboard-driven screen in
+   the app) reserve only the scrim's band. --chrome-h already resolves to 0 there once hydrated;
+   this states it in CSS as well, so a no-JS visitor does not get a dead band either. */
+html:not(:has(.app-top)) {
+  scroll-padding-top: calc(var(--safe-top) + 12px);
 }
 
 body {
@@ -143,6 +194,26 @@ button {
   color: inherit;
 }
 
+/* Native controls aren't text-selectable, and a long-press that selects a control's label is one
+   of the clearest "this is a web page" tells on touch. Scoped to the controls whose text really is
+   chrome — NOT to `button` as a whole: several buttons wrap genuine content (every proposition on
+   /review sits inside its edit button, as do the state names on /ballot), and making that
+   unselectable would take away select-to-copy / look-up / translate on the one screen that shows
+   the whole question set. Prose, data and those labels stay selectable. The two `button.` selectors
+   are qualified because those class names are shared with non-interactive text — `.opt` also marks
+   the "(optional)" hints in the feedback form, `.skip` the skip-to-content link. */
+.btn,
+.back,
+.fab,
+.toggle,
+button.opt,
+button.skip,
+.pause,
+.x {
+  -webkit-user-select: none;
+  user-select: none;
+}
+
 :focus-visible {
   outline: 2px solid var(--ink);
   outline-offset: 2px;
@@ -155,6 +226,65 @@ button {
 }
 .tnum {
   font-variant-numeric: tabular-nums;
+}
+
+/* Sticky app chrome — the "stable header" that makes the same layout read as an app instead of a
+   scrolling page, on every channel (no web/native divergence). Exactly ONE row pins: `.app-top`
+   holds a page's top bar (TopBar, the landing header, a data page's breadcrumb trail) just below
+   the safe area. Keep it to one — a second pinned row needs a stacking offset derived from the
+   first bar's height, which is wrong as a constant under text scaling and stale as a measurement
+   whenever chrome mounts without a navigation. The quiz's progress rail therefore scrolls with the
+   content; the pinned bar already carries the position in words ("Question 12 of 50"). */
+.app-top {
+  position: sticky;
+  top: var(--safe-top);
+  z-index: 5;
+  background: var(--raise);
+}
+/* A hairline under the pinned bar, drawn in only once content actually scrolls beneath it — at
+   rest the bar stays borderless, exactly as the layout looked before it was sticky. Scroll-driven
+   animation: pure CSS, and engines without it simply never show the hairline (sticky still works). */
+@supports (animation-timeline: scroll()) {
+  .app-top {
+    animation: app-chrome-hairline linear both;
+    animation-timeline: scroll();
+    animation-range: 0px 48px;
+  }
+}
+@keyframes app-chrome-hairline {
+  to {
+    box-shadow: 0 1px 0 var(--line);
+  }
+}
+/* Two cases where the chrome must NOT be pinned, and the focus reservation must go with it:
+   - Short viewports (a phone in landscape, or heavy text zoom): permanent chrome would take ~20%
+     of the screen, and the reading area matters more than the affordance.
+   - The >=720px layout: the sheet becomes a floating card centred on the paper ground, so a bar
+     pinned to the VIEWPORT escapes its frame — square corners hard against the window top while
+     the card's rounded top border scrolls away behind it. The pinned-chrome idiom belongs to the
+     phone-width layout (and the touch devices that use it); desktop has the vertical room. */
+@media (max-height: 480px), (min-width: 720px) {
+  .app-top {
+    position: static;
+    /* The hairline says "content is scrolled underneath me" — meaningless once the bar scrolls
+       away with the content, so it goes with the pinning. */
+    animation: none;
+  }
+  /* Nothing is pinned here, so only the scrim's own band needs reserving. Stated in CSS as well as
+     via --chrome-h so it is right without JS too. */
+  html {
+    scroll-padding-top: calc(var(--safe-top) + 12px);
+  }
+}
+
+/* Native shells only (the layout stamps data-native-shell on <html> in the Capacitor WebViews):
+   suppress the iOS long-press callout on IN-APP links, where inside the app frame it reads as a
+   browser leak. Anything that leaves the app keeps it — external links (the AEC enrolment check,
+   the They Vote For You source records), and mailto:/tel: (the accessibility-complaints address),
+   where the callout is the only way to copy or share the target and is precisely what a voter
+   wants in order to carry it elsewhere. The web PWA keeps full browser behaviour. */
+:root[data-native-shell] a:not([target="_blank"]):not([href^="mailto:"]):not([href^="tel:"]) {
+  -webkit-touch-callout: none;
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -191,11 +321,25 @@ button {
   display: flex;
   flex-direction: column;
   background: var(--raise);
-  /* Reserve room for the fixed consent banner while it is shown, so bottom-anchored content is
-     never covered. The banner publishes its live height; the fallback is 0 when it is absent. On
+  /* Reserve room for whatever is fixed to the bottom of the viewport, so bottom-anchored content is
+     never covered: the consent banner while it is shown, and the plan's authorisation band while a
+     plan is on screen. Each publishes its own live height; both fall back to 0 when absent. On
      mobile the sheet fills the viewport, so the reservation lives inside it (footer sits directly
-     above the fixed bar). The desktop override moves it below the card — see the media query. */
-  padding-bottom: var(--consent-banner-h, 0px);
+     above the fixed bar). The desktop override moves it below the card — see the media query.
+     max() rather than a sum for the same reason as scroll-padding-bottom above: each band's
+     published height already contains the gesture-bar inset. */
+  padding-bottom: max(
+    var(--safe-bottom),
+    calc(var(--consent-banner-h, 0px) + var(--plan-auth-h, 0px))
+  );
+  /* Edge-to-edge: the sheet fills the viewport on phones, so it carries the safe-area insets —
+     the first content line starts below the status bar / display cutout, the footer ends above
+     the gesture bar, and nothing hides behind rounded corners or notches in landscape. Scrolling
+     content still passes under the transparent bars, which is the platform-native look. All four
+     insets are 0 on desktop. */
+  padding-top: var(--safe-top);
+  padding-left: var(--safe-left);
+  padding-right: var(--safe-right);
 }
 @media (min-width: 720px) {
   /* Centre the sheet in the viewport on both axes, rather than pinning it to the top. The flex
@@ -214,12 +358,62 @@ button {
     overflow: clip;
     /* The card is a narrow centred column now, not the full viewport, so an internal reservation
        just leaves dead space between the footer and the card's bottom border. Reserve on the body
-       instead (below) so a scrolled-to-bottom footer still clears the fixed bar. */
+       instead (below) so a scrolled-to-bottom footer still clears the fixed bar. The safe-area
+       insets are dropped with it: the centred card sits well inside every bar and cutout (the
+       body's own 32px frame more than covers them), so the phone-layout insets would only add
+       dead space here. */
     padding-bottom: 0;
+    padding-top: 0;
+    padding-left: 0;
+    padding-right: 0;
   }
   body {
-    padding-bottom: var(--consent-banner-h, 0px);
+    padding-bottom: max(
+      var(--safe-bottom),
+      calc(var(--consent-banner-h, 0px) + var(--plan-auth-h, 0px))
+    );
   }
+}
+
+/* Long-form document typography. Global rather than scoped to ContentPage because the same body
+   markup is rendered in two places — the route, and the dialog a policy link raises over the
+   current page (DocDialog). Both must look like the same document; a reader who opens the
+   privacy notice from the consent banner is being shown the notice, not a summary of it. */
+.prose {
+  padding: 8px var(--gutter) 24px;
+  font-size: 16px;
+  line-height: 1.62;
+}
+.prose h1 {
+  font-size: 28px;
+  margin: 8px 0 16px;
+}
+.prose h2 {
+  font-size: 20px;
+  margin: 28px 0 8px;
+}
+.prose p {
+  margin: 0 0 14px;
+  color: var(--ink2);
+}
+.prose li {
+  color: var(--ink2);
+  margin-bottom: 6px;
+}
+.prose strong {
+  color: var(--ink);
+}
+.prose a {
+  color: var(--ink);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+.prose code {
+  font-family: var(--mono);
+  font-size: 0.85em;
+  background: var(--wash);
+  padding: 1px 5px;
+  border-radius: 3px;
 }
 
 .visually-hidden {

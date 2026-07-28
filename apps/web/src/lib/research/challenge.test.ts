@@ -136,7 +136,7 @@ describe("AltchaVerifier — issue → solve → verify, in-process", () => {
   });
 
   it("REJECTS a no-work solution: valid signature + honest key for a counter that misses the prefix", async () => {
-    // The core proof-of-work regression guard. altcha-lib's verifySolution only checks
+    // The core proof-of-work guard. altcha-lib's verifySolution only checks
     // derivedKey === derive(counter); it does NOT check the prefix. Without the app's own prefix
     // enforcement this payload — one honest derivation at a counter that did NOT solve — would pass
     // having done zero search. Find such a counter (any key not starting with the prefix).

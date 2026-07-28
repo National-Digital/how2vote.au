@@ -65,8 +65,9 @@ until a corrected version replaces it. This is the per-question lever beneath th
 Each published correction is recorded here: date, what was wrong, what changed, the data
 version before/after, and who verified it. (No corrections yet — pre-launch.)
 
-The public-facing mirror of this log is the `/corrections` route
-(`apps/web/src/routes/corrections/+page.svelte`); keep the two in sync when a correction is added.
+The public-facing mirror of this log is the `/corrections` route, whose body lives in
+`apps/web/src/lib/content/CorrectionsContent.svelte` (shared by the route and the in-flow document
+dialog); keep the two in sync when a correction is added.
 
 | Date | Election | Issue | Change | Data version | Verified by |
 | ---- | -------- | ----- | ------ | ------------ | ----------- |

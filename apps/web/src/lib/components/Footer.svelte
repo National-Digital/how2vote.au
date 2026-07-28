@@ -1,5 +1,7 @@
 <script lang="ts">
+  import ExternalLink from "$lib/components/ExternalLink.svelte";
   import { CURRENT_ELECTION_ID } from "@how2vote/data-schema";
+  import StoreBadges from "$lib/components/StoreBadges.svelte";
   import { AUTHORISATION, DATA_SOURCE, LICENCES, ORG } from "$lib/org";
   import { consent } from "$lib/privacy/consent.svelte";
   import { hasConfigurableConsent } from "$lib/privacy/registry";
@@ -54,17 +56,16 @@
       <a href="/saved">Saved cards</a>
     {/if}
   </p>
+  <!-- Store badges (web channel only, hidden until the listings are live — see store-links.ts). -->
+  <StoreBadges />
   <p class="credit">
     ©
-    <a href={ORG.website} target="_blank" rel="noopener noreferrer">{ORG.tradingName}</a>
-    2019–{currentYear} (<a href={LICENCES.app.url} target="_blank" rel="noopener noreferrer"
-      >{LICENCES.app.shortName}</a
+    <ExternalLink href={ORG.website}>{ORG.tradingName}</ExternalLink>
+    2019–{currentYear} (<ExternalLink href={LICENCES.app.url}>{LICENCES.app.shortName}</ExternalLink
     >) · Vote data ©
-    <a href={DATA_SOURCE.url} target="_blank" rel="noopener noreferrer">{DATA_SOURCE.name}</a>
+    <ExternalLink href={DATA_SOURCE.url}>{DATA_SOURCE.name}</ExternalLink>
     ({DATA_SOURCE.publisher}),
-    <a href={LICENCES.data.url} target="_blank" rel="noopener noreferrer"
-      >{LICENCES.data.shortName}</a
-    >
+    <ExternalLink href={LICENCES.data.url}>{LICENCES.data.shortName}</ExternalLink>
   </p>
   <!-- Electoral authorisation for the site and the comparison content National Digital publishes
        (Commonwealth Electoral Act 1918 s 321D). Town + state only, no street address. Shown on every

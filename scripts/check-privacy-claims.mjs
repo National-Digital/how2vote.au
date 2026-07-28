@@ -279,7 +279,7 @@ function main() {
     claimsRegister,
     deidRegister,
     controlRegister,
-    privacyPageText: safeRead("apps/web/src/routes/privacy/+page.svelte"),
+    privacyPageText: safeRead("apps/web/src/lib/content/PrivacyContent.svelte"),
     schemaVersion: readConst(consentSrc, "RESEARCH_SCHEMA_VERSION"),
     minCell: readConst(statsSrc, "MIN_CELL"),
     sensitiveDimensions: readSensitiveDimensions(surveySrc),

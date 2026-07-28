@@ -360,7 +360,11 @@ export function verdict(input = {}) {
 const ROOT = new URL("../", import.meta.url);
 const rel = (p) => new URL(p, ROOT);
 
-const TERMS_PAGE = "apps/web/src/routes/terms/+page.svelte";
+// The legal copy itself, which is a shared component rather than the route: the same body is
+// rendered by /terms AND by the dialog a policy link raises over the current page, so that there is
+// exactly one copy of the text a reader is asked to accept. Hash and scan the copy where it lives —
+// pointed at the route, this guard would content-address a file that contains only a wrapper.
+const TERMS_PAGE = "apps/web/src/lib/content/TermsContent.svelte";
 const LEAF = "apps/web/src/lib/terms/terms.ts";
 const STORE = "apps/web/src/lib/terms.svelte.ts";
 const REGISTRY = "docs/legal/terms-registry.json";

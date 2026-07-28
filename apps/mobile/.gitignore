@@ -1,0 +1,29 @@
+# Generated asset sources (from the brand mark) and capacitor-assets output are committed in the
+# native projects; the intermediate assets/ inputs are regenerated on demand.
+assets/
+
+# iOS
+ios/App/Pods/
+ios/App/output/
+ios/App/App/public/
+ios/DerivedData/
+ios/capacitor-cordova-ios-plugins/
+*.xcuserdatad/
+
+# Android
+android/.gradle/
+android/.idea/
+android/app/build/
+android/build/
+android/local.properties
+android/app/src/main/assets/public/
+android/capacitor-cordova-android-plugins/
+
+# fastlane — the ANDROID listing text is COMMITTED (F-Droid imports fastlane metadata from the
+# repo at the release tag; mobile-ci's fdroid job drift-checks it against the generator). The
+# iOS tree stays generated per release, and supply's staged images dir is CI-only.
+fastlane/report.xml
+fastlane/README.md
+fastlane/metadata/ios/
+fastlane/metadata/android/en-AU/images/
+builds/

@@ -1,4 +1,5 @@
 <script lang="ts">
+  import ExternalLink from "$lib/components/ExternalLink.svelte";
   import { browser, version } from "$app/environment";
   import {
     CURRENT_ELECTION_ID,
@@ -113,7 +114,7 @@
   </p>
   <p>
     You can read the source at
-    <a href={SOURCE_REPO_URL} target="_blank" rel="noopener noreferrer">{SOURCE_REPO_URL}</a>
+    <ExternalLink href={SOURCE_REPO_URL}>{SOURCE_REPO_URL}</ExternalLink>
     (with its build instructions and per-domain data licences). The versions and content hashes this build
     was made from are recorded below.
   </p>
@@ -143,9 +144,7 @@
   <p>
     <!-- rel="external": generated at deploy (not present at prerender time), so the crawler must skip it. -->
     The machine-readable
-    <a href="/release-manifest.json" target="_blank" rel="external noopener noreferrer"
-      >release manifest</a
-    >
+    <ExternalLink href="/release-manifest.json" rel="external">release manifest</ExternalLink>
     records these alongside the git commit and content hashes of every legal, governance and dataset artefact
     this build shipped.
   </p>
@@ -174,17 +173,13 @@
     <strong>{manifest.dataVersion}</strong>{#if retrievedAt}, retrieved {retrievedAt}{/if}. The
     checksum listed under Versions and the
     <!-- rel="external": generated at deploy (not present at prerender time), so the crawler must skip it. -->
-    <a href="/release-manifest.json" target="_blank" rel="external noopener noreferrer"
-      >release manifest</a
-    >
+    <ExternalLink href="/release-manifest.json" rel="external">release manifest</ExternalLink>
     fix the exact bytes, so a saved reference stays reproducible.
   </p>
   <p>
     The design and governance decisions behind the site — from the age-first eligibility gate to the
     aggregate-only research store — are recorded as
-    <a href={repoDir("docs/adr")} target="_blank" rel="noopener noreferrer"
-      >Architecture Decision Records</a
-    >
+    <ExternalLink href={repoDir("docs/adr")}>Architecture Decision Records</ExternalLink>
     in the source repository.
   </p>
 
@@ -227,11 +222,9 @@
     {#each PUBLIC_SIGNATORIES as person (person.id)}
       {@const linkedin = linkedinOf(person.sameAs)}
       <li id={person.id}>
-        <strong>{person.legalName}</strong> — {person.jobTitle}, {person.org}{#if linkedin}{" "}(<a
+        <strong>{person.legalName}</strong> — {person.jobTitle}, {person.org}{#if linkedin}{" "}(<ExternalLink
             href={linkedin}
-            target="_blank"
-            rel="noopener noreferrer"
-            aria-label={`${person.legalName} on LinkedIn`}>LinkedIn</a
+            ariaLabel={`${person.legalName} on LinkedIn`}>LinkedIn</ExternalLink
           >){/if}
       </li>
     {/each}

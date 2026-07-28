@@ -1,5 +1,6 @@
 <script lang="ts">
   import { consent } from "$lib/privacy/consent.svelte";
+  import DocLink from "./DocLink.svelte";
 
   // "Reject" and "Accept" share the same button variant, so declining is never
   // harder or quieter than accepting, and nothing is pre-selected. A quieter
@@ -18,7 +19,11 @@
     const set = (): void => root.style.setProperty("--consent-banner-h", `${el!.offsetHeight}px`);
     set();
     const observer = new ResizeObserver(set);
-    observer.observe(el);
+    // border-box, NOT the default content-box. This banner's height changes for two reasons: the
+    // copy rewraps, and the gesture-bar inset it carries in its own bottom padding changes. A
+    // content-box observer sees only the first, so on an edge-to-edge device it would publish a
+    // height short by exactly the inset — under-reserving by the amount the reservation exists for.
+    observer.observe(el, { box: "border-box" });
     return () => {
       observer.disconnect();
       root.style.removeProperty("--consent-banner-h");
@@ -43,7 +48,9 @@
       <p id="consent-desc">
         A few optional features can be switched on below. They stay off until you choose, store
         nothing on your device until then, and never affect your card. See our
-        <a href="/privacy">privacy notice</a> for what each one does.
+        <!-- Opens over this banner rather than navigating: this is a decision surface, and
+             navigating away would abandon the decision with no way back. -->
+        <DocLink href="/privacy">privacy notice</DocLink> for what each one does.
       </p>
     </div>
     <div class="actions">
@@ -68,7 +75,7 @@
   .inner {
     max-width: var(--sheet);
     margin: 0 auto;
-    padding: 16px var(--gutter) calc(16px + env(safe-area-inset-bottom, 0px));
+    padding: 16px var(--gutter) calc(16px + var(--safe-bottom));
     display: flex;
     flex-direction: column;
     gap: 14px;
@@ -86,7 +93,10 @@
     line-height: 1.5;
     color: var(--ink2);
   }
-  a {
+  /* :global because the anchor now belongs to DocLink — Svelte's scoping class is not applied
+     across a component boundary, so a bare `a` selector here would silently stop matching and the
+     link would lose its underline. */
+  .copy :global(a) {
     color: var(--ink);
     text-decoration: underline;
     text-underline-offset: 3px;

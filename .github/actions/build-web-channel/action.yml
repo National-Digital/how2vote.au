@@ -1,0 +1,40 @@
+name: Build web app for a distribution channel
+description: >
+  Checkout must already be done. Installs the toolchain and builds the static web app
+  (apps/web/build) with the given APP_VERSION and PUBLIC_DIST_CHANNEL baked in. Used by the
+  store release/CI workflows so the iOS and Android pipelines can never drift apart on how the
+  web bundle is produced. Optional PUBLIC_* feature vars are inherited from the calling job's
+  env when set; absent vars simply disable those optional features in the build.
+
+inputs:
+  channel:
+    description: Distribution channel baked into the build (web | ios | android)
+    required: true
+  app-version:
+    description: Semver injected as APP_VERSION (svelte.config.js version.name)
+    required: true
+  apple-app-id:
+    description: >
+      Apple's numeric App Store id, baked in as PUBLIC_APPLE_APP_ID for the native stale-data
+      notice's "update" store link. Optional (account-gated) — empty just omits the iOS link.
+    required: false
+    default: ""
+
+runs:
+  using: composite
+  steps:
+    - run: corepack enable
+      shell: bash
+    - uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e # v6
+      with:
+        node-version-file: .nvmrc
+        cache: pnpm
+    - run: pnpm install --frozen-lockfile
+      shell: bash
+    - name: Build (topological, channel-aware)
+      shell: bash
+      env:
+        APP_VERSION: ${{ inputs.app-version }}
+        PUBLIC_DIST_CHANNEL: ${{ inputs.channel }}
+        PUBLIC_APPLE_APP_ID: ${{ inputs.apple-app-id }}
+      run: pnpm build

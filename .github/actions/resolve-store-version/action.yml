@@ -1,0 +1,73 @@
+name: Resolve store version
+description: >
+  Single source of the version pair for BOTH store pipelines, so the marketing version and the
+  build-number encoding never drift between iOS and Android.
+  marketing version = the web release tag without the leading v (deploy.yml tags every main push);
+  build number = a deterministic encoding of that semver plus the calling workflow's run number, so
+  consecutive uploads of one release rise and a later release always outranks an earlier one.
+  run_number is per-workflow, so the iOS and Android counters are independent: the two stores get
+  build numbers with the same semver digits but their own low digits, which is fine — build numbers
+  only ever compete within one store. Requires the repo checked out with fetch-depth: 0 (tags).
+
+outputs:
+  version:
+    description: Marketing version (e.g. 2.1.0)
+    value: ${{ steps.v.outputs.version }}
+  build:
+    description: Numeric build number (iOS CFBundleVersion / Android versionCode)
+    value: ${{ steps.v.outputs.build }}
+  build-year:
+    description: Release year (for the store copyright field), from the tagged commit — deterministic
+    value: ${{ steps.v.outputs.build_year }}
+
+runs:
+  using: composite
+  steps:
+    - id: v
+      shell: bash
+      env:
+        TAG: ${{ github.event.release.tag_name }}
+        RUN_NUMBER: ${{ github.run_number }}
+      run: |
+        set -euo pipefail
+        # Release events carry the tag; a workflow_dispatch from a branch resolves the latest tag.
+        if [ -z "${TAG:-}" ]; then TAG="$(git describe --tags --abbrev=0 --match 'v*')"; fi
+        VERSION="${TAG#v}"
+        # Fail closed on a non-semver tag rather than feeding it into build settings / shell.
+        # Leading zeros are rejected: bash arithmetic reads them as octal, so `1.01.0` would
+        # silently encode as `1.1.0` and collide with it.
+        if ! printf '%s' "$VERSION" | grep -Eq '^(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)$'; then
+          echo "::error::release tag '$TAG' is not vMAJOR.MINOR.PATCH (no leading zeros)"; exit 1
+        fi
+        IFS=. read -r MAJOR MINOR PATCH <<<"$VERSION"
+        # Each field owns a fixed digit range in the encoding; overflowing one would carry into the
+        # next and rank a later release BELOW an earlier one. Refuse rather than emit that.
+        if [ "$MINOR" -gt 99 ] || [ "$PATCH" -gt 99 ]; then
+          echo "::error::minor/patch must be < 100 to encode a store build number ($VERSION)"; exit 1
+        fi
+        # The store build number must rise every time we upload, and a store rejects a versionCode
+        # it has already seen. run_number is the only counter that satisfies that: it increases on
+        # every run of this workflow, where run_attempt resets to 1 whenever the release is
+        # re-published or re-dispatched rather than retried in place.
+        #
+        # It is taken modulo the three digits reserved for it, so it can never exhaust: run_number
+        # counts EVERY run of the calling workflow, dry runs included, so a hard ceiling would one
+        # day block all releases with no in-repo remedy. Consecutive runs still rise, which is what
+        # a re-upload of the same release needs. The one case a wrap could tie two uploads of the
+        # SAME release is a re-upload straddling a multiple of 1000; the remedy is a patch bump,
+        # which raises the high digits.
+        RUN_DIGITS=$(( 10#$RUN_NUMBER % 1000 ))
+        # Deterministic, monotonic, store-safe (< 2.1e9 versionCode ceiling for major < ~210):
+        # semver in the high digits so a later release always outranks an earlier one, three digits
+        # of run_number below it so re-uploads of the SAME release still rise.
+        # KEEP IN SYNC with scripts/generate-app-version.mjs, which publishes the SAME encoding
+        # with run digits 000 as the F-Droid source-build baseline (check-fdroid-ready.mjs
+        # guards the parity).
+        BUILD=$(( (10#$MAJOR * 10000 + 10#$MINOR * 100 + 10#$PATCH) * 1000 + RUN_DIGITS ))
+        # Copyright year = the year of the tagged commit, not the wall clock, so a re-run reproduces
+        # the same listing.
+        BUILD_YEAR="$(git log -1 --format=%cd --date=format:%Y "$TAG" 2>/dev/null || git log -1 --format=%cd --date=format:%Y)"
+        echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+        echo "build=$BUILD" >> "$GITHUB_OUTPUT"
+        echo "build_year=$BUILD_YEAR" >> "$GITHUB_OUTPUT"
+        echo "Resolved version=$VERSION build=$BUILD year=$BUILD_YEAR"

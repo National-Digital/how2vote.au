@@ -2,8 +2,8 @@
  * Self-hosted form submission helper, shared by the per-page Feedback widget and the Contact page.
  * Both post to OUR OWN `POST /api/forms` Pages Function (functions/api/forms.ts), which verifies
  * the anti-abuse challenge and relays the message to the project inbox by email — it stores
- * nothing. Formspree is gone: no third-party origin is involved anywhere on the form path, which
- * is also what makes the forms shippable in the FOSS/F-Droid build.
+ * nothing. No third-party origin is involved anywhere on the form path, which is also what makes
+ * the forms shippable in the FOSS/F-Droid build.
  *
  * The site is an offline-first PWA. When there is no connection a POST cannot reach the endpoint,
  * so we detect that up front (`navigator.onLine`) and return an "offline" result the UI explains,
@@ -15,12 +15,15 @@
  * lazily on that first solution request, so it never runs for someone merely browsing. A failed
  * solve is treated like any other submit error.
  */
+import { isNativeShell } from "./channel";
+import { SITE_URL } from "./seo";
 import { solveChallenge, type ChallengePurpose } from "./altcha";
 
 export type SubmitResult = "ok" | "offline" | "error";
 
-// Same-origin and relative, like the challenge endpoint: no env var, within `connect-src 'self'`.
-const FORMS_ENDPOINT = "/api/forms";
+// Web PWA: same-origin relative path. Native shells post to the canonical origin (allowed by the
+// endpoint's strict CORS allowlist), mirroring the challenge fetch and the research transport.
+const FORMS_ENDPOINT = `${isNativeShell ? SITE_URL : ""}/api/forms`;
 
 /** Drops empty/undefined fields so optional inputs aren't posted as blank strings. */
 function compact(fields: Record<string, string | undefined>): Record<string, string> {

@@ -1,4 +1,5 @@
 <script lang="ts">
+  import GlossaryTerm from "$lib/components/GlossaryTerm.svelte";
   import { page } from "$app/state";
   import DataPage from "$lib/components/DataPage.svelte";
   import ElectionToggle from "$lib/components/ElectionToggle.svelte";
@@ -28,7 +29,8 @@
   </ul>
 
   <p class="source">
-    Each proposition links to the parliamentary <a href="/glossary#division">divisions</a> behind it on
-    They Vote For You. Positions are the recorded voting record — How2Vote takes no side on any proposition.
+    Each proposition links to the parliamentary <GlossaryTerm id="division">divisions</GlossaryTerm> behind
+    it on They Vote For You. Positions are the recorded voting record — How2Vote takes no side on any
+    proposition.
   </p>
 </DataPage>

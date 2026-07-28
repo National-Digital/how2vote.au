@@ -1,4 +1,5 @@
 <script lang="ts">
+  import ExternalLink from "$lib/components/ExternalLink.svelte";
   import { version } from "$app/environment";
   import ContentPage from "$lib/components/ContentPage.svelte";
   import Meta from "$lib/components/Meta.svelte";
@@ -40,10 +41,8 @@
   <p>
     The survey is run as a <strong>confirmatory repeated cross-sectional trend series</strong> — the
     design official statistics use — not an open-ended data archive. Under the aggregate-counters
-    model (<a
-      href={repoFile("docs/adr/0008-aggregate-counters.md")}
-      target="_blank"
-      rel="noopener noreferrer">ADR-0008</a
+    model (<ExternalLink href={repoFile("docs/adr/0008-aggregate-counters.md")}
+      >ADR-0008</ExternalLink
     >) the research store holds only the counter tables listed below: the raw answers never leave
     your device, and the server only ever increments totals. Nothing else is collected, so nothing
     else can ever be analysed.
@@ -76,13 +75,9 @@
     Because there is no per-person record at any point, there is nothing to cross-tabulate beyond
     these totals — that is a deliberate design property, not a limitation to be worked around. The
     full registry and the question codebook are published:
-    <a href={repoFile("docs/research/analysis-plan.md")} target="_blank" rel="noopener noreferrer"
-      >analysis plan</a
-    >
+    <ExternalLink href={repoFile("docs/research/analysis-plan.md")}>analysis plan</ExternalLink>
     ·
-    <a href={repoFile("docs/research/codebook.md")} target="_blank" rel="noopener noreferrer"
-      >codebook</a
-    >.
+    <ExternalLink href={repoFile("docs/research/codebook.md")}>codebook</ExternalLink>.
   </p>
 
   <h2>Disclosure controls</h2>
@@ -163,7 +158,7 @@
     {#each register.standards as s (s.id)}
       <li>
         <strong>
-          <a href={s.url} target="_blank" rel="noopener noreferrer">{s.name}</a>
+          <ExternalLink href={s.url}>{s.name}</ExternalLink>
         </strong>
         ({s.publisher}) — {statusLabel(
           s.status,
@@ -181,10 +176,8 @@
   <p>
     The machine-readable register that binds each standard to the control and tests that implement
     it is published in full:
-    <a
-      href={repoFile("docs/research/standards-register.json")}
-      target="_blank"
-      rel="noopener noreferrer">standards register</a
+    <ExternalLink href={repoFile("docs/research/standards-register.json")}
+      >standards register</ExternalLink
     >.
   </p>
 </ContentPage>

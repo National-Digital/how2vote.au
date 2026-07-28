@@ -22,6 +22,23 @@ export async function seedEligibility(page: Page): Promise<void> {
 }
 
 /**
+ * Wait until the page has HYDRATED, not merely rendered.
+ *
+ * Every route is prerendered, so a control is visible — and `click()` considers it actionable — well
+ * before Svelte attaches any handler. Clicking in that window runs the element's NATIVE behaviour: a
+ * real anchor navigates, and a button does nothing at all. Both look like the feature is broken, and
+ * neither is deterministic, so a spec that clicks straight after `goto()` is a coin toss under load.
+ *
+ * The root layout stamps `data-hydrated` on <html> from a mount effect, which is the only honest
+ * signal available: attributes present in the prerendered HTML (`aria-expanded`, say) are there
+ * before hydration, so waiting on one would pass immediately and test nothing. A fixed timeout is
+ * worse again — it encodes this machine's speed.
+ */
+export async function waitForHydration(page: Page): Promise<void> {
+  await page.waitForSelector("html[data-hydrated]", { state: "attached" });
+}
+
+/**
  * Stub our `/api/challenge` issuer (a Pages Function, absent from the static e2e preview) with a
  * REAL, signed, deliberately low-cost ALTCHA challenge minted in the test process. The bundled
  * in-page solver then genuinely solves it — exercising the true "fetch a challenge → solve

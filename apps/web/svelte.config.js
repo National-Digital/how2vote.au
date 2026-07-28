@@ -28,6 +28,27 @@ const BASE_CSP = {
   "object-src": ["none"],
 };
 
+// Native shells (Capacitor iOS/Android) bundle the whole app in the binary and update only via the
+// store, so the service worker is redundant there — and on Android's https://localhost (a secure
+// context) it would otherwise register and drive a web-style update prompt. Disable registration
+// for native channels; the web PWA keeps it. PUBLIC_DIST_CHANNEL is baked at build time.
+const isNativeChannel =
+  process.env.PUBLIC_DIST_CHANNEL === "ios" || process.env.PUBLIC_DIST_CHANNEL === "android";
+
+// The CSP is a pure function of the third-party registry (mergeRegistryCsp). The one channel
+// difference: native shells serve from a local WebView origin, so the optional research POST to our
+// OWN canonical origin is cross-origin and must be allowed in connect-src. This is first-party
+// (how2vote.au is ours, not a third party), so it is added here rather than in the third-party
+// registry, and ONLY for native builds — the web PWA is same-origin and keeps connect-src 'self'.
+/** @param {Record<string, string[]>} base */
+function channelDirectives(base) {
+  const directives = mergeRegistryCsp(base);
+  if (isNativeChannel) {
+    directives["connect-src"] = [...(directives["connect-src"] ?? []), "https://how2vote.au"];
+  }
+  return directives;
+}
+
 /** @type {import('@sveltejs/kit').Config} */
 const config = {
   preprocess: vitePreprocess(),
@@ -45,9 +66,10 @@ const config = {
     // Analytics at the edge, so no analytics origin appears in the client CSP either.
     csp: {
       mode: "hash",
-      directives: mergeRegistryCsp(BASE_CSP),
+      directives: channelDirectives(BASE_CSP),
     },
     serviceWorker: {
+      register: !isNativeChannel,
       // Which `static/` files reach the `files` list in $service-worker, and so the precache. The
       // Pages control files are excluded because Pages does not serve them and the service worker's
       // atomic addAll would reject (see src/lib/pages-control-files.js). The `.DS_Store` clause

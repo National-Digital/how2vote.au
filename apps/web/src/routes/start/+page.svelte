@@ -1,4 +1,5 @@
 <script lang="ts">
+  import ExternalLink from "$lib/components/ExternalLink.svelte";
   /**
    * The age-first eligibility gate (see docs/adr/0011, as amended by docs/adr/0012) — the FIRST interactive
    * step of the quiz/comparison flow. It runs before any quiz state, answer, research consent,
@@ -74,21 +75,17 @@
       </p>
       <ul class="links ui">
         <li>
-          <a href={CIVIC_LINKS.enrol} target="_blank" rel="noopener noreferrer">
-            Enrol early with the AEC ↗
-          </a>
+          <ExternalLink href={CIVIC_LINKS.enrol}>Enrol early with the AEC</ExternalLink>
           — at 16 or 17 you can provisionally enrol, so you're ready to vote the day you turn {RESEARCH_MIN_AGE}.
         </li>
         <li>
-          <a href={CIVIC_LINKS.findMember} target="_blank" rel="noopener noreferrer">
-            Find and contact your local member ↗
-          </a>
+          <ExternalLink href={CIVIC_LINKS.findMember}>
+            Find and contact your local member
+          </ExternalLink>
           — tell the person who represents your area what matters to you.
         </li>
         <li>
-          <a href={CIVIC_LINKS.votingRecord} target="_blank" rel="noopener noreferrer">
-            See how Parliament votes ↗
-          </a>
+          <ExternalLink href={CIVIC_LINKS.votingRecord}>See how Parliament votes</ExternalLink>
           — the records behind this quiz, on They Vote For You.
         </li>
         <li><a href="/">Back to the home page</a></li>

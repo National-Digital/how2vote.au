@@ -1,0 +1,250 @@
+name: Android release
+
+# Store pipeline for the Android shell (apps/mobile). Every web release becomes an Android build:
+#
+# release published      -> build the channel web bundle, build + sign the release aab with the
+#                           upload key, upload to the Play internal track, then — behind the
+#                           `play-store` environment's required-reviewer gate — promote that
+#                           build to production at a STAGED 10% rollout (add `[full-rollout]` to
+#                           the release notes before approving to go straight to 100%).
+#
+# NOTE: with Managed publishing enabled in Play Console, a green `promote` job means "ready to
+# publish", not "live" — the release waits for an explicit publish click in the console.
+# workflow_dispatch      -> same build; dry_run=true stops after the signed bundle (no upload),
+#                           dry_run=false uploads to the internal track. Promotion never runs
+#                           from dispatch.
+#
+# Google Play re-signs uploads with the escrowed app signing key (Play App Signing); the
+# keystore here is the UPLOAD key only.
+#
+# Requires secrets PLAY_SERVICE_ACCOUNT_JSON, ANDROID_UPLOAD_KEYSTORE (base64 JKS),
+# ANDROID_KEYSTORE_PASSWORD, ANDROID_KEY_ALIAS, ANDROID_KEY_PASSWORD. FAILS CLOSED if any is
+# missing: Android is a live store channel, so "no credentials" means a release did not ship, and
+# that must be red. A green run has to mean the bundle reached Play.
+
+on:
+  release:
+    types: [published]
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: Build + sign only; skip the Play upload
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+
+concurrency:
+  # One lane for all Android releases so two quick releases serialize. Never cancel a signing/upload.
+  group: android-release
+  cancel-in-progress: false
+
+jobs:
+  build:
+    name: Build & Play internal track
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    outputs:
+      app-version: ${{ steps.version.outputs.version }}
+      build-number: ${{ steps.version.outputs.build }}
+    steps:
+      # Presence check only; values are never printed (passed via env, not interpolated) and the
+      # failure names the missing KEYS, never their contents.
+      #
+      # Fail closed rather than warn and skip: a release run has exactly two honest outcomes, the
+      # bundle reached Play or the run is red. Skipping would make an unreleasable repo look green.
+      - name: Check Play secrets are configured
+        env:
+          PLAY_SERVICE_ACCOUNT_JSON: ${{ secrets.PLAY_SERVICE_ACCOUNT_JSON }}
+          ANDROID_UPLOAD_KEYSTORE: ${{ secrets.ANDROID_UPLOAD_KEYSTORE }}
+          ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+          ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+        run: |
+          set -euo pipefail
+          missing=()
+          for key in PLAY_SERVICE_ACCOUNT_JSON ANDROID_UPLOAD_KEYSTORE ANDROID_KEYSTORE_PASSWORD \
+                     ANDROID_KEY_ALIAS ANDROID_KEY_PASSWORD; do
+            [ -n "${!key-}" ] || missing+=("$key")
+          done
+          if [ ${#missing[@]} -gt 0 ]; then
+            echo "::error::Android release secrets missing: ${missing[*]}."
+            echo "Set them under Settings → Secrets and variables → Actions (see docs/store-distribution.md)."
+            exit 1
+          fi
+          echo "All five Android release secrets are present."
+
+      - name: Checkout repository
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7
+        with:
+          fetch-depth: 0 # full tags so a dispatch run can resolve the current version
+
+      # Google enforces publish rights when an edit is APPLIED, not on the calls that build it, so
+      # an under-permissioned service account gets all the way through build + upload + metadata
+      # before being refused. Probe it here — seconds, applies nothing — rather than discovering it
+      # minutes in with a signed bundle already produced.
+      - name: Verify Play publish permission (fail-closed)
+        if: ${{ !(github.event_name == 'workflow_dispatch' && inputs.dry_run) }}
+        env:
+          PLAY_SERVICE_ACCOUNT_JSON: ${{ secrets.PLAY_SERVICE_ACCOUNT_JSON }}
+        run: node scripts/check-play-permission.mjs
+
+      - name: Resolve version
+        id: version
+        uses: ./.github/actions/resolve-store-version
+
+      - name: Build web bundle (android channel)
+        uses: ./.github/actions/build-web-channel
+        with:
+          channel: android
+          app-version: ${{ steps.version.outputs.version }}
+          apple-app-id: ${{ vars.PUBLIC_APPLE_APP_ID }}
+
+      - name: Sync Capacitor Android project
+        run: pnpm --filter @how2vote/mobile sync:android
+
+      - name: Set up Java
+        uses: actions/setup-java@03ad4de0992f5dab5e18fcb136590ce7c4a0ac95 # v5.6.0
+        with:
+          distribution: temurin
+          java-version: "21"
+
+      - name: Set up Ruby / fastlane
+        uses: ruby/setup-ruby@95ef2b042f9d7a56d8268cba8559e2842e2ad01b # v1.321.0
+        with:
+          ruby-version: .ruby-version # single source: apps/mobile/.ruby-version
+          bundler-cache: true
+          working-directory: apps/mobile
+
+      # Listing copy + changelog are generated from the operator + shared product-copy records
+      # (single-sourced s 321D authorisation; see scripts/generate-store-metadata.mjs).
+      - name: Generate store metadata
+        env:
+          BUILD_YEAR: ${{ steps.version.outputs.build-year }}
+        run: node scripts/generate-store-metadata.mjs
+
+      # Supply reads images from the (generated, gitignored) metadata images dir; copy the committed
+      # screenshots + feature graphic into it, and render the store icon, so a release uploads the
+      # complete pack.
+      #
+      # The store icon is a DIFFERENT asset from the launcher icon inside the APK: Play shows it in
+      # search and on the listing page, and with no icon.png the listing falls back to a generic
+      # placeholder. It is rendered here from the same committed 1024px opaque mark the
+      # native launcher icons are generated from (assets/icon-only.png via generate-native-assets),
+      # so the store and the device can never show different marks.
+      - name: Stage store images for supply
+        working-directory: apps/mobile
+        run: |
+          IMG=fastlane/metadata/android/en-AU/images
+          mkdir -p "$IMG/phoneScreenshots" "$IMG/tenInchScreenshots"
+          cp fastlane/screenshots/android-phone/*.png "$IMG/phoneScreenshots/"
+          cp fastlane/screenshots/android-tablet/*.png "$IMG/tenInchScreenshots/"
+          cp fastlane/screenshots/android-feature/feature.png "$IMG/featureGraphic.png"
+          # assets/ holds gitignored, deterministic intermediates, so the mark does not exist on a
+          # fresh checkout — render it first (sharp only; the @capacitor/assets step that needs a
+          # toolchain is NOT required just to get the source mark).
+          node scripts/generate-native-assets.mjs
+          # Play requires exactly 512x512 (32-bit PNG, under 1 MB).
+          node -e "require('sharp')('assets/icon-only.png').resize(512,512).png().toFile('$IMG/icon.png')"
+          # Fail the release rather than silently publish a placeholder icon.
+          test -s "$IMG/icon.png"
+
+      - name: Build${{ (github.event_name == 'workflow_dispatch' && inputs.dry_run) && ' (dry run)' || ' & upload to Play internal track' }}
+        working-directory: apps/mobile
+        env:
+          APP_VERSION: ${{ steps.version.outputs.version }}
+          BUILD_NUMBER: ${{ steps.version.outputs.build }}
+          # The ANDROID_UPLOAD_KEYSTORE secret is exposed as ANDROID_KEYSTORE, the name the build
+          # step reads; the preflight's error message must keep the Settings secret name. Do not
+          # rename either.
+          ANDROID_KEYSTORE: ${{ secrets.ANDROID_UPLOAD_KEYSTORE }}
+          ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+          ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+          PLAY_SERVICE_ACCOUNT_JSON: ${{ secrets.PLAY_SERVICE_ACCOUNT_JSON }}
+          DRY_RUN: ${{ (github.event_name == 'workflow_dispatch' && inputs.dry_run) && 'true' || 'false' }}
+        run: |
+          export ANDROID_KEYSTORE_PATH="$RUNNER_TEMP/upload.jks"
+          # Remove the decoded keystore on ANY exit (success, build failure, or cancel).
+          trap 'rm -f "$ANDROID_KEYSTORE_PATH"' EXIT
+          printf '%s' "$ANDROID_KEYSTORE" | base64 -d > "$ANDROID_KEYSTORE_PATH"
+          if [ "$DRY_RUN" = "true" ]; then
+            bundle exec fastlane android build
+          else
+            bundle exec fastlane android internal
+          fi
+
+      - name: Record artifact provenance
+        env:
+          VERSION: ${{ steps.version.outputs.version }}
+          BUILD: ${{ steps.version.outputs.build }}
+        run: |
+          AAB=apps/mobile/android/app/build/outputs/bundle/release/app-release.aab
+          {
+            echo "### Android build"
+            echo "- version: $VERSION ($BUILD)"
+            echo "- sha256: $(sha256sum "$AAB" | cut -d' ' -f1)"
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Upload aab artifact
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
+        with:
+          name: how2vote-android-${{ steps.version.outputs.version }}-${{ steps.version.outputs.build }}
+          path: apps/mobile/android/app/build/outputs/bundle/release/app-release.aab
+          if-no-files-found: warn
+          retention-days: 30
+
+  promote:
+    name: Promote to Play production
+    needs: build
+    # Release events only. A failed `build` skips this too (the `if` deliberately does not use
+    # always()). The environment carries the required-reviewer gate — a human promotes every
+    # store release.
+    if: github.event_name == 'release'
+    environment: play-store
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: read # gh release view (rollout marker)
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7
+
+      # Rollout size is a release-time human decision, so it is read from the release notes at
+      # PROMOTE time rather than from the trigger payload (which was captured before the reviewer
+      # saw it) or a repo variable (sticky — a full rollout left switched on is the failure mode
+      # this whole gate exists to prevent). The approver adds the marker, then approves; the choice
+      # stays visible in the release notes afterwards. Default is staged. See
+      # "Rollout policy" in docs/store-distribution.md.
+      - name: Resolve rollout fraction
+        id: rollout
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ github.event.release.tag_name }}
+        run: |
+          set -euo pipefail
+          BODY="$(gh release view "$TAG" --json body --jq .body || echo "")"
+          if printf '%s' "$BODY" | grep -qiF '[full-rollout]'; then
+            echo "fraction=1" >> "$GITHUB_OUTPUT"
+            echo "::warning::[full-rollout] marker present — promoting to 100% of users."
+          else
+            echo "fraction=0.1" >> "$GITHUB_OUTPUT"
+            echo "Staged rollout: 10%. Ramp in Play Console, or halt if crash-rate regresses."
+          fi
+
+      - name: Set up Ruby / fastlane
+        uses: ruby/setup-ruby@95ef2b042f9d7a56d8268cba8559e2842e2ad01b # v1.321.0
+        with:
+          ruby-version: .ruby-version # single source: apps/mobile/.ruby-version
+          bundler-cache: true
+          working-directory: apps/mobile
+
+      - name: Promote internal build to production
+        working-directory: apps/mobile
+        env:
+          APP_VERSION: ${{ needs.build.outputs.app-version }}
+          BUILD_NUMBER: ${{ needs.build.outputs.build-number }}
+          PLAY_SERVICE_ACCOUNT_JSON: ${{ secrets.PLAY_SERVICE_ACCOUNT_JSON }}
+          PLAY_ROLLOUT: ${{ steps.rollout.outputs.fraction }}
+        run: bundle exec fastlane android promote

@@ -3,6 +3,7 @@
   import { goto } from "$app/navigation";
   import { activeQuestions, electionPhase } from "@how2vote/data-schema";
   import { topPartyMatch } from "@how2vote/engine";
+  import DocLink from "$lib/components/DocLink.svelte";
   import Meta from "$lib/components/Meta.svelte";
   import Progress from "$lib/components/Progress.svelte";
   import TopBar from "$lib/components/TopBar.svelte";
@@ -82,7 +83,9 @@
   const position = $derived(current ? visible.indexOf(current) + 1 : 0);
 
   // Wait for the store to hydrate (root layout $effect) before acting on it, so a hard refresh on
-  // this screen doesn't bounce a mid-flow visitor to /ballot before their ballot is restored.
+  // this screen doesn't bounce a mid-flow visitor to /ballot before their ballot is restored. The
+  // optional research contribution is offered on every channel: native shells POST to the
+  // canonical origin (survey.ts) via the endpoints' strict CORS allowlist.
   $effect(() => {
     if (quiz.hydrated && !quiz.hasBallot) goto("/ballot");
   });
@@ -256,7 +259,9 @@
           deleted. We publish only privacy-protected aggregates, do
           <strong>not</strong> collect your preference order, and no direct identifiers are
           collected. Full detail is in the
-          <a href="/privacy">Privacy policy</a>.
+          <!-- Opens over the gate rather than navigating: every consent tick here lives in
+               component state, so leaving the page discards the decision being collected. -->
+          <DocLink href="/privacy">Privacy policy</DocLink>.
         </p>
         <label class="consent ui">
           <input type="checkbox" bind:checked={consented} />
@@ -284,7 +289,7 @@
           particular contribution cannot later be located or deleted. We do
           <strong>not</strong> collect your preference order, and no direct identifiers are
           collected. We publish only privacy-protected aggregates. Full detail is in the
-          <a href="/privacy">Privacy policy</a>.
+          <DocLink href="/privacy">Privacy policy</DocLink>.
         </p>
         <label class="consent ui">
           <input type="checkbox" bind:checked={consented} />
@@ -313,7 +318,9 @@
              current Terms; recorded (version + timestamp) when you contribute. -->
         <label class="consent ui">
           <input type="checkbox" bind:checked={termsChecked} />
-          <span>{TERMS_ACCEPTANCE_LABEL} See our <a href="/terms">Terms of Use</a>.</span>
+          <span>
+            {TERMS_ACCEPTANCE_LABEL} See our <DocLink href="/terms">Terms of Use</DocLink>.
+          </span>
         </label>
       {/if}
       <div class="cta">
@@ -386,7 +393,9 @@
     line-height: 1.55;
     margin: 0 0 12px;
   }
-  .note a {
+  /* :global because the anchor now belongs to DocLink — Svelte's scoping class is not applied
+     across a component boundary, so a bare descendant selector would silently stop matching. */
+  .note :global(a) {
     color: var(--ink);
     text-decoration: underline;
     text-underline-offset: 3px;

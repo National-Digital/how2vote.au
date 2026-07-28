@@ -1,4 +1,6 @@
 <script lang="ts">
+  import ExternalLink from "$lib/components/ExternalLink.svelte";
+  import GlossaryTerm from "$lib/components/GlossaryTerm.svelte";
   import { page } from "$app/state";
   import DataPage from "$lib/components/DataPage.svelte";
   import Meta from "$lib/components/Meta.svelte";
@@ -41,8 +43,8 @@
         ? ""
         : "s"}.
     {/if}
-    See the <a href="/glossary#division">divisions</a> behind this on
-    <a href={data.tvfy} target="_blank" rel="noopener noreferrer">They Vote For You</a>. Positions
-    are the recorded voting record; How2Vote takes no side on any proposition.
+    See the <GlossaryTerm id="division">divisions</GlossaryTerm> behind this on
+    <ExternalLink href={data.tvfy}>They Vote For You</ExternalLink>. Positions are the recorded
+    voting record; How2Vote takes no side on any proposition.
   </p>
 </DataPage>

@@ -2,8 +2,8 @@
  * Minimal in-page ALTCHA v2 proof-of-work solver.
  *
  * The full altcha-lib client entry re-exports the server half too (createChallenge,
- * verifySolution, Sentinel verification …), which the browser never needs — bundling it blew the
- * gzipped JS budget. This module implements ONLY the solve loop of the documented v2 protocol —
+ * verifySolution, Sentinel verification …), which the browser never needs and which does not fit
+ * the gzipped JS budget. This module implements ONLY the solve loop of the documented v2 protocol —
  * password = nonce bytes ‖ big-endian uint32 counter, derive, compare against the required key
  * prefix — on top of altcha-lib's own WebCrypto PBKDF2 derivation, so the cryptography is not
  * ours and interop with the lib's server-side verifySolution is pinned by pow-solver.test.ts.

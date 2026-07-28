@@ -14,6 +14,13 @@ apps/web/static/og.png
 apps/web/static/og-*.png
 apps/web/static/500.html
 apps/web/static/.well-known/security.txt
+apps/web/static/.well-known/apple-app-site-association
+apps/web/static/.well-known/assetlinks.json
+# channel-freshness endpoint payloads only — the committed store-badge artwork
+# (app-store.svg, google-play.png) lives in the same directory and must stay tracked.
+apps/web/static/badges/*.json
+# F-Droid update-check endpoint — generated per deploy (scripts/generate-app-version.mjs)
+apps/web/static/app-version.json
 apps/web/static/apple-touch-icon.png
 apps/web/static/favicon-16.png
 apps/web/static/favicon-32.png

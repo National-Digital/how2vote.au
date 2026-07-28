@@ -10,7 +10,9 @@
  *      header (a `.get("cf-connecting-ip")`/`request.ip`-style read). Comments are stripped first, so
  *      the endpoints' own "CF-Connecting-IP is never read" prose does not trip the scan.
  *   2. NO BODY/URL LOGGING — the ingestion Pages Functions emit NO console.* at all (they promise to
- *      log nothing about a request), and the client transport logs no request body/URL.
+ *      log nothing about a request), and the client transport logs no request body/URL. The scanned
+ *      set covers the shared request-path modules the Functions import as well as the endpoints
+ *      themselves — code reached on every request is in scope wherever it lives.
  *   3. CLIENT WIRING — survey.ts routes every research POST through transportInit() (from the transport
  *      policy) and no longer hand-rolls a fetch init, so no caller can bypass the no-store / no-credentials
  *      / field-allowlist projection.
@@ -211,6 +213,25 @@ export function verdict(input = {}) {
   return { ok: errors.length === 0, errors };
 }
 
+/**
+ * Every Pages Function on the request path, not only the three research endpoints: challenge.ts and
+ * forms.ts sit behind the same no-IP/no-UA/no-log promise and run on ingestion traffic.
+ */
+export const FUNCTION_FILES = [
+  "apps/web/functions/api/research.ts",
+  "apps/web/functions/api/research/geography.ts",
+  "apps/web/functions/api/research/token.ts",
+  "apps/web/functions/api/challenge.ts",
+  "apps/web/functions/api/forms.ts",
+];
+
+/**
+ * Shared modules the Functions above import. Code here executes on EVERY ingestion request, so a
+ * forbidden read or a log added here would leak exactly as if it were written in the endpoint —
+ * scan it under the same rules. Add any further shared request-path module here.
+ */
+export const SHARED_REQUEST_MODULES = ["apps/web/src/lib/research/cors.ts"];
+
 /* c8 ignore start -- CLI/fs plumbing, exercised via CI not unit tests */
 const root = new URL("..", import.meta.url);
 const rel = (p) => new URL(p, root);
@@ -222,16 +243,21 @@ const safeRead = (p) => {
   }
 };
 
-const FUNCTION_FILES = [
-  "apps/web/functions/api/research.ts",
-  "apps/web/functions/api/research/geography.ts",
-  "apps/web/functions/api/research/token.ts",
-];
-
 function main() {
-  const functionFiles = FUNCTION_FILES.map((p) => ({ path: p, text: safeRead(p) })).filter((f) =>
-    isNonEmptyString(f.text),
-  );
+  const scanned = [...FUNCTION_FILES, ...SHARED_REQUEST_MODULES].map((p) => ({
+    path: p,
+    text: safeRead(p),
+  }));
+  // A renamed or deleted entry must break the build, not quietly shrink the scanned set.
+  const missing = scanned.filter((f) => !isNonEmptyString(f.text)).map((f) => f.path);
+  if (missing.length > 0) {
+    for (const p of missing) {
+      console.error(`::error::research-transport: ${p}: listed for scanning but missing or empty`);
+    }
+    process.exit(1);
+    return;
+  }
+  const functionFiles = scanned;
   const surveyText = safeRead("apps/web/src/lib/survey.ts");
   const transportPolicyText = safeRead("apps/web/src/lib/research/transport-policy.ts");
   const ingestionFiles = [

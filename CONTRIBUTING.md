@@ -79,19 +79,37 @@ committed hooks run automatically — no husky or other dependency is added. The
 
 - **pre-commit** — formats (Prettier) and lints (ESLint, `--max-warnings 0`) the _staged_ files and
   re-stages the fixes, so the CI "Lint & format" gate never fails on something fixable locally.
-- **pre-push** — runs `pnpm lint`, `pnpm typecheck` and `pnpm test` before anything leaves your
-  machine. Heavier gates (`pnpm build`, the Playwright e2e suites, and the compliance-script checks)
-  stay in CI by design. Skip a push's checks for a WIP branch with `SKIP_HOOKS=1 git push`.
+- **pre-push** — runs `pnpm lint`, `pnpm typecheck`, `pnpm test` and `pnpm preflight` before anything
+  leaves your machine. `preflight` is the source-only compliance guards (control register, vendor,
+  legal-review, privacy, boundary, brand, operator, store-channel, …) — all plain Node, ~13s, so the
+  blocking checks a normal change can trip are caught before the PR. Skip for a WIP branch with
+  `SKIP_HOOKS=1 git push`.
 - **prepare-commit-msg** — appends the DCO `Signed-off-by` trailer so commits satisfy the DCO check.
 
-Before opening a PR, run the same gates CI runs:
+### Running checks locally
+
+`pnpm preflight` (also run by pre-push) covers the fast, blocking, Node-only guards. Some checks are
+**deliberately CI-only** because they need a heavier toolchain or are non-blocking safety/drift
+checks — don't install extra tooling just to run them, CI will catch them:
 
 ```sh
-pnpm test                # all package tests, incl. golden methodology tests
-pnpm typecheck
-pnpm lint                # eslint + prettier
-pnpm --filter @how2vote/web neutrality:check   # after a web build
+pnpm preflight           # fast source-only compliance guards (runs on pre-push)
+pnpm test && pnpm typecheck && pnpm lint
+
+# CI-only by design — run by hand only if your change touches these areas:
+pnpm build && pnpm --filter @how2vote/web neutrality:check   # build-dependent (CSS scan, bundle budget)
+pnpm --filter @how2vote/web test:e2e                          # Playwright browsers
 ```
+
+**Mobile store checks** (`.github/workflows/mobile-ci.yml`) are **CI-only and non-blocking**, and
+need toolchains a web contributor should not have to install:
+
+- **fastlane / Ruby** — only relevant if you change `apps/mobile/Gemfile`. To run locally: install
+  Ruby via the pinned `apps/mobile/.ruby-version` (`rvm install "$(cat apps/mobile/.ruby-version)"`),
+  then `cd apps/mobile && bundle install && bundle exec fastlane lanes`. CI proves this on every PR,
+  so you normally don't need to.
+- **Android / iOS shell compiles** need the Android SDK / Xcode — leave them to CI (the Android
+  compile runs every PR; the iOS compile is enabled with repo var `MOBILE_CI_IOS=1`).
 
 ## Code comments
 

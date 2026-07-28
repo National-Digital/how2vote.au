@@ -128,6 +128,14 @@ jobs:
           # The forms and the anti-abuse challenge need NO build-time PUBLIC_ configuration: both
           # post to our own Pages Functions and the self-hosted challenge is issued/verified
           # server-side (see apps/web/wrangler.toml — ALTCHA_HMAC_SECRET, EMAIL_* secrets).
+          # Deep-link (universal/app link) association files, emitted to /.well-known only when set
+          # (scripts/generate-deep-link-assets.mjs) — so app links "switch on" once these exist,
+          # with no code change. APPLE_TEAM_ID → apple-app-site-association; ANDROID_CERT_SHA256 →
+          # assetlinks.json (the Play app-signing cert fingerprint, colon-hex). Not secret.
+          APPLE_TEAM_ID: ${{ vars.APPLE_TEAM_ID }}
+          ANDROID_CERT_SHA256: ${{ vars.ANDROID_CERT_SHA256 }}
+          # Apple's numeric App Store id → the in-app "update" store deep link (stale-data notice).
+          PUBLIC_APPLE_APP_ID: ${{ vars.PUBLIC_APPLE_APP_ID }}
 
       - name: Verify production infra config (fail-closed)
         # FAIL CLOSED before anything ships: every required production id (D1 database id, KV namespace
@@ -377,7 +385,7 @@ jobs:
           script: |
             const url = `https://pr-${context.issue.number}.${process.env.CF_PAGES_PROJECT}.pages.dev`;
             const marker = '<!-- cf-pages-preview -->';
-            const body = `${marker}\n### ⚡ Cloudflare Pages preview\n\nThis PR is deployed (\`noindex\`) at:\n\n**${url}**\n\n_Updated for commit ${context.sha.slice(0, 7)}._`;
+            const body = `${marker}\n### 🌐 Web preview\n\nThis PR is deployed (\`noindex\`) at:\n\n**${url}**\n\n_Updated for commit ${context.sha.slice(0, 7)}._`;
             const { data: comments } = await github.rest.issues.listComments({
               owner: context.repo.owner,
               repo: context.repo.repo,
@@ -491,7 +499,7 @@ jobs:
         with:
           script: |
             const marker = '<!-- cf-pages-preview -->';
-            const body = `${marker}\n### ⚡ Cloudflare Pages preview\n\nThe preview for this PR has been torn down (PR ${context.payload.pull_request.merged ? 'merged' : 'closed'}).`;
+            const body = `${marker}\n### 🌐 Web preview\n\nThe preview for this PR has been torn down (PR ${context.payload.pull_request.merged ? 'merged' : 'closed'}).`;
             const { data: comments } = await github.rest.issues.listComments({
               owner: context.repo.owner,
               repo: context.repo.repo,

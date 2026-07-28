@@ -414,7 +414,7 @@ function main() {
   const result = verdict({
     register,
     sources: gatherSources(),
-    methodologyText: safeRead("apps/web/src/routes/methodology/+page.svelte"),
+    methodologyText: safeRead("apps/web/src/lib/content/MethodologyContent.svelte"),
     propositionsHash,
     methodologyVersion: methodologyVersion(),
   });

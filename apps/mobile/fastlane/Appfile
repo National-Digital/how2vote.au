@@ -1,0 +1,5 @@
+# Identity only — every credential arrives via environment (GitHub secrets/vars), never here.
+app_identifier("au.how2vote.app")
+team_id(ENV["APPLE_TEAM_ID"]) if ENV["APPLE_TEAM_ID"]
+json_key_data_raw(ENV["PLAY_SERVICE_ACCOUNT_JSON"]) if ENV["PLAY_SERVICE_ACCOUNT_JSON"]
+package_name("au.how2vote.app")

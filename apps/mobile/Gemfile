@@ -1,0 +1,7 @@
+# fastlane drives store delivery for both platforms (see fastlane/Fastfile). The toolchain runs on
+# Ruby 4.0 (pinned in the workflows); mobile-ci's `fastlane toolchain (Ruby 4)` job verifies the
+# gem tree resolves and loads on every PR. Gemfile.lock IS committed (generated in CI with the
+# linux + darwin platforms) so the tree is fully reproducible; bump deliberately with `bundle update`.
+source "https://rubygems.org"
+
+gem "fastlane", "2.237.0"

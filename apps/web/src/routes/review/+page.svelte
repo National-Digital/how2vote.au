@@ -45,7 +45,8 @@
   function getCard(): void {
     // The optional research survey is 18+ only (ADR 0008/0012), so an under-18 explorer skips it and
     // goes straight to their comparison. The layout guard would bounce them off /survey anyway; this
-    // just avoids a redirect bounce and keeps the explore flow clean.
+    // just avoids a redirect bounce and keeps the explore flow clean. Offered on every channel
+    // (native contributes to the canonical origin — see docs/store-distribution.md).
     goto(ageGate.canVote ? "/survey" : "/card");
   }
 </script>

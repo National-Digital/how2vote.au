@@ -17,9 +17,9 @@ const CONSENT_SRC = read("apps/web/src/lib/research/consent.ts");
 const STATS_SRC = read("packages/data-pipeline/src/stats.ts");
 const PAGE_PATHS = [
   "apps/web/src/routes/insights/+page.svelte",
-  "apps/web/src/routes/privacy/+page.svelte",
+  "apps/web/src/lib/content/PrivacyContent.svelte",
   "apps/web/src/routes/survey/+page.svelte",
-  "apps/web/src/routes/terms/+page.svelte",
+  "apps/web/src/lib/content/TermsContent.svelte",
 ];
 const PAGES = Object.fromEntries(PAGE_PATHS.map((p) => [p, read(p)]));
 

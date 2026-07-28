@@ -45,31 +45,31 @@
     {
       "id": "privacy-prefer-not-to-say",
       "concern": "prefer-not-to-say",
-      "page": "apps/web/src/routes/privacy/+page.svelte",
+      "page": "apps/web/src/lib/content/PrivacyContent.svelte",
       "text": "Every survey question is optional and includes a prefer-not-to-say option."
     },
     {
       "id": "privacy-aggregate-only",
       "concern": "aggregate-only",
-      "page": "apps/web/src/routes/privacy/+page.svelte",
+      "page": "apps/web/src/lib/content/PrivacyContent.svelte",
       "text": "aggregate-only by construction"
     },
     {
       "id": "privacy-indefinite-retention",
       "concern": "indefinite-retention",
-      "page": "apps/web/src/routes/privacy/+page.svelte",
+      "page": "apps/web/src/lib/content/PrivacyContent.svelte",
       "text": "we may retain them indefinitely"
     },
     {
       "id": "privacy-retention-controls",
       "concern": "indefinite-retention",
-      "page": "apps/web/src/routes/privacy/+page.svelte",
+      "page": "apps/web/src/lib/content/PrivacyContent.svelte",
       "text": "the protections that matter for those counts are the disclosure controls below, not a deletion clock"
     },
     {
       "id": "privacy-no-withdrawal",
       "concern": "no-withdrawal",
-      "page": "apps/web/src/routes/privacy/+page.svelte",
+      "page": "apps/web/src/lib/content/PrivacyContent.svelte",
       "text": "we will generally be unable to locate a particular contribution for access, correction or deletion"
     },
     {
@@ -87,19 +87,19 @@
     {
       "id": "terms-voluntary",
       "concern": "voluntary",
-      "page": "apps/web/src/routes/terms/+page.svelte",
+      "page": "apps/web/src/lib/content/TermsContent.svelte",
       "text": "Taking part in research is entirely optional and is never a condition of using the Service"
     },
     {
       "id": "terms-aggregate-no-withdrawal",
       "concern": "no-withdrawal",
-      "page": "apps/web/src/routes/terms/+page.svelte",
+      "page": "apps/web/src/lib/content/TermsContent.svelte",
       "text": "Once a contribution has been merged into the aggregate counts it cannot be identified, withdrawn or deleted"
     },
     {
       "id": "terms-indefinite-retention",
       "concern": "indefinite-retention",
-      "page": "apps/web/src/routes/terms/+page.svelte",
+      "page": "apps/web/src/lib/content/TermsContent.svelte",
       "text": "the aggregate counts are not personal information and may be retained indefinitely subject to the disclosure controls in our Privacy policy"
     }
   ],

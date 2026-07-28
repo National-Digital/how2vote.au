@@ -1,0 +1,29 @@
+{
+  "name": "@how2vote/mobile",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Capacitor shells (iOS + Android) around the @how2vote/web static build — the same offline PWA, store-distributed. No app logic lives here.",
+  "license": "AGPL-3.0-or-later",
+  "type": "module",
+  "scripts": {
+    "assets:generate": "node scripts/generate-native-assets.mjs && pnpm dlx @capacitor/assets@3.0.5 generate --assetPath assets --ios --android",
+    "metadata:generate": "node ../../scripts/generate-store-metadata.mjs",
+    "sync:ios": "cap sync ios",
+    "sync:android": "cap sync android",
+    "open:ios": "cap open ios",
+    "open:android": "cap open android"
+  },
+  "dependencies": {
+    "@capacitor/android": "^8.4.2",
+    "@capacitor/app": "^8.1.1",
+    "@capacitor/browser": "^8.0.4",
+    "@capacitor/core": "^8.4.2",
+    "@capacitor/ios": "^8.4.2",
+    "@capacitor/preferences": "^8.0.1",
+    "@capacitor/share": "^8.0.0"
+  },
+  "devDependencies": {
+    "@capacitor/cli": "^8.4.2",
+    "sharp": "^0.35.3"
+  }
+}

@@ -1,10 +1,16 @@
+import { readFileSync, readdirSync } from "node:fs";
+import { sep } from "node:path";
 import { describe, expect, it } from "vitest";
 import {
+  FUNCTION_FILES,
+  SHARED_REQUEST_MODULES,
   readCodePolicy,
   scanForbiddenReads,
   scanRequestLogging,
   verdict,
 } from "./check-research-transport.mjs";
+
+const repoFile = (rel) => readFileSync(new URL(`../${rel}`, import.meta.url), "utf8");
 
 const clone = (o) => JSON.parse(JSON.stringify(o));
 
@@ -141,5 +147,73 @@ describe("verdict", () => {
     const input = base();
     input.infraPolicy.ingestionRoutes = ["/api/research"];
     expect(verdict(input).errors.some((e) => /ingestionRoutes missing/.test(e))).toBe(true);
+  });
+
+  it("catches a forbidden read introduced in a shared request-path module", () => {
+    const input = base();
+    const bad = {
+      path: "apps/web/src/lib/research/cors.ts",
+      text: `export const h = (request) => request.headers.get("CF-Connecting-IP");`,
+    };
+    input.functionFiles = [CLEAN_FUNCTION, bad];
+    input.ingestionFiles = [...input.functionFiles, { path: "survey.ts", text: GOOD_SURVEY }];
+    expect(
+      verdict(input).errors.some(
+        (e) => /research\/cors\.ts/.test(e) && /forbidden request attribute/.test(e),
+      ),
+    ).toBe(true);
+  });
+
+  it("catches a log introduced in a shared request-path module", () => {
+    const input = base();
+    const bad = {
+      path: "apps/web/src/lib/research/cors.ts",
+      text: `export const h = (request) => { console.warn(request.url); };`,
+    };
+    input.functionFiles = [CLEAN_FUNCTION, bad];
+    input.ingestionFiles = [...input.functionFiles, { path: "survey.ts", text: GOOD_SURVEY }];
+    expect(
+      verdict(input).errors.some((e) => /research\/cors\.ts/.test(e) && /must log nothing/.test(e)),
+    ).toBe(true);
+  });
+});
+
+// Coverage of the scanned set itself: the CLI can only prove an invariant about files it reads, so a
+// request-path module left off the list is a blind spot the verdict tests above cannot detect.
+describe("scanned set", () => {
+  const scanned = [...FUNCTION_FILES, ...SHARED_REQUEST_MODULES];
+
+  it("includes every Pages Function under functions/api", () => {
+    // Enumerated from disk, so a new endpoint cannot escape the scan by simply not being listed.
+    const dir = new URL("../apps/web/functions/", import.meta.url);
+    const onDisk = readdirSync(dir, { recursive: true })
+      .map((p) => `apps/web/functions/${String(p).split(sep).join("/")}`)
+      .filter((p) => p.endsWith(".ts") && !p.endsWith(".test.ts"));
+    expect(onDisk.length).toBeGreaterThan(0);
+    expect(scanned.filter((p) => p.startsWith("apps/web/functions/")).sort()).toEqual(
+      onDisk.sort(),
+    );
+  });
+
+  it("includes every shared module a scanned Function imports that touches the Request", () => {
+    const required = new Set();
+    for (const fn of FUNCTION_FILES) {
+      const text = repoFile(fn);
+      for (const m of text.matchAll(/from\s+["'](?:\.\.\/)+src\/(lib\/[^"']+)["']/g)) {
+        const rel = `apps/web/src/${m[1]}.ts`;
+        // Only modules that see the Request can read a header or log about one.
+        if (/\bRequest\b|\.headers\b/.test(repoFile(rel))) required.add(rel);
+      }
+    }
+    expect(required.size).toBeGreaterThan(0);
+    for (const rel of required) expect(scanned).toContain(rel);
+  });
+
+  it("the real request-path files are clean under both scans", () => {
+    const files = scanned.map((p) => ({ path: p, text: repoFile(p) }));
+    expect(
+      scanForbiddenReads(files, ["CF-Connecting-IP", "X-Forwarded-For", "User-Agent"]),
+    ).toEqual([]);
+    expect(scanRequestLogging(files)).toEqual([]);
   });
 });

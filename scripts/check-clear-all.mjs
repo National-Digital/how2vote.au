@@ -176,8 +176,12 @@ export function verifyStorageNamespace(sources) {
   const headRe = /(?:localStorage|sessionStorage)\s*\.\s*(?:get|set|remove)Item\s*\(/g;
   for (const { path, text } of sources) {
     // The clear-all sweeper itself legitimately iterates dynamic, already-namespaced keys — it is the
-    // thing doing the sweeping, not a store, so it is exempt from the per-key resolution below.
-    if (path.endsWith("/privacy/local-data.ts")) continue;
+    // thing doing the sweeping, not a store, so it is exempt from the per-key resolution below. The
+    // native-storage durability mirror is the same kind of module: it copies the SAME namespace to /
+    // from native Preferences and only ever touches keys it has guarded with
+    // `startsWith(STORAGE_KEY_PREFIX)`, so like the sweeper it operates on the namespace as a whole
+    // rather than a fixed key. clearLocalDeviceData() clears the native copy too, so nothing escapes.
+    if (path.endsWith("/privacy/local-data.ts") || path.endsWith("/native-storage.ts")) continue;
     const clean = stripComments(text);
     const lits = perFileLiterals.get(path);
     const prefixes = perFilePrefixes.get(path);

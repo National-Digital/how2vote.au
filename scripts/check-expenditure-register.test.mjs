@@ -23,7 +23,7 @@ describe("real register", () => {
   });
 
   it("computes the committed totals", () => {
-    expect(computeTotals(REAL)).toEqual({ actual: 3857.45, electoral: 3857.45 });
+    expect(computeTotals(REAL)).toEqual({ actual: 3885.2, electoral: 3885.2 });
   });
 });
 
@@ -47,8 +47,8 @@ describe("period totals and thresholds", () => {
     period.totalElectoralExpenditure = period.disclosureThreshold;
     period.thresholdExceeded = false;
     period.thirdPartyReturnRequired = false;
-    register.lifeToDate["actualCashCostThrough2026-07-12"] = computeTotals(register).actual;
-    register.lifeToDate["conservativelyClassifiedElectoralExpenditureThrough2026-07-12"] =
+    register.lifeToDate["actualCashCostThrough2026-07-26"] = computeTotals(register).actual;
+    register.lifeToDate["conservativelyClassifiedElectoralExpenditureThrough2026-07-26"] =
       computeTotals(register).electoral;
     expect(verdict(register, { now: NOW }).ok).toBe(true);
   });
@@ -66,8 +66,8 @@ describe("period totals and thresholds", () => {
     period.totalElectoralExpenditure = period.disclosureThreshold + 1;
     period.thresholdExceeded = false;
     period.thirdPartyReturnRequired = false;
-    register.lifeToDate["actualCashCostThrough2026-07-12"] = computeTotals(register).actual;
-    register.lifeToDate["conservativelyClassifiedElectoralExpenditureThrough2026-07-12"] =
+    register.lifeToDate["actualCashCostThrough2026-07-26"] = computeTotals(register).actual;
+    register.lifeToDate["conservativelyClassifiedElectoralExpenditureThrough2026-07-26"] =
       computeTotals(register).electoral;
     const result = verdict(register, { now: NOW });
     expect(hasError(result, "thresholdExceeded must be true")).toBe(true);

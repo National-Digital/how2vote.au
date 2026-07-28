@@ -1,0 +1,17 @@
+How2Vote is an independent, non-partisan comparison tool for Australian federal elections.
+
+Answer 50 propositions parliament has actually voted on. The app shows how closely each party's recorded parliamentary votes match your positions — against the candidates on your ballot, in official ballot order. Then build your own voting plan: nothing is ranked for you and no preference is recommended. You author your own preference order.
+
+WORKS FULLY OFFLINE
+The complete dataset ships inside the app — questions, scoring and your card all work with no connection, including at a polling place with no signal.
+
+BUILT FROM THE PARLIAMENTARY RECORD
+Comparisons are built from recorded parliamentary votes (public Hansard data via They Vote For You), not campaign statements. Every proposition links to the parliamentary divisions behind it, so everything you are shown can be checked at the source.
+
+PRIVATE BY DESIGN
+No account. No sign-up. Your answers and weights stay on your device.
+
+NEUTRAL BY CONSTRUCTION
+The interface is strictly two-tone, so match quality is never encoded as party colour. The scoring method is public, deterministic and reproducible, and the app is open source under AGPL-3.0-or-later. github.com/National-Digital/how2vote.au
+
+Authorised by General Consulting Services Pty Ltd as trustee for the Australian Business Trust, trading as National Digital, Gold Coast, Queensland.

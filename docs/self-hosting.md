@@ -169,11 +169,18 @@ test with no Cloudflare account at all.
 
 - **Edge rate limit (required for the API routes):** the anti-abuse proof-of-work raises the cost
   of each submission but does not cap request volume. Configure a Cloudflare WAF per-IP rate-limit
-  rule (and Bot Fight Mode) covering **`/api/research`, `/api/research/geography`, `/api/research/token`,
+  rule covering **`/api/research`, `/api/research/geography`, `/api/research/token`,
   `/api/challenge` and `/api/forms`** — not just the research routes. Without it, `/api/forms` can be
   flooded to exhaust the Email Sending quota (a self-inflicted-inbox / cost DoS), and the challenge
   issuer can be hammered. Verifying `FORMS_DELIVERY_ADDRESS` as a destination address also keeps
   sends on the free tier.
+
+  This deployment subscribes to **no managed bot-detection service**, so the rate limit is the only
+  thing capping volume and its route coverage is load-bearing: a rule scoped to `/api/research`
+  alone leaves the two most expensive routes open. Verify coverage after any WAF edit. If abuse is
+  observed, the dials are the rule's threshold and `CHALLENGE_COST` in
+  `apps/web/src/lib/research/challenge.ts` — raising the latter increases an attacker's cost
+  linearly while the server still re-derives exactly once per submission.
 - **Non-production note:** a *deployed* non-production build (marker `preview`/`staging`) with the
   relay secrets set but the challenge secret unset accepts form submits inertly (204) and sends
   nothing — provision `ALTCHA_HMAC_SECRET` there too if you want the relay actually exercised, or

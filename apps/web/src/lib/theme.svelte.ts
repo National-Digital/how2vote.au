@@ -1,4 +1,5 @@
 import { browser } from "$app/environment";
+import { nativeSystemBarsPlugin } from "$lib/channel";
 
 const KEY = "how2vote:theme";
 export type ThemePref = "light" | "dark" | "system";
@@ -39,6 +40,16 @@ class Theme {
     const root = document.documentElement;
     if (this.pref === "system") root.removeAttribute("data-theme");
     else root.setAttribute("data-theme", this.pref);
+    // Native shells draw edge-to-edge, so the OS bar glyphs sit over OUR background — keep their
+    // light/dark style on the app's effective theme, not the OS one (the toggle can differ from
+    // it). "DEFAULT" hands "system" back to the OS, which then also tracks a mid-session OS theme
+    // change natively. Style names are background-relative: dark theme → "DARK" → light glyphs.
+    // No-op on the web (null accessor); fire-and-forget — bar styling must never block the UI.
+    const bars = nativeSystemBarsPlugin();
+    if (bars) {
+      const style = this.pref === "system" ? "DEFAULT" : this.pref === "dark" ? "DARK" : "LIGHT";
+      void bars.setStyle({ style }).catch(() => undefined);
+    }
   }
 }
 

@@ -95,8 +95,11 @@ distinguish payload paths, not channels.
   a well-funded bot the way behavioural analysis can. Because it prices but does not *cap volume*,
   the per-IP edge rate-limit rule is load-bearing and **must be extended to `/api/challenge` and
   `/api/forms`**, not only the research routes — otherwise `/api/forms` can be flooded to exhaust
-  the email quota. Mitigations, together: the edge rate-limit + Bot Fight Mode across every `/api`
-  route, single-use purpose-bound challenges burned in the atomic nonce store, the single-use signed
+  the email quota. No managed bot-detection service (e.g. Bot Fight Mode) is
+  subscribed, so nothing filters traffic behaviourally before it reaches the rate limit: the
+  proof-of-work and the rate limit are the whole edge defence, and the PoW cost is the dial to turn
+  if abuse is observed. Mitigations, together: the per-IP edge rate limit across every `/api` route,
+  single-use purpose-bound challenges burned in the atomic nonce store, the single-use signed
   submission token, and registry validation — abuse is bounded and priced, not merely detected.
   (The prefix difficulty is enforced server-side in `AltchaVerifier` — altcha-lib's `verifySolution`
   checks only that the submitted key derives from the submitted counter, so the app asserts the

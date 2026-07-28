@@ -58,7 +58,7 @@ describe("derivation is a pure function of the registry", () => {
     expect(deriveBrowserHosts(REGISTRY)).toEqual([]);
     expect(deriveNetworkAllowlist(REGISTRY)).toContain("theyvoteforyou.org.au");
     expect(deriveNetworkAllowlist(REGISTRY)).toContain("api.cloudflare.com");
-    // The removed third parties never reappear in the allowlist.
+    // Third-party form and challenge hosts must never appear in the allowlist.
     expect(deriveNetworkAllowlist(REGISTRY)).not.toContain("formspree.io");
     expect(deriveNetworkAllowlist(REGISTRY)).not.toContain("challenges.cloudflare.com");
   });

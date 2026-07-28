@@ -1,0 +1,707 @@
+name: Mobile CI
+
+# Store-shell checks. No store account and no secrets are required to pass any of them.
+#
+# Two tiers, decided once by the scope job:
+#   always  — static gates and channel-aware web behaviour. Linux, seconds to a couple of minutes.
+#   native  — both shells compiled, with the binaries attached: an Android APK that installs on a
+#             device and an iOS Simulator .app. Runs when a change can affect a native build.
+#
+# A Svelte change cannot break gradle or xcodebuild: the native projects consume apps/web/build as
+# opaque static assets, and ci.yml builds that on every PR. So the native tier is scoped to
+# apps/mobile/**, the lockfile, the toolchain pin, the F-Droid recipe, this workflow, the shared
+# build actions and the store/F-Droid scripts. For a branch the scope does not select, dispatch it.
+#
+# Both shells are gated on the SAME condition, deliberately, so a plugin cannot end up registered
+# on one shell and missing on the other.
+#
+# There is no workflow-level paths filter. A required check filtered out that way never reports and
+# leaves the pull request blocked indefinitely; a job skipped by a job-level if reports "skipped",
+# which branch protection accepts as passing.
+#
+# Signing and store upload live in ios-release.yml / android-release.yml. NOTHING reachable from a
+# pull_request trigger may touch a store credential: a pull request can change the very code a job
+# runs (the Fastfile, a gradle script), so head code must never execute with the upload keystore or
+# the Play service account in scope. Preview APKs are therefore debug-signed for every pull request,
+# and the one job that signs with the upload key and talks to Play (android-share) is manual-dispatch
+# only AND behind the play-share environment's required-reviewer gate.
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened, ready_for_review, closed]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: mobile-ci-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  scope:
+    name: Change scope (mobile paths)
+    if: github.event.action != 'closed'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      contents: read
+      pull-requests: read # the pull-request files API — contents:read alone cannot read a pull request
+    outputs:
+      app: ${{ steps.decide.outputs.app }}
+      native: ${{ steps.decide.outputs.native }}
+    steps:
+      - name: Decide
+        id: decide
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PR: ${{ github.event.pull_request.number }}
+          DRAFT: ${{ github.event.pull_request.draft }}
+          EVENT: ${{ github.event_name }}
+        run: |
+          set -euo pipefail
+          # An explicit dispatch is a request, not a guess.
+          if [ "$EVENT" != "pull_request" ]; then
+            echo "app=true" >> "$GITHUB_OUTPUT"
+            echo "native=true" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          # The files API, paginated — `gh pr diff` uses the diff API, which refuses pull
+          # requests that touch more than 300 files.
+          FILES=$(gh api "repos/$GITHUB_REPOSITORY/pulls/$PR/files" --paginate --jq '.[].filename')
+          echo "$FILES" | sed 's/^/  /'
+          APP='^(apps/(mobile|web)/|packages/|pnpm-lock\.yaml|\.nvmrc|docs/fdroid/|\.github/(workflows/mobile-ci\.yml|actions/(build-web-channel|resolve-store-version)/)|scripts/(check-fdroid-ready|check-native-plugins|check-store-channel|generate-app-version|generate-store-metadata)\.mjs)'
+          # apps/web and packages are deliberately absent here: they are input to the bundle, not to
+          # the native build graph.
+          NATIVE='^(apps/mobile/|pnpm-lock\.yaml|\.nvmrc|docs/fdroid/|\.github/(workflows/mobile-ci\.yml|actions/(build-web-channel|resolve-store-version)/)|scripts/(check-fdroid-ready|check-native-plugins|generate-app-version|generate-store-metadata)\.mjs)'
+          if echo "$FILES" | grep -qE "$APP"; then echo "app=true" >> "$GITHUB_OUTPUT"; else echo "app=false" >> "$GITHUB_OUTPUT"; fi
+          # A draft still gets the cheap tier; the builds wait until it is marked ready (which
+          # re-triggers this) or are dispatched by hand, so macOS capacity is not spent on
+          # work in progress.
+          if [ "$DRAFT" = "true" ]; then
+            echo "native=false" >> "$GITHUB_OUTPUT"
+            echo "::notice::Draft pull request — shell builds skipped until it is marked ready."
+          elif echo "$FILES" | grep -qE "$NATIVE"; then
+            echo "native=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "native=false" >> "$GITHUB_OUTPUT"
+          fi
+
+  channel-build:
+    name: Channel build invariants
+    needs: scope
+    if: needs.scope.outputs.app == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7
+
+      - name: Store metadata gate
+        run: node scripts/generate-store-metadata.mjs --check
+
+      - name: Cross-channel drift gate (appId / name / palette / version resolver)
+        run: node scripts/check-store-channel.mjs
+
+      # Adding a plugin needs `cap sync` run for BOTH platforms, and skipping one is invisible:
+      # the web bundle reads plugins by name off the bridge and falls back to null, so a missing
+      # plugin looks exactly like running on the web. Type-check, unit tests and e2e all pass. This
+      # is a text comparison because it has to run here rather than behind a macOS runner.
+      - name: Native plugin parity (both shells register every plugin)
+        run: node scripts/check-native-plugins.mjs
+
+      # The STATIC half of the F-Droid gate — scanner-clean gradle files, the version-injection
+      # contract, versionCode formula parity, recipe invariants, committed listing. A second of
+      # text checks, so it runs in the cheap tier; the actual recipe-mirror build is the fdroid job.
+      - name: F-Droid readiness gate (static)
+        run: node scripts/check-fdroid-ready.mjs
+
+      - name: Build web bundle (ios channel)
+        uses: ./.github/actions/build-web-channel
+        with:
+          channel: ios
+          app-version: 0.0.0-dev
+
+      # The channel is baked into the static build via $env/dynamic/public — prove the flag
+      # actually landed, and that the canonical-origin share invariant holds in the bundle.
+      - name: Verify channel is baked into the build
+        run: |
+          # env.js emits unquoted keys: export const env={PUBLIC_DIST_CHANNEL:"ios",…}
+          if ! grep -Eq 'PUBLIC_DIST_CHANNEL"?:[[:space:]]*"ios"' apps/web/build/_app/env.js; then
+            echo "::error::PUBLIC_DIST_CHANNEL=ios not present in built env — channel baking broke."
+            exit 1
+          fi
+          echo "✓ ios channel baked into build"
+
+      - name: Unit tests (channel + share URL invariants included)
+        run: pnpm --filter @how2vote/web test
+
+  channel-behaviour:
+    name: Channel behaviour (${{ matrix.channel }})
+    needs: scope
+    if: needs.scope.outputs.app == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    strategy:
+      fail-fast: false
+      matrix:
+        channel: [web, ios, android]
+    # The build under test is produced for this channel, and the specs below read the same var, so
+    # each one asserts the behaviour that channel is supposed to have. This is the only place the
+    # NATIVE branches run: the main e2e job builds the web channel, where every native assertion
+    # passes for the wrong reason.
+    env:
+      PUBLIC_DIST_CHANNEL: ${{ matrix.channel }}
+    steps:
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7
+      - run: corepack enable
+      - uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e # v6
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      # Build the workspace topologically so @how2vote/data-schema and @how2vote/engine dist/ exist
+      # (the webServer's web-only rebuild below resolves them). PUBLIC_DIST_CHANNEL is inherited.
+      - name: Build workspace (channel)
+        run: pnpm build
+      - name: Install Playwright browser
+        run: pnpm --filter @how2vote/web exec playwright install --with-deps chromium
+      # playwright.config webServer runs `pnpm build` inheriting PUBLIC_DIST_CHANNEL, so the served
+      # bundle is this channel; the spec drives the full opt-in flow and checks the upload origin.
+      - name: Contribution upload flow
+        run: pnpm --filter @how2vote/web exec playwright test research-native
+
+      # The in-app browser: the cue wording, and — on the native channels only — that an outbound
+      # link is handed to the Browser plugin instead of falling through to a new tab. A plugin
+      # double stands in for the native code; see the spec header for what that does and does not
+      # prove. Without this job the native branch would only ever have been exercised locally.
+      - name: Outbound link behaviour
+        run: pnpm --filter @how2vote/web exec playwright test native-browser
+
+  fastlane-toolchain:
+    name: fastlane toolchain (Ruby 4)
+    needs: scope
+    if: needs.scope.outputs.app == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7
+      # Empirical compatibility gate: install the committed Gemfile.lock FROZEN on the pinned Ruby 4
+      # and LOAD the entire fastlane gem tree (enumerating the lanes exercises the Fastfile + every
+      # plugin). No secrets. If any gem is incompatible with the Ruby major this goes red here.
+      - uses: ruby/setup-ruby@95ef2b042f9d7a56d8268cba8559e2842e2ad01b # v1.321.0
+        with:
+          ruby-version: .ruby-version # single source: apps/mobile/.ruby-version
+          bundler-cache: true
+          working-directory: apps/mobile
+      - name: Load fastlane and list lanes (proves Ruby 4 compatibility)
+        working-directory: apps/mobile
+        run: bundle exec fastlane lanes
+      # Drift guard: the committed lock must cover the CI (linux) + store-runner (darwin) platforms.
+      # A presence check (not a byte-exact git diff) so bundler's own self-checksum churn can't make
+      # it brittle; the frozen install above is the real proof the lock is complete and usable.
+      - name: Committed Gemfile.lock covers all target platforms
+        working-directory: apps/mobile
+        run: |
+          for p in x86_64-linux arm64-darwin x86_64-darwin; do
+            grep -qx "  $p" Gemfile.lock || {
+              echo "::error::Gemfile.lock is missing platform $p — run 'bundle lock --add-platform $p' and re-commit"; exit 1; }
+          done
+          echo "✓ lock covers all target platforms"
+
+  android:
+    name: Android shell compiles
+    needs: scope
+    if: needs.scope.outputs.native == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    outputs:
+      version: ${{ steps.version.outputs.name }}
+      # Promoted from step to JOB output so the comment job can read it: a job can only see another
+      # job's `outputs`, never its steps.
+      artifact-url: ${{ steps.apk-upload.outputs.artifact-url }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7
+
+      - name: Resolve preview version
+        id: version
+        env:
+          PR: ${{ github.event.pull_request.number || 0 }}
+          RUN: ${{ github.run_number }}
+        run: |
+          set -euo pipefail
+          if [ "$PR" != "0" ]; then NAME="0.0.0-pr${PR}.${RUN}"; else NAME="0.0.0-dev.${RUN}"; fi
+          # Strict semver prerelease: APP_VERSION also becomes the service-worker cache name
+          # (svelte.config.js) and the release manifest's appVersion, so no `+` build metadata.
+          # 0.0.0 keeps a preview unmistakably below every release.
+          #
+          # The versionCode sits ABOVE any release code, so a preview installs over a store build
+          # instead of being refused as a downgrade. Releases encode as
+          # (MAJOR*10000 + MINOR*100 + PATCH)*1000 + run digits (resolve-store-version), which does
+          # not reach 1e9 until major 100, and the versionCode ceiling is 2.1e9 — so the range is
+          # unreachable in practice. Nothing here touches a release track, so no release code is
+          # consumed.
+          echo "name=$NAME" >> "$GITHUB_OUTPUT"
+          echo "code=$(( 1000000000 + RUN ))" >> "$GITHUB_OUTPUT"
+
+      - name: Build web bundle (android channel)
+        uses: ./.github/actions/build-web-channel
+        with:
+          channel: android
+          app-version: ${{ steps.version.outputs.name }}
+
+      - name: Sync Capacitor Android project
+        run: pnpm --filter @how2vote/mobile sync:android
+
+      - name: Set up Java
+        uses: actions/setup-java@03ad4de0992f5dab5e18fcb136590ce7c4a0ac95 # v5.6.0
+        with:
+          distribution: temurin
+          java-version: "21"
+
+      # Debug-signed, ALWAYS — no signing secret is referenced anywhere in this job, so nothing here
+      # can execute against the upload key no matter what the head branch changes. A debug APK still
+      # installs on a real phone, which is what a preview is for, and a fork pull request (which
+      # never receives secrets) gets exactly the same build as an internal one. bundleRelease runs
+      # too, so the release build graph is still proven; signing itself is proven by the
+      # android-share job and by android-release.yml.
+      - name: Build (release bundle + debug-signed APK)
+        working-directory: apps/mobile/android
+        env:
+          CODE: ${{ steps.version.outputs.code }}
+          NAME: ${{ steps.version.outputs.name }}
+        run: |
+          set -euo pipefail
+          ./gradlew bundleRelease assembleDebug --no-daemon \
+            -PversionCode="$CODE" -PversionName="$NAME"
+          test -s app/build/outputs/apk/debug/app-debug.apk
+
+      - name: Stage the APK
+        id: apk
+        env:
+          NAME: ${{ steps.version.outputs.name }}
+        run: |
+          set -euo pipefail
+          cp apps/mobile/android/app/build/outputs/apk/debug/app-debug.apk "$RUNNER_TEMP/how2vote.apk"
+          SUM=$(sha256sum "$RUNNER_TEMP/how2vote.apk" | cut -d' ' -f1)
+          echo "sha256=$SUM" >> "$GITHUB_OUTPUT"
+          {
+            echo "### Android build"
+            echo "- version: \`$NAME\` (debug-signed)"
+            echo "- sha256: \`$SUM\`"
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      # Named with the PR number so the teardown job can find it.
+      - name: Attach the APK to this run
+        id: apk-upload
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
+        with:
+          name: how2vote-android-pr${{ github.event.pull_request.number || 0 }}-${{ github.run_number }}
+          path: ${{ runner.temp }}/how2vote.apk
+          if-no-files-found: error
+          retention-days: 14
+
+  # The ONLY job in this workflow that touches a store credential, and it is unreachable from a pull
+  # request by construction:
+  #   - `workflow_dispatch` only. A pull_request run cannot select it, so head code from an unreviewed
+  #     branch (the Fastfile, a gradle script, a plugin) never executes with the upload keystore or
+  #     the production Play service account in scope. Dispatch also requires repo write access.
+  #   - `environment: play-share`, which must carry a required reviewer — the same gate the play-store
+  #     / app-store environments enforce in android-release.yml / ios-release.yml. The credentials
+  #     must be ENVIRONMENT secrets of play-share, not repository secrets: a repository secret is
+  #     readable by every job in every same-repo run, so scoping is what actually contains it. The
+  #     reviewer rule and the scoping both live in repo settings, which is the point — a workflow-level
+  #     `if:` cannot be the boundary, because a branch can edit the condition that gates it.
+  #   - a SEPARATE, least-privilege Play credential. PLAY_SHARE_SERVICE_ACCOUNT_JSON should hold a
+  #     service account with internal-app-sharing rights only, so it cannot promote a release. The
+  #     production PLAY_SERVICE_ACCOUNT_JSON stays scoped to play-store, reachable only from
+  #     android-release.yml, and never enters a dispatchable job.
+  # It rebuilds rather than reusing the preview APK: the preview is debug-signed.
+  android-share:
+    name: Play internal app sharing (reviewed)
+    needs: scope
+    if: github.event_name == 'workflow_dispatch' && needs.scope.outputs.native == 'true'
+    environment: play-share
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7
+
+      - name: Resolve preview version
+        id: version
+        env:
+          RUN: ${{ github.run_number }}
+        run: |
+          set -euo pipefail
+          # Same encoding as the preview job above: strict semver prerelease, 0.0.0 to keep it below
+          # every release, versionCode above any release code so it installs over a store build.
+          echo "name=0.0.0-dev.${RUN}" >> "$GITHUB_OUTPUT"
+          echo "code=$(( 1000000000 + RUN ))" >> "$GITHUB_OUTPUT"
+
+      - name: Build web bundle (android channel)
+        uses: ./.github/actions/build-web-channel
+        with:
+          channel: android
+          app-version: ${{ steps.version.outputs.name }}
+
+      - name: Sync Capacitor Android project
+        run: pnpm --filter @how2vote/mobile sync:android
+
+      - name: Set up Java
+        uses: actions/setup-java@03ad4de0992f5dab5e18fcb136590ce7c4a0ac95 # v5.6.0
+        with:
+          distribution: temurin
+          java-version: "21"
+
+      # A DEDICATED share keystore, never the upload key. Play internal app sharing "can be signed with
+      # any key, and [artifacts] don't need to be signed with a production or upload key" — Play
+      # re-signs every upload with an Internal App Sharing key it generates for the app
+      # (support.google.com/googleplay/android-developer/answer/9844679). So the upload key has no
+      # business in a dispatchable job: it stays scoped to play-store / android-release.yml, and this
+      # path uses a throwaway keystore whose loss costs nothing. The build is still a RELEASE build, so
+      # the preview exercises R8, resource shrinking and the release manifest — the things worth
+      # smoke-testing before a store submission.
+      #
+      # Fail closed: a missing credential is a configuration fault, never a reason to hand out an
+      # unsigned or silently skipped build from a job whose whole purpose is the signed upload.
+      - name: Build (release, share-key signed)
+        working-directory: apps/mobile/android
+        env:
+          ANDROID_KEYSTORE: ${{ secrets.PLAY_SHARE_KEYSTORE }}
+          ANDROID_KEYSTORE_PASSWORD: ${{ secrets.PLAY_SHARE_KEYSTORE_PASSWORD }}
+          ANDROID_KEY_ALIAS: ${{ secrets.PLAY_SHARE_KEY_ALIAS }}
+          ANDROID_KEY_PASSWORD: ${{ secrets.PLAY_SHARE_KEY_PASSWORD }}
+          CODE: ${{ steps.version.outputs.code }}
+          NAME: ${{ steps.version.outputs.name }}
+        run: |
+          set -euo pipefail
+          if [ -z "${ANDROID_KEYSTORE:-}" ]; then
+            echo "::error::PLAY_SHARE_KEYSTORE is not available to the play-share environment — add it there as an environment secret (a throwaway keystore, NOT the upload key)."
+            exit 1
+          fi
+          export ANDROID_KEYSTORE_PATH="$RUNNER_TEMP/share.jks"
+          # Remove the decoded keystore on ANY exit (success, failure, or cancel).
+          trap 'rm -f "$ANDROID_KEYSTORE_PATH"' EXIT
+          printf '%s' "$ANDROID_KEYSTORE" | base64 -d > "$ANDROID_KEYSTORE_PATH"
+          ./gradlew bundleRelease assembleRelease --no-daemon \
+            -PversionCode="$CODE" -PversionName="$NAME"
+          # Without the keystore gradle emits app-release-unsigned.apk, which installs nowhere.
+          # Assert the signed name so a silently-unsigned build cannot be handed out.
+          test -s app/build/outputs/apk/release/app-release.apk
+
+      - name: Set up Ruby / fastlane
+        uses: ruby/setup-ruby@95ef2b042f9d7a56d8268cba8559e2842e2ad01b # v1.321.0
+        with:
+          ruby-version: .ruby-version # single source: apps/mobile/.ruby-version
+          bundler-cache: true
+          working-directory: apps/mobile
+
+      # Internal app sharing, NEVER a track. A track upload would consume a version code in the
+      # release sequence: Play requires every later upload to that track to be higher, and a
+      # preview code of 1e9+ would make every future real release (~1000700) unpublishable to it,
+      # permanently breaking android-release.yml. Internal app sharing sits outside every track,
+      # interacts with no version code, and cannot be promoted.
+      #
+      # Play refuses it with `UploadException: NOT_PUBLISHED` until the app has a published
+      # release, which it does not yet — an account-state precondition, not a build defect, so it
+      # is recognised specifically and reported as a warning. Any OTHER refusal is red: an
+      # unrecognised one must not be waved through. A missing credential is red as well.
+      #
+      # There is no delete on this API resource (uploadapk/uploadbundle are the only operations),
+      # so each successful upload is a permanent link — one more reason this runs only when a human
+      # asks for it and a reviewer approves it.
+      - name: Share through Play internal app sharing
+        working-directory: apps/mobile
+        env:
+          # The share-only credential, kept distinct from the release one so the account that can
+          # promote to production is never in scope here. Fastlane reads PLAY_SERVICE_ACCOUNT_JSON, so
+          # the least-privilege secret is mapped onto that name for the lane's benefit only.
+          PLAY_SERVICE_ACCOUNT_JSON: ${{ secrets.PLAY_SHARE_SERVICE_ACCOUNT_JSON }}
+        run: |
+          set -uo pipefail
+          if [ -z "${PLAY_SERVICE_ACCOUNT_JSON:-}" ]; then
+            echo "::error::PLAY_SHARE_SERVICE_ACCOUNT_JSON is not available to the play-share environment — add it there as an environment secret (a service account with internal-app-sharing rights only)."
+            exit 1
+          fi
+          export DRAFT_URL_FILE="$RUNNER_TEMP/draft-url.txt"
+          LOG="$RUNNER_TEMP/share.log"
+          if bundle exec fastlane android draft_share 2>&1 | tee "$LOG"; then
+            test -s "$DRAFT_URL_FILE"
+            echo "- install: $(cat "$DRAFT_URL_FILE")" >> "$GITHUB_STEP_SUMMARY"
+          elif grep -q "NOT_PUBLISHED" "$LOG"; then
+            echo "::warning::Play refused internal app sharing: au.how2vote.app has no published release yet (draft app). This starts working once the first production release is live."
+          else
+            echo "::error::Play refused the internal-app-sharing upload for a reason other than the app being unpublished. See the step log."
+            exit 1
+          fi
+
+  ios:
+    name: iOS shell compiles
+    needs: scope
+    if: needs.scope.outputs.native == 'true'
+    runs-on: macos-15
+    # Tighter than the Android job on purpose: macOS concurrency is capped at 5 across the whole
+    # account, so a hung job here costs a slot that ios-release.yml may need.
+    timeout-minutes: 35
+    outputs:
+      artifact-url: ${{ steps.app-upload.outputs.artifact-url }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7
+
+      - name: Resolve preview version
+        id: version
+        env:
+          PR: ${{ github.event.pull_request.number || 0 }}
+          RUN: ${{ github.run_number }}
+        run: |
+          set -euo pipefail
+          if [ "$PR" != "0" ]; then NAME="0.0.0-pr${PR}.${RUN}"; else NAME="0.0.0-dev.${RUN}"; fi
+          echo "name=$NAME" >> "$GITHUB_OUTPUT"
+
+      - name: Build web bundle (ios channel)
+        uses: ./.github/actions/build-web-channel
+        with:
+          channel: ios
+          app-version: ${{ steps.version.outputs.name }}
+
+      - name: Sync Capacitor iOS project
+        run: pnpm --filter @how2vote/mobile sync:ios
+
+      # Simulator, unsigned: no certificate, no provisioning profile, no App Store Connect key and
+      # no Developer Program enrolment. That is what makes this the one iOS build a fork can
+      # have. The trade is that it runs only in the Simulator — device installs need TestFlight.
+      - name: Build for the simulator (no signing)
+        working-directory: apps/mobile/ios/App
+        run: |
+          set -euo pipefail
+          xcodebuild build \
+            -project App.xcodeproj \
+            -scheme App \
+            -configuration Release \
+            -destination "generic/platform=iOS Simulator" \
+            -derivedDataPath "$RUNNER_TEMP/dd" \
+            CODE_SIGNING_ALLOWED=NO CODE_SIGN_IDENTITY=""
+
+      # ditto, not upload-artifact's own zipping: a .app is a directory that can contain symlinks
+      # and executable bits, and upload-artifact preserves neither reliably. A mangled bundle fails
+      # to launch with a message that explains nothing. Costs one extra unzip on the way in.
+      - name: Package the app bundle
+        id: package
+        env:
+          NAME: ${{ steps.version.outputs.name }}
+        run: |
+          set -euo pipefail
+          APP="$RUNNER_TEMP/dd/Build/Products/Release-iphonesimulator/App.app"
+          test -d "$APP"
+          test -x "$APP/App"
+          ditto -c -k --sequesterRsrc --keepParent "$APP" "$RUNNER_TEMP/App.zip"
+          SUM=$(shasum -a 256 "$RUNNER_TEMP/App.zip" | cut -d' ' -f1)
+          echo "sha256=$SUM" >> "$GITHUB_OUTPUT"
+          {
+            echo "### iOS build"
+            echo "- version: \`$NAME\`"
+            echo "- sha256: \`$SUM\`"
+            echo "- simulator only — an unsigned simulator build cannot run on a physical iPhone"
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Attach the app bundle to this run
+        id: app-upload
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
+        with:
+          name: how2vote-ios-pr${{ github.event.pull_request.number || 0 }}-${{ github.run_number }}
+          path: ${{ runner.temp }}/App.zip
+          if-no-files-found: error
+          retention-days: 14
+
+  fdroid:
+    name: F-Droid buildability (recipe mirror)
+    needs: scope
+    if: needs.scope.outputs.native == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7
+
+      # F-Droid imports the Android listing from the repo AT THE TAG, so the fastlane android text
+      # tree is committed — prove it still matches what the generator would emit.
+      - name: Committed Android listing matches the generator
+        run: |
+          node scripts/generate-store-metadata.mjs
+          git diff --exit-code apps/mobile/fastlane/metadata/android \
+            || { echo "::error::committed fastlane android metadata drifted — run 'node scripts/generate-store-metadata.mjs' and commit"; exit 1; }
+
+      # ---- From here on, mirror docs/fdroid/au.how2vote.app.yml step for step. The point is to
+      # ---- build EXACTLY the way F-Droid's buildserver will: version pair injected via
+      # ---- gradle.properties (never -P flags), web bundle built from source, assembleRelease.
+      # 9.9.9 under the shared encoding, (MAJOR*10000 + MINOR*100 + PATCH)*1000, is 90909000.
+      - name: Inject version pair the way the recipe's prebuild does
+        run: printf 'versionCode=90909000\nversionName=9.9.9\n' >> apps/mobile/android/gradle.properties
+
+      # The fdroid channel, matching the recipe: F-Droid installs cannot be updated through Play (a
+      # different signing key), so the in-app update remedy has to point at the F-Droid listing.
+      # Building this mirror on the `android` channel would stop it mirroring the thing it verifies.
+      - name: Build web bundle (fdroid channel)
+        uses: ./.github/actions/build-web-channel
+        with:
+          channel: fdroid
+          app-version: 9.9.9
+
+      - name: Sync Capacitor Android project
+        run: pnpm --filter @how2vote/mobile sync:android
+
+      - name: Set up Java
+        uses: actions/setup-java@03ad4de0992f5dab5e18fcb136590ce7c4a0ac95 # v5.6.0
+        with:
+          distribution: temurin
+          java-version: "21"
+
+      # assembleRelease (APK), not bundleRelease: F-Droid builds and signs APKs. No -P flags — if
+      # the property-injection path broke, the assertion below catches the 0.0.0-dev fallback.
+      - name: Build unsigned release APK with no CI-injected properties
+        working-directory: apps/mobile/android
+        run: ./gradlew assembleRelease --no-daemon
+
+      - name: Assert the built APK carries the injected version pair
+        run: |
+          APK=apps/mobile/android/app/build/outputs/apk/release/app-release-unsigned.apk
+          AAPT2=$(ls "$ANDROID_HOME"/build-tools/*/aapt2 | sort -V | tail -1)
+          BADGING=$("$AAPT2" dump badging "$APK" | head -1)
+          echo "$BADGING"
+          echo "$BADGING" | grep -q "versionCode='90909000'" \
+            || { echo "::error::versionCode was not injected via gradle.properties — the F-Droid recipe path is broken"; exit 1; }
+          echo "$BADGING" | grep -q "versionName='9.9.9'" \
+            || { echo "::error::versionName was not injected via gradle.properties — the F-Droid recipe path is broken"; exit 1; }
+          echo "✓ F-Droid build path proven: gradle.properties → APK ${BADGING#package: }"
+
+  comment:
+    name: Preview install links
+    needs: [android, ios]
+    # Runs even if one platform failed, so a working build is still handed over — but not when the
+    # whole thing was cancelled or skipped.
+    if: always() && github.event_name == 'pull_request' && (needs.android.result == 'success' || needs.ios.result == 'success')
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      pull-requests: write
+    steps:
+      - name: Compose the comment body
+        env:
+          BODY_FILE: ${{ runner.temp }}/mobile-preview.md
+          SHA: ${{ github.event.pull_request.head.sha }}
+          VERSION: ${{ needs.android.outputs.version }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+          ANDROID: ${{ needs.android.result }}
+          IOS: ${{ needs.ios.result }}
+          APK_URL: ${{ needs.android.outputs.artifact-url }}
+          APP_URL: ${{ needs.ios.outputs.artifact-url }}
+        run: |
+          set -euo pipefail
+          # printf, not a heredoc: an indented heredoc body keeps its leading whitespace, and four
+          # leading spaces render the whole comment as a code block.
+          # upload-artifact's artifact-url points at the file itself, not the run page, so both
+          # platforms get the same kind of link. It requires the reader to be signed in to GitHub.
+          # Fall back to the run page if the output is ever missing.
+          A="Android: build ${ANDROID}"
+          if [ "$ANDROID" = "success" ]; then
+            # Always debug-signed: no pull-request job holds the upload key. A Play internal-app-
+            # sharing link comes from the reviewed android-share job, dispatched by hand.
+            A="**Android** — Download [how2vote.apk](${APK_URL:-$RUN_URL}), then \`adb install how2vote.apk\` or open the file on the device. Debug-signed, so it cannot install over a store build."
+          fi
+          I="iOS: build ${IOS}"
+          [ "$IOS" = "success" ] && I="**iOS** — Download [App.zip](${APP_URL:-$RUN_URL}), then on a Mac with Xcode: \`unzip App.zip && xcrun simctl install booted App.app\`. Simulator only; a device needs TestFlight."
+          printf '%s\n\n%s\n\n%s\n\n%s\n\n%s\n\n%s\n' \
+            "### 📱 Mobile preview" \
+            "Version \`${VERSION:-preview}\`." \
+            "$A" \
+            "$I" \
+            "Uninstall a previous preview before installing a new one — preview builds are signed with a different key each time, so Android refuses to replace one in place. Artifacts are deleted when this pull request closes." \
+            "_Updated for commit ${SHA:0:7}._" > "$BODY_FILE"
+
+      # Upserted against a marker, so repeated pushes edit ONE comment instead of stacking a new
+      # install-links block on every run. Same pattern and heading style as deploy.yml's web
+      # preview; the teardown below rewrites this same comment when the PR closes.
+      - name: Upsert the preview comment
+        uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9
+        env:
+          BODY_FILE: ${{ runner.temp }}/mobile-preview.md
+        with:
+          script: |
+            const { readFileSync } = require('node:fs');
+            const marker = '<!-- mobile-preview -->';
+            const body = `${marker}\n${readFileSync(process.env.BODY_FILE, 'utf8')}`;
+            const { data: comments } = await github.rest.issues.listComments({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+            });
+            const existing = comments.find(c => c.body?.includes(marker));
+            if (existing) {
+              await github.rest.issues.updateComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                comment_id: existing.id,
+                body,
+              });
+            } else {
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: context.issue.number,
+                body,
+              });
+            }
+
+  # Artifacts are deletable, so a preview genuinely dies with its pull request rather than lingering
+  # until retention expires. Same posture as deploy.yml's web preview teardown. A Play internal-app-
+  # sharing upload, by contrast, is permanent (that API has no delete operation) — which is why the
+  # android-share job is dispatched by hand and reviewer-gated rather than run per pull request.
+  teardown:
+    name: Tear down preview binaries
+    if: github.event.action == 'closed'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      actions: write
+      pull-requests: write # rewrite the sticky preview comment
+    steps:
+      - name: Delete artifacts for this PR
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PR: ${{ github.event.pull_request.number }}
+        run: |
+          set -euo pipefail
+          n=0
+          for prefix in "how2vote-android-pr${PR}-" "how2vote-ios-pr${PR}-"; do
+            # The trailing dash matters: without it, prefix "…-pr20" would also match "…-pr200-3".
+            for id in $(gh api --paginate "repos/$GITHUB_REPOSITORY/actions/artifacts" \
+                          --jq ".artifacts[] | select(.name | startswith(\"$prefix\")) | .id"); do
+              gh api -X DELETE "repos/$GITHUB_REPOSITORY/actions/artifacts/$id" && n=$((n+1))
+            done
+          done
+          echo "Deleted $n mobile binary artifact(s) for PR #$PR."
+
+      # The install links above now point at deleted artifacts, so say so rather than leaving a
+      # comment full of dead downloads. Edits in place; does nothing if no preview was ever posted.
+      - name: Update the preview comment
+        uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9
+        with:
+          script: |
+            const marker = '<!-- mobile-preview -->';
+            const body = `${marker}\n### 📱 Mobile preview\n\nThe preview binaries for this PR have been deleted (PR ${context.payload.pull_request.merged ? 'merged' : 'closed'}).`;
+            const { data: comments } = await github.rest.issues.listComments({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+            });
+            const existing = comments.find(c => c.body?.includes(marker));
+            if (existing) {
+              await github.rest.issues.updateComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                comment_id: existing.id,
+                body,
+              });
+            }

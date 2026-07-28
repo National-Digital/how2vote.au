@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<!-- Dark-scheme brand tokens (SLATE ground / CHALK ink), matching the PWA's dark theme-color. -->
+<resources>
+    <color name="ground">#151410</color>
+    <color name="ink">#EBE8DF</color>
+</resources>

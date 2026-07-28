@@ -1,0 +1,167 @@
+# Store delivery for both shells. Run from apps/mobile (`bundle exec fastlane ios beta`, …).
+#
+# Inputs arrive ONLY via environment (set by the release workflows from GitHub secrets/vars):
+#   APP_VERSION   — marketing version, the web release tag without the leading v (e.g. 2.1.0)
+#   BUILD_NUMBER  — monotonically increasing integer (iOS CFBundleVersion / Android versionCode)
+#   iOS:     ASC_KEY_ID, ASC_ISSUER_ID, ASC_API_KEY_P8 (base64 .p8), ASC_KEY_PATH (decoded file),
+#            APPLE_TEAM_ID
+#   Android: PLAY_SERVICE_ACCOUNT_JSON, ANDROID_KEYSTORE_PATH + passwords (read by build.gradle)
+#
+# Signing is cloud-managed (no certificate repo): xcodebuild -allowProvisioningUpdates
+# authenticates with the App Store Connect API key and creates/fetches profiles itself.
+
+default_platform(:ios)
+
+def asc_api_key
+  app_store_connect_api_key(
+    key_id: ENV.fetch("ASC_KEY_ID"),
+    issuer_id: ENV.fetch("ASC_ISSUER_ID"),
+    key_content: ENV.fetch("ASC_API_KEY_P8"),
+    is_key_content_base64: true,
+  )
+end
+
+platform :ios do
+  desc "Archive + export the signed ipa (cloud-managed signing)"
+  lane :build do
+    build_app(
+      project: "ios/App/App.xcodeproj",
+      scheme: "App",
+      configuration: "Release",
+      output_directory: "builds",
+      output_name: "how2vote.ipa",
+      export_method: "app-store",
+      export_options: {
+        signingStyle: "automatic",
+        teamID: ENV.fetch("APPLE_TEAM_ID"),
+      },
+      xcargs: [
+        "-allowProvisioningUpdates",
+        "-authenticationKeyPath #{File.expand_path(ENV.fetch('ASC_KEY_PATH'))}",
+        "-authenticationKeyID #{ENV.fetch('ASC_KEY_ID')}",
+        "-authenticationKeyIssuerID #{ENV.fetch('ASC_ISSUER_ID')}",
+        "MARKETING_VERSION=#{ENV.fetch('APP_VERSION')}",
+        "CURRENT_PROJECT_VERSION=#{ENV.fetch('BUILD_NUMBER')}",
+        "DEVELOPMENT_TEAM=#{ENV.fetch('APPLE_TEAM_ID')}",
+      ].join(" "),
+    )
+  end
+
+  desc "Build and upload to TestFlight (runs on every web release)"
+  lane :beta do
+    build
+    # Do NOT skip processing here: the submit lane runs behind a human review gate and attaches
+    # THIS exact build by number; if deliver runs before ASC finishes processing, it errors with
+    # "Build number N does not exist". Waiting in the (unattended) upload job is the right place.
+    upload_to_testflight(
+      api_key: asc_api_key,
+      ipa: "builds/how2vote.ipa",
+      skip_waiting_for_build_processing: false,
+    )
+  end
+
+  desc "Submit the already-uploaded build for App Store review (behind the app-store environment gate)"
+  lane :submit_review do
+    # The beta lane waits for ASC processing before the build job finishes, so by the time this
+    # human-gated job runs the build is processed and deliver can attach it by number.
+    deliver(
+      api_key: asc_api_key,
+      app_version: ENV.fetch("APP_VERSION"),
+      build_number: ENV.fetch("BUILD_NUMBER"),
+      metadata_path: "fastlane/metadata/ios",
+      screenshots_path: "fastlane/screenshots",
+      skip_binary_upload: true,
+      skip_screenshots: false,
+      overwrite_screenshots: true,
+      submit_for_review: true,
+      # Apple's equivalent of a staged rollout, and the same reasoning as the Android `promote`
+      # lane: no OTA path, so a paused phased release is the only "undo". Mechanism differs —
+      # Apple runs a FIXED 7-day schedule (1/2/5/10/20/50/100%) that applies only to AUTOMATIC
+      # updates for existing users (new and manual downloads always get the latest), and there is
+      # no percentage to choose. Campaign-period data corrections set IOS_PHASED_RELEASE=false so
+      # the fix reaches auto-updaters immediately.
+      phased_release: ENV.fetch("IOS_PHASED_RELEASE", "true") == "true",
+      # Approved builds wait for a human to release — the App Store equivalent of Play's
+      # Managed publishing. A green submit job means "approved and waiting", not "live".
+      automatic_release: false,
+      run_precheck_before_submit: false,
+      force: true,
+      submission_information: {
+        add_id_info_uses_idfa: false,
+        export_compliance_uses_encryption: false,
+      },
+    )
+  end
+end
+
+platform :android do
+  desc "Build the signed release bundle (aab)"
+  lane :build do
+    gradle(
+      project_dir: "android",
+      task: "bundle",
+      build_type: "Release",
+      properties: {
+        "versionCode" => ENV.fetch("BUILD_NUMBER"),
+        "versionName" => ENV.fetch("APP_VERSION"),
+      },
+    )
+  end
+
+  desc "Build and upload to the Play internal track (runs on every web release)"
+  lane :internal do
+    build
+    upload_to_play_store(
+      track: "internal",
+      aab: "android/app/build/outputs/bundle/release/app-release.aab",
+      metadata_path: "fastlane/metadata/android",
+      skip_upload_images: false,
+      skip_upload_screenshots: false,
+      release_status: "completed",
+    )
+  end
+
+  desc "Share an already-built preview APK through Play INTERNAL APP SHARING (never a track)"
+  lane :draft_share do
+    # Internal app sharing, NOT a track, and the distinction is load-bearing. A track upload
+    # consumes a version code in the release sequence — Play requires every later upload to that
+    # track to be higher — so a preview code of 1e9+ would make every future real release (~1000700)
+    # unpublishable to the internal track and permanently break the `internal` lane above.
+    # Internal app sharing sits outside every track, interacts with no version code, and cannot be
+    # promoted. Do NOT "simplify" this to upload_to_play_store.
+    #
+    # The APK is built by gradle in the calling workflow (mobile-ci.yml); this lane only uploads it.
+    #
+    # Play refuses this with `UploadException: NOT_PUBLISHED` while the app has no published
+    # release. The caller recognises that specific error and treats it as a warning, because the
+    # APK is already attached to the run and is a complete preview without a share link.
+    url = upload_to_play_store_internal_app_sharing(
+      apk: "android/app/build/outputs/apk/release/app-release.apk",
+    )
+    out = ENV["DRAFT_URL_FILE"]
+    # Absolute path from the caller — fastlane resolves relative paths against the fastlane/ dir,
+    # which is not where the workflow looks for it.
+    UI.user_error!("DRAFT_URL_FILE must be an absolute path") if out.nil? || !out.start_with?("/")
+    UI.user_error!("internal app sharing returned no download URL") if url.to_s.empty?
+    File.write(out, url.to_s)
+  end
+
+  desc "Promote the internal build to production (behind the play-store environment gate)"
+  lane :promote do
+    # Staged by default. Native has no OTA path — a bad build sits on devices until a NEW build
+    # clears review — so a halted staged rollout is the only "undo" available. The exception is a
+    # data correction inside the campaign period (writ issued → polls close): there, 90% of users
+    # left on wrong ballot data is the worse failure, so the release workflow passes PLAY_ROLLOUT=1.
+    upload_to_play_store(
+      track: "internal",
+      track_promote_to: "production",
+      rollout: ENV.fetch("PLAY_ROLLOUT", "0.1"),
+      version_code: ENV.fetch("BUILD_NUMBER"),
+      skip_upload_aab: true,
+      skip_upload_metadata: true,
+      skip_upload_changelogs: true,
+      skip_upload_images: true,
+      skip_upload_screenshots: true,
+    )
+  end
+end

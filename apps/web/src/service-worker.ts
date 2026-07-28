@@ -32,7 +32,17 @@ const isDataPage = (path: string): boolean => ELECTION_IDS.some((id) => path.sta
 // the whole flow is available offline on first install and the offline-status page can honestly
 // report each step as saved.
 const corePrerendered = prerendered.filter((path) => !isDataPage(path));
-const PRECACHE = [...build, ...files, ...corePrerendered];
+
+// The prerenderer's env shim, which is in NEITHER `build` (the client manifest) nor `files` (static/)
+// because the prerenderer writes it. Every prerendered page boots through it — a client module reads
+// $env/dynamic/public, so each page ships `env: null` and calls `import("./_app/env.js")` before it
+// starts. Left out of the precache the page renders offline and then never hydrates: the import takes
+// the network-first branch, misses the cache, is not a navigation so the /offline fallback does not
+// apply, and the boot promise rejects. The result looks intact and is completely inert — and it
+// recurs after every release, because activate prunes the previous generation. Presence in the build
+// is asserted by scripts/check-precache.mjs, since an absent path would reject the atomic addAll.
+const ENV_SHIM = "/_app/env.js";
+const PRECACHE = [...build, ...files, ...corePrerendered, ENV_SHIM];
 
 sw.addEventListener("install", (event) => {
   // Precache the new generation, but do NOT skipWaiting: the new worker stays "waiting" so any open

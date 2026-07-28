@@ -106,9 +106,15 @@ outlive their windows.
 Attacker floods the endpoint, fabricates party slugs, or tries to inject via field values.
 - Mitigations: body-size caps, proposition-count cap, schema-version gate, allowlist/shape
   validation (no free text stored), static SQL with bound values only **[code]**; fabricated party
-  slugs are never published (dataset filter in the generator) **[code, test-pinned]**; live
-  Cloudflare rate limit + Bot Fight Mode on `POST /api/research` **[ops]** (already configured —
-  see project memory), with spike detection via Cloudflare request analytics **[ops]**. **No
+  slugs are never published (dataset filter in the generator) **[code, test-pinned]**; a live
+  Cloudflare per-IP rate limit covering the `POST /api/*` routes **[ops]** (already configured),
+  with spike detection via Cloudflare request analytics **[ops]**; each submission additionally
+  carries a single-use, purpose-bound proof-of-work **[code]**. **Residual risk:** no managed
+  bot-detection service (e.g. Bot Fight Mode) is subscribed, so there is no behavioural layer in
+  front of the rate limit — a distributed attacker under the per-IP threshold is priced by the
+  proof-of-work but not otherwise filtered. Accepted: the publication gate below bounds the
+  impact, and the compensating controls are the rate limit's route coverage and the PoW cost
+  dial (ADR-0017). **No
   surgical excision:** a per-cell-per-time delta store would be the remediation path, but it would
   also be a temporary person-level record (a rare cell on a quiet day regroups by insertion order
   or shared cohort/state/party key), so it is deliberately **not** built (ADR-0008). A confirmed
@@ -127,7 +133,7 @@ Attacker floods the endpoint, fabricates party slugs, or tries to inject via fie
 | No timestamp finer than a quarter anywhere; no delta/per-request bundle; allowlist validation; uniform 204 | [code] |
 | Per-cohort k ≥ 10 suppression, board < 50 hidden, no-leak denominator, no electorate view, dataset-checked party keys | [code] |
 | Snapshot differencing gate on stats regeneration (≥ k new responses) | [code] |
-| Poisoning: prevention (rate limit + Bot Fight) + infra detection; no in-DB delta store | [ops] |
+| Poisoning: prevention (per-IP rate limit + proof-of-work) + infra detection; no in-DB delta store | [ops/code] |
 | Analytics excludes all research/quiz/geo fields (test-pinned) | [code] |
 | Retention sweep SQL + procedure (counters per election wave) | [code/doc] |
 | Least-privilege D1 binding; separate prod/stats/admin credentials; token rotation | [ops] |

@@ -234,9 +234,8 @@ export function verdict(register, options = {}) {
       push("vendorRegistry must contain a services array");
     } else {
       // EVERY registry vendor — browser-loaded services AND infrastructure vendors — must have a
-      // matching ledger record. (Originally services-only; with the forms + anti-abuse now
-      // self-hosted that list is empty, so the infrastructure vendors are what keeps this
-      // completeness gate live.)
+      // matching ledger record. The browser-loaded list is currently empty (forms and anti-abuse
+      // are self-hosted), so the infrastructure vendors are what keeps this completeness gate live.
       const vendors = [
         ...vendorRegistry.services,
         ...(Array.isArray(vendorRegistry.infrastructure) ? vendorRegistry.infrastructure : []),
@@ -255,15 +254,15 @@ export function verdict(register, options = {}) {
     push("lifeToDate must be an object");
   } else {
     if (
-      !isNumber(life["actualCashCostThrough2026-07-12"]) ||
-      !moneyEqual(life["actualCashCostThrough2026-07-12"], totals.actual)
+      !isNumber(life["actualCashCostThrough2026-07-26"]) ||
+      !moneyEqual(life["actualCashCostThrough2026-07-26"], totals.actual)
     ) {
       push(`lifeToDate actual total must equal ${totals.actual}`);
     }
     if (
-      !isNumber(life["conservativelyClassifiedElectoralExpenditureThrough2026-07-12"]) ||
+      !isNumber(life["conservativelyClassifiedElectoralExpenditureThrough2026-07-26"]) ||
       !moneyEqual(
-        life["conservativelyClassifiedElectoralExpenditureThrough2026-07-12"],
+        life["conservativelyClassifiedElectoralExpenditureThrough2026-07-26"],
         totals.electoral,
       )
     ) {

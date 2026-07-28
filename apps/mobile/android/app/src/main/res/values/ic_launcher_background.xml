@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<!-- Adaptive-icon background layer colour — must match the generated icon-background.png (PAPER,
+     see apps/mobile/scripts/generate-native-assets.mjs). -->
+<resources>
+    <color name="ic_launcher_background">#F6F4EE</color>
+</resources>

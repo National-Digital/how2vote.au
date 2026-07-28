@@ -4,7 +4,7 @@ Status: **Retention posture implemented in policy; end-of-purpose deletion tooli
 scheduling NOT yet wired (deployment/ops task); concerns long-term retention.** See
 ADR [0006](../adr/0006-legal-compliance-rebuild.md) (Retention, historical), ADR
 [0008](../adr/0008-aggregate-counters.md) (aggregate counters — indefinite retention of
-aggregates), the Privacy Policy §5 (`apps/web/src/routes/privacy/+page.svelte`), the
+aggregates), the Privacy Policy §5 (`apps/web/src/lib/content/PrivacyContent.svelte`), the
 [analysis plan](../research/analysis-plan.md) (the documented purpose + review), and
 `scripts/retention-sweep.sql`.
 

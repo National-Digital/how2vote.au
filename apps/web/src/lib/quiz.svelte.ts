@@ -1,6 +1,7 @@
 import { browser } from "$app/environment";
 import { ELECTION_IDS } from "@how2vote/data-schema";
 import type { Answer, AnswerPoints } from "@how2vote/engine";
+import { removeFromNative } from "./native-storage";
 
 const KEY_PREFIX = "how2vote:quiz:v2:"; // v2: namespaced per election id
 const key = (electionId: string): string => KEY_PREFIX + electionId;
@@ -131,7 +132,11 @@ class Quiz {
     this.cursor = 0;
     // questionIds are build constants, not user work — keep them in memory so the home page's total
     // stays correct after a reset; the next persist (a fresh ballot) writes them back to storage.
-    if (browser && this.loadedId) localStorage.removeItem(key(this.loadedId));
+    if (browser && this.loadedId) {
+      localStorage.removeItem(key(this.loadedId));
+      // Write through to the shells' durable copy, or the next launch restores what was just reset.
+      void removeFromNative([key(this.loadedId)]);
+    }
   }
 
   /**
@@ -153,6 +158,9 @@ class Quiz {
         // Storage disabled — nothing persisted to clear.
       }
     }
+    // Write through to the shells' durable copy. Without this an under-18's declaration wipes the
+    // prior adult session's answers from localStorage only, and the next launch heals them back.
+    void removeFromNative(ELECTION_IDS.map(key));
   }
 
   /**
@@ -204,7 +212,9 @@ class Quiz {
     // eligibility declaration. This is defence-in-depth behind the layout route guard — it stops an
     // async page mount (a data load resolving into syncQuestions) from persisting quiz state during
     // the redirect to /start. The key is the one-bit acknowledgement written by the age-gate store
-    // (see $lib/age.svelte, STORAGE_KEY "how2vote:age-ok:v1"); read directly to avoid an import cycle.
+    // (see $lib/age.svelte, STORAGE_KEY "how2vote:age-ok:v1"). Spelled out as a LITERAL, not the
+    // imported AGE_ELIGIBILITY_KEY: check-clear-all.mjs proves every key here is swept by resolving
+    // it statically, and an imported const is unresolvable to it. Duplication the guard requires.
     try {
       if (localStorage.getItem("how2vote:age-ok:v1") !== "1") return;
     } catch {

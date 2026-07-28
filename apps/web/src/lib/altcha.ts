@@ -1,15 +1,15 @@
 /**
  * Self-hosted ALTCHA proof-of-work bridge — the client half of the anti-abuse challenge.
  *
- * Replaces the Cloudflare Turnstile bridge. There is NO third-party script, iframe or endpoint any
- * more: the challenge is fetched from OUR OWN `/api/challenge` Pages Function and solved on-device
+ * No third-party script, iframe or endpoint is involved: the challenge is fetched from OUR OWN
+ * `/api/challenge` Pages Function and solved on-device
  * with the bundled altcha-lib solver (MIT), then the base64 `{challenge, solution}` payload is sent
  * to the receiving endpoint (`/api/research/token` or `/api/forms`) as the `challenge` field for
  * in-process server verification. See src/lib/research/challenge.ts for the whole mechanism.
  *
- * The user experience is unchanged from Turnstile's invisible mode: no puzzle, no interaction, no
- * accessibility barrier — just a sub-second background computation on submit. The solver yields to
- * the event loop while it works, so the UI stays responsive.
+ * Invisible to the user: no puzzle, no interaction, no accessibility barrier — just a sub-second
+ * background computation on submit. The solver yields to the event loop while it works, so the UI
+ * stays responsive.
  *
  * Loaded LAZILY — the solver module is dynamic-imported only the first time a solution is requested
  * (i.e. when someone actually submits), so nothing competes with hydration on the LCP path and a
@@ -21,14 +21,17 @@
  * is handled as an ordinary submit error.
  */
 import { browser } from "$app/environment";
+import { isNativeShell } from "./channel";
+import { SITE_URL } from "./seo";
 
 /** What the solution will be spent on. Signed into the challenge by the server and enforced at
  *  verification, so a solution can never be spent on a different path. */
 export type ChallengePurpose = "research" | "contact" | "feedback";
 
-// Same-origin and relative, like the research endpoints: no env var needed, and the fetch stays
-// within `connect-src 'self'`, inheriting the page's (HTTPS, in production) origin.
-const CHALLENGE_ENDPOINT = "/api/challenge";
+// Web PWA: same-origin relative path (connect-src 'self'). Native shells serve from a local WebView
+// origin, so the challenge is fetched from the canonical origin (allowed by the endpoint's strict
+// CORS allowlist), mirroring the research transport (see survey.ts / cors.ts).
+const CHALLENGE_ENDPOINT = `${isNativeShell ? SITE_URL : ""}/api/challenge`;
 
 /** Give slow devices ample room while still bounding a pathological challenge. The expected solve
  *  is well under a second; the challenge itself expires server-side after 10 minutes. */
@@ -69,7 +72,7 @@ export async function solveChallenge(purpose: ChallengePurpose): Promise<string 
   const challenge = body.challenge;
   if (typeof challenge !== "object" || challenge === null) return undefined;
 
-  // Lazy-load the solver only now, on first actual use (mirrors the old lazy api.js injection).
+  // Lazy-load the solver only now, on first actual use.
   const { solvePow } = await import("./pow-solver");
   const solution = await solvePow(challenge as Parameters<typeof solvePow>[0], SOLVE_TIMEOUT_MS);
   if (!solution) throw new Error("Anti-abuse challenge could not be solved in time");
