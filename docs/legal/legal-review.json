@@ -96,7 +96,16 @@
     },
     {
       "date": "2026-07-28",
+      "change": "Data-change gate hardened (scripts/check-legal-review.mjs): a PR touching a legally-sensitive path must add a changeLog entry naming an active signatory with an explicit disposition, rather than merely touching this file; the docs/legal/ registers are now themselves sensitive paths; and reviewer ids resolve against signatories.json as it stood at the PR base, so a PR cannot add a signatory and name them as its own approver. Change to the enforcement tooling only — it narrows what CI accepts and records. No register content, legal position, obligation or permitted use is altered.",
+      "disposition": "no-review-required",
+      "reviewer": "cameron-young",
+      "affectedControls": ["control-2"]
+    },
+    {
+      "date": "2026-07-28",
       "change": "Non-substantive engineering change under packages/data-schema/src/, recorded because the data-change gate matches that path prefix. A Zod runtime setting (zod-runtime.ts) disables JIT schema compilation in the browser only, so Zod stops probing for eval and no longer trips the site Content-Security-Policy; the same module is imported by schemas.ts, elections.ts and snapshots.ts purely to fix evaluation order. No schema, field, validation rule, election metadata value or scoring input is added, removed or altered, and validation outcomes are identical on both paths (Zod falls back to the interpreted validator, which the Node data pipeline already exercises against the whole committed dataset). No legal or compliance position is affected and no control evidence changes; no legal review was sought or is required.",
+      "disposition": "no-review-required",
+      "reviewer": "cameron-young",
       "affectedControls": []
     }
   ],

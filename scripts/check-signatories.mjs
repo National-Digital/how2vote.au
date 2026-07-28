@@ -9,6 +9,7 @@
  *   - data/source/<id>/ballot-verification.json  (reviewers.primary / reviewers.second)
  *   - data/source/<id>/candidate-mapping.json    (reviewer)
  *   - docs/legal/control-register.json           (evidence[].reviewer / .secondReviewer, internal sign-offs)
+ *   - docs/legal/legal-review.json               (changeLog[].reviewer / .secondReviewer)
  *
  * This guard proves:
  *   - the registry is well-formed: unique kebab ids, complete identity, valid GitHub handle and
@@ -52,6 +53,39 @@ function parseIsoDate(v) {
 /** Is this reviewer value an id reference (vs an external/legacy descriptor)? */
 export function isIdReference(v) {
   return typeof v === "string" && ID_SHAPE.test(v.trim());
+}
+
+/**
+ * Is this signatory record active at `now`? A missing/unparseable activeFrom is NOT active.
+ * @param {any} s @param {number} now
+ */
+function isActiveAt(s, now) {
+  const from = parseIsoDate(s && s.activeFrom);
+  if (from === null || from > now) return false;
+  if (s.activeUntil === undefined) return true;
+  const until = parseIsoDate(s.activeUntil);
+  return until !== null && until >= now;
+}
+
+/**
+ * The ids of every signatory active at `now`. Exported so other guards can require a named,
+ * currently-authorised approver without re-implementing the active window.
+ *
+ * @param {unknown} registry  parsed docs/legal/signatories.json
+ * @param {number} now
+ * @returns {Set<string>}
+ */
+export function activeSignatoryIds(registry, now) {
+  const out = new Set();
+  const list =
+    typeof registry === "object" && registry !== null && Array.isArray(registry.signatories)
+      ? registry.signatories
+      : [];
+  for (const s of list) {
+    if (typeof s !== "object" || s === null || !isNonEmptyString(s.id)) continue;
+    if (isActiveAt(s, now)) out.add(s.id.trim());
+  }
+  return out;
 }
 
 /**
@@ -155,15 +189,12 @@ export function verdict(registry, options = {}) {
       push(`${at}: signOffScope must be "all" or a non-empty array of declared domains`);
     }
 
-    const from = parseIsoDate(s.activeFrom);
-    if (from === null) push(`${at}: activeFrom must be an ISO date`);
-    const until = s.activeUntil === undefined ? null : parseIsoDate(s.activeUntil);
-    if (s.activeUntil !== undefined && until === null) {
+    if (parseIsoDate(s.activeFrom) === null) push(`${at}: activeFrom must be an ISO date`);
+    if (s.activeUntil !== undefined && parseIsoDate(s.activeUntil) === null) {
       push(`${at}: activeUntil must be an ISO date when present`);
     }
-    const active = from !== null && from <= now && (until === null || until >= now);
 
-    if (isNonEmptyString(s.id)) byId.set(s.id, { active, scope });
+    if (isNonEmptyString(s.id)) byId.set(s.id, { active: isActiveAt(s, now), scope });
   }
 
   // Referential integrity: every id-shaped reviewer reference resolves to an active, in-scope signatory.
@@ -244,6 +275,21 @@ function gatherReferences() {
           reviewer: e.secondReviewer,
         });
       }
+    }
+  }
+
+  // legal-review.json changeLog entries name the person who reviewed the change (or determined that
+  // no review was required). Entries predating that requirement carry no reviewer and are skipped.
+  const legalReview = readJson("docs/legal/legal-review.json");
+  for (const [i, e] of ((legalReview && legalReview.changeLog) || []).entries()) {
+    if (e && "reviewer" in e) {
+      refs.push({ where: `legal-review changeLog[${i}] (${e.date})`, reviewer: e.reviewer });
+    }
+    if (e && "secondReviewer" in e) {
+      refs.push({
+        where: `legal-review changeLog[${i}] (${e.date}) (second reviewer)`,
+        reviewer: e.secondReviewer,
+      });
     }
   }
 
