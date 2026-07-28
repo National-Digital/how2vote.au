@@ -113,7 +113,9 @@ test(`[channel=${CHANNEL}] a contribution uploads to the correct origin with no 
   expect(body).not.toHaveProperty("electorate");
   expect(Array.isArray(body.propositions)).toBe(true);
 
-  // The token request and the separate geography ping also target the expected origin.
-  expect(posts.token.every((r) => r.url().startsWith(EXPECTED_ORIGIN))).toBe(true);
-  expect(posts.geography.every((r) => r.url().startsWith(EXPECTED_ORIGIN))).toBe(true);
+  // The token request and the separate geography ping also target the expected origin,
+  // compared as parsed origins: a string prefix would accept a host that merely starts with it.
+  const expectedOrigin = new URL(EXPECTED_ORIGIN).origin;
+  expect(posts.token.every((r) => new URL(r.url()).origin === expectedOrigin)).toBe(true);
+  expect(posts.geography.every((r) => new URL(r.url()).origin === expectedOrigin)).toBe(true);
 });

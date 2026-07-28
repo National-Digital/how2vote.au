@@ -90,7 +90,6 @@ if (!edit.id) {
   console.error(
     `::error::Play API refused to open an edit: ${edit.error?.message ?? insert.status}`,
   );
-  console.error(`Service account: ${key.client_email}`);
   process.exit(1);
 }
 
@@ -124,7 +123,7 @@ try {
 }
 
 if (verdict.ok) {
-  console.info(`Play publish permission OK — ${key.client_email} can apply edits to ${PACKAGE}.`);
+  console.info(`Play publish permission OK — the service account can apply edits to ${PACKAGE}.`);
   process.exit(0);
 }
 
@@ -134,7 +133,7 @@ The service account can prepare changes but not apply them, so a release will bu
 then fail at the final commit. Google enforces this at the end of the edit, which is why the whole
 job has to run before the error appears — this check exists to surface it in seconds instead.
 
-Fix in Play Console → Users and permissions → ${key.client_email}
+Fix in Play Console → Users and permissions → the configured service account
   → App permissions → How2Vote → grant BOTH:
        • Release to testing tracks   (publishing a build to internal/closed/open)
        • Manage store presence       (listing text, icon, screenshots, feature graphic)
