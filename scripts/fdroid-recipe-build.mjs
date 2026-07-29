@@ -73,11 +73,16 @@ export function subdir(recipe) {
  * @returns {string[]} lower-case 64-hex digests, in declaration order
  */
 export function signingKeys(recipe) {
-  const start = recipe.split("\n").findIndex((l) => l.trimEnd() === "AllowedAPKSigningKeys:");
+  // fdroidserver canonicalises a one-key list to a scalar, so both forms are valid input and the
+  // submitted copy will use whichever `fdroid rewritemeta` emits.
+  const scalar = recipe.match(/^AllowedAPKSigningKeys:[ \t]+([0-9a-fA-F]{64})[ \t]*$/m);
+  if (scalar) return [scalar[1].toLowerCase()];
+  const lines = recipe.split("\n");
+  const start = lines.findIndex((l) => l.trimEnd() === "AllowedAPKSigningKeys:");
   if (start === -1) return [];
   /** @type {string[]} */
   const keys = [];
-  for (const line of recipe.split("\n").slice(start + 1)) {
+  for (const line of lines.slice(start + 1)) {
     const item = line.match(/^\s+-\s+([0-9a-fA-F]{64})\s*$/);
     if (!item) break;
     keys.push(item[1].toLowerCase());
