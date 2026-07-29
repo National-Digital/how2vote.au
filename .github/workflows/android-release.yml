@@ -200,6 +200,131 @@ jobs:
           if-no-files-found: warn
           retention-days: 30
 
+  # The APK F-Droid verifies against. Built in its own job from a clean checkout: the build job
+  # produces the `android` channel for Play, and this needs the `fdroid` channel, so sharing a
+  # workspace would leave whichever ran second overwriting the other's web bundle.
+  #
+  # Reproduction is only possible if this is built the way the recipe is built, so the recipe's own
+  # phases are executed here too (same script mobile-ci uses) rather than restated.
+  fdroid-apk:
+    name: F-Droid APK (signed, reproducible)
+    needs: build
+    if: github.event_name == 'release' || (github.event_name == 'workflow_dispatch' && !inputs.dry_run)
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    permissions:
+      contents: read # deliberately NOT write: this job holds the signing key, the next one publishes
+    steps:
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7
+
+      - name: Check F-Droid signing secrets are configured
+        env:
+          FDROID_KEYSTORE: ${{ secrets.FDROID_KEYSTORE }}
+          FDROID_KEYSTORE_PASSWORD: ${{ secrets.FDROID_KEYSTORE_PASSWORD }}
+          FDROID_KEY_ALIAS: ${{ secrets.FDROID_KEY_ALIAS }}
+          FDROID_KEY_PASSWORD: ${{ secrets.FDROID_KEY_PASSWORD }}
+        run: |
+          set -euo pipefail
+          missing=()
+          for key in FDROID_KEYSTORE FDROID_KEYSTORE_PASSWORD FDROID_KEY_ALIAS FDROID_KEY_PASSWORD; do
+            [ -n "${!key-}" ] || missing+=("$key")
+          done
+          if [ ${#missing[@]} -gt 0 ]; then
+            echo "::error::F-Droid signing secrets missing: ${missing[*]}."
+            exit 1
+          fi
+
+      - run: corepack enable
+
+      - uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e # v6
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+
+      - uses: actions/setup-java@03ad4de0992f5dab5e18fcb136590ce7c4a0ac95 # v5.6.0
+        with:
+          distribution: temurin
+          java-version: "21"
+
+      - name: Recipe prebuild
+        env:
+          V: ${{ needs.build.outputs.app-version }}
+        run: node scripts/fdroid-recipe-build.mjs prebuild --version "$V" --code "$(node scripts/generate-app-version.mjs --code "$V")"
+
+      - name: Recipe build
+        env:
+          V: ${{ needs.build.outputs.app-version }}
+        run: node scripts/fdroid-recipe-build.mjs build --version "$V" --code "$(node scripts/generate-app-version.mjs --code "$V")"
+
+      # Unsigned, exactly as the buildserver produces it — signing is a separate pass over that
+      # artifact, so the pre-signature bytes are identical to theirs by construction.
+      - name: Assemble the unsigned release APK
+        working-directory: apps/mobile/android
+        run: ./gradlew assembleRelease --no-daemon
+
+      - name: Sign, and assert the signer matches the recipe
+        env:
+          FDROID_KEYSTORE: ${{ secrets.FDROID_KEYSTORE }}
+          FDROID_KEYSTORE_PASSWORD: ${{ secrets.FDROID_KEYSTORE_PASSWORD }}
+          FDROID_KEY_ALIAS: ${{ secrets.FDROID_KEY_ALIAS }}
+          FDROID_KEY_PASSWORD: ${{ secrets.FDROID_KEY_PASSWORD }}
+          V: ${{ needs.build.outputs.app-version }}
+        run: |
+          set -euo pipefail
+          KS="$RUNNER_TEMP/fdroid.p12"
+          trap 'rm -f "$KS"' EXIT
+          printf '%s' "$FDROID_KEYSTORE" | base64 -d > "$KS"
+          BT=$(ls -d "$ANDROID_HOME"/build-tools/* | sort -V | tail -1)
+          UNSIGNED=apps/mobile/android/app/build/outputs/apk/release/app-release-unsigned.apk
+          OUT="how2vote-$V.apk"
+          # Not re-aligned: AGP already 4-byte-aligns the stored entries, and rewriting the zip would
+          # perturb the bytes F-Droid compares. Verified, not transformed.
+          "$BT/zipalign" -c 4 "$UNSIGNED"
+          "$BT/apksigner" sign --ks "$KS" --ks-pass env:FDROID_KEYSTORE_PASSWORD \
+            --ks-key-alias "$FDROID_KEY_ALIAS" --key-pass env:FDROID_KEY_PASSWORD \
+            --out "$OUT" "$UNSIGNED"
+          "$BT/zipalign" -c 4 "$OUT"
+          "$BT/apksigner" verify "$OUT"
+          # The recipe pins the signers F-Droid will accept; publishing anything else is a dead end,
+          # so compare before the asset is ever attached to a release.
+          ACTUAL=$("$BT/apksigner" verify --print-certs "$OUT" \
+            | sed -n 's/.*certificate SHA-256 digest: *//p' | head -1 | tr 'A-Z' 'a-z')
+          if ! node scripts/fdroid-recipe-build.mjs signing-keys | grep -qxF "$ACTUAL"; then
+            echo "::error::signer $ACTUAL is not in the recipe's AllowedAPKSigningKeys"
+            exit 1
+          fi
+          echo "### F-Droid APK" >> "$GITHUB_STEP_SUMMARY"
+          echo "- signer: $ACTUAL" >> "$GITHUB_STEP_SUMMARY"
+          echo "- sha256: $(sha256sum "$OUT" | cut -d' ' -f1)" >> "$GITHUB_STEP_SUMMARY"
+
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
+        with:
+          name: fdroid-apk-${{ needs.build.outputs.app-version }}
+          path: how2vote-${{ needs.build.outputs.app-version }}.apk
+          if-no-files-found: error
+          retention-days: 30
+
+  # Separate from the signing job so `contents: write` is never held alongside a signing key.
+  fdroid-release-asset:
+    name: Attach the F-Droid APK to the release
+    needs: [build, fdroid-apk]
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: write # gh release upload
+    steps:
+      - uses: actions/download-artifact@634f93cb2916e3fdff6788551b99b062d0335ce0 # v5
+        with:
+          name: fdroid-apk-${{ needs.build.outputs.app-version }}
+
+      # F-Droid resolves Binaries from the tag, so the asset name must match the recipe's pattern.
+      - name: Upload
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ github.event.release.tag_name || format('v{0}', needs.build.outputs.app-version) }}
+          V: ${{ needs.build.outputs.app-version }}
+        run: gh release upload "$TAG" "how2vote-$V.apk" --clobber --repo "$GITHUB_REPOSITORY"
+
   promote:
     name: Promote to Play production
     needs: build

@@ -17,6 +17,7 @@
  *   node scripts/fdroid-recipe-build.mjs prebuild --version 9.9.9 --code 90909000
  *   node scripts/fdroid-recipe-build.mjs build    --version 9.9.9 --code 90909000
  *   node scripts/fdroid-recipe-build.mjs build --print   # show the shell line, run nothing
+ *   node scripts/fdroid-recipe-build.mjs signing-keys   # digests the recipe pins, one per line
  */
 
 import { spawnSync } from "node:child_process";
@@ -65,6 +66,26 @@ export function subdir(recipe) {
 }
 
 /**
+ * The signer certificate digests the recipe pins. The release build asserts the APK it signs
+ * matches one of these, so the recipe stays the single source for the published binary's identity.
+ *
+ * @param {string} recipe
+ * @returns {string[]} lower-case 64-hex digests, in declaration order
+ */
+export function signingKeys(recipe) {
+  const start = recipe.split("\n").findIndex((l) => l.trimEnd() === "AllowedAPKSigningKeys:");
+  if (start === -1) return [];
+  /** @type {string[]} */
+  const keys = [];
+  for (const line of recipe.split("\n").slice(start + 1)) {
+    const item = line.match(/^\s+-\s+([0-9a-fA-F]{64})\s*$/);
+    if (!item) break;
+    keys.push(item[1].toLowerCase());
+  }
+  return keys;
+}
+
+/**
  * @param {string[]} cmds
  * @param {{version: string, code: string}} pair
  * @returns {string} the single shell line fdroidserver would execute
@@ -76,8 +97,19 @@ export function shellLine(cmds, { version, code }) {
 /* c8 ignore start -- CLI/process plumbing */
 function main() {
   const [phase] = process.argv.slice(2);
+  if (phase === "signing-keys") {
+    const keys = signingKeys(readFileSync(join(ROOT, RECIPE_REL), "utf8"));
+    if (keys.length === 0) {
+      console.error(`✗ ${RECIPE_REL}: no AllowedAPKSigningKeys pinned`);
+      process.exit(1);
+    }
+    console.info(keys.join("\n"));
+    return;
+  }
   if (!PHASES.includes(phase)) {
-    console.error(`usage: fdroid-recipe-build.mjs <${PHASES.join("|")}> [--version v] [--code c]`);
+    console.error(
+      `usage: fdroid-recipe-build.mjs <${PHASES.join("|")}|signing-keys> [--version v] [--code c]`,
+    );
     process.exit(2);
   }
   const arg = (name, fallback) => {

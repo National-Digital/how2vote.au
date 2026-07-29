@@ -195,6 +195,36 @@ export function verdict(files) {
     }
   }
 
+  // 4a1 — reproducible-build pinning. `Binaries` without `AllowedAPKSigningKeys` lets F-Droid
+  // publish a binary from any signer; the pair has to move together, and the URL has to carry %v or
+  // it resolves to one release forever.
+  if (recipe !== null) {
+    const binaries = recipe.match(/^Binaries:[ \t]*(\S+)[ \t]*$/m)?.[1];
+    const keys = [
+      ...recipe.matchAll(/^AllowedAPKSigningKeys:\n((?:[ \t]+-[ \t]*[0-9a-fA-F]{64}[ \t]*\n)+)/gm),
+    ].flatMap((m) =>
+      m[1]
+        .trim()
+        .split("\n")
+        .map((l) => l.replace(/^[ \t]*-[ \t]*/, "").trim()),
+    );
+    if (binaries === undefined) {
+      push(`${RECIPE_REL}: Binaries missing — F-Droid would sign with its own key`);
+    } else if (!binaries.includes("%v")) {
+      push(`${RECIPE_REL}: Binaries "${binaries}" has no %v — it would pin one release forever`);
+    }
+    if (keys.length === 0) {
+      push(
+        `${RECIPE_REL}: AllowedAPKSigningKeys missing — Binaries without it pins no certificate`,
+      );
+    }
+    for (const key of keys) {
+      if (!/^[a-f0-9]{64}$/.test(key)) {
+        push(`${RECIPE_REL}: AllowedAPKSigningKeys "${key}" is not a lower-case 64-hex digest`);
+      }
+    }
+  }
+
   // 4a2 — the Node major the recipe's sudo installs must match .nvmrc. The CI mirror does not run
   // `sudo` (the runner provides Node), so a drift here is invisible until the buildserver runs.
   const nvmrc = need(".nvmrc");
