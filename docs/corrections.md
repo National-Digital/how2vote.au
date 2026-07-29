@@ -7,7 +7,7 @@ and the runbook for the emergency controls.
 ## Reporting an error
 
 Suspected errors — a wrong candidate, party mapping, ballot order, or alignment figure —
-go through the [contact page](https://how2vote.au/contact) or `how2vote@nationaldigital.com.au`.
+go through the [contact page](https://how2vote.au/contact) or `contact@how2vote.au`.
 The contact channel is monitored during a campaign.
 
 ### Response times

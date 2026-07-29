@@ -41,7 +41,7 @@ reader — stays `how2vote`, always, with no exceptions:
 | Tool and function names | `how2vote_find_electorate` |
 | Infrastructure names | the `how2vote-au` worker, the `how2vote-research` D1 database |
 | File and asset names | `docs/brand/how2vote-wordmark.svg` |
-| Email addresses | `how2vote@nationaldigital.com.au` |
+| Email addresses | `contact@how2vote.au` |
 | Repository and module paths | `National-Digital/how2vote.au` |
 
 The rule is absolute in that direction, and it is enforced: `scripts/check-brand-casing.mjs` fails
@@ -131,4 +131,4 @@ its own terms govern the font, not these marks.)
 ## Reporting brand confusion
 
 If you believe a deployment, product or content is passing itself off as How2Vote or implying an
-endorsement by National Digital that does not exist, contact **how2vote@nationaldigital.com.au**.
+endorsement by National Digital that does not exist, contact **contact@how2vote.au**.
