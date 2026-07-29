@@ -47,9 +47,9 @@ AllowedAPKSigningKeys: 617efd39535bb3af10ce0778b6f20ee4597f221baeb3f3e07547bfcc1
 Builds:
   # First submitted release; checkupdates appends every later release automatically with the
   # same shape.
-  - versionName: 1.3.9
-    versionCode: 10309000
-    commit: v1.3.9
+  - versionName: 1.3.10
+    versionCode: 10310000
+    commit: v1.3.10
     subdir: apps/mobile/android
     sudo:
       # Node toolchain for the SvelteKit web bundle the shell wraps. Node major must satisfy
@@ -90,5 +90,5 @@ UpdateCheckMode: HTTP
 # sentinel: apply the regex to the page already fetched. fdroidserver builds a second fetch with no
 # headers (checkupdates.py check_http) and it is answered 403 at the edge, so never name a URL there.
 UpdateCheckData: https://how2vote.au/app-version.json|"versionCode":\s*(\d+)|.|"versionName":\s*"([\d.]+)"
-CurrentVersion: 1.3.9
-CurrentVersionCode: 10309000
+CurrentVersion: 1.3.10
+CurrentVersionCode: 10310000
