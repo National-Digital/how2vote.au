@@ -11,8 +11,10 @@ name: Android release
 # NOTE: with Managed publishing enabled in Play Console, a green `promote` job means "ready to
 # publish", not "live" — the release waits for an explicit publish click in the console.
 # workflow_dispatch      -> same build; dry_run=true stops after the signed bundle (no upload),
-#                           dry_run=false uploads to the internal track. Promotion never runs
-#                           from dispatch.
+#                           dry_run=false uploads to the internal track and continues to the
+#                           environment-gated promote. deploy.yml releases through dispatch (a
+#                           GITHUB_TOKEN-created release cannot fire `release:` triggers), so a
+#                           real dispatch IS the release path.
 #
 # Google Play re-signs uploads with the escrowed app signing key (Play App Signing); the
 # keystore here is the UPLOAD key only.
@@ -198,10 +200,11 @@ jobs:
   promote:
     name: Promote to Play production
     needs: build
-    # Release events only. A failed `build` skips this too (the `if` deliberately does not use
-    # always()). The environment carries the required-reviewer gate — a human promotes every
-    # store release.
-    if: github.event_name == 'release'
+    # Release events, and real (non-dry-run) dispatches — deploy.yml releases through dispatch,
+    # since a GITHUB_TOKEN-created release cannot fire `release:` triggers. A failed `build` skips
+    # this too (the `if` deliberately does not use always()). The environment carries the
+    # required-reviewer gate — a human promotes every store release, whatever the trigger.
+    if: github.event_name == 'release' || (github.event_name == 'workflow_dispatch' && !inputs.dry_run)
     environment: play-store
     runs-on: ubuntu-latest
     timeout-minutes: 15
@@ -221,7 +224,8 @@ jobs:
         id: rollout
         env:
           GH_TOKEN: ${{ github.token }}
-          TAG: ${{ github.event.release.tag_name }}
+          # Empty on a dispatch, where the build's resolved version names the same release.
+          TAG: ${{ github.event.release.tag_name || format('v{0}', needs.build.outputs.app-version) }}
         run: |
           set -euo pipefail
           BODY="$(gh release view "$TAG" --json body --jq .body || echo "")"

@@ -12,8 +12,10 @@ name: iOS release
 # NOTE: `automatic_release: false` — a green submit job means "approved and waiting", not "live";
 # a human clicks release in App Store Connect.
 # workflow_dispatch      -> same build; dry_run=true stops after the signed archive (no upload),
-#                           dry_run=false uploads to TestFlight. Submission never runs from
-#                           dispatch — promoting to the store is a release-event decision.
+#                           dry_run=false uploads to TestFlight and continues to the
+#                           environment-gated submit. deploy.yml releases through dispatch (a
+#                           GITHUB_TOKEN-created release cannot fire `release:` triggers), so a
+#                           real dispatch IS the release path.
 #
 # Guideline 2.5.2 means there is no OTA update path: the web bundle ships inside the binary and
 # every change goes through App Review, which is why this must be fully automated.
@@ -155,10 +157,12 @@ jobs:
   submit:
     name: Submit for App Store review
     needs: build
-    # Release events only. A skipped or failed `build` skips this too (the `if` deliberately does
-    # not use always()). The environment carries the required-reviewer gate — a human promotes
-    # every store submission.
-    if: github.event_name == 'release'
+    # Release events, and real (non-dry-run) dispatches — deploy.yml releases through dispatch,
+    # since a GITHUB_TOKEN-created release cannot fire `release:` triggers. A skipped or failed
+    # `build` skips this too (the `if` deliberately does not use always()). The environment
+    # carries the required-reviewer gate — a human promotes every store submission, whatever the
+    # trigger.
+    if: github.event_name == 'release' || (github.event_name == 'workflow_dispatch' && !inputs.dry_run)
     environment: app-store
     runs-on: macos-15
     timeout-minutes: 30
@@ -177,7 +181,8 @@ jobs:
         id: rollout
         env:
           GH_TOKEN: ${{ github.token }}
-          TAG: ${{ github.event.release.tag_name }}
+          # Empty on a dispatch, where the build's resolved version names the same release.
+          TAG: ${{ github.event.release.tag_name || format('v{0}', needs.build.outputs.app-version) }}
         run: |
           set -euo pipefail
           BODY="$(gh release view "$TAG" --json body --jq .body || echo "")"
