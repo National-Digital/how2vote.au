@@ -1,6 +1,13 @@
 import { describe, expect, it } from "vitest";
-import { readFileSync } from "node:fs";
-import { authorisationLine, buildMetadata, validateMetadata } from "./generate-store-metadata.mjs";
+import { existsSync, lstatSync, readFileSync } from "node:fs";
+import {
+  ANDROID_IMAGE_MAP,
+  FDROID_FILES,
+  authorisationLine,
+  buildMetadata,
+  fdroidTargetRel,
+  validateMetadata,
+} from "./generate-store-metadata.mjs";
 
 // The REAL operator + product-copy records — the invariants must hold for what actually ships.
 const operator = JSON.parse(
@@ -74,5 +81,47 @@ describe("store metadata", () => {
     expect(
       validateMetadata(broken, operator, copy).some((i) => i.includes("android/title.txt")),
     ).toBe(true);
+  });
+});
+
+describe("F-Droid listing mirror", () => {
+  const files = buildMetadata(operator, copy);
+  const ROOT = new URL("../", import.meta.url);
+  const at = (rel) => new URL(rel, ROOT);
+
+  it("mirrors every text file F-Droid renders, and only android ones", () => {
+    for (const path of FDROID_FILES) {
+      expect(path.startsWith("android/")).toBe(true);
+      expect(files[path], `${path} is not produced by buildMetadata`).toBeTruthy();
+    }
+  });
+
+  it("writes the mirror under the repo-root path fdroidserver globs", () => {
+    expect(fdroidTargetRel("android/title.txt")).toBe("fastlane/metadata/android/en-US/title.txt");
+    expect(fdroidTargetRel("android/changelogs/default.txt")).toBe(
+      "fastlane/metadata/android/en-US/changelogs/default.txt",
+    );
+  });
+
+  it("keeps images as symlinks into the screenshot pack", () => {
+    expect(ANDROID_IMAGE_MAP.length).toBeGreaterThan(0);
+    for (const { name, source } of ANDROID_IMAGE_MAP) {
+      expect(source.startsWith("apps/mobile/fastlane/screenshots/")).toBe(true);
+      expect(existsSync(at(source)), `${source} missing`).toBe(true);
+      const link = at(`fastlane/metadata/android/en-US/images/${name}`);
+      expect(lstatSync(link).isSymbolicLink(), `${name} is not a symlink`).toBe(true);
+      expect(existsSync(link), `${name} is dangling`).toBe(true);
+    }
+  });
+
+  it("uses the fastlane image names supply and fdroidserver recognise", () => {
+    expect(ANDROID_IMAGE_MAP.map((e) => e.name)).toEqual([
+      "phoneScreenshots",
+      "tenInchScreenshots",
+      "featureGraphic.png",
+    ]);
+    for (const { name, dir } of ANDROID_IMAGE_MAP) {
+      expect(dir).toBe(!name.includes("."));
+    }
   });
 });

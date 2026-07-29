@@ -4,6 +4,7 @@ import { resolve, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
 
 import {
+  FDROID_LISTING_RELS,
   FORBIDDEN,
   GRADLE_RELS,
   LISTING_RELS,
@@ -16,6 +17,7 @@ const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const RELS = [
   ...GRADLE_RELS,
   ...LISTING_RELS,
+  ...FDROID_LISTING_RELS,
   RECIPE_REL,
   ".github/actions/resolve-store-version/action.yml",
   "scripts/generate-app-version.mjs",
@@ -94,6 +96,45 @@ describe("F-Droid readiness guard", () => {
     const { ok, errors } = verdict(files);
     expect(ok).toBe(false);
     expect(errors.some((e) => e.includes("title.txt"))).toBe(true);
+  });
+
+  it("catches a second update-check fetch", () => {
+    const files = realFiles();
+    files[RECIPE_REL] = files[RECIPE_REL].replace(
+      /^UpdateCheckData:.*$/m,
+      'UpdateCheckData: https://how2vote.au/app-version.json|"versionCode":\\s*(\\d+)|' +
+        'https://how2vote.au/app-version.json|"versionName":\\s*"([\\d.]+)"',
+    );
+    const { ok, errors } = verdict(files);
+    expect(ok).toBe(false);
+    expect(errors.some((e) => e.includes("sentinel"))).toBe(true);
+  });
+
+  it("catches UpdateCheckData losing a field", () => {
+    const files = realFiles();
+    files[RECIPE_REL] = files[RECIPE_REL].replace(
+      /^UpdateCheckData:.*$/m,
+      'UpdateCheckData: https://how2vote.au/app-version.json|"versionCode":\\s*(\\d+)',
+    );
+    const { ok, errors } = verdict(files);
+    expect(ok).toBe(false);
+    expect(errors.some((e) => e.includes("4 |-separated fields"))).toBe(true);
+  });
+
+  it("catches the F-Droid listing being emptied", () => {
+    for (const rel of FDROID_LISTING_RELS) {
+      const files = realFiles();
+      files[rel] = "";
+      const { ok, errors } = verdict(files);
+      expect(ok).toBe(false);
+      expect(errors.some((e) => e.startsWith(`${rel}:`))).toBe(true);
+    }
+  });
+
+  it("looks for the listing at the repo root, where fdroidserver globs", () => {
+    for (const rel of FDROID_LISTING_RELS) {
+      expect(rel.startsWith("fastlane/metadata/android/en-US/")).toBe(true);
+    }
   });
 });
 

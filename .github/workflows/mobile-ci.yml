@@ -70,7 +70,8 @@ jobs:
           # requests that touch more than 300 files.
           FILES=$(gh api "repos/$GITHUB_REPOSITORY/pulls/$PR/files" --paginate --jq '.[].filename')
           echo "$FILES" | sed 's/^/  /'
-          APP='^(apps/(mobile|web)/|packages/|pnpm-lock\.yaml|\.nvmrc|docs/fdroid/|\.github/(workflows/mobile-ci\.yml|actions/(build-web-channel|resolve-store-version)/)|scripts/(check-fdroid-ready|check-native-plugins|check-store-channel|generate-app-version|generate-store-metadata)\.mjs)'
+          # `fastlane/` (repo root) is the F-Droid listing tree.
+          APP='^(apps/(mobile|web)/|packages/|fastlane/|pnpm-lock\.yaml|\.nvmrc|docs/fdroid/|\.github/(workflows/mobile-ci\.yml|actions/(build-web-channel|resolve-store-version)/)|scripts/(check-fdroid-ready|check-native-plugins|check-store-channel|generate-app-version|generate-store-metadata)\.mjs)'
           # apps/web and packages are deliberately absent here: they are input to the bundle, not to
           # the native build graph.
           NATIVE='^(apps/mobile/|pnpm-lock\.yaml|\.nvmrc|docs/fdroid/|\.github/(workflows/mobile-ci\.yml|actions/(build-web-channel|resolve-store-version)/)|scripts/(check-fdroid-ready|check-native-plugins|generate-app-version|generate-store-metadata)\.mjs)'
@@ -525,12 +526,12 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7
 
-      # F-Droid imports the Android listing from the repo AT THE TAG, so the fastlane android text
-      # tree is committed — prove it still matches what the generator would emit.
+      # F-Droid imports the Android listing from the repo AT THE TAG, so both android text trees are
+      # committed — prove they still match what the generator would emit.
       - name: Committed Android listing matches the generator
         run: |
           node scripts/generate-store-metadata.mjs
-          git diff --exit-code apps/mobile/fastlane/metadata/android \
+          git diff --exit-code apps/mobile/fastlane/metadata/android fastlane/metadata/android \
             || { echo "::error::committed fastlane android metadata drifted — run 'node scripts/generate-store-metadata.mjs' and commit"; exit 1; }
 
       # ---- From here on, mirror docs/fdroid/au.how2vote.app.yml step for step. The point is to
