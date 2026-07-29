@@ -46,9 +46,11 @@ permissions:
   contents: read
 
 concurrency:
-  # One lane for all iOS releases so two quick releases serialize (a second `deliver` while the
-  # first review submission is open hard-fails at ASC). Never cancel an in-flight signing/upload.
-  group: ios-release
+  # One lane PER RELEASE. Two runs of the SAME release still serialize (a second `deliver` while the
+  # first review submission is open hard-fails at ASC), but a submit_review job waiting on the
+  # app-store environment's reviewer no longer holds the group and block every later release.
+  # Never cancels in progress: a signing or store upload must always finish.
+  group: ios-release-${{ github.event.release.tag_name || github.ref }}
   cancel-in-progress: false
 
 jobs:

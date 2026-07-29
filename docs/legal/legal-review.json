@@ -158,6 +158,14 @@
       "disposition": "reviewed",
       "reviewer": "cameron-young",
       "affectedControls": ["control-21"]
+    },
+    {
+      "date": "2026-07-29",
+      "change": "Signed Android release binaries are published to a first-party Cloudflare R2 bucket (how2vote-dist) served read-only at dist.how2vote.au, so F-Droid can verify its own build of a release tag against our binary and distribute ours under our signature. Recorded as a new dedicated service in the vendor registry (Cloudflare infrastructure entry) and as expenditure record 2026-H2-CF-R2 at $0 — storage and operations sit inside the R2 free tier and R2 charges no egress. Distribution surface only: the bucket holds build artefacts, no personal or visitor data; no collection, use, disclosure, retention or overseas-processing practice changes, and no consent or Terms version is affected.",
+      "disposition": "reviewed",
+      "reviewer": "cameron-young",
+      "secondReviewer": "tara-buckley",
+      "affectedControls": ["control-8", "control-29"]
     }
   ],
   "nextMandatoryReviewDate": "2027-07-15",

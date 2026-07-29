@@ -38,8 +38,12 @@ permissions:
   contents: read
 
 concurrency:
-  # One lane for all Android releases so two quick releases serialize. Never cancel a signing/upload.
-  group: android-release
+  # One lane PER RELEASE, not one lane for all of them. The promote job waits on the play-store
+  # environment's reviewer, and a run parked at an environment gate still occupies its concurrency
+  # group — so a single group made one unapproved promotion block every later release indefinitely,
+  # with the queued runs showing only "pending". Keyed by ref, an unapproved v1 blocks nothing but
+  # another v1. Still never cancels in progress: a signing or store upload must always finish.
+  group: android-release-${{ github.event.release.tag_name || github.ref }}
   cancel-in-progress: false
 
 jobs:
@@ -276,7 +280,7 @@ jobs:
           printf '%s' "$FDROID_KEYSTORE" | base64 -d > "$KS"
           BT=$(ls -d "$ANDROID_HOME"/build-tools/* | sort -V | tail -1)
           UNSIGNED=apps/mobile/android/app/build/outputs/apk/release/app-release-unsigned.apk
-          OUT="how2vote-$V.apk"
+          OUT="how2vote-fdroid-$V.apk"
           # Not re-aligned: AGP already 4-byte-aligns the stored entries, and rewriting the zip would
           # perturb the bytes F-Droid compares. Verified, not transformed.
           "$BT/zipalign" -c 4 "$UNSIGNED"
@@ -300,30 +304,83 @@ jobs:
       - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
         with:
           name: fdroid-apk-${{ needs.build.outputs.app-version }}
-          path: how2vote-${{ needs.build.outputs.app-version }}.apk
+          path: how2vote-fdroid-${{ needs.build.outputs.app-version }}.apk
           if-no-files-found: error
           retention-days: 30
 
-  # Separate from the signing job so `contents: write` is never held alongside a signing key.
-  fdroid-release-asset:
-    name: Attach the F-Droid APK to the release
+  # Separate from the signing job so the signing key and the bucket credential are never held
+  # together. Publishes to R2 rather than the GitHub release: releases in this repo are immutable, so
+  # assets cannot be attached after publication, and deploy.yml publishes before dispatching.
+  fdroid-publish:
+    name: Publish the F-Droid APK
     needs: [build, fdroid-apk]
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: 15
     permissions:
-      contents: write # gh release upload
+      contents: read
     steps:
       - uses: actions/download-artifact@634f93cb2916e3fdff6788551b99b062d0335ce0 # v5
         with:
           name: fdroid-apk-${{ needs.build.outputs.app-version }}
 
-      # F-Droid resolves Binaries from the tag, so the asset name must match the recipe's pattern.
-      - name: Upload
+      - name: Install rclone
+        run: |
+          set -euo pipefail
+          VERSION=1.74.4
+          SHA256=fe435e0c36228e7c2f116a8701f01127bb1f694005fc11d1f27186c8bca4115d
+          curl -sSfL -o rclone.zip "https://downloads.rclone.org/v${VERSION}/rclone-v${VERSION}-linux-amd64.zip"
+          echo "${SHA256}  rclone.zip" | sha256sum --check --quiet
+          unzip -q -j rclone.zip "rclone-v${VERSION}-linux-amd64/rclone"
+          chmod +x rclone
+
+      - name: Upload to dist.how2vote.au
         env:
-          GH_TOKEN: ${{ github.token }}
-          TAG: ${{ github.event.release.tag_name || format('v{0}', needs.build.outputs.app-version) }}
+          RCLONE_CONFIG_R2_TYPE: s3
+          RCLONE_CONFIG_R2_PROVIDER: Cloudflare
+          RCLONE_CONFIG_R2_ACCESS_KEY_ID: ${{ secrets.R2_ACCESS_KEY_ID }}
+          RCLONE_CONFIG_R2_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_ACCESS_KEY }}
+          RCLONE_CONFIG_R2_ENDPOINT: https://${{ secrets.R2_ACCOUNT_ID }}.r2.cloudflarestorage.com
+          RCLONE_CONFIG_R2_NO_CHECK_BUCKET: "true"
           V: ${{ needs.build.outputs.app-version }}
-        run: gh release upload "$TAG" "how2vote-$V.apk" --clobber --repo "$GITHUB_REPOSITORY"
+        run: |
+          set -euo pipefail
+          APK="how2vote-fdroid-$V.apk"
+          KEY="app/fdroid/$APK"
+          # A published binary is never replaced: F-Droid verifies one specific build against one
+          # specific file, so overwriting it would invalidate a verification that already passed.
+          if ./rclone lsf "r2:how2vote-dist/app/fdroid/" 2>/dev/null | grep -qxF "$APK"; then
+            echo "::error::$KEY already published — refusing to replace it"
+            exit 1
+          fi
+          ./rclone copyto "$APK" "r2:how2vote-dist/$KEY" \
+            --header-upload "Content-Type: application/vnd.android.package-archive"
+
+      # F-Droid fetches over the public custom domain, not the S3 endpoint, so prove that path serves
+      # the exact bytes that were signed before anything points a recipe at it.
+      - name: Verify the published URL serves the signed bytes
+        env:
+          V: ${{ needs.build.outputs.app-version }}
+        run: |
+          set -euo pipefail
+          APK="how2vote-fdroid-$V.apk"
+          URL="https://dist.how2vote.au/app/fdroid/$APK"
+          # The zone caches /app/* aggressively. The object was just written, so a 404 here means a
+          # negative response was cached before it existed and needs purging, not a failed upload.
+          if ! curl -sSfL --retry 5 --retry-delay 4 --retry-all-errors -o published.apk "$URL"; then
+            echo "::error::$URL did not serve the object just uploaded — if this is a 404, purge the Cloudflare cache for that path"
+            exit 1
+          fi
+          LOCAL=$(sha256sum "$APK" | cut -d" " -f1)
+          REMOTE=$(sha256sum published.apk | cut -d" " -f1)
+          if [ "$LOCAL" != "$REMOTE" ]; then
+            echo "::error::$URL serves $REMOTE, expected $LOCAL"
+            exit 1
+          fi
+          CT=$(curl -sSI "$URL" | tr -d "\r" | sed -n "s/^content-type: //Ip")
+          echo "### F-Droid APK published" >> "$GITHUB_STEP_SUMMARY"
+          echo "- url: $URL" >> "$GITHUB_STEP_SUMMARY"
+          echo "- sha256: $LOCAL" >> "$GITHUB_STEP_SUMMARY"
+          echo "- content-type: $CT" >> "$GITHUB_STEP_SUMMARY"
 
   promote:
     name: Promote to Play production
