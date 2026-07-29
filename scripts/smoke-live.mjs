@@ -146,22 +146,42 @@ async function main() {
 
   // 1 — deployed release manifest, and 2 — the governance kill-switch STATE it publishes, both
   // asserted from the SAME live HTTP response (no local-file read).
-  try {
-    const res = await fetchJson(`${origin}/release-manifest.json`);
-    errors.push(
-      ...verifyManifestResponse(res, {
-        expectedCommit: process.env.EXPECTED_COMMIT || process.env.GITHUB_SHA,
-        expectedAppVersion: process.env.EXPECTED_APP_VERSION || process.env.APP_VERSION,
-      }),
-    );
-    errors.push(
-      ...verifyGovernanceState(res?.body, {
-        expectedControlPlaneIntegrity: process.env.EXPECTED_CONTROL_PLANE_INTEGRITY,
-      }),
-    );
-  } catch (err) {
-    errors.push(`release-manifest: fetch failed: ${err.message}`);
+  //
+  // Polled with backoff: the Pages alias can lag the upload by a minute or two, so a single
+  // immediate fetch reads the PREVIOUS deployment and reports drift that is not real. Real drift
+  // persists past the whole window and still fails.
+  const RETRY_DELAYS_S = [0, 5, 10, 20, 30, 45, 60];
+  let manifestErrors = [];
+  for (const [attempt, delayS] of RETRY_DELAYS_S.entries()) {
+    if (delayS > 0) await new Promise((resolve) => setTimeout(resolve, delayS * 1000));
+    manifestErrors = [];
+    let res = null;
+    try {
+      res = await fetchJson(`${origin}/release-manifest.json`);
+    } catch (err) {
+      manifestErrors = [`release-manifest: fetch failed: ${err.message}`];
+    }
+    if (res !== null) {
+      manifestErrors.push(
+        ...verifyManifestResponse(res, {
+          expectedCommit: process.env.EXPECTED_COMMIT || process.env.GITHUB_SHA,
+          expectedAppVersion: process.env.EXPECTED_APP_VERSION || process.env.APP_VERSION,
+        }),
+      );
+      manifestErrors.push(
+        ...verifyGovernanceState(res.body, {
+          expectedControlPlaneIntegrity: process.env.EXPECTED_CONTROL_PLANE_INTEGRITY,
+        }),
+      );
+    }
+    if (manifestErrors.length === 0) break;
+    if (attempt < RETRY_DELAYS_S.length - 1) {
+      console.info(
+        `smoke: manifest not settled (attempt ${attempt + 1}/${RETRY_DELAYS_S.length}) — retrying`,
+      );
+    }
   }
+  errors.push(...manifestErrors);
 
   // 3 — research endpoint uniform-reply contract (only when the Functions are live).
   if (process.env.SMOKE_RESEARCH === "1") {

@@ -54,9 +54,16 @@ jobs:
     name: Build & deploy
     runs-on: ubuntu-latest
     timeout-minutes: 20
+    # No write scopes here, deliberately: this job executes PR-authored build code and the
+    # dependency tree (install scripts), so its token must not be able to push, release or
+    # dispatch. Tagging, the GitHub release and the store dispatches live in the `release`
+    # job below, which runs only on push to main and runs none of the build code.
     permissions:
-      contents: write # push the release tag + create the GitHub release on main
+      contents: read
       pull-requests: write # upsert the preview-URL comment
+    outputs:
+      ready: ${{ steps.secrets.outputs.ready }}
+      version: ${{ steps.target.outputs.version }}
     # Everything except a PR close — those go to the cleanup job below.
     if: github.event_name != 'pull_request' || github.event.action != 'closed'
     steps:
@@ -408,24 +415,57 @@ jobs:
               });
             }
 
-      # On a production deploy (push to main), tag the released version and cut a GitHub release
-      # with auto-generated notes. Idempotent: skips cleanly if the version couldn't be resolved,
-      # if the tag already exists (a re-run), or if a CONCURRENT production deploy — which the
-      # per-run concurrency groups above now allow — created the tag/release first. The remote is
-      # the source of truth, so we never fail the deploy on an "already exists" race.
-      - name: Tag + GitHub release
-        if: steps.secrets.outputs.ready == 'true' && github.event_name == 'push' && github.ref == 'refs/heads/main'
+  # On a production deploy (push to main), tag the released version, cut a GitHub release with
+  # auto-generated notes, and dispatch the store release workflows. A separate job from the build
+  # so the write-capable token never coexists with PR-authored build code or dependency install
+  # scripts. Idempotent: skips cleanly if the version couldn't be resolved, if the tag already
+  # exists (a re-run), or if a CONCURRENT production deploy — which the per-run concurrency
+  # groups above allow — created the tag/release first. The remote is the source of truth, so we
+  # never fail the promotion on an "already exists" race.
+  release:
+    name: Tag, release & dispatch stores
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    needs: deploy
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main' && needs.deploy.outputs.ready == 'true'
+    permissions:
+      contents: write # push the release tag + create the GitHub release
+      actions: write # dispatch the store release workflows
+    steps:
+      # Default credential persistence is fine here: this job runs no build or dependency code,
+      # only git/gh against the repo itself.
+      - name: Checkout repository
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7
+
+      - name: Tag, release & dispatch stores
         env:
           GH_TOKEN: ${{ github.token }}
-          VERSION: ${{ steps.target.outputs.version }}
+          VERSION: ${{ needs.deploy.outputs.version }}
+          APPLE_TEAM_ID: ${{ vars.APPLE_TEAM_ID }}
+          REPO: ${{ github.repository }}
         run: |
           [ -z "$VERSION" ] && { echo "No version resolved — skipping."; exit 0; }
           V="v${VERSION}"
+          # A release created with GITHUB_TOKEN cannot trigger `release: published` workflows
+          # (GitHub suppresses events from that token; workflow_dispatch and repository_dispatch
+          # are the two documented exceptions), so the store pipelines are dispatched explicitly.
+          # Dispatched AT THE TAG, so the store build ships exactly the released commit even if
+          # main has moved on; each workflow stays fail-closed on secrets, and iOS is skipped
+          # entirely while APPLE_TEAM_ID (its "channel is live" switch) is unset.
+          dispatch() {
+            for i in 1 2 3; do
+              gh workflow run "$1" --ref "$V" && return 0
+              sleep 5
+            done
+            echo "::error::could not dispatch $1 — run manually: gh workflow run $1 --repo $REPO --ref $V"
+            return 1
+          }
           # Fetch the remote tag first — a concurrent promotion may already have published it, and
           # rev-parse against the local checkout alone wouldn't see it.
           git fetch --quiet origin "refs/tags/$V:refs/tags/$V" 2>/dev/null || true
           if git rev-parse -q --verify "refs/tags/$V" >/dev/null 2>&1; then
             echo "Tag $V already exists — skipping tag/release."
+            echo "If the store dispatches did not happen for $V, run: gh workflow run android-release.yml --repo $REPO --ref $V"
             exit 0
           fi
           git tag "$V"
@@ -449,6 +489,8 @@ jobs:
             cat release.err >&2
             exit 1
           fi
+          dispatch android-release.yml
+          if [ -n "${APPLE_TEAM_ID:-}" ]; then dispatch ios-release.yml; fi
 
   cleanup:
     name: Tear down preview
