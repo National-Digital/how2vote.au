@@ -89,6 +89,17 @@ describe("pinned signer", () => {
     expect(signingKeys(doc)).toEqual(["a".repeat(64)]);
   });
 
+  it("reads the canonical scalar form fdroidserver emits for one key", () => {
+    const k = "c".repeat(64);
+    expect(signingKeys(`AllowedAPKSigningKeys: ${k}\n`)).toEqual([k]);
+    expect(signingKeys(`AllowedAPKSigningKeys:\n  - ${k}\n`)).toEqual([k]);
+  });
+
+  it("lower-cases whichever form it reads", () => {
+    const k = "A".repeat(64);
+    expect(signingKeys(`AllowedAPKSigningKeys: ${k}\n`)).toEqual(["a".repeat(64)]);
+  });
+
   it("returns nothing when the field is absent", () => {
     expect(signingKeys("Categories:\n  - Science & Education\n")).toEqual([]);
   });

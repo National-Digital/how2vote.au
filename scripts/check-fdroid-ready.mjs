@@ -39,6 +39,7 @@ import { fileURLToPath } from "node:url";
 import { resolve, dirname } from "node:path";
 
 import { encodeVersionCode } from "./generate-app-version.mjs";
+import { signingKeys } from "./fdroid-recipe-build.mjs";
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 
@@ -200,14 +201,7 @@ export function verdict(files) {
   // it resolves to one release forever.
   if (recipe !== null) {
     const binaries = recipe.match(/^Binaries:[ \t]*(\S+)[ \t]*$/m)?.[1];
-    const keys = [
-      ...recipe.matchAll(/^AllowedAPKSigningKeys:\n((?:[ \t]+-[ \t]*[0-9a-fA-F]{64}[ \t]*\n)+)/gm),
-    ].flatMap((m) =>
-      m[1]
-        .trim()
-        .split("\n")
-        .map((l) => l.replace(/^[ \t]*-[ \t]*/, "").trim()),
-    );
+    const keys = signingKeys(recipe);
     if (binaries === undefined) {
       push(`${RECIPE_REL}: Binaries missing — F-Droid would sign with its own key`);
     } else if (!binaries.includes("%v")) {
@@ -217,11 +211,6 @@ export function verdict(files) {
       push(
         `${RECIPE_REL}: AllowedAPKSigningKeys missing — Binaries without it pins no certificate`,
       );
-    }
-    for (const key of keys) {
-      if (!/^[a-f0-9]{64}$/.test(key)) {
-        push(`${RECIPE_REL}: AllowedAPKSigningKeys "${key}" is not a lower-case 64-hex digest`);
-      }
     }
   }
 
