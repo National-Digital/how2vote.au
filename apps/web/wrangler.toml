@@ -93,7 +93,7 @@ compatibility_date = "2025-06-01"
 [vars]
 RESEARCH_ENVIRONMENT = "production"
 FORMS_FROM_ADDRESS = "forms@send.how2vote.au"
-FORMS_DELIVERY_ADDRESS = "how2vote@nationaldigital.com.au"
+FORMS_DELIVERY_ADDRESS = "contact@how2vote.au"
 
 [[d1_databases]]
 binding = "RESEARCH_DB"

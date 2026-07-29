@@ -151,6 +151,13 @@
       "reviewer": "cameron-young",
       "secondReviewer": "tara-buckley",
       "affectedControls": ["control-8", "control-16", "control-21", "control-29"]
+    },
+    {
+      "date": "2026-07-29",
+      "change": "Public contact point changed from how2vote@nationaldigital.com.au to contact@how2vote.au across every public surface: the operator record (email + privacyContactEmail, which project into the Privacy Policy contact section, the Terms error-reporting section, the corrections and accessibility pages, and the generated App Review notes), the brand register, the corrections process document, and the forms relay delivery address (wrangler.toml FORMS_DELIVERY_ADDRESS — the Cloudflare Email Sending destination must be verified for the new address before this deploys, or contact/feedback delivery fails). Contact-point change only: no collection, use, disclosure, retention or overseas-processing practice changes; the consent and Terms versions are unchanged (the Terms render the operator record, and the wording hash binds the source, so no re-acceptance is triggered).",
+      "disposition": "reviewed",
+      "reviewer": "cameron-young",
+      "affectedControls": ["control-21"]
     }
   ],
   "nextMandatoryReviewDate": "2027-07-15",
