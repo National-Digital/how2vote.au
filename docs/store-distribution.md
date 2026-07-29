@@ -398,10 +398,12 @@ How the pieces fit — each fact is enforced on every PR (guards named on the ri
 | Scanner | no Google service reference anywhere in the gradle files (the Capacitor template's dormant push-services block is removed) | scanner simulation in `check-fdroid-ready.mjs` |
 | Channel | F-Droid ships the **`fdroid`** channel (`PUBLIC_DIST_CHANNEL=fdroid`), a fourth value in `apps/web/src/lib/channel.ts`. An F-Droid install cannot be updated through Play (different signing keys), so the in-app update remedy resolves to `f-droid.org/packages/<appId>` rather than `market://`. Nothing else differs from the `android` build | `check-store-channel.mjs`; the `fdroid` job builds this channel, and the per-channel behaviour specs cover the branch |
 
-The `fdroid` job in `mobile-ci.yml` mirrors the recipe step for step (property
-injection → android-channel web build → `cap sync` → `gradlew assembleRelease`, then asserts the
-version pair inside the built APK), so a PR that would break the F-Droid buildserver goes red
-here first.
+The `fdroid` job in `mobile-ci.yml` **executes the recipe's own commands** rather than restating
+them: `scripts/fdroid-recipe-build.mjs` reads each phase out of `docs/fdroid/au.how2vote.app.yml`
+and runs it the way fdroidserver does — one `bash -e -u -o pipefail -x -c`, commands joined with
+`; `, working directory the recipe's `subdir` — then builds `assembleRelease` and asserts the
+version pair inside the APK. The commands must come from the recipe, never be restated in the
+workflow: a restatement can pass while the buildserver fails.
 
 **Publication steps (one-time):**
 

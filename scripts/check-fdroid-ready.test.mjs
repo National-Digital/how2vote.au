@@ -21,6 +21,7 @@ const RELS = [
   RECIPE_REL,
   ".github/actions/resolve-store-version/action.yml",
   "scripts/generate-app-version.mjs",
+  ".nvmrc",
   "apps/mobile/capacitor.config.ts",
   "apps/mobile/package.json",
   "LICENSE",
@@ -211,5 +212,15 @@ describe("recipe version pairs", () => {
     const { ok, errors } = verdict(files);
     expect(ok).toBe(false);
     expect(errors.some((e) => e.includes("parse as versionName/versionCode/commit"))).toBe(true);
+  });
+});
+
+describe("toolchain parity", () => {
+  it("catches the recipe's Node major drifting from .nvmrc", () => {
+    const files = realFiles();
+    files[RECIPE_REL] = files[RECIPE_REL].replace("setup_24.x", "setup_22.x");
+    const { ok, errors } = verdict(files);
+    expect(ok).toBe(false);
+    expect(errors.some((e) => e.includes(".nvmrc pins"))).toBe(true);
   });
 });
