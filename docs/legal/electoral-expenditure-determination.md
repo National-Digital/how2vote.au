@@ -2,8 +2,8 @@
 
 **Operator:** General Consulting Services Pty Ltd as trustee for the Australian Business Trust, trading as National Digital  
 **Project:** How2Vote  
-**Reviewed:** 2018-10-12 to 2026-07-12  
-**Determination date:** 2026-07-20  
+**Reviewed:** 2018-10-12 to 2026-07-26  
+**Determination date:** 2026-07-26  
 **Reviewers:** Cameron Young and Tara Buckley  
 **Evidence ID:** `EV-EXPENDITURE-CLASSIFICATION`
 
@@ -25,8 +25,8 @@ here. The headline the conclusion turns on (drift-gated against the ledger by
 `scripts/check-expenditure-register.mjs`):
 
 - Highest reviewed period: **A$578.30** (FY2024-25), against its **A$16,900** threshold.
-- Current transitional period (2026-H2, through 12 July 2026): **A$19.00**, against **A$17,300**.
-- Life-to-date conservatively classified electoral expenditure: approximately **A$3,857.45**.
+- Current transitional period (2026-H2, through 26 July 2026): **A$46.75**, against **A$17,300**.
+- Life-to-date conservatively classified electoral expenditure: approximately **A$3,885.20**.
 
 The historical AWS and registrar figures are reconstructed estimates. Exact invoice reconciliation
 should be retained where available, but cannot affect the threshold outcome because the margin is
@@ -40,7 +40,9 @@ substantial.
 - **2025:** small update.
 - **June 2026:** substantial redevelopment.
 - **July 2026:** small amount of completion and migration work; AWS EC2 instance terminated and the application migrated to Cloudflare.
-- **Cloudflare:** current architecture uses free-tier services, with no dedicated cash expenditure recorded through 12 July 2026.
+- **25 July 2026:** third-party form delivery (Formspree) and anti-abuse (Cloudflare Turnstile) replaced by self-hosted first-party equivalents; form submissions are relayed via Cloudflare Email Sending at no dedicated cost (the US$5/month account-level plan upgrade that enabled it is a National Digital account-wide overhead, $0 project-specific under the shared-overheads policy).
+- **26 July 2026:** defensive `how2vote.app` domain registered for A$27.75/yr and permanently redirected to `how2vote.au` (it matches the published Android application ID `au.how2vote.app`; `.com` and `.org` were already held by third parties).
+- **Cloudflare:** current architecture uses free-tier services, with no dedicated cash expenditure recorded through 26 July 2026.
 - **Labour:** all project work was undertaken by Cameron Young and Tara Buckley without a project-specific charge to National Digital.
 
 ## Forecast treatment
@@ -71,5 +73,5 @@ Approved by:
 - Cameron Young, CEO
 - Tara Buckley, COO
 
-Approval date: 20 July 2026  
+Approval date: 26 July 2026  
 Next review date: 1 December 2026

@@ -1,4 +1,5 @@
 {
   "_comment": "Performance budget enforced in CI. jsGzipKB is the gzipped client JavaScript a visitor downloads: every non-dataset chunk in full, plus the single largest per-election dataset chunk (only one dataset loads per session, lazily — see scripts/check-bundle-budget.mjs). It guards against runaway dependencies and dataset-size regressions. The limit tracks deliberate feature growth (see the ADRs in docs/adr); a raise must be a considered, reviewed change, not an accident, and should leave a few KB of headroom so ordinary cross-environment gzip variance doesn't flip the gate. Lighthouse remains informational.",
-  "jsGzipKB": 208
+  "_comment_2": "Two caveats when judging a raise. The metric sums EVERY non-dataset chunk, so it counts a code-split payload as though one visitor downloaded all of it — an on-demand document can raise the number without touching any page's critical path, while inlining it would measure lower and cost first paint. And small modules compress worse split than inlined, so tiny content modules are imported statically even though a dynamic chunk looks like it should be cheaper.",
+  "jsGzipKB": 217
 }

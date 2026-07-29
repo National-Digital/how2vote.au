@@ -23,7 +23,7 @@
       "name": "Cloudflare",
       "provider": "Cloudflare, Inc.",
       "surface": "infrastructure",
-      "role": "Website hosting and CDN (Cloudflare Pages), edge compute (Pages Functions), the consented research counter database (Cloudflare D1), cookieless aggregate usage measurement (Cloudflare Web Analytics, measured at the edge with no client tag or cookie), the transactional email relay for the contact/feedback forms (Cloudflare Email Sending, called server-side at api.cloudflare.com), and edge security including rate limiting and Bot Fight Mode. The anti-abuse challenge is self-hosted (an in-app proof-of-work issued and verified by our own Pages Functions) — no Cloudflare or other third-party code loads in the browser for it, so this infrastructure entry adds no Content-Security-Policy source.",
+      "role": "Website hosting and CDN (Cloudflare Pages), edge compute (Pages Functions), the consented research counter database (Cloudflare D1), cookieless aggregate usage measurement (Cloudflare Web Analytics, measured at the edge with no client tag or cookie), the transactional email relay for the contact/feedback forms (Cloudflare Email Sending, called server-side at api.cloudflare.com), and edge security (per-IP rate limiting on the API routes). The anti-abuse challenge is self-hosted (an in-app proof-of-work issued and verified by our own Pages Functions) — no Cloudflare or other third-party code loads in the browser for it, so this infrastructure entry adds no Content-Security-Policy source.",
       "dataProcessing": "Serves all site content and runs the /api endpoints. Stores consented aggregate research counters in Cloudflare D1. Relays contact/feedback form messages to the project inbox as transactional email (relay only — the application stores no copy). Measures aggregate site usage with cookieless Cloudflare Web Analytics (no per-person identifier). May process request metadata (including IP address) transiently for delivery and security; the application does not read, log or persist it.",
       "retention": "Operational hosting: for the life of the service. Research data: aggregate-only counters retained per docs/privacy/retention.md (no per-person record exists). Cloudflare's own transient network/security logs per its data-processing terms.",
       "subprocessors": [],
@@ -97,10 +97,10 @@
     {
       "id": "cloudflare-edge",
       "service": "cloudflare",
-      "mechanism": "Edge rate limiting + Bot Fight Mode",
+      "mechanism": "Edge rate limiting",
       "interactive": false,
       "accessible": true,
-      "note": "Server-side rate limiting and heuristic bot mitigation on POST /api/research. It is applied at the edge and presents no user-facing challenge, so it is accessible to all users."
+      "note": "Server-side per-IP rate limiting on the POST /api/* routes. It is applied at the edge and presents no user-facing challenge, so it is accessible to all users."
     }
   ]
 }

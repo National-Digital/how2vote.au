@@ -5,9 +5,32 @@ import {
   RESEARCH_TRANSPORT_POLICY,
   TRANSMITTABLE_FIELDS,
   projectAllowlisted,
+  researchEndpointUrl,
   transportInit,
   verifyTransportInit,
 } from "./transport-policy";
+
+describe("researchEndpointUrl (per-channel target)", () => {
+  const SITE = "https://how2vote.au";
+  it("web PWA: relative same-origin paths (connect-src 'self')", () => {
+    expect(researchEndpointUrl("research")).toBe("/api/research");
+    expect(researchEndpointUrl("geography", "")).toBe("/api/research/geography");
+    expect(researchEndpointUrl("token", "")).toBe("/api/research/token");
+  });
+  it("native shells: absolute canonical origin (WebView origin is not how2vote.au)", () => {
+    expect(researchEndpointUrl("research", SITE)).toBe("https://how2vote.au/api/research");
+    expect(researchEndpointUrl("geography", SITE)).toBe(
+      "https://how2vote.au/api/research/geography",
+    );
+    expect(researchEndpointUrl("token", SITE)).toBe("https://how2vote.au/api/research/token");
+  });
+  it("the same relative literal underlies both, so infra route matching still holds", () => {
+    const names = ["research", "geography", "token"] as const;
+    for (const key of names) {
+      expect(researchEndpointUrl(key, SITE)).toBe(`${SITE}${RESEARCH_ENDPOINTS[key]}`);
+    }
+  });
+});
 
 describe("research transport policy", () => {
   it("declares the fail-closed invariants", () => {

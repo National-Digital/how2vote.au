@@ -60,7 +60,7 @@ describe("third-party registry integrity", () => {
     expect(pow!.accessible).toBe(true);
     // Attributed to a registered vendor (the Pages Functions run on Cloudflare infrastructure).
     expect(infrastructureServices.map((v) => v.id)).toContain(pow!.service);
-    // And no anti-abuse mechanism references the removed Turnstile service.
+    // And no anti-abuse mechanism resolves to a third-party challenge service.
     expect(antiAbuse.find((a) => a.id === "turnstile")).toBeUndefined();
   });
 });

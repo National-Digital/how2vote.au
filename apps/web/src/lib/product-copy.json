@@ -1,0 +1,28 @@
+{
+  "_comment": "Single source for the generated store listings (scripts/generate-store-metadata.mjs); a unit test asserts the App Store and Play descriptions are built from these exact strings, so the two listings can never drift apart. Consumed node-side by the generator only (kept out of the web client bundle). Page CONTENT (privacy, terms, about, …) is not here — those live as real pages that the native shells bundle verbatim, so they cannot drift by construction.",
+  "tagline": "Vote on their record.",
+  "repoUrl": "github.com/National-Digital/how2vote.au",
+  "pitch": "How2Vote is an independent, non-partisan comparison tool for Australian federal elections.",
+  "howItWorks": "Answer 50 propositions parliament has actually voted on. The app shows how closely each party's recorded parliamentary votes match your positions — against the candidates on your ballot, in official ballot order. Then build your own voting plan: nothing is ranked for you and no preference is recommended. You author your own preference order.",
+  "claims": {
+    "offline": {
+      "heading": "WORKS FULLY OFFLINE",
+      "body": "The complete dataset ships inside the app — questions, scoring and your card all work with no connection, including at a polling place with no signal."
+    },
+    "record": {
+      "heading": "BUILT FROM THE PARLIAMENTARY RECORD",
+      "body": "Comparisons are built from recorded parliamentary votes (public Hansard data via They Vote For You), not campaign statements. Every proposition links to the parliamentary divisions behind it, so everything you are shown can be checked at the source."
+    },
+    "private": {
+      "heading": "PRIVATE BY DESIGN",
+      "body": "No account. No sign-up. Your answers and weights stay on your device."
+    },
+    "neutral": {
+      "heading": "NEUTRAL BY CONSTRUCTION",
+      "body": "The interface is strictly two-tone, so match quality is never encoded as party colour. The scoring method is public, deterministic and reproducible, and the app is open source under AGPL-3.0-or-later."
+    }
+  },
+  "subtitle": "Vote on their record",
+  "shortDescriptionAndroid": "See how parties' real parliamentary voting records compare with your views.",
+  "promoText": "Compare your views with parties' actual parliamentary voting records — then build your own voting plan. Works fully offline at the polling place."
+}

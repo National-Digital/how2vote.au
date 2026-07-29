@@ -1,0 +1,220 @@
+name: iOS release
+
+# Store pipeline for the iOS shell (apps/mobile). Every web release becomes an iOS build:
+#
+# release published      -> build the channel web bundle, archive + sign the ipa (cloud-managed
+#                           signing via the App Store Connect API key), upload to TestFlight,
+#                           then — behind the `app-store` environment's required-reviewer gate —
+#                           submit that build for App Store review with generated metadata, as a
+#                           PHASED release (add `[full-rollout]` to the release notes before
+#                           approving to push all auto-updaters at once).
+#
+# NOTE: `automatic_release: false` — a green submit job means "approved and waiting", not "live";
+# a human clicks release in App Store Connect.
+# workflow_dispatch      -> same build; dry_run=true stops after the signed archive (no upload),
+#                           dry_run=false uploads to TestFlight. Submission never runs from
+#                           dispatch — promoting to the store is a release-event decision.
+#
+# Guideline 2.5.2 means there is no OTA update path: the web bundle ships inside the binary and
+# every change goes through App Review, which is why this must be fully automated.
+#
+# Requires secrets ASC_KEY_ID, ASC_ISSUER_ID, ASC_API_KEY_P8 (base64 .p8) and variable
+# APPLE_TEAM_ID.
+#
+# APPLE_TEAM_ID is the enrolment switch, and it is deliberately a VARIABLE rather than a secret so
+# this workflow can tell two different situations apart:
+#
+#   unset   -> the Apple Developer Program enrolment has not landed, so there is no iOS channel to
+#              release to. The job does not run at all (skipped — not a green no-op that looks like
+#              a successful release).
+#   set     -> iOS is a live channel. The three ASC secrets MUST be present, and the run FAILS
+#              CLOSED if any is missing, because "no credentials" then means a release did not ship.
+
+on:
+  release:
+    types: [published]
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: Build + sign only; skip the TestFlight upload
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+
+concurrency:
+  # One lane for all iOS releases so two quick releases serialize (a second `deliver` while the
+  # first review submission is open hard-fails at ASC). Never cancel an in-flight signing/upload.
+  group: ios-release
+  cancel-in-progress: false
+
+jobs:
+  build:
+    name: Build & TestFlight
+    runs-on: macos-15
+    timeout-minutes: 60
+    # Not enrolled yet → no iOS channel → nothing to release. See the header: this is the one
+    # switch that distinguishes "not a channel" from "a channel that failed to publish".
+    if: vars.APPLE_TEAM_ID != ''
+    outputs:
+      app-version: ${{ steps.version.outputs.version }}
+      build-number: ${{ steps.version.outputs.build }}
+      build-year: ${{ steps.version.outputs.build-year }}
+    steps:
+      # Presence check only; values are never printed (passed via env, not interpolated) and the
+      # failure names the missing KEYS, never their contents.
+      - name: Check App Store secrets are configured
+        env:
+          ASC_KEY_ID: ${{ secrets.ASC_KEY_ID }}
+          ASC_ISSUER_ID: ${{ secrets.ASC_ISSUER_ID }}
+          ASC_API_KEY_P8: ${{ secrets.ASC_API_KEY_P8 }}
+        run: |
+          set -euo pipefail
+          missing=()
+          for key in ASC_KEY_ID ASC_ISSUER_ID ASC_API_KEY_P8; do
+            [ -n "${!key-}" ] || missing+=("$key")
+          done
+          if [ ${#missing[@]} -gt 0 ]; then
+            echo "::error::APPLE_TEAM_ID is set (iOS is a live channel) but secrets are missing: ${missing[*]}."
+            echo "Set them under Settings → Secrets and variables → Actions (see docs/store-distribution.md),"
+            echo "or clear the APPLE_TEAM_ID variable if iOS should not be released yet."
+            exit 1
+          fi
+          echo "All three App Store Connect secrets are present."
+
+      - name: Checkout repository
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7
+        with:
+          fetch-depth: 0 # full tags so a dispatch run can resolve the current version
+
+      - name: Resolve version
+        id: version
+        uses: ./.github/actions/resolve-store-version
+
+      - name: Build web bundle (ios channel)
+        uses: ./.github/actions/build-web-channel
+        with:
+          channel: ios
+          app-version: ${{ steps.version.outputs.version }}
+          apple-app-id: ${{ vars.PUBLIC_APPLE_APP_ID }}
+
+      - name: Sync Capacitor iOS project
+        run: pnpm --filter @how2vote/mobile sync:ios
+
+      - name: Set up Ruby / fastlane
+        uses: ruby/setup-ruby@95ef2b042f9d7a56d8268cba8559e2842e2ad01b # v1.321.0
+        with:
+          ruby-version: .ruby-version # single source: apps/mobile/.ruby-version
+          bundler-cache: true
+          working-directory: apps/mobile
+
+      - name: Archive, sign${{ (github.event_name == 'workflow_dispatch' && inputs.dry_run) && ' (dry run)' || ' & upload to TestFlight' }}
+        working-directory: apps/mobile
+        env:
+          APP_VERSION: ${{ steps.version.outputs.version }}
+          BUILD_NUMBER: ${{ steps.version.outputs.build }}
+          ASC_KEY_ID: ${{ secrets.ASC_KEY_ID }}
+          ASC_ISSUER_ID: ${{ secrets.ASC_ISSUER_ID }}
+          ASC_API_KEY_P8: ${{ secrets.ASC_API_KEY_P8 }}
+          APPLE_TEAM_ID: ${{ vars.APPLE_TEAM_ID }}
+          DRY_RUN: ${{ (github.event_name == 'workflow_dispatch' && inputs.dry_run) && 'true' || 'false' }}
+        run: |
+          export ASC_KEY_PATH="$RUNNER_TEMP/asc.p8"
+          # Remove the decoded key on ANY exit (success, build failure, or cancel).
+          trap 'rm -f "$ASC_KEY_PATH"' EXIT
+          printf '%s' "$ASC_API_KEY_P8" | base64 -d > "$ASC_KEY_PATH"
+          if [ "$DRY_RUN" = "true" ]; then
+            bundle exec fastlane ios build
+          else
+            bundle exec fastlane ios beta
+          fi
+
+      - name: Record artifact provenance
+        env:
+          VERSION: ${{ steps.version.outputs.version }}
+          BUILD: ${{ steps.version.outputs.build }}
+        run: |
+          IPA=apps/mobile/builds/how2vote.ipa
+          {
+            echo "### iOS build"
+            echo "- version: $VERSION ($BUILD)"
+            echo "- sha256: $(shasum -a 256 "$IPA" | cut -d' ' -f1)"
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Upload ipa artifact
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
+        with:
+          name: how2vote-ios-${{ steps.version.outputs.version }}-${{ steps.version.outputs.build }}
+          path: |
+            apps/mobile/builds/how2vote.ipa
+            apps/mobile/builds/how2vote.app.dSYM.zip
+          if-no-files-found: warn
+          retention-days: 30
+
+  submit:
+    name: Submit for App Store review
+    needs: build
+    # Release events only. A skipped or failed `build` skips this too (the `if` deliberately does
+    # not use always()). The environment carries the required-reviewer gate — a human promotes
+    # every store submission.
+    if: github.event_name == 'release'
+    environment: app-store
+    runs-on: macos-15
+    timeout-minutes: 30
+    permissions:
+      contents: read # gh release view (rollout marker)
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7
+
+      # Same marker and same policy as android-release.yml, so one decision in the release notes
+      # governs BOTH stores and they can't drift. Read at submit time rather than from the trigger
+      # payload (captured before the reviewer saw it) or a repo variable (sticky — a full rollout
+      # left switched on is the failure this gate exists to prevent). See "Rollout policy" in
+      # docs/store-distribution.md.
+      - name: Resolve phased-release mode
+        id: rollout
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ github.event.release.tag_name }}
+        run: |
+          set -euo pipefail
+          BODY="$(gh release view "$TAG" --json body --jq .body || echo "")"
+          if printf '%s' "$BODY" | grep -qiF '[full-rollout]'; then
+            echo "phased=false" >> "$GITHUB_OUTPUT"
+            echo "::warning::[full-rollout] marker present — phased release OFF (all auto-updaters at once)."
+          else
+            echo "phased=true" >> "$GITHUB_OUTPUT"
+            echo "Phased release: Apple's 7-day schedule. Pause in App Store Connect if needed."
+          fi
+
+      - uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e # v6
+        with:
+          node-version-file: .nvmrc
+
+      # Listing copy is generated from the operator + shared product-copy records so the s 321D
+      # authorisation and the entity are single-sourced (see scripts/generate-store-metadata.mjs).
+      - name: Generate store metadata
+        env:
+          BUILD_YEAR: ${{ needs.build.outputs.build-year }}
+        run: node scripts/generate-store-metadata.mjs
+
+      - name: Set up Ruby / fastlane
+        uses: ruby/setup-ruby@95ef2b042f9d7a56d8268cba8559e2842e2ad01b # v1.321.0
+        with:
+          ruby-version: .ruby-version # single source: apps/mobile/.ruby-version
+          bundler-cache: true
+          working-directory: apps/mobile
+
+      - name: Submit build for review
+        working-directory: apps/mobile
+        env:
+          APP_VERSION: ${{ needs.build.outputs.app-version }}
+          BUILD_NUMBER: ${{ needs.build.outputs.build-number }}
+          ASC_KEY_ID: ${{ secrets.ASC_KEY_ID }}
+          ASC_ISSUER_ID: ${{ secrets.ASC_ISSUER_ID }}
+          ASC_API_KEY_P8: ${{ secrets.ASC_API_KEY_P8 }}
+          APPLE_TEAM_ID: ${{ vars.APPLE_TEAM_ID }}
+          IOS_PHASED_RELEASE: ${{ steps.rollout.outputs.phased }}
+        run: bundle exec fastlane ios submit_review

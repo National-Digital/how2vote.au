@@ -13,7 +13,7 @@ const REGISTER = JSON.parse(
   readFileSync(new URL("../docs/legal/neutrality-claims.json", import.meta.url), "utf8"),
 );
 const PAGE = readFileSync(
-  new URL("../apps/web/src/routes/methodology/+page.svelte", import.meta.url),
+  new URL("../apps/web/src/lib/content/MethodologyContent.svelte", import.meta.url),
   "utf8",
 );
 

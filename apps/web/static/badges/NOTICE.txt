@@ -1,0 +1,23 @@
+Store badge artwork — third-party assets, NOT covered by this project's AGPL-3.0-or-later licence.
+
+  app-store.svg    "Download on the App Store" badge. Apple Inc. App Store and the App Store logo
+                   are trademarks of Apple Inc. Used unmodified under the Apple Identity Guidelines
+                   for Channel Affiliates and Apple-Related Products:
+                   https://developer.apple.com/app-store/marketing/guidelines/
+
+  google-play.png  "Get it on Google Play" badge. Google LLC. Google Play and the Google Play logo
+                   are trademarks of Google LLC. Used unmodified under the Google Play badge
+                   guidelines: https://play.google.com/intl/en_us/badges/
+
+  f-droid.svg      "Get it on F-Droid" badge. F-Droid Limited / the F-Droid contributors. Licensed
+                   CC-BY-SA-3.0 (https://f-droid.org/docs/Badges/), the official badge unmodified;
+                   any adaptation must carry the same licence. F-Droid asks that the badge only
+                   point at an app in the main F-Droid repository.
+
+The Apple and Google badges are trademarked marketing assets, licensed only for linking to the
+corresponding store listing and only in unmodified form. They cannot be conveyed under the AGPL. See
+THIRD-PARTY-NOTICES.md at the repository root for the full terms; a fork that does not link to a
+given store should delete that store's file.
+
+The *.json files in this directory are generated shields.io endpoint payloads
+(scripts/generate-store-badges.mjs) and are part of this project.

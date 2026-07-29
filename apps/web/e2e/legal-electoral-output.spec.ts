@@ -321,6 +321,89 @@ test("a native print before the acknowledgement produces only the not-authorised
   await page.emulateMedia({ media: null });
 });
 
+test("a screenshot of the plan carries the authorisation and the historical marker", async ({
+  page,
+}) => {
+  // The print path is gated so paper is always authorised, which leaves SCREEN CAPTURE as the one
+  // uncontrolled channel — and capture cannot be intercepted on the web (FLAG_SECURE is
+  // deliberately not used on Android). The only lever that works on all three
+  // distribution channels is what the captured pixels say, so this asserts the authorisation is
+  // actually in them: present, opaque, and the topmost thing at the bottom edge no matter how far
+  // into the ballot the voter has scrolled.
+
+  // Single-source the expected wording from the site footer, which renders the same AUTHORISATION
+  // constant. Asserting equality here means the band and the footer cannot drift apart — a literal
+  // copied into this file would go stale the moment the operator record changed.
+  await page.goto("/about");
+  const expected = ((await page.locator("footer .auth").innerText()) ?? "").trim();
+  expect(expected).toMatch(/^Authorised by .+\.$/);
+
+  await reachCompare(page);
+  await openBuilder(page);
+  // A real edge-to-edge device inset: the band carries it in its own padding, so this is also what
+  // catches a height published from a content-box measurement (which misses padding changes).
+  await page.addStyleTag({
+    content: ":root{--safe-area-inset-top:47px;--safe-area-inset-bottom:34px}",
+  });
+
+  const band = page.locator(".band");
+  await expect(band).toBeVisible();
+  // Every shipped election is archived today, so the historical marker is the case under test; the
+  // live-election branch simply omits this line.
+  await expect(band).toContainText(/historical example — not valid for voting/i);
+  await expect(band).toContainText(expected);
+  await expect(band).toContainText("Preference order selected by the user.");
+
+  const seen = await page.evaluate(() => {
+    const el = document.querySelector<HTMLElement>(".band");
+    if (!el) return null;
+    const cs = getComputedStyle(el);
+    const rect = el.getBoundingClientRect();
+    const w = window.innerWidth;
+    return {
+      // Published height must equal the real one, or the reservations below it under-reserve by
+      // exactly the amount that is covering content.
+      token: getComputedStyle(document.documentElement).getPropertyValue("--plan-auth-h").trim(),
+      height: `${Math.round(rect.height)}px`,
+      // Flush to the bottom edge of the viewport — the part of the frame a capture always includes.
+      gapBelow: Math.round(window.innerHeight - rect.bottom),
+      // Opaque: a translucent band would let the ballot show through and become unreadable in a
+      // capture, which is the same as not being there.
+      background: cs.backgroundColor,
+      opacity: cs.opacity,
+      // Hit-testing, not just z-index: this is what proves nothing is painted over it.
+      hits: [4, w / 2, w - 4].map((x) =>
+        document.elementFromPoint(x, window.innerHeight - 3)?.closest(".band") ? "band" : "other",
+      ),
+    };
+  });
+  expect(seen).not.toBeNull();
+  expect(seen!.token).toBe(seen!.height);
+  expect(seen!.gapBelow).toBe(0);
+  expect(seen!.background).toMatch(/^rgb\(/); // never `transparent` / `rgba(...,0)`
+  expect(seen!.opacity).toBe("1");
+  expect(seen!.hits).toEqual(["band", "band", "band"]);
+
+  // Deep into the Senate rows — the capture most likely to be taken, and the one the scrolling
+  // worksheet footer is useless for.
+  await page.mouse.wheel(0, 2500);
+  await expect
+    .poll(async () =>
+      page.evaluate(() => {
+        const hit = document.elementFromPoint(window.innerWidth / 2, window.innerHeight - 3);
+        return { onTop: !!hit?.closest(".band"), scrolled: window.scrollY > 400 };
+      }),
+    )
+    .toEqual({ onTop: true, scrolled: true });
+
+  // Print is unaffected: it has its own stamp and its own watermark, rendered once at the end of
+  // the document and gated on the acknowledgement. A viewport-fixed band would repeat on every
+  // printed page and collide with both.
+  await page.emulateMedia({ media: "print" });
+  await expect(band).toBeHidden();
+  await page.emulateMedia({ media: null });
+});
+
 test("cancelling the acknowledgement does not print, and Escape closes it and restores focus", async ({
   page,
 }) => {

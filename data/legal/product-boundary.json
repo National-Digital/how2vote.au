@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "updated": "2026-07-20",
+  "updated": "2026-07-29",
   "note": "Machine-readable, fail-closed PRODUCT BOUNDARY — the externally-determined legal state of what this build is permitted to do, as recommended by the 2026-07-19 deep electoral-law review. It is DECLARATIVE: the runtime enforcement lives in the signed control plane (data/governance/control-plane.json) and in the code itself (candidate scores are party-panel-only by construction). scripts/check-product-boundary.mjs is blocking and FAILS CLOSED: it rejects an expired/undated boundary, an unknown enum, a determination that claims a non-pending status without a two-person sign-off, and — critically — any boundary flag that DISAGREES with the runtime control plane (e.g. printMode=disabled while printing is not actually suspended). As of 2026-07-20 the two-person compliance review (cameron-young + tara-buckley) has signed off all six external determinations, so printing and research are re-enabled (their control-plane suspensions lifted with audited RESTORE records) under the National Digital authoriser model and the consent/minimisation controls. Candidate scores remain party-panel-only. The deploy still runs the historical-demo release profile (other programme controls remain partial); full production mode is a separate decision. Bound into the release manifest (productBoundaryHash) so a deploy is pinned to the exact boundary it shipped under.",
   "effectiveFrom": "2026-07-19",
   "expiresAt": "2026-11-30",
@@ -61,6 +61,15 @@
       "determinationDate": "2026-07-19",
       "evidenceRef": "EV-AEC-SOURCE-RECORDS",
       "basis": "Raw AEC candidate/ballot source retention + reviewer sign-off (control-10)."
+    },
+    "storeDistribution": {
+      "status": "determined",
+      "determination": "Approved. Store distribution and cross-origin research ingestion from the two named shell origins are permitted on the recorded controls. The remaining register items — vendor rows for Apple and Google, the store-fee expenditure records and the EV-IP-ASSIGNMENT confirmation — land with the store accounts, before any store submission.",
+      "reviewer": "cameron-young",
+      "secondReviewer": "tara-buckley",
+      "determinationDate": "2026-07-29",
+      "evidenceRef": "EV-STORE-DISTRIBUTION-2026",
+      "basis": "Distribution of the unchanged application through third-party marketplaces (Apple App Store, Google Play) as Capacitor-wrapped builds of the same static bundle (apps/mobile). Covers: (1) the AGPL section 7 application-store additional permission (LICENSE-EXCEPTIONS.md); (2) store listing copy carrying the s 321D authorisation line, generated from the operator record (scripts/generate-store-metadata.mjs); (3) classification of store developer fees in the expenditure register; (4) vendor-register entries for Apple and Google; and (5) cross-origin research ingestion — the opt-in research contribution posts from the two exact shell origins (capacitor://localhost, https://localhost) to the canonical origin under the strict CORS allowlist in src/lib/research/cors.ts, with the enforceable controls unchanged; the full posture analysis and control enumeration are recorded in the 2026-07-24 legal-review entries under EV-STORE-DISTRIBUTION-2026."
     },
     "accessibilityHumanTesting": {
       "status": "determined",

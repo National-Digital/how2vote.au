@@ -1,5 +1,6 @@
 <script lang="ts">
   import { onMount } from "svelte";
+  import { isNativeShell } from "$lib/channel";
   import Logo from "$lib/components/Logo.svelte";
   import Meta from "$lib/components/Meta.svelte";
   import { quiz } from "$lib/quiz.svelte";
@@ -58,7 +59,7 @@
 <Meta />
 
 <div class="wrap">
-  <header class="top ui">
+  <header class="top ui app-top">
     <Logo size="sm" />
     <span class="pill" class:off={!online} aria-live="polite">{online ? "Online" : "Offline"}</span>
   </header>
@@ -66,7 +67,13 @@
   <div class="body">
     <h1>{heading}</h1>
 
-    {#if online}
+    {#if isNativeShell}
+      <p class="lede">
+        The app, the questions, the scoring and your card are all installed on this device — nothing
+        needs to be downloaded or saved first. Everything keeps working with no connection, handy in
+        a polling place with no signal.
+      </p>
+    {:else if online}
       <p class="lede">
         This tool is built to run entirely on your device. Once you've opened it, the questions, the
         scoring and your card all keep working with no connection — handy in a polling place with no
@@ -89,7 +96,7 @@
       </p>
     {/if}
 
-    {#if cap?.supported}
+    {#if cap?.supported && !isNativeShell}
       <ul class="checks ui" aria-label="What's available offline">
         {#each cap.items as item (item.path)}
           <li class:on={item.available}>
@@ -113,10 +120,17 @@
       {/if}
     </div>
 
-    <p class="foot ui">
-      A connection is only needed for the optional research survey and cookieless usage analytics —
-      never for building or reading your card.
-    </p>
+    {#if isNativeShell}
+      <p class="foot ui">
+        A connection is only needed for the optional research contribution — never for building or
+        reading your card.
+      </p>
+    {:else}
+      <p class="foot ui">
+        A connection is only needed for the optional research survey and cookieless usage analytics
+        — never for building or reading your card.
+      </p>
+    {/if}
   </div>
 </div>
 

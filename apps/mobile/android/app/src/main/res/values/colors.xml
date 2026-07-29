@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<!-- Two-tone brand tokens (PAPER/INK — see apps/mobile/scripts/generate-native-assets.mjs and the
+     PWA theme-colors in apps/web/src/app.html). values-night/ flips ground/ink to SLATE/CHALK.
+     The interface is strictly two-tone by design (neutrality: no hue anywhere), so system chrome
+     must carry the brand ground, never a template accent colour. -->
+<resources>
+    <color name="ground">#F6F4EE</color>
+    <color name="ink">#181611</color>
+    <color name="colorPrimary">#181611</color>
+    <color name="colorPrimaryDark">#181611</color>
+    <color name="colorAccent">#181611</color>
+</resources>

@@ -1,5 +1,6 @@
 <script lang="ts">
   import { tick } from "svelte";
+  import { modal } from "$lib/modal";
   import { ORG } from "$lib/org";
 
   // The print acknowledgement modal — National Digital authoriser model (see docs/adr/0010). The
@@ -17,6 +18,10 @@
 
   let dialog = $state<HTMLElement | null>(null);
   const previouslyFocused = typeof document !== "undefined" ? document.activeElement : null;
+
+  // Suspend the app's global keyboard shortcuts while this is mounted — a custom element, so
+  // nothing else keeps a bare key from reaching a window handler underneath.
+  $effect(() => modal.open());
 
   const canConfirm = $derived(ack);
 
@@ -131,14 +136,18 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    padding: 20px;
+    /* Keep the panel — and its Print / Cancel buttons — clear of the system bars on an
+       edge-to-edge device. This is the s321D acknowledgement: it must never be partly under the
+       status or gesture bar on a short or landscape screen. The insets are 0 everywhere else. */
+    padding: calc(20px + var(--safe-top)) calc(20px + var(--safe-right))
+      calc(20px + var(--safe-bottom)) calc(20px + var(--safe-left));
     background: var(--scrim);
     overflow-y: auto;
   }
   .panel {
     width: 100%;
     max-width: 460px;
-    max-height: calc(100vh - 40px);
+    max-height: calc(100dvh - 40px - var(--safe-top) - var(--safe-bottom));
     overflow-y: auto;
     padding: 20px;
     background: var(--raise);

@@ -1,4 +1,5 @@
 <script lang="ts">
+  import DocLink from "$lib/components/DocLink.svelte";
   import { page } from "$app/state";
   import DataPage from "$lib/components/DataPage.svelte";
   import ElectionToggle from "$lib/components/ElectionToggle.svelte";
@@ -32,6 +33,6 @@
 
   <p class="source">
     Positions are compiled from recorded parliamentary votes, sourced from They Vote For You. See
-    <a href="/methodology">how the scoring works</a>.
+    <DocLink href="/methodology">how the scoring works</DocLink>.
   </p>
 </DataPage>

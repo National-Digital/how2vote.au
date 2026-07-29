@@ -68,7 +68,7 @@ result, not a tuning problem: **any mechanism that permits surgical subtraction 
 record per-cell-per-time deltas, and a small per-time delta is a person record.** Surgical excision
 and "no per-person record at rest" are therefore incompatible, and the guarantee wins.
 
-Poisoning is instead handled by **prevention** (Cloudflare rate limit + Bot Fight Mode on
+Poisoning is instead handled by **prevention** (a Cloudflare per-IP rate limit on
 `POST /api/research`, already live) and **detection** via Cloudflare request analytics (the
 infra layer already meters request volume to the route). If an attack is ever confirmed, the
 remedy is coarse and documented: tighten the limit, annotate the affected wave in the analysis
@@ -76,6 +76,17 @@ plan, and — only in the worst case — discard that election's counters and re
 We accept the loss of surgical excision as the price of the guarantee. A consequence: the store
 now contains **no timestamp finer than a calendar quarter** (`collection_period_count`); no
 per-day or finer time exists anywhere.
+
+**The migration's own comment is superseded by the paragraph above.** `apps/web/migrations/0001_research.sql`
+attributes prevention to "Cloudflare rate limit + Bot Fight Mode". No managed bot-detection service is
+subscribed on this account, so the Bot Fight Mode half was never accurate: the per-IP WAF rate limit
+and the self-hosted proof-of-work ([0017](0017-self-hosted-proof-of-work-challenge.md)) are the whole
+edge defence, and the absence of a behavioural layer is accepted residual risk under threat-model T8.
+The comment is deliberately left as written. That migration has been applied and its hash is pinned in
+`infra/providers/cloudflare/migration-registry.json`, so an applied migration is immutable — editing
+one to correct prose means re-pinning the hash, which spends the registry's only tamper signal on a
+comment and makes the pin unable to distinguish a prose fix from a schema change. Corrections to a
+migration's commentary belong in this ADR, which the comment already cites.
 
 **Publication differencing gate**: the stats generator republishes an election's
 file only when at least `MIN_CELL` new responses have accrued since the published file,

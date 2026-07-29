@@ -19,7 +19,14 @@
  * client and the server read); this file re-exports RESEARCH_CONSENT_VERSION for its existing callers.
  */
 import { RESEARCH_CONSENT_VERSION, RESEARCH_SCHEMA_VERSION } from "./research/consent";
-import { RESEARCH_ENDPOINTS, transportInit } from "./research/transport-policy";
+import { researchEndpointUrl, transportInit } from "./research/transport-policy";
+import { isNativeShell } from "./channel";
+import { SITE_URL } from "./seo";
+
+// Native shells serve the app from a local WebView origin, so research POSTs must target the
+// canonical origin (the endpoints allow the shell origins by strict CORS allowlist); the web PWA
+// uses same-origin relative paths. Nothing else about the request changes.
+const RESEARCH_ORIGIN = isNativeShell ? SITE_URL : "";
 
 export { RESEARCH_CONSENT_VERSION } from "./research/consent";
 
@@ -44,7 +51,7 @@ export {
  *  single-sourced in ./research/transport-policy. */
 /** Issues the short-lived, single-use signed submission tokens. Called AFTER the
  *  client's age + consent gates; returns one token per unlinkable request (research + geography). */
-const TOKEN_ENDPOINT = RESEARCH_ENDPOINTS.token;
+const TOKEN_ENDPOINT = researchEndpointUrl("token", RESEARCH_ORIGIN);
 
 /** The AEC timetable boundaries the server needs to classify the collection context. All
  *  public build-time facts from the election registry — never personal data. Sent so the SERVER can
@@ -149,7 +156,7 @@ async function post(endpoint: "research" | "geography", payload: unknown): Promi
     // transportInit enforces the in-transit policy: no-store, no credentials, and a
     // fail-closed field allowlist so only the device-derived record — never the raw answer vector or
     // the electorate — can reach the wire.
-    await fetch(RESEARCH_ENDPOINTS[endpoint], transportInit(endpoint, payload));
+    await fetch(researchEndpointUrl(endpoint, RESEARCH_ORIGIN), transportInit(endpoint, payload));
   } catch {
     // Deliberately ignored — research is optional and must never affect the card.
   }

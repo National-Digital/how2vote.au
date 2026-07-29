@@ -41,6 +41,20 @@ export const RESEARCH_ENDPOINTS = {
 export type ResearchEndpointName = keyof typeof RESEARCH_ENDPOINTS;
 
 /**
+ * Resolve an ingestion route to the URL to fetch. On the web PWA `originBase` is "" so the
+ * relative, same-origin path is used (connect-src 'self', inherits the page's HTTPS origin). In a
+ * native shell the WebView origin (capacitor://localhost / https://localhost) is not how2vote.au,
+ * so the caller passes the canonical origin and the path is made absolute. This is the ONLY
+ * transport difference for native: the request still carries no credentials and no cache (see
+ * transportInit), and the server-side aggregate-only / token / no-log invariants are unchanged —
+ * the endpoints allow the two shell origins by strict CORS allowlist, nothing wider. Kept pure
+ * (base passed in, not imported) so the leaf property and testability hold.
+ */
+export function researchEndpointUrl(endpoint: ResearchEndpointName, originBase = ""): string {
+  return `${originBase}${RESEARCH_ENDPOINTS[endpoint]}`;
+}
+
+/**
  * The exact set of TOP-LEVEL fields permitted on the wire for each endpoint — the executable form of
  * the payload contracts in survey.ts (ResearchPayload / GeographyPayload / the token request). Any key
  * not listed here is dropped by projectAllowlisted() before the body is serialised (fail-closed).

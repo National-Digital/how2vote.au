@@ -1,0 +1,74 @@
+# fdroiddata recipe for au.how2vote.app — REFERENCE COPY.
+#
+# The authoritative copy lives in the fdroiddata repo (gitlab.com/fdroid/fdroiddata,
+# metadata/au.how2vote.app.yml) once the packaging MR is merged; this file is the version we
+# maintain, submit and diff against. mobile-ci's `fdroid` job executes the same steps this
+# recipe declares (property injection via gradle.properties, web build, cap sync,
+# `gradlew assembleRelease` with no -P flags) so a change that would break the F-Droid
+# buildserver goes red on the PR that makes it, and scripts/check-fdroid-ready.mjs statically
+# guards the invariants the recipe relies on. See docs/store-distribution.md § F-Droid.
+#
+# Versioning: the gradle files carry NO literal version (values arrive as project properties).
+# checkupdates therefore polls https://how2vote.au/app-version.json (published on every
+# production deploy by scripts/generate-app-version.mjs) for the versionName/versionCode pair,
+# writes them into a new build block below (AutoUpdateMode: Version → commit: v<versionName>),
+# and at build time the prebuild line feeds $$VERSION$$/$$VERCODE$$ back into gradle via
+# gradle.properties. versionCode = (MAJOR×10000 + MINOR×100 + PATCH)×1000 — the shared
+# resolve-store-version encoding with the run-number digits pinned to 000, so an F-Droid build
+# of a release always ranks below the Play build of the same release (different signers; the
+# codes never compete within one channel).
+
+Categories:
+  - Science & Education
+License: AGPL-3.0-or-later
+AuthorName: National Digital
+WebSite: https://how2vote.au
+SourceCode: https://github.com/National-Digital/how2vote.au
+IssueTracker: https://github.com/National-Digital/how2vote.au/issues
+Changelog: https://github.com/National-Digital/how2vote.au/releases
+
+AutoName: How2Vote
+
+RepoType: git
+Repo: https://github.com/National-Digital/how2vote.au.git
+
+Builds:
+  # Placeholder first block — replace versionName/versionCode/commit with the first tag actually
+  # submitted; checkupdates appends every later release automatically with the same shape.
+  - versionName: 1.0.0
+    versionCode: 10000000
+    commit: v1.0.0
+    subdir: apps/mobile/android
+    sudo:
+      # Node toolchain for the SvelteKit web bundle the shell wraps. Node major must satisfy
+      # .nvmrc; pnpm version comes from corepack (packageManager field in package.json).
+      - apt-get update
+      - apt-get install -y --no-install-recommends curl ca-certificates
+      - curl -fsSL https://deb.nodesource.com/setup_24.x | bash -
+      - apt-get install -y nodejs
+      - npm install -g corepack && corepack enable
+    prebuild:
+      # The ONLY version source for this build: the block's declared pair, injected as gradle
+      # project properties (app/build.gradle reads them; -P flags are the store-CI route only).
+      - printf 'versionCode=$$VERCODE$$\nversionName=$$VERSION$$\n' >> gradle.properties
+      - cd ../../.. && corepack install && pnpm install --frozen-lockfile
+    scanignore:
+      # JS dependency tree for the bundled web app — installed from the committed lockfile.
+      - node_modules
+    build:
+      # Same channel build the store pipelines use: static web bundle with the android channel
+      # baked in, then Capacitor copies it into the native project. Everything ships in the APK;
+      # no runtime fetch (see docs/store-distribution.md — the offline guarantee is absolute).
+      - cd ../../.. && APP_VERSION=$$VERSION$$ PUBLIC_DIST_CHANNEL=fdroid pnpm --filter @how2vote/web build
+      - cd ../../.. && pnpm --filter @how2vote/mobile sync:android
+    gradle:
+      - yes
+    output: app/build/outputs/apk/release/app-release-unsigned.apk
+
+# %v in the pattern below = the versionName found by the update check; deploy.yml tags every
+# production release exactly `v<version>`, so the generated commit ref always exists.
+AutoUpdateMode: Version v%v
+UpdateCheckMode: HTTP
+UpdateCheckData: https://how2vote.au/app-version.json|"versionCode":\s*(\d+)|https://how2vote.au/app-version.json|"versionName":\s*"([\d.]+)"
+CurrentVersion: 1.0.0
+CurrentVersionCode: 10000000

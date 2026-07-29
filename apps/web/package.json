@@ -9,12 +9,14 @@
     "og:generate": "node scripts/generate-og.mjs",
     "budget:check": "node scripts/check-bundle-budget.mjs",
     "precache:check": "node scripts/check-precache.mjs",
-    "prebuild:assets": "node scripts/generate-og.mjs && node scripts/generate-icons.mjs && node scripts/generate-security-txt.mjs && node scripts/generate-error-pages.mjs",
+    "html-nesting:check": "node scripts/check-html-nesting.mjs",
+    "prebuild:assets": "node scripts/generate-og.mjs && node scripts/generate-icons.mjs && node scripts/generate-security-txt.mjs && node scripts/generate-error-pages.mjs && node scripts/generate-deep-link-assets.mjs && node ../../scripts/generate-store-badges.mjs && node ../../scripts/generate-app-version.mjs",
     "build": "pnpm prebuild:assets && vite build",
     "preview": "vite preview",
     "typecheck": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json",
     "test": "vitest run",
     "test:e2e": "playwright test",
+    "screenshots": "playwright test --config playwright.screenshots.config.ts",
     "neutrality:check": "node scripts/neutrality-check.mjs"
   },
   "dependencies": {

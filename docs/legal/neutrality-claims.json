@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "description": "Neutrality claims register. Maps each qualified neutrality wording used in public copy to its substantiating control, CI test IDs, external-evidence IDs and approver/expiry; and records the versioned proposition-selection rationale + scoring spec, bound to the built-dataset proposition manifest. Enforced by scripts/check-neutrality-claims.mjs (the claims/copy arm of the neutrality lint) and wired into the compliance CI groups. See also docs/claims-register.md (prose) and apps/web/src/routes/methodology/+page.svelte (the public surface).",
+  "description": "Neutrality claims register. Maps each qualified neutrality wording used in public copy to its substantiating control, CI test IDs, external-evidence IDs and approver/expiry; and records the versioned proposition-selection rationale + scoring spec, bound to the built-dataset proposition manifest. Enforced by scripts/check-neutrality-claims.mjs (the claims/copy arm of the neutrality lint) and wired into the compliance CI groups. See also docs/claims-register.md (prose) and apps/web/src/lib/content/MethodologyContent.svelte (the public surface, rendered by the /methodology route and by the in-flow document dialog).",
   "claims": [
     {
       "id": "NC-NO-RECOMMENDATION",

@@ -27,6 +27,7 @@ import {
 import { isElectionOpen } from "../../../src/lib/research/registry";
 import { newNonce, signToken, type TokenClaims } from "../../../src/lib/research/token";
 import { resolveChallengeVerifier, type ChallengeEnv } from "../../../src/lib/research/challenge";
+import { preflightResponse, withCors } from "../../../src/lib/research/cors";
 
 /** ChallengeEnv carries ALTCHA_HMAC_SECRET, the single-use store bindings and the deployment
  *  marker read by isProductionDeployment(). In production the anti-abuse challenge fails closed:
@@ -42,7 +43,16 @@ const MAX_BODY_BYTES = 4 * 1024;
 const noContent = (): Response => new Response(null, { status: 204 });
 const refused = (): Response => new Response(null, { status: 403 });
 
-export const onRequestPost: PagesFunction<Env> = async ({ request, env }) => {
+// Preflight for the native shells' cross-origin POST (strict allowlist; see cors.ts). The token
+// response body must be readable cross-origin, so its 200 (and every refusal) carries the same
+// strict ACAO via the wrapper below.
+export const onRequestOptions: PagesFunction<Env> = async ({ request }) =>
+  preflightResponse(request);
+
+export const onRequestPost: PagesFunction<Env> = async (ctx) =>
+  withCors(await handlePost(ctx), ctx.request);
+
+const handlePost: PagesFunction<Env> = async ({ request, env }) => {
   const length = Number(request.headers.get("content-length") ?? "0");
   if (length > MAX_BODY_BYTES) return refused();
 

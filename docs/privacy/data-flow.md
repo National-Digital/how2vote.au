@@ -122,7 +122,7 @@ to the public `/insights` dashboards.
 | Aggregate-only writes (counters, atomic batch) | `research.ts` | No per-person row exists at rest; a leak exposes counts |
 | Key rule: sensitive dimensions national-only | `research.ts` (+ generator defence-in-depth) | Worst leaked row = "one person somewhere in Australia" |
 | Cohort classified server-side; counters cohort-keyed | `research.ts` | Cohorts exact; per-cohort suppression inherent |
-| Poisoning: prevention + infra detection (no in-DB delta) | Cloudflare rate limit / Bot Fight / request analytics | Integrity without a person-reconstructable delta store |
+| Poisoning: prevention + infra detection (no in-DB delta) | Cloudflare per-IP rate limit / proof-of-work / request analytics | Integrity without a person-reconstructable delta store |
 | Per-cohort k ≥ 10, no-leak denominator, no combined/electorate view, dataset-checked parties, differencing gate | Build time (`stats.ts`, `generate-stats.ts`) | Published aggregates are k-anonymous and cannot be differenced below k |
 
 **Site telemetry is entirely separate from this flow.** Usage is measured by cookieless Cloudflare

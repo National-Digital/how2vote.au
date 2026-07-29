@@ -39,7 +39,7 @@ const MIN_TTL_SECONDS = 60;
 /**
  * Cloudflare KV-backed store. KV is eventually consistent, so a burst of truly simultaneous replays
  * of the SAME token could in principle both read "absent" before either writes; that residual risk
- * is covered in depth by the short token lifetime plus the live edge rate-limit + Bot Fight Mode.
+ * is covered in depth by the short token lifetime plus the live edge rate limit.
  * For the ordinary capture-and-replay case (any measurable time apart) this is exact.
  */
 export class KvNonceStore implements NonceStore {

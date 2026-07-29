@@ -65,6 +65,13 @@ jobs:
         # offline e2e specs cannot catch this.
         run: pnpm --filter @how2vote/web precache:check
 
+      - name: HTML nesting gate (no block-level element inside a paragraph)
+        # A start tag that implicitly closes <p> splits the paragraph, so the prerendered DOM stops
+        # matching what Svelte expects and hydration discards the page and re-renders it — a layout
+        # shift on every affected page. axe and the e2e specs run after hydration, when the DOM has
+        # already been repaired, so the emitted HTML is the only place this is still visible.
+        run: pnpm --filter @how2vote/web html-nesting:check
+
       - name: Action-pinning gate (every third-party action is pinned to a full commit SHA)
         # Supply-chain: a mutable tag/branch pin (@v4, @main) lets the action owner move it to
         # malicious code that runs with this repo's token — the risk is acute on a public repo where

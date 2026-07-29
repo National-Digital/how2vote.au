@@ -15,7 +15,7 @@ require the sign-off, which is a precondition only for the live service collecti
 Companion documents: `docs/privacy/data-flow.md` (hop-by-hop flows + diagram),
 `docs/privacy/threat-model.md` (assets/threats/controls), `docs/privacy/retention.md`,
 `docs/research/codebook.md` (the instrument), and the Privacy Policy
-(`apps/web/src/routes/privacy/+page.svelte`).
+(`apps/web/src/lib/content/PrivacyContent.svelte`).
 
 ## 1. Purpose and legal basis
 
@@ -154,8 +154,9 @@ differencing gate `[code]`; no delta/per-request bundle and no time finer than a
 `[code]`; input abuse guards (size/proposition caps, schema gate, mandatory consent version)
 `[code]`.
 
-**Poisoning defence is prevention, not excision** — Cloudflare rate limit + Bot Fight Mode on the
-route (`[ops]`, live) and request-analytics detection; a per-cell-per-time delta store would be the
+**Poisoning defence is prevention, not excision** — a Cloudflare per-IP rate limit on the route
+(`[ops]`, live) and request-analytics detection; no managed bot-detection service is subscribed, so
+the rate limit is the sole edge volume control and the in-app proof-of-work prices each submission; a per-cell-per-time delta store would be the
 excision path but is deliberately not built (it would be a temporary person record — ADR-0008).
 
 **Operational / deployment — outstanding, requires sign-off before launch:**
@@ -170,7 +171,8 @@ excision path but is deliberately not built (it would be a temporary person reco
   **tested backup-destruction / PITR-horizon** step; operationalise the after-election review `[ops]`
   (see `retention.md`). This is the APP 11 destroy/de-identify limb — the rule is published but the
   automated deletion is **not yet deployed**.
-- Rate limit + Bot Fight Mode on `POST /api/research` `[ops]` (already configured live).
+- Per-IP rate limit on the `POST /api/*` routes `[ops]` (already configured live). No managed
+  bot-detection service is subscribed; see the residual risk in `threat-model.md` T8.
 - Data-breach response runbook + OAIC notification path `[ops]`.
 
 ## 6. Retention and destruction record

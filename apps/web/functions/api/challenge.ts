@@ -15,8 +15,9 @@
  * addition to `/api/research`. The proof-of-work raises per-submission cost but does not by itself
  * cap request volume; without the rate-limit rule these routes could be flooded (challenge issuance
  * is cheap to request; a solved challenge is required per forms send, so flooding `/api/forms` can
- * burn the email quota). Bot Fight Mode + the per-IP rate limit are the volume control — see
- * docs/adr/0017 and docs/self-hosting.md.
+ * burn the email quota). The per-IP rate limit is the ONLY volume control — there is no managed
+ * bot-detection layer in front of it — so its route coverage is load-bearing. See docs/adr/0017
+ * and docs/self-hosting.md.
  *
  * When no HMAC secret is provisioned the endpoint is inert (204): the client then submits without a
  * challenge, and the receiving endpoint's verifier decides (inert pass-through in non-production;
@@ -28,6 +29,7 @@ import {
   issueChallenge,
   type ChallengePurpose,
 } from "../../src/lib/research/challenge";
+import { preflightResponse, withCors } from "../../src/lib/research/cors";
 
 interface Env {
   ALTCHA_HMAC_SECRET?: string;
@@ -39,14 +41,29 @@ const MAX_BODY_BYTES = 1024;
 const noContent = (): Response => new Response(null, { status: 204 });
 const refused = (): Response => new Response(null, { status: 403 });
 
-export const onRequestPost: PagesFunction<Env> = async ({ request, env }) => {
-  const length = Number(request.headers.get("content-length") ?? "0");
-  if (length > MAX_BODY_BYTES) return refused();
+// Native shells (Capacitor iOS/Android) POST from their local WebView origin to the canonical
+// origin, so the challenge is fetched cross-origin: answer the preflight and echo the strict CORS
+// allowlist on the response, exactly as the research endpoints do (see cors.ts). The web PWA is
+// same-origin and these headers are inert for it.
+export const onRequestOptions: PagesFunction<Env> = async ({ request }) =>
+  preflightResponse(request);
+
+export const onRequestPost: PagesFunction<Env> = async (ctx) =>
+  withCors(await handlePost(ctx), ctx.request);
+
+const handlePost: PagesFunction<Env> = async ({ request, env }) => {
+  // Cheap rejection when the sender declares an oversized body; the byte check below is the one
+  // that actually holds, since a chunked request carries no content-length to read.
+  const declared = Number(request.headers.get("content-length") ?? "0");
+  if (declared > MAX_BODY_BYTES) return refused();
 
   let purpose: ChallengePurpose;
   try {
-    const text = await request.text();
-    if (text.length > MAX_BODY_BYTES) return refused();
+    // Measured in BYTES, not string length: `text.length` counts UTF-16 code units, so a multi-byte
+    // body would pass a cap it is several times over.
+    const raw = await request.arrayBuffer();
+    if (raw.byteLength > MAX_BODY_BYTES) return refused();
+    const text = new TextDecoder().decode(raw);
     const parsed: unknown = JSON.parse(text);
     const candidate =
       typeof parsed === "object" && parsed !== null

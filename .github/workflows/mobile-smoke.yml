@@ -1,0 +1,103 @@
+name: Mobile smoke (device boot)
+
+# Real device-boot smoke tests for the native shells: build the app, launch it on an
+# emulator/simulator, and assert it starts and the bundled web app loads. These are heavier and
+# occasionally flaky, so they run on demand and as part of release verification — NOT on every PR
+# (the deterministic per-channel behaviour specs in mobile-ci cover the upload code path
+# on every PR). Together: mobile-ci proves the upload logic on all three channels; this proves the
+# shells actually boot and render on a real OS image.
+
+on:
+  workflow_dispatch:
+  release:
+    types: [published]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: mobile-smoke-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  android-boot:
+    name: Android boots & loads
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7
+      - name: Build web bundle (android channel)
+        uses: ./.github/actions/build-web-channel
+        with:
+          channel: android
+          app-version: 0.0.0-smoke
+      - name: Sync Capacitor Android project
+        run: pnpm --filter @how2vote/mobile sync:android
+      - uses: actions/setup-java@03ad4de0992f5dab5e18fcb136590ce7c4a0ac95 # v5.6.0
+        with:
+          distribution: temurin
+          java-version: "21"
+      - name: Assemble debug APK
+        working-directory: apps/mobile/android
+        run: ./gradlew assembleDebug --no-daemon
+      - name: Enable KVM
+        run: |
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          sudo udevadm control --reload-rules && sudo udevadm trigger --name-match=kvm
+      - name: Boot emulator, launch app, assert it renders
+        uses: reactivecircus/android-emulator-runner@a421e43855164a8197daf9d8d40fe71c6996bb0d # v2.38.0
+        with:
+          api-level: 30
+          arch: x86_64
+          target: google_apis
+          disable-animations: true
+          script: |
+            adb install -r apps/mobile/android/app/build/outputs/apk/debug/app-debug.apk
+            adb shell am start -n au.how2vote.app/.MainActivity
+            # Give the WebView time to load the bundled app, then assert our activity is resumed
+            # (i.e. the shell launched and did not crash) — a real on-device boot smoke.
+            sleep 20
+            adb shell dumpsys activity activities | tee /tmp/acts.txt
+            if ! grep -q "au.how2vote.app/.MainActivity" /tmp/acts.txt; then
+              echo "::error::How2Vote MainActivity is not the resumed activity — shell failed to launch"; exit 1
+            fi
+            # No fatal WebView/render crash in logcat.
+            if adb logcat -d | grep -iE "FATAL EXCEPTION|AndroidRuntime.*au.how2vote.app"; then
+              echo "::error::fatal exception during launch"; exit 1
+            fi
+            echo "✓ Android shell booted and MainActivity is resumed"
+
+  ios-boot:
+    name: iOS boots & loads
+    # Opt-in via repo var MOBILE_SMOKE_IOS=1 (macOS runner minutes are expensive on private forks).
+    if: vars.MOBILE_SMOKE_IOS == '1'
+    runs-on: macos-15
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7
+      - name: Build web bundle (ios channel)
+        uses: ./.github/actions/build-web-channel
+        with:
+          channel: ios
+          app-version: 0.0.0-smoke
+      - name: Sync Capacitor iOS project
+        run: pnpm --filter @how2vote/mobile sync:ios
+      - name: Boot simulator, build & install, assert it launches
+        working-directory: apps/mobile/ios/App
+        run: |
+          set -euo pipefail
+          DEVICE="iPhone 16"
+          xcrun simctl boot "$DEVICE" || true
+          xcodebuild build \
+            -project App.xcodeproj -scheme App -configuration Debug \
+            -destination "platform=iOS Simulator,name=$DEVICE" \
+            -derivedDataPath build CODE_SIGNING_ALLOWED=NO | tail -20
+          APP=$(find build/Build/Products -name "App.app" -maxdepth 3 | head -1)
+          xcrun simctl install "$DEVICE" "$APP"
+          xcrun simctl launch "$DEVICE" au.how2vote.app
+          sleep 15
+          # Assert the app process is running (launched and did not crash on load).
+          if ! xcrun simctl spawn "$DEVICE" launchctl list | grep -q "au.how2vote.app"; then
+            echo "::error::How2Vote did not stay running on the simulator"; exit 1
+          fi
+          echo "✓ iOS shell launched on the simulator"

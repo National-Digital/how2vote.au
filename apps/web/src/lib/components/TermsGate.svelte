@@ -8,6 +8,7 @@
   // and the copy-lint guard can never drift — and it is a CAPACITY declaration (natural person, not
   // an organisation, not a foreign campaigner), so the "who may use the Service" limit is actively
   // affirmed at every gated action.
+  import DocLink from "./DocLink.svelte";
   import { termsAcceptance } from "$lib/terms.svelte";
   import { TERMS_ACCEPTANCE_LABEL, TERMS_GATE_INTRO, TERMS_GATE_LABEL } from "$lib/terms/terms";
 
@@ -24,7 +25,9 @@
 
 <div class="terms-gate ui" role="group" aria-label={TERMS_GATE_LABEL}>
   <p>
-    {TERMS_GATE_INTRO} See our <a href="/terms">Terms of Use</a>.
+    <!-- Opens over the gate: navigating away to read the terms would discard the pending
+         acceptance and leave no route back to it. -->
+    {TERMS_GATE_INTRO} See our <DocLink href="/terms">Terms of Use</DocLink>.
   </p>
   <label class="terms-check">
     <input type="checkbox" bind:checked />
@@ -51,7 +54,9 @@
     line-height: 1.55;
     margin: 0 0 10px;
   }
-  .terms-gate a {
+  /* :global because the anchor now belongs to DocLink — Svelte's scoping class is not applied
+     across a component boundary, so a bare descendant selector would silently stop matching. */
+  .terms-gate :global(a) {
     color: var(--ink);
     text-decoration: underline;
     text-underline-offset: 3px;

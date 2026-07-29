@@ -1,7 +1,7 @@
 <script lang="ts">
   import "../app.css";
   import { onMount } from "svelte";
-  import { goto } from "$app/navigation";
+  import { afterNavigate, goto } from "$app/navigation";
   import { page } from "$app/state";
   import { env } from "$env/dynamic/public";
   import { CURRENT_ELECTION_ID, electionById } from "@how2vote/data-schema";
@@ -9,9 +9,13 @@
   import Footer from "$lib/components/Footer.svelte";
   import JsonLd from "$lib/components/JsonLd.svelte";
   import ConsentBanner from "$lib/components/ConsentBanner.svelte";
+  import StaleDataNotice from "$lib/components/StaleDataNotice.svelte";
   import ConsentSettings from "$lib/components/ConsentSettings.svelte";
   import { ageGate } from "$lib/age.svelte";
+  import { DIST_CHANNEL, isNativeShell, nativeAppPlugin } from "$lib/channel";
+  import { backupToNative, restoreFromNative } from "$lib/native-storage";
   import { election } from "$lib/election.svelte";
+  import { SITE_URL } from "$lib/seo";
   import { quiz } from "$lib/quiz.svelte";
   import { saved } from "$lib/saved.svelte";
   import { theme } from "$lib/theme.svelte";
@@ -47,7 +51,54 @@
       .then((reg) => reg?.waiting?.postMessage("SKIP_WAITING"));
   }
 
+  // Publish the REAL height of the pinned bar (app.css .app-top) so the focus scroll-padding
+  // reserves what is actually on screen rather than a design token. The token is right at ordinary
+  // text sizes and too small the moment the bar grows — a browser minimum-font-size or text-only
+  // zoom — which would leave a focused control under the bar for exactly the readers who enlarged
+  // the text. Only a bar that is genuinely `position: sticky` counts, so the desktop card layout
+  // and short viewports (where app.css un-pins it) publish 0 and reserve nothing beyond the scrim.
+  // Nothing else derives from this value: the reservation is the single consumer, so a stale read
+  // can only ever cost a few pixels of scroll offset, never overlap two pieces of chrome.
+  function measureChrome(): void {
+    let total = 0;
+    for (const el of document.querySelectorAll<HTMLElement>(".app-top")) {
+      if (getComputedStyle(el).position !== "sticky") continue;
+      total += el.getBoundingClientRect().height;
+    }
+    document.documentElement.style.setProperty("--chrome-h", `${total}px`);
+  }
+
+  // Watch the chrome for box changes (its own content, a text-size change) and the viewport (which
+  // flips the un-pinning media queries). The observer is re-pointed after each navigation, since
+  // the next route renders its own bars.
+  let observeChrome: () => void = () => undefined;
+
   onMount(() => {
+    const ro = new ResizeObserver(() => measureChrome());
+    observeChrome = () => {
+      ro.disconnect();
+      // border-box: the measurement is getBoundingClientRect(), so padding/border changes must
+      // trigger it too — a content-box observer would miss them.
+      for (const el of document.querySelectorAll(".app-top")) ro.observe(el, { box: "border-box" });
+      measureChrome();
+    };
+    observeChrome();
+    window.addEventListener("resize", measureChrome);
+    return () => {
+      ro.disconnect();
+      window.removeEventListener("resize", measureChrome);
+    };
+  });
+
+  afterNavigate(() => observeChrome());
+
+  onMount(() => {
+    // Every listener this hook registers pushes its own teardown, so the single cleanup below
+    // releases all of them. A conditional `return` inside one branch would silently strip the rest.
+    const cleanups: Array<() => void> = [];
+    // Stamp the channel on <html> so the stylesheet can scope native-shell-only polish (see
+    // app.css). An attribute, not a class, so the web DOM stays byte-identical on the web channel.
+    if (isNativeShell) document.documentElement.setAttribute("data-native-shell", DIST_CHANNEL);
     theme.hydrate();
     saved.hydrate();
     // Read the one-bit age-eligibility acknowledgement before the guard below can act on it, so a
@@ -63,8 +114,66 @@
     // it never loads a dataset until a tool is actually invoked, so it stays off the LCP path.
     registerWebmcpTools();
 
-    // Watch for a waiting service-worker update and reload once the user applies it.
-    if ("serviceWorker" in navigator) {
+    // Hydration marker. Every route is prerendered, so a control is visible and clickable before any
+    // handler is attached — and a click in that window runs the element's native behaviour instead
+    // (a real anchor navigates, a button does nothing). Nothing in the prerendered HTML distinguishes
+    // the two states, so the e2e suite has no honest way to wait for interactivity without this;
+    // without it, specs that click straight after a load are a coin toss (see waitForHydration).
+    document.documentElement.dataset.hydrated = "true";
+
+    // Native shells only: WebKit can evict WebView localStorage under storage pressure / after ~7
+    // days idle, which would wipe saved cards and in-progress answers between visits. Heal from the
+    // durable native Preferences copy, then re-hydrate the layer-owned stores so a restored value is
+    // picked up, and keep the durable copy fresh on hide. No-op on the web. (native-storage.ts)
+    if (isNativeShell) {
+      void restoreFromNative().then(() => {
+        theme.hydrate();
+        saved.hydrate();
+        ageGate.hydrate();
+        consent.hydrate();
+        void backupToNative();
+      });
+      // visibilitychange is the reliable trigger: the bridge calls are async, and on pagehide the
+      // WebView is already being torn down, so that pass is opportunistic only.
+      const backup = (): void => {
+        if (document.visibilityState === "hidden") void backupToNative();
+      };
+      document.addEventListener("visibilitychange", backup);
+      window.addEventListener("pagehide", backup);
+      cleanups.push(() => {
+        document.removeEventListener("visibilitychange", backup);
+        window.removeEventListener("pagehide", backup);
+      });
+
+      // Universal/app links: when the OS opens the app for a canonical-origin link, route the path +
+      // fragment into the SvelteKit router so a shared card opens in-app. The share payload is in the
+      // fragment, decoded on-device (no network). No-op until the association files are served
+      // (deep-link vars set) — until then the OS just opens the link in the browser as it does today.
+      const appPlugin = nativeAppPlugin();
+      if (appPlugin) {
+        // Matched against SITE_URL rather than a second copy of the hostname, so associating another
+        // domain cannot leave the router silently dropping its links.
+        const canonicalHost = new URL(SITE_URL).hostname;
+        const handle = appPlugin.addListener("appUrlOpen", ({ url }) => {
+          try {
+            const u = new URL(url);
+            if (u.hostname !== canonicalHost) return;
+            void goto(`${u.pathname}${u.search}${u.hash}`);
+          } catch {
+            /* unparseable url — ignore */
+          }
+        });
+        cleanups.push(() => {
+          void Promise.resolve(handle).then((h) => h.remove());
+        });
+      }
+    }
+
+    // Watch for a waiting service-worker update and reload once the user applies it. Never on a
+    // native shell: the app is store-updated (a new binary re-bundles the assets), so a web-style
+    // "reload to update" prompt would be wrong there, and the Android WebView (https://localhost, a
+    // secure context) would otherwise register the SW and surface it. iOS WKWebView has no SW at all.
+    if (!isNativeShell && "serviceWorker" in navigator) {
       let reloading = false;
       // Whether a worker already controls this page at load. On the very first visit the newly
       // installed worker claims control and fires `controllerchange` — that is NOT an update and
@@ -108,12 +217,16 @@
       };
       document.addEventListener("visibilitychange", onVisibility);
       void acquire();
-      return () => {
+      cleanups.push(() => {
         document.removeEventListener("visibilitychange", onVisibility);
         void sentinel?.release().catch(() => undefined);
         sentinel = null;
-      };
+      });
     }
+
+    return () => {
+      for (const dispose of cleanups) dispose();
+    };
   });
 
   // The active election is driven by the URL: a per-election landing (`/2019`) selects that
@@ -157,7 +270,16 @@
 
 <a href="#main" class="skip ui">Skip to content</a>
 
+<!-- Opaque strip behind the OS status bar on edge-to-edge devices (height = the top safe-area
+     inset, so it is 0 — invisible — on desktop and in in-browser tabs). Content scrolling under
+     the transparent status bar would otherwise collide with the clock/battery glyphs; the sticky
+     app chrome pins directly beneath this strip. Purely decorative. -->
+<div class="statusbar-scrim" aria-hidden="true"></div>
+
 <div class="sheet">
+  <!-- Stale-DATA notice: fires only when the bundled dataset is old enough to matter (staleness.ts);
+       renders nothing otherwise. Above content so it's seen, below the skip link. -->
+  <StaleDataNotice />
   <main id="main">
     {@render children()}
   </main>
@@ -191,7 +313,7 @@
   .sw-update {
     position: fixed;
     left: 50%;
-    bottom: calc(12px + env(safe-area-inset-bottom, 0px));
+    bottom: calc(12px + var(--safe-bottom));
     transform: translateX(-50%);
     z-index: 30;
     display: flex;
@@ -229,7 +351,34 @@
     transition: top 120ms ease-out;
   }
   .skip:focus {
-    top: 8px;
+    /* Clear of the status-bar scrim (and the OS glyphs behind it) on edge-to-edge devices. */
+    top: calc(8px + var(--safe-top));
+  }
+  .statusbar-scrim {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: var(--safe-top);
+    background: var(--raise);
+    /* Above scrolling content and the sticky chrome (z 5), below the skip link (z 10) and the
+       fixed overlays (feedback 20, toasts 30) — none of which occupy the strip anyway. */
+    z-index: 6;
+  }
+  @media (min-width: 720px) {
+    /* The centred-card layout floats the sheet on the paper ground — the strip (only ever visible
+       on a device with a real top inset, e.g. an iPad shell) matches the ground, not the card. */
+    .statusbar-scrim {
+      background: var(--paper);
+    }
+  }
+  @media print {
+    /* Every fixed overlay hides itself in print; this one must too. A fixed box repeats on EVERY
+       page of paged media, which would band the top of each page of the authorised worksheet.
+       Printing is web-only, where there is no status-bar inset, so this is belt-and-braces. */
+    .statusbar-scrim {
+      display: none;
+    }
   }
   main {
     flex: 1;

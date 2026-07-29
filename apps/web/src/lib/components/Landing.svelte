@@ -74,7 +74,7 @@
   }
 </script>
 
-<header class="top ui">
+<header class="top ui app-top">
   <Logo size="sm" />
   <ThemeToggle />
 </header>
@@ -136,7 +136,9 @@
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 14px var(--gutter) 6px;
+    /* Bottom padding matches the other pinned bars: stuck, content scrolling beneath must not
+       come right up against the logo/toggle row. */
+    padding: 14px var(--gutter) 10px;
   }
   .body {
     flex: 1;

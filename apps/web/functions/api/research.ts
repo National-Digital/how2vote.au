@@ -36,7 +36,7 @@
  *    insertion-order key, no shared token. This is deliberate: any per-cell-per-time delta store
  *    (however short-lived) would let a rare cell on a quiet day be regrouped into a temporary
  *    person-level record, which contradicts the aggregate-only guarantee. Poisoning is handled by
- *    PREVENTION at the infra layer (Cloudflare rate limit + Bot Fight Mode on this route) and
+ *    PREVENTION at the infra layer (a Cloudflare per-IP rate limit on this route) and
  *    detection via Cloudflare request analytics — not by an in-database delta the design forbids.
  *    See ADR-0008 "Integrity without a person-reconstructable delta log".
  *  - Stale clients cannot write: any schemaVersion but the current one is dropped, and the older
@@ -52,6 +52,7 @@ import { checkAgainstRegistry } from "../../src/lib/research/registry";
 import { verifyToken } from "../../src/lib/research/token";
 import { provisionalStageFor, timetableFor } from "../../src/lib/research/timetables";
 import { isProductionDeployment } from "../../src/lib/research/environment";
+import { preflightResponse, withCors } from "../../src/lib/research/cors";
 import {
   D1NonceStore,
   KvNonceStore,
@@ -412,7 +413,15 @@ export async function acceptToken(
   return nonces.consume(verified.claims.nonce, ttl);
 }
 
-export const onRequestPost: PagesFunction<Env> = async ({ request, env }) => {
+// Preflight for the native shells' cross-origin POST (strict allowlist; see cors.ts). The web PWA
+// is same-origin and never sends a preflight.
+export const onRequestOptions: PagesFunction<Env> = async ({ request }) =>
+  preflightResponse(request);
+
+export const onRequestPost: PagesFunction<Env> = async (ctx) =>
+  withCors(await handlePost(ctx), ctx.request);
+
+const handlePost: PagesFunction<Env> = async ({ request, env }) => {
   // Cheap guards before touching the body or the database.
   const length = Number(request.headers.get("content-length") ?? "0");
   if (length > MAX_BODY_BYTES) return noContent();

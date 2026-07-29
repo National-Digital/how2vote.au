@@ -1,4 +1,7 @@
 <script lang="ts">
+  import ExternalLink from "$lib/components/ExternalLink.svelte";
+  import GlossaryTerm from "$lib/components/GlossaryTerm.svelte";
+  import DocLink from "$lib/components/DocLink.svelte";
   import { page } from "$app/state";
   import DataPage from "$lib/components/DataPage.svelte";
   import Meta from "$lib/components/Meta.svelte";
@@ -30,7 +33,7 @@
       {#each data.merge.with as w, i (w.name)}{#if i > 0}{i === data.merge.with.length - 1
             ? " and "
             : ", "}{/if}{#if w.href}<a href={w.href}>{w.name}</a>{:else}{w.name}{/if}{/each},
-      treated as one continuous party (see <a href="/methodology">methodology</a>).
+      treated as one continuous party (see <DocLink href="/methodology">methodology</DocLink>).
     </p>
   {/if}
 
@@ -48,17 +51,16 @@
     {#each data.rows as r (r.href)}
       <li>
         <a class="lead" href={r.href}>{r.text}</a>
-        <span class="meta"
-          >{r.stance} · <a href={r.tvfy} target="_blank" rel="noopener noreferrer">record</a></span
-        >
+        <span class="meta">{r.stance} · <ExternalLink href={r.tvfy}>record</ExternalLink></span>
       </li>
     {/each}
   </ul>
 
   <p class="source">
     {noun} scored on its recorded parliamentary votes, sourced from They Vote For You, not on its campaign
-    statements. Each row links to the <a href="/glossary#division">divisions</a> behind it. See
-    <a href="/methodology">how the scoring works</a> and
+    statements. Each row links to the <GlossaryTerm id="division">divisions</GlossaryTerm> behind it.
+    See
+    <DocLink href="/methodology">how the scoring works</DocLink> and
     <a href={data.hubHref}>all parties, {data.year}</a>.
   </p>
 </DataPage>

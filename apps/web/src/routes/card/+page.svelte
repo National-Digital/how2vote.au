@@ -1,4 +1,7 @@
 <script lang="ts">
+  import DocLink from "$lib/components/DocLink.svelte";
+  import ExternalLink from "$lib/components/ExternalLink.svelte";
+  import GlossaryTerm from "$lib/components/GlossaryTerm.svelte";
   import { version } from "$app/environment";
   import { beforeNavigate, goto } from "$app/navigation";
   import { onDestroy, onMount, tick } from "svelte";
@@ -38,6 +41,7 @@
   } from "$lib/governance";
   import Logo from "$lib/components/Logo.svelte";
   import Meta from "$lib/components/Meta.svelte";
+  import PlanAuthorisationBand from "$lib/components/PlanAuthorisationBand.svelte";
   import PlanRow from "$lib/components/PlanRow.svelte";
   import PrintAuthorisationDialog from "$lib/components/PrintAuthorisationDialog.svelte";
   import TermsGate from "$lib/components/TermsGate.svelte";
@@ -49,7 +53,8 @@
   import { moveDown, moveUp, planStatus, prefOf, setRank } from "$lib/plan";
   import { quiz } from "$lib/quiz.svelte";
   import { saved } from "$lib/saved.svelte";
-  import { ogImageFor } from "$lib/seo";
+  import { isNativeShell, nativeSharePlugin } from "$lib/channel";
+  import { ogImageFor, shareUrl } from "$lib/seo";
 
   type Ready = { card: Card; answers: Answer[]; shared: boolean };
 
@@ -471,15 +476,39 @@
 
   // Actually copy/share the link — reached ONLY from the non-revocable warning's confirm,
   // i.e. after the user has been told the link cannot be recalled.
+  // A user who dismisses a share sheet meant to cancel — never silently fall through to another
+  // share surface or copy the answers-bearing link to the clipboard. Only a genuine
+  // unavailability/failure (not a cancel) should try the next mechanism.
+  function isShareCancel(err: unknown): boolean {
+    if (err instanceof DOMException && err.name === "AbortError") return true;
+    const message = err instanceof Error ? err.message : String(err ?? "");
+    return /cancel/i.test(message);
+  }
+
   async function copyShareLink(): Promise<void> {
     showShareWarning = false;
-    const url = window.location.href;
-    if (navigator.share) {
+    // Always the canonical https origin — never window.location, whose origin is the local
+    // WebView scheme in the native shells and would produce a link recipients cannot open.
+    const url = shareUrl(window.location.pathname, window.location.hash);
+    const title = "My How2Vote comparison";
+
+    // Pick exactly ONE share surface: the Capacitor plugin inside a shell, else the Web Share API
+    // on the web (also present in iOS WKWebView). Never chain them — chaining would re-open a
+    // second sheet after the user dismissed the first.
+    const nativeShare = nativeSharePlugin();
+    const shareFn = nativeShare
+      ? (): Promise<unknown> => nativeShare.share({ title, url })
+      : navigator.share
+        ? (): Promise<unknown> => navigator.share({ title, url })
+        : null;
+
+    if (shareFn) {
       try {
-        await navigator.share({ title: "My How2Vote comparison", url });
-        return;
-      } catch {
-        /* cancelled — fall through to copy */
+        await shareFn();
+        return; // shared
+      } catch (err) {
+        if (isShareCancel(err)) return; // cancel means cancel — no clipboard fallback
+        /* genuine failure — fall through to clipboard */
       }
     }
     try {
@@ -570,6 +599,10 @@
   // owner session that actually holds the in-memory capability can open it. A shared-readonly card
   // can never get here.
   function requestPrint(): void {
+    // Printing is a web-PWA capability only. The shells offer no print action at all (printing from a
+    // phone is not a real workflow, and the sanctioned share-image path replaces it), so fail closed
+    // here as well as hiding the control — the gate must not depend on the markup alone.
+    if (isNativeShell) return;
     // Printing a how-to-vote card is vote-capable, 18+ only (ADR 0012). An under-18 can never reach
     // the build stage that hosts the print action, but fail closed here regardless.
     if (!ageGate.canVote) return;
@@ -765,12 +798,14 @@
     </section>
 
     <p class="vintage ui pad-x">
-      Compared against parliamentary <a href="/glossary#division">divisions</a> up to {vintage}.{#if isArchived}{" "}This
+      Compared against parliamentary <GlossaryTerm id="division">divisions</GlossaryTerm> up to {vintage}.{#if isArchived}{" "}This
         is a historical comparison for the {election.meta.year} election, not a current recommendation.{/if}
       {#if withdrawnCount > 0}{" "}{withdrawnCount === 1
           ? "One question has been withdrawn pending correction and is excluded from this comparison"
           : `${withdrawnCount} questions have been withdrawn pending correction and are excluded from this comparison`}
-        — see <a href="/corrections">corrections</a>.{/if}
+        <!-- Opens over the comparison: this line explains why a figure on screen is missing, so
+             navigating away would remove what it refers to. -->
+        — see <DocLink href="/corrections">corrections</DocLink>.{/if}
     </p>
 
     {#if ageGate.canVote}
@@ -829,23 +864,21 @@
         <p class="adv-sub"><b>Want your voice heard now?</b></p>
         <ul>
           <li>
-            <a href={CIVIC_LINKS.enrol} target="_blank" rel="noopener noreferrer">
-              Enrol early with the AEC ↗
-            </a>
+            <ExternalLink href={CIVIC_LINKS.enrol}>Enrol early with the AEC</ExternalLink>
             — at 16 or 17 you can provisionally enrol, so you're ready to vote the day you turn {RESEARCH_MIN_AGE}.
           </li>
           <li>
-            <a href={CIVIC_LINKS.findMember} target="_blank" rel="noopener noreferrer">
+            <ExternalLink href={CIVIC_LINKS.findMember}>
               {electorateLess
-                ? "Contact your local federal member ↗"
-                : `Contact the member for ${data.card.electorate} ↗`}
-            </a>
+                ? "Contact your local federal member"
+                : `Contact the member for ${data.card.electorate}`}
+            </ExternalLink>
             — tell the person who represents your area what matters to you.
           </li>
           <li>
-            <a href={CIVIC_LINKS.votingRecord} target="_blank" rel="noopener noreferrer">
-              See how Parliament has voted ↗
-            </a>
+            <ExternalLink href={CIVIC_LINKS.votingRecord}>
+              See how Parliament has voted
+            </ExternalLink>
             — the parliamentary records behind this quiz, on They Vote For You.
           </li>
         </ul>
@@ -924,15 +957,13 @@
                   <span class="ag ag-{line.agreement}">{line.agreement}</span>
                   <span class="q">
                     {line.question}
-                    <a
-                      class="rec"
+                    <ExternalLink
                       href="{TVFY_POLICY}/{line.questionId}"
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      aria-label="See the parliamentary voting record for “{line.question}” on They Vote For You"
+                      class="rec"
+                      ariaLabel="See the parliamentary voting record for “{line.question}” on They Vote For You"
                     >
-                      record&nbsp;↗
-                    </a>
+                      record
+                    </ExternalLink>
                   </span>
                 </li>
               {/each}
@@ -1131,9 +1162,14 @@
       </div>
 
       <div class="actions ui">
-        <button type="button" class="btn" onclick={requestPrint}>
-          {isArchived ? "Print this demonstration" : "Print my voting plan"}
-        </button>
+        <!-- Web PWA only. The shells carry no print action: the authorisation band pinned to the
+             viewport is the on-screen guarantee there, and a sanctioned share-image is the intended
+             way a plan leaves the device. requestPrint() fails closed on native regardless. -->
+        {#if !isNativeShell}
+          <button type="button" class="btn" onclick={requestPrint}>
+            {isArchived ? "Print this demonstration" : "Print my voting plan"}
+          </button>
+        {/if}
         <button type="button" class="btn ghost" onclick={() => (stage = "compare")}>
           Back to the comparison
         </button>
@@ -1147,9 +1183,16 @@
     </div>
     <!-- /.worksheet — everything above is hidden in print until the print acknowledgement is given. -->
 
+    <!-- The on-SCREEN authorisation, fixed to the viewport for as long as the plan is displayed.
+         Everything below this point is print-only: the stamp and the watermark are `@media print`,
+         so without this band a screenshot of the plan would carry neither the s321D particulars
+         nor (for a historical election) any marker saying so. See PlanAuthorisationBand.svelte. -->
+    <PlanAuthorisationBand archived={isArchived} />
+
     <!-- Archived-election watermark — a large, print-only diagonal overlay repeated on EVERY printed
          page, shown only when this is a historical (archived) election so a printed demonstration can
-         never be mistaken for a live how-to-vote instruction. Hidden on screen. -->
+         never be mistaken for a live how-to-vote instruction. Hidden on screen (the band above is
+         its on-screen counterpart). -->
     {#if isArchived}
       <div class="print-watermark" aria-hidden="true">
         HISTORICAL EXAMPLE — NOT VALID FOR VOTING
@@ -1436,7 +1479,7 @@
     flex-direction: column;
     gap: 10px;
   }
-  .advocacy a {
+  .advocacy :global(a) {
     color: var(--ink);
     text-decoration: underline;
     text-underline-offset: 3px;

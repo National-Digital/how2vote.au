@@ -1,12 +1,15 @@
 /**
  * Self-hosted anti-abuse challenge — ALTCHA v2 proof-of-work, verified entirely in-process.
  *
- * Poisoning / scripted-submission prevention has two live layers configured at the Cloudflare edge
- * today (a per-IP rate limit on the research routes + Bot Fight Mode; see the survey-abuse-controls
- * record). This module is the swappable in-app challenge layer used at token-issue time (and by the
- * self-hosted forms endpoint). It replaced Cloudflare Turnstile: the challenge is now issued and
- * verified by OUR OWN Pages Functions using the open ALTCHA protocol (altcha-lib, MIT), so no
- * third-party JavaScript, iframe or verification call exists anywhere on the submission path.
+ * Poisoning / scripted-submission prevention has one live layer at the Cloudflare edge today: a
+ * per-IP rate limit covering the POST /api/* routes (see the survey-abuse-controls record). There is
+ * no managed bot-detection service in front of it, so that rule caps volume and this module prices
+ * each submission; neither substitutes for the other.
+ *
+ * This module is the swappable in-app challenge layer used at token-issue time (and by the
+ * self-hosted forms endpoint). The challenge is issued and verified by OUR OWN Pages Functions
+ * using the open ALTCHA protocol (altcha-lib, MIT), so no third-party JavaScript, iframe or
+ * verification call exists anywhere on the submission path (ADR-0017).
  *
  * How it works (one mechanism for EVERY channel — web, iOS, Android, F-Droid; never diverge it per
  * channel, because the verifier is server-side and one endpoint serves every client, so a weaker
@@ -22,8 +25,7 @@
  *      challenge nonce in the single-use nonce store so a solved challenge cannot be replayed.
  *
  * Privacy note: verification is pure computation in this process — no request to any provider, so
- * (unlike the old Turnstile siteverify round-trip) there is no provider to receive the visitor's IP
- * or anything else, consistent with the no-IP-storage promise.
+ * there is nowhere for a visitor's IP to be sent, consistent with the no-IP-storage promise.
  */
 
 import { createChallenge, verifySolution } from "altcha-lib";
@@ -102,7 +104,7 @@ export interface ChallengeVerifier {
   readonly enforced: boolean;
 }
 
-/** No challenge configured: pass through. The edge rate-limit + Bot Fight remain the live defence.
+/** No challenge configured: pass through. The edge rate limit remains the only live defence.
  *  Used in NON-PRODUCTION only — see DenyAllVerifier for the production fail-closed counterpart. */
 export class AllowAllVerifier implements ChallengeVerifier {
   readonly enforced = false;

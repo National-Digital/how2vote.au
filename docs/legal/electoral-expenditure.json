@@ -2,10 +2,10 @@
   "schemaVersion": 3,
   "currency": "AUD",
   "reviewedFrom": "2018-10-12",
-  "reviewedThrough": "2026-07-12",
+  "reviewedThrough": "2026-07-26",
   "reviewer": "cameron-young",
   "secondReviewer": "tara-buckley",
-  "reviewDate": "2026-07-20",
+  "reviewDate": "2026-07-26",
   "nextReviewDate": "2026-12-01",
   "evidenceRef": "EV-EXPENDITURE-CLASSIFICATION",
   "operator": "General Consulting Services Pty Ltd as trustee for the Australian Business Trust, trading as National Digital",
@@ -662,7 +662,7 @@
       "id": "2026-H2",
       "startDate": "2026-07-01",
       "endDate": "2026-12-31",
-      "reviewedThrough": "2026-07-12",
+      "reviewedThrough": "2026-07-26",
       "reportingBasis": "transitional-six-month-period",
       "disclosureThreshold": 17300,
       "records": [
@@ -696,11 +696,49 @@
           "actualAmount": 0,
           "electoralAmount": 0,
           "classificationBasis": "Conservatively within scope, but no dedicated cash cost was incurred on the free tier.",
-          "amountBasis": "Actual dedicated charge incurred through 2026-07-12: $0.",
+          "amountBasis": "Actual dedicated charge incurred through 2026-07-26: $0.",
           "evidenceStatus": "operator-attestation",
           "taxBenefitClaimed": false,
           "electionFundingClaimed": false,
           "publicFundingClaimed": false
+        },
+        {
+          "id": "2026-H2-CF-EMAIL",
+          "kind": "cash",
+          "category": "Transactional email delivery",
+          "supplier": "Cloudflare Email Sending",
+          "payer": "National Digital",
+          "sourceOfFundsCountry": "AU",
+          "purpose": "First-party delivery of contact and feedback form submissions via the verified send.how2vote.au subdomain to the allow-listed how2vote@nationaldigital.com.au destination address.",
+          "classification": "electoral",
+          "actualAmount": 0,
+          "electoralAmount": 0,
+          "classificationBasis": "Conservatively within scope, but no dedicated cash cost was incurred: sending is free via the verified subdomain and allow-listed destination address. The account-level Cloudflare paid-plan upgrade (US$5/month) that enabled Email Sending applies to the whole National Digital account, so the project-specific amount is $0 under the shared-overheads policy.",
+          "amountBasis": "Actual dedicated charge incurred through 2026-07-26: $0.",
+          "evidenceStatus": "operator-attestation",
+          "taxBenefitClaimed": false,
+          "electionFundingClaimed": false,
+          "publicFundingClaimed": false,
+          "note": "Enabled ~2026-07-26 when third-party form delivery (Formspree) was replaced by self-hosted first-party forms."
+        },
+        {
+          "id": "2026-H2-DOMAIN-APP",
+          "kind": "cash",
+          "category": "Domain registration and renewal",
+          "supplier": "Domain registrar — how2vote.app",
+          "payer": "National Digital",
+          "sourceOfFundsCountry": "AU",
+          "purpose": "Defensive registration of the how2vote.app domain, permanently redirected to how2vote.au.",
+          "classification": "electoral",
+          "actualAmount": 27.75,
+          "electoralAmount": 27.75,
+          "classificationBasis": "Conservative treatment: all dedicated How2Vote domain and hosting cash costs are counted as electoral expenditure without needing to rely on a narrower dominant-purpose classification.",
+          "amountBasis": "Annual registrar charge supplied by the operator.",
+          "evidenceStatus": "operator-attestation",
+          "taxBenefitClaimed": false,
+          "electionFundingClaimed": false,
+          "publicFundingClaimed": false,
+          "note": "Initial registration date: 2026-07-26. Matches the published Android application ID au.how2vote.app; how2vote.com and how2vote.org were already held by third parties."
         },
         {
           "id": "2026-H2-FORMSPREE",
@@ -709,12 +747,12 @@
           "supplier": "Formspree, Inc.",
           "payer": "National Digital",
           "sourceOfFundsCountry": "AU",
-          "purpose": "Contact and feedback form delivery.",
+          "purpose": "Contact and feedback form delivery (discontinued 2026-07-25; forms are now self-hosted first-party).",
           "classification": "electoral",
           "actualAmount": 0,
           "electoralAmount": 0,
           "classificationBasis": "Conservatively within scope, but no dedicated cash cost was incurred.",
-          "amountBasis": "Actual dedicated charge incurred through 2026-07-12: $0.",
+          "amountBasis": "Actual dedicated charge incurred through 2026-07-26: $0.",
           "evidenceStatus": "operator-attestation",
           "taxBenefitClaimed": false,
           "electionFundingClaimed": false,
@@ -727,12 +765,12 @@
           "supplier": "Cloudflare Turnstile",
           "payer": "National Digital",
           "sourceOfFundsCountry": "AU",
-          "purpose": "Bot and abuse prevention.",
+          "purpose": "Bot and abuse prevention (replaced 2026-07-25 by a self-hosted ALTCHA proof-of-work challenge).",
           "classification": "electoral",
           "actualAmount": 0,
           "electoralAmount": 0,
           "classificationBasis": "Conservatively within scope, but no dedicated cash cost was incurred.",
-          "amountBasis": "Actual dedicated charge incurred through 2026-07-12: $0.",
+          "amountBasis": "Actual dedicated charge incurred through 2026-07-26: $0.",
           "evidenceStatus": "operator-attestation",
           "taxBenefitClaimed": false,
           "electionFundingClaimed": false,
@@ -813,17 +851,17 @@
           "publicFundingClaimed": false
         }
       ],
-      "totalActualCashCost": 19.0,
-      "totalElectoralExpenditure": 19.0,
+      "totalActualCashCost": 46.75,
+      "totalElectoralExpenditure": 46.75,
       "thresholdExceeded": false,
       "thirdPartyReturnRequired": false,
-      "determination": "Conservatively classified electoral expenditure actually incurred through 2026-07-12 was A$19.00 and did not exceed the A$17,300 threshold.",
-      "activityNote": "AWS terminated and application fully migrated to the current Cloudflare architecture in July 2026."
+      "determination": "Conservatively classified electoral expenditure actually incurred through 2026-07-26 was A$46.75 and did not exceed the A$17,300 threshold.",
+      "activityNote": "AWS terminated and application fully migrated to the current Cloudflare architecture in July 2026; forms and anti-abuse brought first-party and the defensive how2vote.app domain registered on 2026-07-26."
     }
   ],
   "lifeToDate": {
-    "actualCashCostThrough2026-07-12": 3857.45,
-    "conservativelyClassifiedElectoralExpenditureThrough2026-07-12": 3857.45,
+    "actualCashCostThrough2026-07-26": 3885.2,
+    "conservativelyClassifiedElectoralExpenditureThrough2026-07-26": 3885.2,
     "note": "The total is the sum of approximate period figures and may differ slightly from rounded life-to-date estimates."
   },
   "forecast": {
@@ -842,18 +880,25 @@
         "description": "how2vote.au renewal",
         "amount": 12.65,
         "reportingPeriod": "CY2027"
+      },
+      {
+        "id": "FORECAST-CY2027-DOMAIN-APP",
+        "expectedDate": "2027-07-26",
+        "description": "how2vote.app renewal",
+        "amount": 27.75,
+        "reportingPeriod": "CY2027"
       }
     ],
-    "annualSteadyStateForecast": 25.3,
-    "note": "The two FY2026/27 domain amounts supplied by the operator are treated as forecasts, not 2026-H2 expenditure, because the stated renewal date is around May 2027. If an invoice shows either amount was actually incurred before 2027-01-01, move that item into 2026-H2."
+    "annualSteadyStateForecast": 53.05,
+    "note": "The domain renewal amounts supplied by the operator are treated as forecasts, not 2026-H2 expenditure, because the stated renewal dates fall in 2027 (the .au and .com.au renewals around May 2027; the how2vote.app renewal around July 2027). If an invoice shows any amount was actually incurred before 2027-01-01, move that item into 2026-H2."
   },
   "disclosureEntity": {
     "status": "not-a-disclosure-entity",
-    "determinationDate": "2026-07-20",
+    "determinationDate": "2026-07-26",
     "reviewer": "cameron-young",
     "secondReviewer": "tara-buckley",
     "evidenceRef": "EV-EXPENDITURE-CLASSIFICATION",
     "determination": "National Digital did not exceed the applicable electoral-expenditure disclosure threshold in any reviewed financial or transitional reporting period. No third-party or significant-third-party return is required for those periods on the recorded facts.",
-    "basis": "Even after conservatively treating every dedicated How2Vote hosting and domain cash cost as electoral expenditure, the highest annual amount was A$578.30, compared with the applicable threshold of A$16,900. The 2026-H2 actual amount through 2026-07-12 was A$19.00, compared with A$17,300."
+    "basis": "Even after conservatively treating every dedicated How2Vote hosting and domain cash cost as electoral expenditure, the highest annual amount was A$578.30, compared with the applicable threshold of A$16,900. The 2026-H2 actual amount through 2026-07-26 was A$46.75, compared with A$17,300."
   }
 }

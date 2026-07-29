@@ -1,4 +1,5 @@
 import { browser } from "$app/environment";
+import { nativePreferencesPlugin } from "$lib/channel";
 
 /**
  * One authoritative "clear all my How2Vote data" action.
@@ -33,6 +34,13 @@ import { browser } from "$app/environment";
 
 /** Namespace every localStorage / sessionStorage key the site writes shares. */
 export const STORAGE_KEY_PREFIX = "how2vote:";
+
+/**
+ * The 18+ eligibility bit's key, owned here because three modules need it and this is the only one
+ * they can all import without a cycle ($lib/age.svelte, which owns the gate, imports quiz + saved).
+ * native-storage.ts needs it to keep the bit OUT of the durable native mirror.
+ */
+export const AGE_ELIGIBILITY_KEY = `${STORAGE_KEY_PREFIX}age-ok:v1`;
 
 /** Namespace every Cache Storage cache the service worker creates shares. */
 export const CACHE_NAME_PREFIX = "how2vote-";
@@ -80,5 +88,19 @@ export async function clearLocalDeviceData(): Promise<void> {
     }
   } catch {
     // Cache Storage unavailable or a delete rejected — the storage wipe above still stands.
+  }
+
+  // Native shells keep a durable Preferences copy of the same namespaced keys (native-storage.ts) —
+  // clear it too, or a "delete my data" would be undone by the next launch's restore. Inert on web.
+  try {
+    const prefs = nativePreferencesPlugin();
+    if (prefs) {
+      const { keys } = await prefs.keys();
+      for (const key of keys) {
+        if (key.startsWith(STORAGE_KEY_PREFIX)) await prefs.remove({ key });
+      }
+    }
+  } catch {
+    // Preferences unavailable — the web-storage + cache wipe above still stands.
   }
 }

@@ -17,6 +17,7 @@ import { RESEARCH_SCHEMA_VERSION } from "../../../src/lib/research/consent";
 import { isElectionOpen } from "../../../src/lib/research/registry";
 import { verifyToken } from "../../../src/lib/research/token";
 import { isProductionDeployment } from "../../../src/lib/research/environment";
+import { preflightResponse, withCors } from "../../../src/lib/research/cors";
 import {
   D1NonceStore,
   KvNonceStore,
@@ -127,7 +128,14 @@ export async function acceptToken(env: Env, token: unknown, electionId: string):
   return nonces.consume(verified.claims.nonce, ttl);
 }
 
-export const onRequestPost: PagesFunction<Env> = async ({ request, env }) => {
+// Preflight for the native shells' cross-origin POST (strict allowlist; see cors.ts).
+export const onRequestOptions: PagesFunction<Env> = async ({ request }) =>
+  preflightResponse(request);
+
+export const onRequestPost: PagesFunction<Env> = async (ctx) =>
+  withCors(await handlePost(ctx), ctx.request);
+
+const handlePost: PagesFunction<Env> = async ({ request, env }) => {
   const length = Number(request.headers.get("content-length") ?? "0");
   if (length > MAX_BODY_BYTES) return noContent();
 

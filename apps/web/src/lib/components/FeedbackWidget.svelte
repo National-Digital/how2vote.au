@@ -4,6 +4,7 @@
   // forms endpoint via $lib/forms. Offline is expected on this PWA and is surfaced as a plain,
   // calm message.
   import { submitFeedback, type SubmitResult } from "$lib/forms";
+  import { modal } from "$lib/modal";
 
   let dialog = $state<HTMLDialogElement | null>(null);
   let name = $state("");
@@ -13,21 +14,39 @@
   // On a successful send we flash a brief "thanks" then close the dialog automatically. The timer is
   // tracked so a manual close (or Escape) can cancel it and avoid a double close().
   let closeTimer: ReturnType<typeof setTimeout> | undefined;
+  // Suspends the app's global keyboard shortcuts while the dialog is up. Released from BOTH close()
+  // and reset(): the dialog's `close` event is dispatched a task later, so releasing only from the
+  // onclose path leaves the shortcuts suspended for a tick after the button was pressed. Idempotent
+  // (see modal.open()), so calling it twice is harmless and calling it once is enough — Escape and a
+  // programmatic close() both still land via reset().
+  let releaseModal: (() => void) | undefined;
+
+  function releaseKeyboard(): void {
+    releaseModal?.();
+    releaseModal = undefined;
+  }
 
   function open(): void {
     status = "idle";
+    // This box is a TEXTAREA on top of a page whose window handler binds bare digit keys. Key
+    // events reach `window` from inside a modal dialog, so without suspending those shortcuts a
+    // digit typed here would answer the quiz question behind the dialog and be swallowed by the
+    // handler's preventDefault.
+    releaseModal ??= modal.open();
     dialog?.showModal();
   }
 
   function close(): void {
     if (closeTimer) clearTimeout(closeTimer);
     closeTimer = undefined;
+    releaseKeyboard();
     dialog?.close();
   }
 
   function reset(): void {
     if (closeTimer) clearTimeout(closeTimer);
     closeTimer = undefined;
+    releaseKeyboard();
     name = "";
     email = "";
     message = "";
@@ -140,8 +159,14 @@
      instead (the layout renders this inside the `.sheet` positioning context). */
   .fab {
     position: fixed;
-    bottom: 14px;
-    right: 14px;
+    /* Viewport-fixed, so it clears the edge-to-edge system bars itself (the sheet's safe-area
+       padding doesn't reach it) and lifts above the plan's authorisation band on /card rather than
+       covering it — an authorisation must not be obscured. max() because the band's published
+       height already contains the gesture-bar inset (it carries it in its own bottom padding); with
+       no band the max falls through to the bare inset. The desktop override below re-anchors inside
+       the padded sheet. */
+    bottom: calc(14px + max(var(--safe-bottom), var(--plan-auth-h, 0px)));
+    right: calc(14px + var(--safe-right));
     z-index: 20;
     display: inline-flex;
     align-items: center;

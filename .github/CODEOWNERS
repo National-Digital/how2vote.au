@@ -37,6 +37,19 @@
 /scripts/check-*.mjs                @National-Digital/engineering @x5hwuk7nc6jsudcc @Tarrah102
 /.github/workflows/compliance.yml   @National-Digital/engineering @x5hwuk7nc6jsudcc @Tarrah102
 
+# Store distribution (App Store / Google Play): generated listing copy carries the s 321D
+# authorisation from the operator record, and the release workflows sign + ship binaries.
+/scripts/generate-store-metadata.mjs        @National-Digital/engineering @x5hwuk7nc6jsudcc @Tarrah102
+/apps/mobile/fastlane/                      @National-Digital/engineering @x5hwuk7nc6jsudcc @Tarrah102
+/apps/mobile/capacitor.config.ts            @National-Digital/engineering @x5hwuk7nc6jsudcc @Tarrah102
+/.github/workflows/ios-release.yml          @National-Digital/engineering @x5hwuk7nc6jsudcc @Tarrah102
+/.github/workflows/android-release.yml      @National-Digital/engineering @x5hwuk7nc6jsudcc @Tarrah102
+/.github/workflows/mobile-ci.yml            @National-Digital/engineering @x5hwuk7nc6jsudcc @Tarrah102
+/.github/workflows/mobile-smoke.yml         @National-Digital/engineering @x5hwuk7nc6jsudcc @Tarrah102
+/apps/web/src/lib/research/cors.ts          @National-Digital/engineering @x5hwuk7nc6jsudcc @Tarrah102
+/.github/actions/                           @National-Digital/engineering @x5hwuk7nc6jsudcc @Tarrah102
+/LICENSE-EXCEPTIONS.md                      @National-Digital/engineering @x5hwuk7nc6jsudcc @Tarrah102
+
 # Election data provenance, rights, corrections and governance (source-of-record + attestations).
 /data/source/                       @National-Digital/engineering @x5hwuk7nc6jsudcc @Tarrah102
 /data/rights/                       @National-Digital/engineering @x5hwuk7nc6jsudcc @Tarrah102

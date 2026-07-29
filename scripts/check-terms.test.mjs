@@ -10,7 +10,7 @@ import {
 
 const url = (p) => new URL(p, import.meta.url);
 const REGISTRY = JSON.parse(readFileSync(url("../docs/legal/terms-registry.json"), "utf8"));
-const TERMS_PAGE = readFileSync(url("../apps/web/src/routes/terms/+page.svelte"), "utf8");
+const TERMS_PAGE = readFileSync(url("../apps/web/src/lib/content/TermsContent.svelte"), "utf8");
 const LEAF = readFileSync(url("../apps/web/src/lib/terms/terms.ts"), "utf8");
 const STORE = readFileSync(url("../apps/web/src/lib/terms.svelte.ts"), "utf8");
 const CARD = readFileSync(url("../apps/web/src/routes/card/+page.svelte"), "utf8");

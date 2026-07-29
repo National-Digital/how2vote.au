@@ -1,10 +1,9 @@
 /**
  * Self-hosted contact/feedback intake — `POST /api/forms` (Cloudflare Pages Function).
  *
- * Replaces Formspree: both forms now post to OUR OWN origin, protected by the same self-hosted
- * ALTCHA proof-of-work challenge as the research path (src/lib/research/challenge.ts), and the
- * message is RELAYED as a transactional email to the project inbox via Cloudflare's Email Sending
- * REST API — this endpoint is a pure relay and STORES NOTHING (no database, no KV, no log of the
+ * Both forms post to OUR OWN origin, protected by the same self-hosted ALTCHA proof-of-work
+ * challenge as the research path (src/lib/research/challenge.ts), and the message is RELAYED as a
+ * transactional email to the project inbox via Cloudflare's Email Sending REST API — this endpoint is a pure relay and STORES NOTHING (no database, no KV, no log of the
  * body), so the aggregate-only privacy posture is unchanged: the only place a message exists after
  * the response is the recipient mailbox, exactly as with any email.
  *
@@ -23,6 +22,7 @@
 
 import { resolveChallengeVerifier, type ChallengeEnv } from "../../src/lib/research/challenge";
 import { isProductionDeployment } from "../../src/lib/research/environment";
+import { preflightResponse, withCors } from "../../src/lib/research/cors";
 
 interface Env extends ChallengeEnv {
   /** Cloudflare API token scoped to Email Sending only (a Cloudflare SECRET, never committed). */
@@ -75,14 +75,27 @@ function field(value: unknown, max: number): string | undefined | null {
   return trimmed.length > max ? null : trimmed;
 }
 
-export const onRequestPost: PagesFunction<Env> = async ({ request, env }) => {
-  const length = Number(request.headers.get("content-length") ?? "0");
-  if (length > MAX_BODY_BYTES) return invalid();
+// Native shells POST cross-origin to the canonical origin — answer the preflight and echo the
+// strict CORS allowlist, matching the research + challenge endpoints (see cors.ts).
+export const onRequestOptions: PagesFunction<Env> = async ({ request }) =>
+  preflightResponse(request);
+
+export const onRequestPost: PagesFunction<Env> = async (ctx) =>
+  withCors(await handlePost(ctx), ctx.request);
+
+const handlePost: PagesFunction<Env> = async ({ request, env }) => {
+  // Cheap rejection when the sender declares an oversized body; the byte check below is the one
+  // that actually holds, since a chunked request carries no content-length to read.
+  const declared = Number(request.headers.get("content-length") ?? "0");
+  if (declared > MAX_BODY_BYTES) return invalid();
 
   let body: Record<string, unknown>;
   try {
-    const text = await request.text();
-    if (text.length > MAX_BODY_BYTES) return invalid();
+    // Measured in BYTES, not string length: `text.length` counts UTF-16 code units, so a multi-byte
+    // body would pass a cap it is several times over.
+    const raw = await request.arrayBuffer();
+    if (raw.byteLength > MAX_BODY_BYTES) return invalid();
+    const text = new TextDecoder().decode(raw);
     const parsed: unknown = JSON.parse(text);
     if (typeof parsed !== "object" || parsed === null) return invalid();
     body = parsed as Record<string, unknown>;

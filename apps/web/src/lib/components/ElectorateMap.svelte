@@ -1,4 +1,5 @@
 <script lang="ts">
+  import ExternalLink from "$lib/components/ExternalLink.svelte";
   import { loadStateMap, type StateMap } from "$lib/maps";
   import { MAP_LICENCE_NAME, MAP_LICENCE_NOTICE, MAP_LICENCE_URL } from "$lib/mapLicence";
   import { stateName } from "$lib/data";
@@ -182,9 +183,7 @@
             <p>{line}</p>
           {/each}
           <p>
-            <a href={MAP_LICENCE_URL} target="_blank" rel="noreferrer noopener"
-              >{MAP_LICENCE_NAME}</a
-            >
+            <ExternalLink href={MAP_LICENCE_URL}>{MAP_LICENCE_NAME}</ExternalLink>
           </p>
         </div>
       </details>
@@ -294,7 +293,7 @@
   .licence .notice p {
     margin: 0 0 4px;
   }
-  .licence .notice a {
+  .licence .notice :global(a) {
     color: var(--ink2);
   }
 </style>

@@ -33,6 +33,179 @@ async function scan(page: Page): Promise<void> {
   expect(results.violations, JSON.stringify(results.violations, null, 2)).toEqual([]);
 }
 
+/**
+ * WCAG 2.2 SC 2.4.11 Focus Not Obscured: Tab through the page and assert no focused control ever
+ * comes to rest underneath the pinned bar or the status-bar scrim.
+ *
+ * Tabbing is the real user behaviour the criterion describes, and it is used INSTEAD of arithmetic
+ * because a geometry check here is vacuous in both available forms: comparing chrome height against
+ * `scroll-padding-top` collapses to a constant once the reservation derives from that same measured
+ * height, and aligning the last focusable to the top never reaches the bar because scrolling is
+ * clamped at the end of the document. Every step below is a real focus move the browser scrolls
+ * for, so removing the reservation fails the assertion.
+ *
+ * The 4px allowance is the focus ring: a 2px outline drawn at a 2px offset outside the element box.
+ */
+async function assertFocusNotObscured(
+  page: Page,
+  { expectPinned, tabs = 25 }: { expectPinned: boolean; tabs?: number },
+): Promise<void> {
+  const pinnedBars = await page.evaluate(
+    () =>
+      [...document.querySelectorAll(".app-top")].filter(
+        (el) => getComputedStyle(el).position === "sticky",
+      ).length,
+  );
+  // Otherwise the check is vacuous wherever the bar happens not to be pinned: a stray media-query
+  // edit would silently turn every call site into a no-op rather than failing.
+  if (expectPinned) {
+    expect(pinnedBars, "this route must pin its top bar for the check to mean anything").toBe(1);
+  }
+  await page.locator("body").click({ position: { x: 5, y: 5 } });
+  // Walk FORWARD first, then check on the way BACK. Forward tabbing reveals elements from the
+  // bottom edge ("nearest" scroll alignment), so it can never put one under a top bar; it is
+  // Shift+Tab, which reveals them from the top edge, that lands a control beneath sticky chrome.
+  // Checking only the forward pass is another way to write a test that cannot fail.
+  for (let i = 0; i < tabs; i++) await page.keyboard.press("Tab");
+  const obscured: string[] = [];
+  let moved = 0;
+  for (let i = 0; i < tabs; i++) {
+    await page.keyboard.press("Shift+Tab");
+    const hit = await page.evaluate(() => {
+      const el = document.activeElement as HTMLElement | null;
+      if (!el || el === document.body) return null;
+      // The chrome's own controls legitimately sit inside the bar; skip them.
+      if (el.closest(".app-top")) return { skip: true, label: "", top: 0, cover: 0 };
+      // Skip anything that floats ABOVE the chrome by design rather than scrolling under it — the
+      // skip link (z-index 10, parked off-screen until focused), overlays, dialogs. Their y position
+      // says nothing about being obscured, and the skip link is mid-transition when focus lands.
+      for (let p: HTMLElement | null = el; p; p = p.parentElement) {
+        const cs = getComputedStyle(p);
+        if (cs.position !== "static" && (parseInt(cs.zIndex, 10) || 0) >= 5) {
+          return { skip: true, label: "", top: 0, cover: 0 };
+        }
+      }
+      const r = el.getBoundingClientRect();
+      if (r.height === 0) return { skip: true, label: "", top: 0, cover: 0 };
+      const cover = [
+        ...document.querySelectorAll<HTMLElement>(".app-top, .statusbar-scrim"),
+      ].reduce((low, c) => {
+        const pos = getComputedStyle(c).position;
+        return pos === "sticky" || pos === "fixed"
+          ? Math.max(low, c.getBoundingClientRect().bottom)
+          : low;
+      }, 0);
+      return {
+        skip: false,
+        label: `${el.tagName}:${(el.textContent ?? "").trim().slice(0, 28)}`,
+        top: r.top,
+        cover,
+      };
+    });
+    if (!hit || hit.skip) continue;
+    moved++;
+    if (hit.top - 4 < hit.cover) {
+      obscured.push(
+        `"${hit.label}" at top ${hit.top.toFixed(1)}px vs chrome ${hit.cover.toFixed(1)}px`,
+      );
+    }
+  }
+  // A run that never focused anything outside the chrome would also be vacuous.
+  expect(moved, "tabbing must reach controls outside the chrome").toBeGreaterThan(0);
+  expect(
+    obscured,
+    `focused controls landed under the pinned chrome:\n${obscured.join("\n")}`,
+  ).toEqual([]);
+}
+
+/**
+ * SC 2.4.11 at the OTHER edge. The helper above walks back with Shift+Tab because that is the
+ * direction that reveals a control from the TOP and puts it under sticky chrome. Bottom-fixed bands
+ * — the consent banner, and the plan's authorisation band — are the mirror image: forward Tab uses
+ * "nearest" alignment and reveals the next control from the BOTTOM edge, which is exactly where
+ * they sit. So this walks FORWARD, and a Shift+Tab version of it would be the vacuous one.
+ *
+ * Measured against the band's live rect rather than the reservation that was derived from it: an
+ * inequality between `scroll-padding-bottom` and `--plan-auth-h` collapses to a constant and passes
+ * however wrong both are.
+ *
+ * 4px is the focus ring: a 2px outline drawn at a 2px offset outside the element box.
+ */
+async function assertFocusClearOfBottomBands(
+  page: Page,
+  { expectBand, tabs = 40 }: { expectBand: boolean; tabs?: number },
+): Promise<void> {
+  const bands = await page.evaluate(
+    () =>
+      [...document.querySelectorAll(".band, .banner")].filter(
+        (el) => getComputedStyle(el).position === "fixed",
+      ).length,
+  );
+  // Without this the whole check silently becomes a no-op wherever the band happens not to render.
+  if (expectBand) {
+    expect(bands, "this route must show a bottom-fixed band for the check to mean anything").toBe(
+      1,
+    );
+  }
+  await page.locator("body").click({ position: { x: 5, y: 5 } });
+  const obscured: string[] = [];
+  let moved = 0;
+  for (let i = 0; i < tabs; i++) {
+    await page.keyboard.press("Tab");
+    const hit = await page.evaluate(() => {
+      const el = document.activeElement as HTMLElement | null;
+      if (!el || el === document.body) return null;
+      // Controls that live inside a band, or float above it by design (the feedback button), say
+      // nothing about being obscured by it.
+      if (el.closest(".band, .banner, .fab, .skip")) return null;
+      const r = el.getBoundingClientRect();
+      if (r.height === 0) return null;
+      const cover = [...document.querySelectorAll<HTMLElement>(".band, .banner")].reduce(
+        (high, c) =>
+          getComputedStyle(c).position === "fixed"
+            ? Math.min(high, c.getBoundingClientRect().top)
+            : high,
+        Infinity,
+      );
+      return {
+        label: `${el.tagName}:${(el.textContent ?? "").trim().slice(0, 28)}`,
+        bottom: r.bottom,
+        cover,
+      };
+    });
+    if (!hit) continue;
+    moved++;
+    if (hit.bottom + 4 > hit.cover) {
+      obscured.push(
+        `"${hit.label}" ends at ${hit.bottom.toFixed(1)}px vs band top ${hit.cover.toFixed(1)}px`,
+      );
+    }
+  }
+  expect(moved, "tabbing must reach controls outside the bands").toBeGreaterThan(0);
+  expect(
+    obscured,
+    `focused controls landed under a bottom-fixed band:\n${obscured.join("\n")}`,
+  ).toEqual([]);
+}
+
+/**
+ * Simulate an edge-to-edge device's safe-area insets. `env(safe-area-inset-*)` is always 0 in a
+ * headless browser, so every inset-dependent behaviour is invisible to CI unless the app's own
+ * override variables are set — which is the seam Capacitor's SystemBars plugin writes to on Android
+ * (app.css resolves `--safe-top` from `--safe-area-inset-top` first, then `env()`). Without this,
+ * tests silently pass on the one configuration the shells actually run in.
+ */
+async function withSimulatedInsets(page: Page, top = 47, bottom = 34): Promise<void> {
+  // All four sides: the horizontal insets are real in landscape on a notched device and are consumed
+  // by the sheet and the print dialog, so leaving them at 0 would hide a dropped horizontal term —
+  // the very class of gap this helper exists to close.
+  await page.addStyleTag({
+    content: `:root{--safe-area-inset-top:${top}px;--safe-area-inset-bottom:${bottom}px;--safe-area-inset-left:12px;--safe-area-inset-right:12px}`,
+  });
+  // Let the layout's ResizeObserver republish the measured chrome height.
+  await page.waitForTimeout(120);
+}
+
 /** Fail if the document scrolls horizontally at the current viewport (WCAG 1.4.10 reflow). */
 async function assertNoHOverflow(page: Page): Promise<void> {
   const overflow = await page.evaluate(
@@ -292,11 +465,145 @@ test("content reflows at 320px (≈400% zoom) with no horizontal scroll", async 
     "/accessibility",
     "/glossary",
     "/card?res=5f2a9c1e3b7d",
+    // Data pages carry the breadcrumb trail — the one piece of pinned chrome whose height depends
+    // on its content, and the longest crumbs in the app. Both a party record and an issue (whose
+    // final crumb is a full proposition) are checked: a trail that cannot shrink overflows the row
+    // sideways, and one that wraps grows taller than the focus reserve.
+    "/2025/parties/australian-labor-party",
+    "/2025/issues/allow-live-animal-export-and-place-minimal-restrictions-on-it",
   ]) {
     await page.goto(path);
     await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
     await assertNoHOverflow(page);
+    // Every route here pins something (the landing header, a TopBar or the breadcrumb trail)
+    // except the card, which deliberately carries its own head.
+    const expectPinned = !path.startsWith("/card");
+    await assertFocusNotObscured(page, { expectPinned });
+    // Again with a device's safe-area insets applied. This is the shells' real configuration:
+    // dropping the inset term from the reserve would put a focused control under the system
+    // clock, and a 0-inset browser cannot see it.
+    await withSimulatedInsets(page);
+    await assertFocusNotObscured(page, { expectPinned });
+    // Reflow again WITH the insets: they add horizontal padding, so a layout that only just fits
+    // at 320px could overflow once a landscape notch's left/right insets apply.
+    await assertNoHOverflow(page);
     await scan(page);
+  }
+});
+
+test("the plan builder keeps focus clear of the authorisation band", async ({ page }) => {
+  // The plan builder is the most keyboard-driven screen in the app — every candidate row carries a
+  // number field and two move buttons — and it is now also the one screen with a permanent
+  // bottom-fixed band. Tabbing down the ballot is precisely the motion that reveals a control from
+  // the bottom edge, so this is where an under-reservation shows up first.
+  await reachCardCompare(page, { seedTerms: true });
+  await page.getByRole("button", { name: /Build (a demonstration plan|my voting plan)/ }).click();
+  await expect(page.locator(".band")).toBeVisible();
+  await assertFocusClearOfBottomBands(page, { expectBand: true });
+  // Again on a device: the band carries the gesture-bar inset in its own padding, so its height —
+  // and therefore the reservation — changes with the inset. This is the configuration the shells
+  // actually run in, and a 0-inset browser cannot see a term dropped from the reserve.
+  await withSimulatedInsets(page);
+  await assertFocusClearOfBottomBands(page, { expectBand: true });
+  await assertNoHOverflow(page);
+});
+
+test("the status-bar band stays covered on an edge-to-edge device", async ({ page }) => {
+  // On an edge-to-edge device content scrolls under the transparent status bar and collides with
+  // the clock/battery glyphs. The remedy is an opaque strip exactly as tall as the
+  // top inset, painted above scrolling content. Driven by the shared --safe-top token, so this
+  // covers iOS (env(safe-area-inset-top)) and Android (the SystemBars-injected variable) alike.
+  await page.setViewportSize({ width: 390, height: 844 });
+  // TWO different insets, because asserting a single hardcoded height cannot tell "tracks the
+  // inset" apart from "happens to equal 47".
+  for (const inset of [47, 20]) {
+    for (const path of [
+      "/",
+      "/about",
+      "/2025/parties/australian-labor-party",
+      // A route with NO .app-top, where the scrim is the only thing covering the band. This URL
+      // renders the expired-card explainer; a bare /card would silently redirect to /ballot with no
+      // plan state, quietly duplicating a case already covered.
+      "/card?res=5f2a9c1e3b7d",
+    ]) {
+      await page.goto(path);
+      await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
+      await withSimulatedInsets(page, inset);
+      await page.evaluate(() => window.scrollBy(0, 600));
+      await page.waitForTimeout(120);
+      const band = await page.evaluate((h) => {
+        const scrim = document.querySelector(".statusbar-scrim");
+        const box = scrim?.getBoundingClientRect();
+        const cs = scrim ? getComputedStyle(scrim) : null;
+        // Sample across the band's width, at depths derived from the inset itself — a fixed y would
+        // fall outside a shorter band and report the content legitimately beneath it as a leak.
+        const xs = [1, 8, Math.round(window.innerWidth / 2), window.innerWidth - 8];
+        const ys = [0, 1, Math.round(h / 2), h - 1];
+        const painted = xs.flatMap((x) =>
+          ys.map((y) => document.elementFromPoint(x, y)?.className ?? "none"),
+        );
+        return {
+          height: box ? Math.round(box.height) : 0,
+          // The token, read independently of the scrim, is the other side of the height assertion.
+          safeTop: Math.round(
+            parseFloat(getComputedStyle(document.documentElement).getPropertyValue("--safe-top")) ||
+              0,
+          ),
+          background: cs?.backgroundColor ?? "",
+          // A background alone is not cover: opacity/blend can leave content fully visible
+          // through an "opaque" strip.
+          opacity: cs?.opacity ?? "",
+          blend: cs?.mixBlendMode ?? "",
+          allScrim: painted.every((c) => String(c).includes("statusbar-scrim")),
+          hasBar: document.querySelectorAll(".app-top").length,
+        };
+      }, inset);
+      const where = `${path} @${inset}px inset`;
+      expect(band.safeTop, `${where}: the inset must reach --safe-top`).toBe(inset);
+      expect(band.height, `${where}: the scrim must TRACK the inset, not a constant`).toBe(inset);
+      expect(band.background, `${where}: the scrim needs an opaque background`).toMatch(/^rgb\(/);
+      expect(band.opacity, `${where}: a translucent scrim does not cover anything`).toBe("1");
+      expect(band.blend, `${where}: a blend mode would let content show through`).toBe("normal");
+      expect(band.allScrim, `${where}: scrolled content is visible in the status-bar band`).toBe(
+        true,
+      );
+      if (path.startsWith("/card")) {
+        expect(band.hasBar, `${where}: this case must be the no-pinned-bar one`).toBe(0);
+      }
+    }
+  }
+});
+
+test("keyboard focus clears the pinned bar in the wizard, including at 2x text", async ({
+  page,
+}) => {
+  // The ballot is reached through a PAST election — the current one ships no electorates, so
+  // /ballot forwards straight to the questions and a direct visit would quietly test another page.
+  // 320px is the reflow width; 390px is a typical phone, where the shells actually run. The
+  // enlarged-text pass is the case a hardcoded reservation gets wrong: the bar grows, and only a
+  // geometry check notices that focus now lands underneath it.
+  for (const width of [320, 390]) {
+    for (const textScale of [1, 2]) {
+      await page.setViewportSize({ width, height: 640 });
+      await page.goto("/2025");
+      await expect(async () => {
+        await page.getByRole("button", { name: "See how my views compare" }).click();
+        await expect(page).toHaveURL(/\/ballot/);
+      }).toPass({ timeout: 15_000 });
+      await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
+      if (textScale > 1) {
+        // Scale the UI text the way a browser minimum-font-size does, then let the observer that
+        // publishes the bar's height react before measuring.
+        await page.addStyleTag({ content: `.app-top, .app-top * { font-size: 24px !important; }` });
+        await page.waitForTimeout(150);
+      }
+      // With the device's insets applied — enlarged text ON an edge-to-edge device is the most
+      // inset-sensitive configuration in the suite, and without this it could not see the
+      // safe-area term being dropped from the reservation.
+      await withSimulatedInsets(page);
+      await assertFocusNotObscured(page, { expectPinned: true });
+      await assertNoHOverflow(page);
+    }
   }
 });
 

@@ -26,6 +26,17 @@ export function ogImageFor(electionId: string | undefined): string {
   return electionId ? `${SITE_URL}/og-${electionId}.png` : OG_IMAGE;
 }
 
+/**
+ * Canonical absolute URL for a share link. Always composed from SITE_URL — never from
+ * `window.location` — because the running origin is not the canonical one in the native shells
+ * (capacitor://localhost, https://localhost), and a recipient can only open the canonical web
+ * URL. The share payload travels in the fragment, which is origin-independent by design.
+ */
+export function shareUrl(pathname: string, hash: string): string {
+  const path = pathname.startsWith("/") ? pathname : `/${pathname}`;
+  return `${SITE_URL}${path}${hash}`;
+}
+
 export type PageMeta = {
   title: string;
   description: string;

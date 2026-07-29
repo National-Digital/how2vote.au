@@ -1,4 +1,5 @@
 <script lang="ts">
+  import ExternalLink from "$lib/components/ExternalLink.svelte";
   import { onMount } from "svelte";
   import { goto } from "$app/navigation";
   import ElectorateMap from "$lib/components/ElectorateMap.svelte";
@@ -126,9 +127,9 @@
       {/each}
     </ul>
     <p class="note ui">
-      Not sure? <a href="https://check.aec.gov.au/" target="_blank" rel="noopener noreferrer"
-        >Look up your electorate on the AEC website ↗</a
-      > — it opens in a new tab and your progress is kept.
+      Not sure? <ExternalLink href="https://check.aec.gov.au/"
+        >Look up your electorate on the AEC website</ExternalLink
+      > — your progress is kept.
     </p>
   {:else if chosenState && chosenElectorate}
     <h1>{chosenElectorate}</h1>

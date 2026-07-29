@@ -717,7 +717,7 @@
       "evidence": [
         {
           "id": "EV-RESEARCH-INTEGRITY-CONFIG",
-          "description": "Challenge/rate-limit configuration attestation (the self-hosted challenge's ALTCHA_HMAC_SECRET, Workers Rate Limiting + Bot Fight Mode config, and the RESEARCH_TOKEN_SECRET + RESEARCH_NONCES KV binding provisioned in production)",
+          "description": "Challenge/rate-limit configuration attestation (the self-hosted challenge's ALTCHA_HMAC_SECRET, Workers Rate Limiting config, and the RESEARCH_TOKEN_SECRET + RESEARCH_NONCES KV binding provisioned in production)",
           "status": "current",
           "reviewer": "cameron-young",
           "secondReviewer": "tara-buckley",

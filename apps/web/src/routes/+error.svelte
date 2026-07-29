@@ -20,7 +20,7 @@
 </svelte:head>
 
 <div class="wrap">
-  <header class="top ui"><Logo size="sm" /></header>
+  <header class="top ui app-top"><Logo size="sm" /></header>
   <div class="body">
     <p class="code ui">{info.code}</p>
     <h1>{info.title}</h1>

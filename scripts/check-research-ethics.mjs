@@ -477,11 +477,16 @@ function safeRead(relPath) {
   }
 }
 
+// Where the disclosure copy actually LIVES. The privacy notice and the terms are shared components
+// rather than route files: the same body is rendered by the route and by the dialog a policy link
+// raises over the current page, so there is exactly one copy of each. Pointed at the routes, this
+// check would scan two files that now contain only a wrapper and pass on an empty string — the
+// quietest possible way for a disclosure requirement to stop being enforced.
 const PAGE_PATHS = [
   "apps/web/src/routes/insights/+page.svelte",
-  "apps/web/src/routes/privacy/+page.svelte",
+  "apps/web/src/lib/content/PrivacyContent.svelte",
   "apps/web/src/routes/survey/+page.svelte",
-  "apps/web/src/routes/terms/+page.svelte",
+  "apps/web/src/lib/content/TermsContent.svelte",
 ];
 
 function main() {

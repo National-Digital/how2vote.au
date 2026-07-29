@@ -1,4 +1,5 @@
 import { browser } from "$app/environment";
+import { removeFromNative } from "./native-storage";
 import { MAX_SAVED, parseSaved, removeByUrl, upsert, type SavedCard } from "./saved";
 
 const KEY = "how2vote:saved:v1";
@@ -42,7 +43,10 @@ class Saved {
 
   clear(): void {
     this.items = [];
-    if (browser) localStorage.removeItem(KEY);
+    if (!browser) return;
+    localStorage.removeItem(KEY);
+    // Write through to the shells' durable copy, or the next launch restores what was just cleared.
+    void removeFromNative([KEY]);
   }
 
   hydrate(): void {

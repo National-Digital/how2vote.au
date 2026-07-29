@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <!-- Base application theme. -->
+    <style name="AppTheme" parent="Theme.AppCompat.Light.DarkActionBar">
+        <!-- Customize your theme here. -->
+        <item name="colorPrimary">@color/colorPrimary</item>
+        <item name="colorPrimaryDark">@color/colorPrimaryDark</item>
+        <item name="colorAccent">@color/colorAccent</item>
+    </style>
+
+    <style name="AppTheme.NoActionBar" parent="Theme.AppCompat.DayNight.NoActionBar">
+        <item name="windowActionBar">false</item>
+        <item name="windowNoTitle">true</item>
+        <item name="android:background">@null</item>
+        <!-- System chrome carries the brand ground (PAPER, SLATE at night via values-night). The
+             bar colours are ignored on Android 15+ (edge-to-edge is enforced under targetSdk 36;
+             the WebView draws behind transparent bars and the web CSS keeps content clear via the
+             safe-area insets Capacitor's SystemBars plugin passes through) but still paint the
+             bars on older releases. -->
+        <item name="android:statusBarColor">@color/ground</item>
+        <item name="android:navigationBarColor">@color/ground</item>
+        <item name="android:windowLightStatusBar">@bool/light_system_bars</item>
+        <!-- Behind-the-WebView ground: visible in keyboard-transition gaps and used by SystemBars
+             for the decor background — keep it brand ground, not the AppCompat default. -->
+        <item name="android:windowBackground">@color/ground</item>
+    </style>
+
+
+    <style name="AppTheme.NoActionBarLaunch" parent="Theme.SplashScreen">
+        <!-- Android 12+ system splash ground; the drawable covers the pre-12 compat path. -->
+        <item name="windowSplashScreenBackground">@color/ground</item>
+        <item name="android:statusBarColor">@color/ground</item>
+        <item name="android:background">@drawable/splash</item>
+    </style>
+</resources>

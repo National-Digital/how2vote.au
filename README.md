@@ -21,6 +21,16 @@
 [![provenance](https://img.shields.io/github/actions/workflow/status/National-Digital/how2vote.au/compliance.yml?branch=main&label=provenance)](https://github.com/National-Digital/how2vote.au/actions/workflows/compliance.yml)
 [![supply-chain](https://img.shields.io/github/actions/workflow/status/National-Digital/how2vote.au/ci.yml?branch=main&label=supply-chain)](https://github.com/National-Digital/how2vote.au/actions/workflows/ci.yml)
 
+<!-- Distribution channels — live version and the age of the dataset bundled INSIDE that build.
+     The dataset ships in the binary with no over-the-air update path, so an older store build is
+     older candidate data, not just an older UI. Served from how2vote.au (no third-party badge
+     service); emitted by scripts/generate-store-badges.mjs. Grey until that channel goes live.
+     A native build legitimately trails web while a release is in review — that is not a fault. -->
+[![web](https://img.shields.io/endpoint?url=https%3A%2F%2Fhow2vote.au%2Fbadges%2Fweb.json)](https://how2vote.au)
+[![iOS](https://img.shields.io/endpoint?url=https%3A%2F%2Fhow2vote.au%2Fbadges%2Fios.json)](https://how2vote.au)
+[![Android](https://img.shields.io/endpoint?url=https%3A%2F%2Fhow2vote.au%2Fbadges%2Fandroid.json)](https://how2vote.au)
+[![F-Droid](https://img.shields.io/endpoint?url=https%3A%2F%2Fhow2vote.au%2Fbadges%2Ffdroid.json)](https://how2vote.au)
+
 <!-- Project meta -->
 [![License: AGPL-3.0-or-later](https://img.shields.io/badge/license-AGPL--3.0--or--later-blue.svg)](LICENSE)
 [![DCO](https://img.shields.io/badge/DCO-sign--off%20required-blue.svg)](https://developercertificate.org/)
@@ -39,8 +49,11 @@ party's **recorded parliamentary votes** match your positions, against the candi
 ballot in official ballot order — then you build your own voting plan. Nothing is ranked by
 score and no preference is recommended: you author your own preference order.
 
-Built as a fully static, offline-capable PWA. No account, no server-side scoring, no tracking by
-default — analytics is strictly opt-in.
+Built as a fully static, offline-capable PWA, and **packaged unchanged** as native iOS and Android
+shells — Capacitor wrappers around the exact same build, dataset included. Both shells are built on
+every release; **store distribution is pending** and no listing is live yet (see
+[`docs/store-distribution.md`](docs/store-distribution.md)). No account, no server-side scoring,
+no tracking by default — analytics is strictly opt-in.
 
 </div>
 
@@ -74,6 +87,7 @@ Everything a user is shown is provable:
 | `packages/engine` | `@how2vote/engine` | Pure scoring engine, share-link codec, golden tests. |
 | `packages/data-pipeline` | `@how2vote/data-pipeline` | TVFY → per-party positions compiler, AEC nominations fetcher, dataset build/validate CLI. |
 | `apps/web` | `@how2vote/web` | SvelteKit (`adapter-static`) offline PWA — the six-screen flow. |
+| `apps/mobile` | — | Capacitor iOS/Android store shells bundling the built web app byte-for-byte; fastlane release lanes, store metadata + screenshot packs. |
 | `data/` | — | Curated source dataset and compiled, checksummed output shipped with the build. |
 
 ## Getting started
@@ -276,16 +290,26 @@ stays hidden below a minimum response count.
 
 ## Licensing
 
-This project carries **two** licences, because code and data are governed separately:
+This project carries **two** licences, because code and data are governed separately, plus a
+carve-out for third-party assets it redistributes:
 
 - **Source code — [AGPL-3.0-or-later](LICENSE).** Anyone who runs a modified version, including over a
-  network, must make their source available under the same terms.
+  network, must make their source available under the same terms. An
+  [additional permission under AGPL §7](LICENSE-EXCEPTIONS.md) allows distribution of the built
+  app through application stores (Apple App Store, Google Play) whose standard terms are
+  otherwise incompatible with the AGPL — the source here always remains available under the
+  plain AGPL.
 - **Compiled vote dataset — [ODbL v1.0](LICENSE-DATA.md).** The dataset is a Derivative Database of
   They Vote For You data (© OpenAustralia Foundation, ODbL to the extent the OpenAustralia
   Foundation has rights in it). Share-alike and attribution are
   obligations of that licence, not a choice. Attribution — *"Vote data © They Vote For You
   (OpenAustralia Foundation), ODbL"* — appears on every screen and print, and the compiled dataset is
   published with a data vintage and checksum.
+- **Third-party assets — [THIRD-PARTY-NOTICES.md](THIRD-PARTY-NOTICES.md).** Neither licence above
+  covers assets owned by someone else: the Apple and Google store badges are trademarked marketing
+  artwork usable only under each owner's brand guidelines and are **not** conveyed under the AGPL,
+  and the bundled Newsreader typeface is under the SIL Open Font License 1.1 (shipped beside it as
+  [`apps/web/static/fonts/OFL.txt`](apps/web/static/fonts/OFL.txt)).
 
 Using the They Vote For You API for low-volume, non-commercial purposes is free and imposes **no**
 obligation to publish application source code; publishing this code under AGPL is our own decision.
@@ -311,4 +335,4 @@ contact about brand confusion — are in [`BRAND.md`](BRAND.md).
 The scoring engine is validated against a fixed set of worked examples as immutable golden tests, so
 any change to scoring is a deliberate, versioned methodology bump surfaced in the app footer. Design
 and data-pipeline decisions are recorded as ADRs in [`docs/adr/`](docs/adr/); the in-app
-[methodology page](apps/web/src/routes/methodology) documents the scoring method for end users.
+[methodology page](apps/web/src/lib/content/MethodologyContent.svelte) documents the scoring method for end users.

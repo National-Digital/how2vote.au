@@ -166,10 +166,22 @@ describe("verdict — no unregistered host", () => {
   });
 
   it("flags a config that no longer merges the registry", () => {
-    const bad = SVELTE_CONFIG.replace("mergeRegistryCsp(BASE_CSP)", "BASE_CSP");
+    const bad = SVELTE_CONFIG.replace(/mergeRegistryCsp\(/g, "noMerge(");
     expect(
       hasError(verdict(REGISTRY, opts({ svelteConfig: bad })), "no longer merges the registry"),
     ).toBe(true);
+  });
+
+  it("allows the first-party canonical origin (native connect-src) but flags any other", () => {
+    // The real config adds https://how2vote.au for native builds — first-party, permitted.
+    expect(hasError(verdict(REGISTRY, opts({})), "outside the registry")).toBe(false);
+    const bad = SVELTE_CONFIG.replace(
+      '"https://how2vote.au"',
+      '"https://how2vote.au", "https://tracker.example.com"',
+    );
+    expect(hasError(verdict(REGISTRY, opts({ svelteConfig: bad })), "outside the registry")).toBe(
+      true,
+    );
   });
 
   it("flags a function that contacts an unregistered host", () => {

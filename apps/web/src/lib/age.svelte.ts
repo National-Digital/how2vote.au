@@ -1,4 +1,5 @@
 import { browser } from "$app/environment";
+import { AGE_ELIGIBILITY_KEY } from "./privacy/local-data";
 import { quiz } from "./quiz.svelte";
 import { saved } from "./saved.svelte";
 
@@ -33,7 +34,7 @@ import { saved } from "./saved.svelte";
  * survey (`./survey.ts`) is a SEPARATE, consented, aggregate-only field — unrelated to this
  * eligibility gate (and reachable only under {@link canVote}, i.e. never by an under-18 explorer).
  */
-const STORAGE_KEY = "how2vote:age-ok:v1";
+const STORAGE_KEY = AGE_ELIGIBILITY_KEY;
 
 class AgeGate {
   /** True once the visitor has affirmed they are 18+ (may vote). Persisted as a single bit. */

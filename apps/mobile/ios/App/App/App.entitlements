@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<!-- Universal Links: claim how2vote.au so a shared card opens in-app. Requires the app's
+	     provisioning profile to carry the Associated Domains capability (automatic with cloud
+	     signing once the Apple account exists) and the apex to serve
+	     /.well-known/apple-app-site-association (emitted by the web build once APPLE_TEAM_ID is set).
+	     Until both are in place iOS opens the link in Safari, so this is safe to ship early. -->
+	<key>com.apple.developer.associated-domains</key>
+	<array>
+		<string>applinks:how2vote.au</string>
+	</array>
+</dict>
+</plist>

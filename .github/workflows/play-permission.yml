@@ -1,0 +1,43 @@
+name: Play publish permission
+
+# Standing check that the Play service account can still APPLY edits — i.e. that an automated
+# release would actually publish rather than build for four minutes and then be refused.
+#
+# Scheduled rather than left to release time: Google enforces publish rights at the END of an edit,
+# so a missing grant only surfaces once a release is already under way, and an unrelated permission
+# edit in the console can replace the release access at any time. A daily probe makes that drift a
+# red run long before it matters, instead of on the day of a launch.
+#
+# The probe stages a listing change in a throwaway edit and calls :validate, which applies nothing.
+# The edit is always discarded: the live listing, the tracks and the release history are untouched.
+#
+# Red if PLAY_SERVICE_ACCOUNT_JSON is missing, not green: a credential that has disappeared is one
+# of the ways "we can no longer publish" shows up, and it is the one a skip would hide.
+
+on:
+  schedule:
+    # Daily, offset from the data refresh and deploy crons so the API quota isn't shared.
+    - cron: "17 4 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: play-permission
+  cancel-in-progress: true
+
+jobs:
+  probe:
+    name: Can the service account publish?
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7
+      - uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e # v6
+        with:
+          node-version-file: .nvmrc
+      - name: Probe publish permission
+        env:
+          PLAY_SERVICE_ACCOUNT_JSON: ${{ secrets.PLAY_SERVICE_ACCOUNT_JSON }}
+        run: node scripts/check-play-permission.mjs

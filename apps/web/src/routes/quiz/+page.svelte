@@ -1,10 +1,12 @@
 <script lang="ts">
+  import ExternalLink from "$lib/components/ExternalLink.svelte";
   import { browser } from "$app/environment";
   import { goto } from "$app/navigation";
   import { page } from "$app/state";
   import type { AnswerPoints } from "@how2vote/engine";
   import AnswerOptions from "$lib/components/AnswerOptions.svelte";
   import Meta from "$lib/components/Meta.svelte";
+  import { modal } from "$lib/modal";
   import Progress from "$lib/components/Progress.svelte";
   import ProvenanceNotice from "$lib/components/ProvenanceNotice.svelte";
   import TopBar from "$lib/components/TopBar.svelte";
@@ -93,6 +95,10 @@
   }
 
   function onkeydown(e: KeyboardEvent): void {
+    // A modal surface owns the keyboard while it is up. This handler is on `window`, and key events
+    // still bubble there from inside a `showModal()` dialog, so without this the answer keys keep
+    // firing underneath one — reading the Terms over the quiz would silently answer questions.
+    if (modal.isOpen) return;
     if (e.metaKey || e.ctrlKey || e.altKey) return;
     if (e.key === "ArrowLeft") {
       back();
@@ -132,9 +138,9 @@
       {/if}
       <p class="kicker ui">Parliament voted on this</p>
       <h1 class="q">{question.text}</h1>
-      <a class="src ui" href={policyUrl} target="_blank" rel="noopener noreferrer">
-        See the parliamentary votes behind this ↗
-      </a>
+      <ExternalLink href={policyUrl} class="src ui">
+        See the parliamentary votes behind this
+      </ExternalLink>
     </div>
 
     <div class="stack">
@@ -184,7 +190,7 @@
     letter-spacing: -0.01em;
     font-weight: 600;
   }
-  .src {
+  .intro :global(.src) {
     /* WCAG 2.2 SC 2.5.8 Target Size (Minimum): 24px-tall hit area for the standalone source link,
        type unchanged (inline-flex so the underline still hugs the text). */
     display: inline-flex;

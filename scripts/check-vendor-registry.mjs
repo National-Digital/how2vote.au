@@ -305,6 +305,23 @@ export function verdict(registry, options = {}) {
         "svelte.config.js: BASE_CSP hardcodes an external origin — every external origin must come from the registry",
       );
     }
+    // Also scan the executable config (comments stripped) for any hardcoded origin OUTSIDE the
+    // registry — this covers channel-specific additions (e.g. the native connect-src), not just
+    // BASE_CSP. The site's OWN canonical origin is first-party (the WebView origin is local, so the
+    // native shell's call to our own API is cross-origin to us) and is the only permitted literal;
+    // every third-party host must still come from the registry.
+    const FIRST_PARTY_ORIGIN = "https://how2vote.au";
+    // Strip block comments, then line comments — but only where the `//` is NOT preceded by `:`,
+    // so the `//` inside `https://` URLs is never mistaken for a comment.
+    const codeOnly = cfg.replace(/\/\*[\s\S]*?\*\//g, "").replace(/(^|[^:])\/\/.*$/gm, "$1");
+    const external = [...(codeOnly.match(/https?:\/\/[a-z0-9.-]+/gi) ?? [])].filter(
+      (o) => o.toLowerCase() !== FIRST_PARTY_ORIGIN,
+    );
+    if (external.length > 0) {
+      push(
+        `svelte.config.js: hardcodes external origin(s) ${[...new Set(external)].join(", ")} outside the registry — every external origin must come from the registry`,
+      );
+    }
   }
 
   // Server runtime (Cloudflare Pages Functions): every host a function contacts must be allowlisted.

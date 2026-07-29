@@ -127,6 +127,12 @@ jobs:
       # any mapping change forces re-review.
       - name: Candidate/party mapping approval
         run: node scripts/check-candidate-mapping.mjs
+      # Data-currency signalling: the stale-data predicate stays a pure, channel-independent function
+      # — no network call and no channel branch — so web, iOS and Android all warn on the same
+      # dataVersion. Only the remedy (reload vs open the store) differs, and that lives in the
+      # component.
+      - name: Stale-data predicate is pure and channel-independent
+        run: node scripts/check-staleness.mjs
 
   privacy-research:
     name: CI group (Privacy and Research)

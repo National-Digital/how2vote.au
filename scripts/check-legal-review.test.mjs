@@ -19,7 +19,14 @@ describe("verdict — real committed legal-review record", () => {
 
 describe("gate 1 — freshness", () => {
   it("fails when the last review is more than 12 months old", () => {
-    const later = Date.parse("2027-07-28T00:00:00Z"); // just past 12 months (review 2026-07-27)
+    // Derived from the record rather than hardcoded: a literal date silently stops testing "more
+    // than" the moment lastReviewDate moves, since the probe becomes the exact boundary instead.
+    const reviewed = new Date(`${REAL.lastReviewDate}T00:00:00Z`);
+    const later = Date.UTC(
+      reviewed.getUTCFullYear() + 1,
+      reviewed.getUTCMonth(),
+      reviewed.getUTCDate() + 1,
+    );
     expect(hasError(verdict(REAL, { now: later }), "more than 12 months old")).toBe(true);
   });
 
