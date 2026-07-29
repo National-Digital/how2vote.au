@@ -868,6 +868,25 @@
           "taxBenefitClaimed": false,
           "electionFundingClaimed": false,
           "publicFundingClaimed": false
+        },
+        {
+          "id": "2026-H2-CF-R2",
+          "kind": "cash",
+          "category": "Release artifact distribution",
+          "supplier": "Cloudflare R2",
+          "payer": "National Digital",
+          "sourceOfFundsCountry": "AU",
+          "purpose": "First-party hosting of signed Android release binaries at dist.how2vote.au, so F-Droid can verify its own build of a release tag against the binary we published and distribute ours under our signature.",
+          "classification": "electoral",
+          "actualAmount": 0,
+          "electoralAmount": 0,
+          "classificationBasis": "Conservatively within scope, but no dedicated cash cost was incurred: storage and operations sit inside the R2 free tier and R2 charges no egress, so download volume does not create a cost.",
+          "amountBasis": "Actual dedicated charge incurred through 2026-07-29: $0.",
+          "evidenceStatus": "operator-attestation",
+          "taxBenefitClaimed": false,
+          "electionFundingClaimed": false,
+          "publicFundingClaimed": false,
+          "note": "Bucket how2vote-dist, created 2026-07-29, read-only over the dist.how2vote.au custom domain; writes use a bucket-scoped API token held only in Actions secrets."
         }
       ],
       "totalActualCashCost": 82.59,
