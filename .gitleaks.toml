@@ -1,7 +1,7 @@
 # Gitleaks configuration. The CI "Secret scan" job (.github/workflows/ci.yml) runs
 # `gitleaks git --log-opts=--all`, scanning the full history of every ref, so a secret committed to
 # any branch — not just the current tip — fails the build. This file extends the built-in default
-# ruleset with a single, documented allowlist for one value that is public by design.
+# ruleset with a documented allowlist for values that are public by design.
 title = "How2Vote gitleaks config"
 
 [extend]
@@ -14,9 +14,16 @@ useDefault = true
 # high-entropy string, the default generic-api-key rule flags it as a false positive. We allowlist
 # the one known value rather than excluding the `.env.example` path, so example files are still
 # scanned for any genuinely secret material.
+#
+# The F-Droid signer certificate digest is public by construction: it is the SHA-256 of the
+# certificate inside every copy of the published APK, and it is pinned in the fdroiddata recipe for
+# the world to read. Only the keystore and its password are sensitive, and they live solely in Actions
+# secrets. Canonical fdroidserver formatting emits it as `AllowedAPKSigningKeys: <digest>`, and that
+# keyword-plus-high-entropy shape is what the default generic-api-key rule flags.
 [allowlist]
-description = "Public reCAPTCHA v3 site key (client-side, domain-locked; retained in git history)"
+description = "Values that are public by design: reCAPTCHA v3 site key, F-Droid signer digest"
 regexTarget = "line"
 regexes = [
   '''6LeN2U8tAAAAAOBXIIa5De5K1VfTpeavkqWmP7Py''',
+  '''617efd39535bb3af10ce0778b6f20ee4597f221baeb3f3e07547bfcc1ac7d213''',
 ]
