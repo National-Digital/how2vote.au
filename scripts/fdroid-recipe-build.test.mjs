@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { readFileSync } from "node:fs";
 
-import { PHASES, phaseCommands, shellLine, subdir } from "./fdroid-recipe-build.mjs";
+import { PHASES, phaseCommands, shellLine, signingKeys, subdir } from "./fdroid-recipe-build.mjs";
 
 const recipe = readFileSync(new URL("../docs/fdroid/au.how2vote.app.yml", import.meta.url), "utf8");
 
@@ -69,5 +69,27 @@ describe("phase argument handling", () => {
     expect(phaseCommands(recipe, "(build)")).toEqual([]);
     expect(phaseCommands(recipe, ".*")).toEqual([]);
     expect(phaseCommands(recipe, "build")).toEqual(["true"]);
+  });
+});
+
+describe("pinned signer", () => {
+  it("reads the digests the recipe pins", () => {
+    const keys = signingKeys(recipe);
+    expect(keys.length).toBeGreaterThan(0);
+    for (const k of keys) expect(k).toMatch(/^[0-9a-f]{64}$/);
+  });
+
+  it("stops at the end of the list", () => {
+    const doc = [
+      "AllowedAPKSigningKeys:",
+      "  - " + "a".repeat(64),
+      "CurrentVersion: 1.0.0",
+      "  - " + "b".repeat(64),
+    ].join("\n");
+    expect(signingKeys(doc)).toEqual(["a".repeat(64)]);
+  });
+
+  it("returns nothing when the field is absent", () => {
+    expect(signingKeys("Categories:\n  - Science & Education\n")).toEqual([]);
   });
 });

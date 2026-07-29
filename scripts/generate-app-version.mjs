@@ -73,6 +73,18 @@ export function payload(appVersion) {
 
 /* c8 ignore start -- CLI/fs plumbing, exercised via CI not unit tests */
 function main() {
+  // `--code <semver>` prints just the encoded versionCode, so callers that need the F-Droid pair
+  // (release workflow, recipe pin) take it from this one encoding rather than restating the formula.
+  const codeFor = process.argv[process.argv.indexOf("--code") + 1];
+  if (process.argv.includes("--code")) {
+    const code = encodeVersionCode(codeFor);
+    if (code === null) {
+      console.error(`✗ "${codeFor}" is not a versionCode-encodable semver`);
+      process.exit(1);
+    }
+    console.info(String(code));
+    return;
+  }
   const check = process.argv.includes("--check");
   const body = payload(process.env.APP_VERSION);
   if (check) {

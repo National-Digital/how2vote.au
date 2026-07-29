@@ -33,12 +33,22 @@ AutoName: How2Vote
 RepoType: git
 Repo: https://github.com/National-Digital/how2vote.au.git
 
+# Reproducible builds. F-Droid builds the tag itself, compares the result with the APK published
+# below, and on a match publishes OURS under OUR signature rather than re-signing with its own key.
+# %v is the versionName found by the update check; android-release.yml attaches exactly this asset
+# to every release, built through the same recipe phases so the comparison can succeed.
+Binaries: https://github.com/National-Digital/how2vote.au/releases/download/v%v/how2vote-%v.apk
+# Signer certificate digest of that APK (public). The release build asserts what it signs matches
+# this, so a wrong key or alias fails the release instead of publishing something F-Droid rejects.
+AllowedAPKSigningKeys:
+  - 617efd39535bb3af10ce0778b6f20ee4597f221baeb3f3e07547bfcc1ac7d213
+
 Builds:
   # First submitted release; checkupdates appends every later release automatically with the
   # same shape.
-  - versionName: 1.3.6
-    versionCode: 10306000
-    commit: v1.3.6
+  - versionName: 1.3.7
+    versionCode: 10307000
+    commit: v1.3.7
     subdir: apps/mobile/android
     sudo:
       # Node toolchain for the SvelteKit web bundle the shell wraps. Node major must satisfy
@@ -79,5 +89,5 @@ UpdateCheckMode: HTTP
 # sentinel: apply the regex to the page already fetched. fdroidserver builds a second fetch with no
 # headers (checkupdates.py check_http) and it is answered 403 at the edge, so never name a URL there.
 UpdateCheckData: https://how2vote.au/app-version.json|"versionCode":\s*(\d+)|.|"versionName":\s*"([\d.]+)"
-CurrentVersion: 1.3.6
-CurrentVersionCode: 10306000
+CurrentVersion: 1.3.7
+CurrentVersionCode: 10307000
