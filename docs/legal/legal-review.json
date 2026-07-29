@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "lastReviewDate": "2026-07-28",
+  "lastReviewDate": "2026-07-29",
   "reviewer": "cameron-young — Australian lawyer (National Digital)",
   "approvalRef": "compliance-review-2026-07-27",
   "legislationCompilation": "Commonwealth Electoral Act 1918 (Cth), current compilation as at 2026-07-15",
@@ -143,6 +143,14 @@
       "disposition": "reviewed",
       "reviewer": "cameron-young",
       "affectedControls": ["control-21"]
+    },
+    {
+      "date": "2026-07-29",
+      "change": "Store-distribution register items landed with the Google Play developer account, per the signed storeDistribution determination (EV-STORE-DISTRIBUTION-2026): a Google infrastructure vendor row (distribution-only, no runtime contact — the app sends nothing to Play and the only touchpoint is a user-initiated store deep link handed to the OS); the one-time Play registration fee recorded in the expenditure register at A$35.84 (published US$25 at the RBA 2026-07-24 rate, evidence status operator-reconstructed-estimate pending the card statement) with period and life-to-date totals restated; and the EV-IP-ASSIGNMENT evidence extended to state expressly that the operator's IP position covers granting the AGPL section 7 application-store additional permission (LICENSE-EXCEPTIONS.md), re-approved by both signatories. The vendor row projects into Privacy Policy section 9's provider table, so the policy's last-updated date advances to 29 July 2026. Disclosure only: no collection, use, disclosure, retention or overseas-processing practice changes; no right, obligation or permitted use is altered; the consent and Terms versions are unchanged, so no re-acceptance or re-consent is triggered. Apple's vendor row and annual fee follow at Developer Program enrolment.",
+      "disposition": "reviewed",
+      "reviewer": "cameron-young",
+      "secondReviewer": "tara-buckley",
+      "affectedControls": ["control-8", "control-16", "control-21", "control-29"]
     }
   ],
   "nextMandatoryReviewDate": "2027-07-15",

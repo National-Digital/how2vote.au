@@ -23,7 +23,7 @@ describe("real register", () => {
   });
 
   it("computes the committed totals", () => {
-    expect(computeTotals(REAL)).toEqual({ actual: 3885.2, electoral: 3885.2 });
+    expect(computeTotals(REAL)).toEqual({ actual: 3921.04, electoral: 3921.04 });
   });
 });
 

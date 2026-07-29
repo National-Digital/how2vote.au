@@ -25,7 +25,7 @@
   //     deletion remain; there is no fixed maximum.
   // The third-party inventory is rendered straight from the registry that also drives the CSP and
   // the consent UI, so the three can never disagree about what this site loads.
-  const lastUpdated = "28 July 2026";
+  const lastUpdated = "29 July 2026";
   const categoryLabel = new Map(categories.map((c) => [c.id, c.label]));
   const inventory = [...services].sort((a, b) =>
     a.name.localeCompare(b.name, "en", { sensitivity: "base" }),

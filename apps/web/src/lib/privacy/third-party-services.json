@@ -63,6 +63,28 @@
       }
     },
     {
+      "id": "google",
+      "name": "Google",
+      "provider": "Google LLC",
+      "surface": "infrastructure",
+      "role": "Application distribution through Google Play: hosts the store listing and delivers the Android store build (apps/mobile). The deployed site and the app do not contact Google at runtime; the app's only Play touchpoint is a user-initiated store deep link handed to the operating system.",
+      "dataProcessing": "Distributes the signed Android binary and processes install, update and store-listing interactions under the device owner's own Google account and Google's terms. No end-user personal data from the Service flows to Google; the app sends nothing to Play.",
+      "retention": "Store listing, release history and developer-account records for the life of the listing, per Google's terms.",
+      "subprocessors": [],
+      "subprocessorsNote": "Google publishes no Play-specific subprocessor list; platform processing occurs under Google's own privacy policy, outside the Service.",
+      "dataLocation": "United States and global — Google infrastructure.",
+      "privacyPolicyUrl": "https://policies.google.com/privacy",
+      "egressHosts": [],
+      "contract": {
+        "type": "DeveloperDistributionAgreement",
+        "evidenceId": "EV-VENDOR-CONTRACT-REVIEW",
+        "status": "pending",
+        "reviewDate": "2026-07-29",
+        "nextReviewDate": "2027-07-29",
+        "note": "Google Play Developer Distribution Agreement accepted at account registration (2026-07-26); to be reviewed and filed in the restricted legal records; evidence pending (fail-closed / partial-passing)."
+      }
+    },
+    {
       "id": "tvfy",
       "name": "They Vote For You",
       "provider": "OpenAustralia Foundation",
