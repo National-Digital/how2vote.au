@@ -25,8 +25,8 @@ here. The headline the conclusion turns on (drift-gated against the ledger by
 `scripts/check-expenditure-register.mjs`):
 
 - Highest reviewed period: **A$578.30** (FY2024-25), against its **A$16,900** threshold.
-- Current transitional period (2026-H2, through 26 July 2026): **A$46.75**, against **A$17,300**.
-- Life-to-date conservatively classified electoral expenditure: approximately **A$3,885.20**.
+- Current transitional period (2026-H2, through 26 July 2026): **A$82.59**, against **A$17,300**.
+- Life-to-date conservatively classified electoral expenditure: approximately **A$3,921.04**.
 
 The historical AWS and registrar figures are reconstructed estimates. Exact invoice reconciliation
 should be retained where available, but cannot affect the threshold outcome because the margin is

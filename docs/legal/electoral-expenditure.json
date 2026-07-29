@@ -5,7 +5,7 @@
   "reviewedThrough": "2026-07-26",
   "reviewer": "cameron-young",
   "secondReviewer": "tara-buckley",
-  "reviewDate": "2026-07-26",
+  "reviewDate": "2026-07-29",
   "nextReviewDate": "2026-12-01",
   "evidenceRef": "EV-EXPENDITURE-CLASSIFICATION",
   "operator": "General Consulting Services Pty Ltd as trustee for the Australian Business Trust, trading as National Digital",
@@ -831,6 +831,25 @@
           "publicFundingClaimed": false
         },
         {
+          "id": "2026-H2-PLAY-REGISTRATION",
+          "kind": "cash",
+          "category": "Store developer fees",
+          "supplier": "Google Play — developer account registration",
+          "payer": "National Digital",
+          "sourceOfFundsCountry": "AU",
+          "purpose": "One-time Google Play developer account registration fee, enabling distribution of the Android store build (apps/mobile).",
+          "classification": "electoral",
+          "actualAmount": 35.84,
+          "electoralAmount": 35.84,
+          "classificationBasis": "Conservative treatment: all dedicated How2Vote distribution cash costs are counted as electoral expenditure without needing to rely on a narrower dominant-purpose classification.",
+          "amountBasis": "Published US$25 fee converted at the RBA AUD/USD rate for 2026-07-24 (0.6975), the last published rate before the 2026-07-26 registration; replace with the card-statement figure when located.",
+          "evidenceStatus": "operator-reconstructed-estimate",
+          "taxBenefitClaimed": false,
+          "electionFundingClaimed": false,
+          "publicFundingClaimed": false,
+          "note": "Registration date: 2026-07-26 — the day the Play Console app au.how2vote.app was created."
+        },
+        {
           "id": "2026-H2-LABOUR",
           "kind": "labour",
           "category": "Unpaid founder/director labour",
@@ -851,17 +870,17 @@
           "publicFundingClaimed": false
         }
       ],
-      "totalActualCashCost": 46.75,
-      "totalElectoralExpenditure": 46.75,
+      "totalActualCashCost": 82.59,
+      "totalElectoralExpenditure": 82.59,
       "thresholdExceeded": false,
       "thirdPartyReturnRequired": false,
-      "determination": "Conservatively classified electoral expenditure actually incurred through 2026-07-26 was A$46.75 and did not exceed the A$17,300 threshold.",
+      "determination": "Conservatively classified electoral expenditure actually incurred through 2026-07-26 was A$82.59 and did not exceed the A$17,300 threshold.",
       "activityNote": "AWS terminated and application fully migrated to the current Cloudflare architecture in July 2026; forms and anti-abuse brought first-party and the defensive how2vote.app domain registered on 2026-07-26."
     }
   ],
   "lifeToDate": {
-    "actualCashCostThrough2026-07-26": 3885.2,
-    "conservativelyClassifiedElectoralExpenditureThrough2026-07-26": 3885.2,
+    "actualCashCostThrough2026-07-26": 3921.04,
+    "conservativelyClassifiedElectoralExpenditureThrough2026-07-26": 3921.04,
     "note": "The total is the sum of approximate period figures and may differ slightly from rounded life-to-date estimates."
   },
   "forecast": {

@@ -578,11 +578,11 @@
       "evidence": [
         {
           "id": "EV-IP-ASSIGNMENT",
-          "description": "Employee/contractor IP assignments permit AGPL publication",
+          "description": "Employee/contractor IP assignments place all project copyright with the operator, permitting AGPL publication and the grant of the AGPL section 7 application-store additional permission (LICENSE-EXCEPTIONS.md)",
           "status": "current",
           "reviewer": "cameron-young",
           "secondReviewer": "tara-buckley",
-          "approvedAt": "2026-07-18",
+          "approvedAt": "2026-07-29",
           "expiresAt": "2029-07-18"
         }
       ]

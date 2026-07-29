@@ -35,6 +35,14 @@
       "contractStatus": "pending"
     },
     {
+      "id": "google",
+      "name": "Google",
+      "provider": "Google LLC",
+      "surface": "infrastructure",
+      "dataLocation": "United States and global — Google infrastructure.",
+      "contractStatus": "pending"
+    },
+    {
       "id": "tvfy",
       "name": "They Vote For You",
       "provider": "OpenAustralia Foundation",
