@@ -146,6 +146,68 @@ native deployment floors so one bundle is safe everywhere:
 Tablet posture: portrait-first. Phones are orientation-locked; large screens (iPad, and Android
 tablets under `targetSdk 36` which ignores the lock) may rotate — the layout is responsive.
 
+### Declared permissions
+
+The whole permission surface of all three channels, platform and browser. A permission with no live
+call site is removed rather than left declared. Egress itself (CSP, `connect-src`, the third-party
+register) is a separate matter, covered by the research posture above and `docs/privacy/`; the store
+privacy declarations have their own section below.
+
+**Android — declared.** One `uses-permission`, `android.permission.INTERNET`
+(`apps/mobile/android/app/src/main/AndroidManifest.xml`). It is used for three things:
+
+1. **User-initiated first-party requests.** The contact form (`apps/web/src/lib/forms.ts` →
+   `POST /api/forms`) and the optional research contribution (`apps/web/src/lib/survey.ts` →
+   `/api/research/*`), both gated by the self-hosted proof-of-work challenge
+   (`apps/web/src/lib/altcha.ts` → `POST /api/challenge`). Research is opt-in behind a consent +
+   18+ gate and aggregate-only; the form is sent when the user submits it. From a native shell both
+   target `SITE_URL`, since `/api/*` does not exist on the local WebView origin — the
+   `isNativeShell` branch in each module. Every endpoint is AGPL code in this repo and self-hostable
+   (`docs/self-hosting.md`).
+2. **Outbound links** the user follows to the AEC or They Vote For You, opened in the in-app
+   browser.
+3. **The WebView origin.** Capacitor requires the permission for the `https://localhost` origin the
+   bundle is served from (its default `androidScheme`; `apps/mobile/capacitor.config.ts` sets no
+   `server.url`). The assets themselves are returned locally, by the bridge's
+   `shouldInterceptRequest` handler, not over a socket.
+
+It is not used for analytics or telemetry, an advertising identifier, crash reporting, remote
+config, over-the-air asset or dataset updates, or any startup request. Dataset, maps, stats and
+fonts are compiled into the binary, so the quiz, the comparison and the card work with no
+connection.
+
+**Android — merged.** What ships is the manifest merger's output, not the authored file: Gradle
+folds in every dependency's library manifest. None of the six Capacitor packages the shell depends
+on (`android`, `app`, `browser`, `core`, `preferences`, `share`) declares a permission, so the merged
+set is `INTERNET` alone. The `fdroid` job asserts that against the built APK
+(`aapt2 dump permissions`) and fails if it changes, so a dependency that adds a permission cannot
+reach a store listing or an F-Droid review while this register still claims one. The job runs when a
+PR touches `apps/mobile/**` or `pnpm-lock.yaml`, and on a draft PR only once it is marked ready.
+
+**iOS.** No purpose strings at all: `apps/mobile/ios/App/App/Info.plist` carries no
+`NS*UsageDescription` key and no `UIBackgroundModes`. Neither platform uses camera, microphone,
+location, contacts, photo library, notifications or any background capability, and `MainActivity`
+overrides no WebView permission handler.
+
+**Browser capabilities.** What the WebView or browser gates rather than the manifest:
+
+| Capability | Where | Prompt |
+| --- | --- | --- |
+| Web Share, or the Capacitor Share plugin in a shell | `routes/card/+page.svelte` | none — user gesture |
+| Clipboard write (the share fallback) | `routes/card/+page.svelte` | browser-dependent |
+| `window.print()` | web PWA only — not offered in the shells | none |
+| Service worker + Cache Storage | web only; registration gates on `!isNativeShell` in `+layout.svelte` | none |
+| `localStorage`, plus the durable native store | `apps/web/src/lib/native-storage.ts` | none |
+
+Nothing queries `navigator.permissions`, and there is no `getUserMedia`, geolocation, `Notification`
+or `storage.persist()` call anywhere in the tree.
+
+**`Permissions-Policy`.** `apps/web/static/_headers` denies `accelerometer`, `autoplay`,
+`browsing-topics`, `camera`, `display-capture`, `geolocation`, `gyroscope`, `interest-cohort`,
+`magnetometer`, `microphone`, `payment` and `usb`. It is a response header, so it binds the **web
+PWA only** — the shells load from a local origin that receives no headers, where what holds is the
+absence of the capability from the code.
+
 ## Release flow
 
 `deploy.yml` tags `v<version>` and publishes a GitHub Release on every push to `main`. Both
@@ -163,8 +225,8 @@ store workflows trigger on `release: published`:
    internal → production at a **staged 10% rollout** (see Rollout policy below).
 3. **F-Droid** — no workflow of ours runs: F-Droid's buildserver builds from the release tag via
    the fdroiddata recipe, discovers new releases by polling
-   `https://how2vote.au/app-version.json`, and signs with its own key. See the F-Droid section
-   below for the whole mechanism.
+   `https://how2vote.au/app-version.json`, and publishes our signed APK when its build reproduces
+   ours. See the F-Droid section below for the whole mechanism.
 4. **`mobile-ci.yml`** (PRs, no secrets) — two tiers decided by its `scope` job. Always: store
    metadata limits + authorisation invariants, cross-channel drift, native plugin parity, the
    static F-Droid gate, channel baking, and the per-channel behaviour specs (the only place the
@@ -400,6 +462,7 @@ How the pieces fit — each fact is enforced on every PR (guards named on the ri
 | Artifact host | `dist.how2vote.au` — Cloudflare R2 bucket `how2vote-dist`, read-only over that domain, keyed `app/<channel>/how2vote-<channel>-<version>.apk`. Not a GitHub release asset: releases here are **immutable**, and `deploy.yml` publishes before dispatching the store workflows, so an asset can never be attached afterwards. The channel appears in both the path and the filename because a saved APK loses its URL and its signature decides whether it installs | `fdroid-publish` refuses to replace a published object, then re-downloads over the public domain and compares SHA-256 with the signed file |
 | Signing flags | `apksigner --alignment-preserved` is **required**: apksigner re-aligns the zip by default, shifting nearly every entry, and any digest computed over the original layout then fails — F-Droid could never match its own build. v1 (JAR) signing is disabled: minSdk 24 supports v2 everywhere, and v1 adds ~200 KB of per-entry manifests | `fdroid-apk` runs `apksigcopier compare` against the unsigned build, which is the check F-Droid's verification performs |
 | Signature classes | the F-Droid APK is signed by our dedicated F-Droid key; Play distributes split APKs signed by Google's escrowed key. Same package name, different signers — neither can update over the other, so the two are separate install classes and a user must uninstall before switching | — |
+| Permissions | one declaration, `INTERNET`, used only for the user-initiated first-party form and opt-in research POSTs, outbound links, and the `https://localhost` WebView origin Capacitor requires it for. Full register under "Declared permissions" above | the `fdroid` job asserts the **merged** set from the built APK with `aapt2 dump permissions` |
 | Scanner | no Google service reference anywhere in the gradle files (the Capacitor template's dormant push-services block is removed) | scanner simulation in `check-fdroid-ready.mjs` |
 | Channel | F-Droid ships the **`fdroid`** channel (`PUBLIC_DIST_CHANNEL=fdroid`), a fourth value in `apps/web/src/lib/channel.ts`. An F-Droid install cannot be updated through Play (different signing keys), so the in-app update remedy resolves to `f-droid.org/packages/<appId>` rather than `market://`. Nothing else differs from the `android` build | `check-store-channel.mjs`; the `fdroid` job builds this channel, and the per-channel behaviour specs cover the branch |
 
@@ -427,9 +490,14 @@ workflow: a restatement can pass while the buildserver fails.
    then `fdroid build -v -l au.how2vote.app`.
 4. Open the MR and respond to packager review; mirror any conventions the packagers require
    (e.g. a srclib-based Node install instead of NodeSource in `sudo:`) back into `docs/fdroid/`.
-5. After merge the app appears in the index within a build cycle or two. F-Droid signs with
-   **its own key** — reproducible builds under our signature (`AllowedAPKSigningKeys`) is a
-   later, optional upgrade.
+   **While the MR is open the pin does not move**, even as releases keep shipping: bumping the
+   reviewed tag invalidates any build a packager has already run, and `checkupdates` picks up
+   every release since the pin the first time it runs after merge. Step 1's "in step with each
+   release" applies from then on.
+5. After merge the app appears in the index within a build cycle or two. Because `Binaries:` and
+   `AllowedAPKSigningKeys:` are both set, F-Droid builds the tag, compares against our published
+   APK, and on a match publishes **our** binary under **our** signature; it falls back to signing
+   its own build with the F-Droid key only if the comparison fails.
 6. Wire `FDROID_LIVE_VERSION` for the README badge from the index:
    `https://f-droid.org/api/v1/packages/au.how2vote.app`.
 

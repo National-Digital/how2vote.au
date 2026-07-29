@@ -7,7 +7,7 @@
   "claims": {
     "offline": {
       "heading": "WORKS FULLY OFFLINE",
-      "body": "The complete dataset ships inside the app — questions, scoring and your card all work with no connection, including at a polling place with no signal."
+      "body": "The complete dataset ships inside the app — questions, scoring and your card all work with no connection, including at a polling place with no signal. The app goes online only for what you ask it to: sending the contact form, contributing to the anonymous research if you opt in, or opening a link out to the AEC or They Vote For You."
     },
     "record": {
       "heading": "BUILT FROM THE PARLIAMENTARY RECORD",

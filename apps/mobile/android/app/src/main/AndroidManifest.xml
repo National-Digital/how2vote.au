@@ -49,6 +49,11 @@
 
     <!-- Permissions -->
 
+    <!-- The only permission declared, and used only on an explicit user action: the contact form
+         and the opt-in research contribution POST to first-party endpoints, and outbound links open
+         in the in-app browser. Capacitor also requires it for the https://localhost WebView origin
+         the bundle is served from. Nothing is fetched at startup; dataset, maps, stats and fonts
+         ship in the binary. See docs/store-distribution.md, "Declared permissions". -->
     <uses-permission android:name="android.permission.INTERNET" />
 
     <!-- The activity's portrait lock (phones) implicitly marks android.hardware.screen.portrait
