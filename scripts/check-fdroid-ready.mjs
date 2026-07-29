@@ -170,13 +170,32 @@ export function verdict(files) {
     }
     const blocks = [
       ...recipe.matchAll(
-        /^[ \t]*-[ \t]*versionName:[ \t]*([\d.]+)[ \t]*\n[ \t]*versionCode:[ \t]*(\d+)/gm,
+        /^[ \t]*-[ \t]*versionName:[ \t]*([\d.]+)[ \t]*\n[ \t]*versionCode:[ \t]*(\d+)[ \t]*\n[ \t]*commit:[ \t]*(\S+)/gm,
       ),
     ];
     if (blocks.length === 0) {
-      push(`${RECIPE_REL}: no build block declares a versionName/versionCode pair`);
+      push(`${RECIPE_REL}: no build block declares a versionName/versionCode/commit triple`);
     }
-    for (const [, name, code] of blocks) pairs.push([`build block ${name}`, name, code]);
+    // Every declared block must parse as a full triple — otherwise a block with re-ordered or
+    // interleaved fields (checkupdates appends blocks; hand edits happen) would silently skip
+    // validation while the well-formed blocks keep the guard green.
+    const declared = [...recipe.matchAll(/^[ \t]*-[ \t]*versionName:/gm)].length;
+    if (declared !== blocks.length) {
+      push(
+        `${RECIPE_REL}: ${declared} build block(s) declare versionName but only ${blocks.length} ` +
+          `parse as versionName/versionCode/commit triples — keep the three fields adjacent in ` +
+          `that order so every block is validated`,
+      );
+    }
+    for (const [, name, code, commit] of blocks) {
+      pairs.push([`build block ${name}`, name, code]);
+      // deploy.yml tags every release exactly v<version>, and AutoUpdateMode generates commit
+      // refs the same way — a hand-written block that deviates points the buildserver at a ref
+      // that will never exist.
+      if (commit !== `v${name}`) {
+        push(`${RECIPE_REL}: build block ${name}: commit "${commit}" must be "v${name}"`);
+      }
+    }
     for (const [label, name, code] of pairs) {
       const expected = encodeVersionCode(name);
       if (expected === null) {

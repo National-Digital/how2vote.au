@@ -143,4 +143,32 @@ describe("recipe version pairs", () => {
     expect(ok).toBe(false);
     expect(errors.some((e) => e.includes("checkupdates needs both"))).toBe(true);
   });
+
+  it("declares a build-block commit that is exactly v<versionName>", () => {
+    const recipe = readFileSync(resolve(ROOT, RECIPE_REL), "utf8");
+    const name = recipe.match(/versionName:\s*([\d.]+)/)?.[1];
+    const commit = recipe.match(/^\s*commit:[ \t]*(\S+)/m)?.[1];
+    expect(commit).toBe(`v${name}`);
+  });
+
+  it("catches a build-block commit that does not match its versionName", () => {
+    const files = realFiles();
+    files[RECIPE_REL] = files[RECIPE_REL].replace(/^(\s*)commit: \S+$/m, "$1commit: v9.9.9");
+    const { ok, errors } = verdict(files);
+    expect(ok).toBe(false);
+    expect(errors.some((e) => e.includes('must be "v'))).toBe(true);
+  });
+
+  it("catches a block whose fields are interleaved and so would skip triple validation", () => {
+    const files = realFiles();
+    // A second block with a field between versionCode and commit — the triple regex cannot see
+    // it, so without the declared-vs-parsed count it would be silently unvalidated.
+    files[RECIPE_REL] = files[RECIPE_REL].replace(
+      /^AutoUpdateMode:/m,
+      "  - versionName: 9.9.9\n    versionCode: 90909000\n    disable: example\n    commit: v9.9.9\n\nAutoUpdateMode:",
+    );
+    const { ok, errors } = verdict(files);
+    expect(ok).toBe(false);
+    expect(errors.some((e) => e.includes("parse as versionName/versionCode/commit"))).toBe(true);
+  });
 });
