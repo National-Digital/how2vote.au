@@ -126,23 +126,26 @@ jobs:
           BUILD_YEAR: ${{ steps.version.outputs.build-year }}
         run: node scripts/generate-store-metadata.mjs
 
-      # Supply reads images from the (generated, gitignored) metadata images dir; copy the committed
-      # screenshots + feature graphic into it, and render the store icon, so a release uploads the
-      # complete pack.
+      # Supply reads images from the (generated, gitignored) metadata images dir; the screenshots and
+      # feature graphic are staged there by generate-store-metadata above. The store icon is rendered
+      # here.
       #
       # The store icon is a DIFFERENT asset from the launcher icon inside the APK: Play shows it in
       # search and on the listing page, and with no icon.png the listing falls back to a generic
       # placeholder. It is rendered here from the same committed 1024px opaque mark the
       # native launcher icons are generated from (assets/icon-only.png via generate-native-assets),
       # so the store and the device can never show different marks.
-      - name: Stage store images for supply
+      - name: Render the Play store icon
         working-directory: apps/mobile
         run: |
           IMG=fastlane/metadata/android/en-AU/images
-          mkdir -p "$IMG/phoneScreenshots" "$IMG/tenInchScreenshots"
-          cp fastlane/screenshots/android-phone/*.png "$IMG/phoneScreenshots/"
-          cp fastlane/screenshots/android-tablet/*.png "$IMG/tenInchScreenshots/"
-          cp fastlane/screenshots/android-feature/feature.png "$IMG/featureGraphic.png"
+          # An unstaged pack is invisible at upload time — supply just sends nothing.
+          for d in phoneScreenshots tenInchScreenshots; do
+            test -n "$(ls -A "$IMG/$d" 2>/dev/null)" \
+              || { echo "::error::$IMG/$d is empty — generate-store-metadata did not stage Play's images"; exit 1; }
+          done
+          test -s "$IMG/featureGraphic.png" \
+            || { echo "::error::$IMG/featureGraphic.png missing — generate-store-metadata did not stage it"; exit 1; }
           # assets/ holds gitignored, deterministic intermediates, so the mark does not exist on a
           # fresh checkout — render it first (sharp only; the @capacitor/assets step that needs a
           # toolchain is NOT required just to get the source mark).

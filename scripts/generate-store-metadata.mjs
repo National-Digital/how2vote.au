@@ -10,6 +10,11 @@
  *
  *   apps/mobile/fastlane/metadata/ios/en-AU/…       (deliver)
  *   apps/mobile/fastlane/metadata/android/en-AU/…   (supply)
+ *   fastlane/metadata/android/en-US/…               (F-Droid, committed)
+ *
+ * fdroidserver globs listing metadata from the repo checkout ROOT, never the build subdir, so the
+ * third tree is the only one it reads. Locale is en-US, F-Droid's fallback locale. It is committed
+ * because no workflow of ours runs for an F-Droid build; `--check` byte-compares it.
  *
  * Every field is validated against the stores' hard length limits and the repo's brand rule (no
  * registration symbols/claims — see check-brand-trademark.mjs), and the description must carry
@@ -21,8 +26,20 @@
  *   node scripts/generate-store-metadata.mjs --check   # validate only (CI), writes nothing
  */
 
-import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
-import { dirname, join, resolve } from "node:path";
+import {
+  copyFileSync,
+  existsSync,
+  lstatSync,
+  mkdirSync,
+  readFileSync,
+  readdirSync,
+  readlinkSync,
+  rmSync,
+  symlinkSync,
+  unlinkSync,
+  writeFileSync,
+} from "node:fs";
+import { dirname, join, relative, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), "..");
@@ -32,6 +49,41 @@ const OPERATOR_REL = "apps/web/src/lib/operator.json";
 const COPY_REL = "apps/web/src/lib/product-copy.json";
 const OUT_REL = "apps/mobile/fastlane/metadata";
 const LOCALE = "en-AU";
+/** Repo-root path fdroidserver globs, and its fallback locale. */
+export const FDROID_OUT_REL = "fastlane/metadata/android";
+export const FDROID_LOCALE = "en-US";
+/** Where supply reads Play's images from. Gitignored. */
+const PLAY_IMAGE_REL = `${OUT_REL}/android/${LOCALE}/images`;
+
+/**
+ * Source → fastlane image name, for both Android consumers: supply reads copies under
+ * PLAY_IMAGE_REL, F-Droid reads committed symlinks in the mirror. Symlinks keep the two listings
+ * byte-identical; fdroidserver resolves them (its scanner skips symlinks, its image copier follows
+ * them). iOS needs no entry — `deliver` takes `screenshots_path` and selects by pixel dimensions.
+ */
+export const ANDROID_IMAGE_MAP = [
+  { name: "phoneScreenshots", source: "apps/mobile/fastlane/screenshots/android-phone", dir: true },
+  {
+    name: "tenInchScreenshots",
+    source: "apps/mobile/fastlane/screenshots/android-tablet",
+    dir: true,
+  },
+  {
+    name: "featureGraphic.png",
+    source: "apps/mobile/fastlane/screenshots/android-feature/feature.png",
+    dir: false,
+  },
+];
+
+/** Android files mirrored into the F-Droid tree — the text F-Droid renders on the app page. */
+export const FDROID_FILES = [
+  "android/title.txt",
+  "android/short_description.txt",
+  "android/full_description.txt",
+  // fdroidserver reads changelogs/default.txt as the "What's New" fallback when no
+  // <versionCode>.txt is present, which is our case: the recipe never writes per-code changelogs.
+  "android/changelogs/default.txt",
+];
 
 /** Store hard limits (characters). Apple: name/subtitle 30, promo 170, description 4000,
  * keywords 100. Play: title 30, short 80, full 4000. */
@@ -160,6 +212,89 @@ export function validateMetadata(files, operator, copy) {
   return issues;
 }
 
+/** @param {string} path store-relative key from buildMetadata (always `android/…`) */
+export function fdroidTargetRel(path) {
+  const rest = path.split("/").slice(1).join("/");
+  return `${FDROID_OUT_REL}/${FDROID_LOCALE}/${rest}`;
+}
+
+/** Absolute path of a mirror image link, and the relative target it must hold. */
+function imageLink({ name, source }) {
+  const linkPath = join(ROOT, FDROID_OUT_REL, FDROID_LOCALE, "images", name);
+  return { linkPath, want: relative(dirname(linkPath), join(ROOT, source)), source };
+}
+
+/** Stages Play's image pack as real copies — supply uploads files and rewrites this directory. */
+function stagePlayImages() {
+  const dest = join(ROOT, PLAY_IMAGE_REL);
+  for (const { name, source, dir } of ANDROID_IMAGE_MAP) {
+    const from = join(ROOT, source);
+    if (dir) {
+      const out = join(dest, name);
+      mkdirSync(out, { recursive: true });
+      for (const f of readdirSync(from)) {
+        if (/\.(png|jpe?g)$/i.test(f)) copyFileSync(join(from, f), join(out, f));
+      }
+    } else {
+      mkdirSync(dest, { recursive: true });
+      copyFileSync(from, join(dest, name));
+    }
+  }
+}
+
+/** Creates or repairs the mirror's image symlinks. Idempotent. */
+function writeImageLinks() {
+  for (const entry of ANDROID_IMAGE_MAP) {
+    const { linkPath, want } = imageLink(entry);
+    let current = null;
+    try {
+      if (lstatSync(linkPath).isSymbolicLink()) current = readlinkSync(linkPath);
+    } catch {
+      /* absent — created below */
+    }
+    if (current === want) continue;
+    mkdirSync(dirname(linkPath), { recursive: true });
+    // lstat, so an existing link is unlinked rather than followed into the screenshot pack.
+    try {
+      const st = lstatSync(linkPath);
+      if (st.isSymbolicLink() || st.isFile()) unlinkSync(linkPath);
+      else rmSync(linkPath, { recursive: true });
+    } catch {
+      /* nothing there */
+    }
+    symlinkSync(want, linkPath);
+  }
+}
+
+/** @returns {string[]} problems with the mirror's image links (empty when correct) */
+function checkImageLinks() {
+  const problems = [];
+  for (const entry of ANDROID_IMAGE_MAP) {
+    const { linkPath, want, source } = imageLink(entry);
+    const rel = relative(ROOT, linkPath);
+    let st;
+    try {
+      st = lstatSync(linkPath);
+    } catch {
+      problems.push(`${rel}: missing — run node scripts/generate-store-metadata.mjs and commit it`);
+      continue;
+    }
+    if (!st.isSymbolicLink()) {
+      problems.push(`${rel}: not a symlink — F-Droid would publish no screenshots`);
+      continue;
+    }
+    const got = readlinkSync(linkPath);
+    if (got !== want) {
+      problems.push(`${rel}: points at "${got}", expected "${want}"`);
+      continue;
+    }
+    if (!existsSync(linkPath)) {
+      problems.push(`${rel}: dangling — ${source} no longer exists`);
+    }
+  }
+  return problems;
+}
+
 function main() {
   const check = process.argv.includes("--check");
   const operator = JSON.parse(readFileSync(join(ROOT, OPERATOR_REL), "utf8"));
@@ -172,7 +307,32 @@ function main() {
     process.exit(1);
   }
   if (check) {
-    console.info(`✓ store metadata valid (${Object.keys(files).length} files, checked only)`);
+    // Committed and consumed without running this script, so compare bytes, not just validity.
+    const stale = [];
+    for (const path of FDROID_FILES) {
+      const rel = fdroidTargetRel(path);
+      const want = `${files[path]}\n`;
+      let got;
+      try {
+        got = readFileSync(join(ROOT, rel), "utf8");
+      } catch {
+        stale.push(`${rel}: missing — run node scripts/generate-store-metadata.mjs and commit it`);
+        continue;
+      }
+      if (got !== want) {
+        stale.push(`${rel}: stale — run node scripts/generate-store-metadata.mjs and commit it`);
+      }
+    }
+    stale.push(...checkImageLinks());
+    if (stale.length > 0) {
+      console.error("✗ F-Droid listing mirror out of date:");
+      for (const s of stale) console.error(`  - ${s}`);
+      process.exit(1);
+    }
+    console.info(
+      `✓ store metadata valid (${Object.keys(files).length} files, checked only; ` +
+        `F-Droid mirror current, ${ANDROID_IMAGE_MAP.length} image link(s) resolve)`,
+    );
     return;
   }
   for (const [path, content] of Object.entries(files)) {
@@ -187,7 +347,18 @@ function main() {
     mkdirSync(dirname(target), { recursive: true });
     writeFileSync(target, `${content}\n`);
   }
-  console.info(`✓ Generated ${Object.keys(files).length} store metadata files → ${OUT_REL}`);
+  for (const path of FDROID_FILES) {
+    const target = join(ROOT, fdroidTargetRel(path));
+    mkdirSync(dirname(target), { recursive: true });
+    writeFileSync(target, `${files[path]}\n`);
+  }
+  writeImageLinks();
+  stagePlayImages();
+  console.info(
+    `✓ Generated ${Object.keys(files).length} store metadata files → ${OUT_REL}, ` +
+      `plus ${FDROID_FILES.length} text + ${ANDROID_IMAGE_MAP.length} image link(s) into the ` +
+      `F-Droid mirror → ${FDROID_OUT_REL}/${FDROID_LOCALE}, and Play's image pack → ${PLAY_IMAGE_REL}`,
+  );
 }
 
 if (process.argv[1] === fileURLToPath(import.meta.url)) main();

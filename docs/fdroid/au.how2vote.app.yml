@@ -22,6 +22,7 @@ Categories:
   - Science & Education
 License: AGPL-3.0-or-later
 AuthorName: National Digital
+AuthorWebSite: https://how2vote.au/contact
 WebSite: https://how2vote.au
 SourceCode: https://github.com/National-Digital/how2vote.au
 IssueTracker: https://github.com/National-Digital/how2vote.au/issues
@@ -35,9 +36,9 @@ Repo: https://github.com/National-Digital/how2vote.au.git
 Builds:
   # First submitted release; checkupdates appends every later release automatically with the
   # same shape.
-  - versionName: 1.3.0
-    versionCode: 10300000
-    commit: v1.3.0
+  - versionName: 1.3.5
+    versionCode: 10305000
+    commit: v1.3.5
     subdir: apps/mobile/android
     sudo:
       # Node toolchain for the SvelteKit web bundle the shell wraps. Node major must satisfy
@@ -69,6 +70,9 @@ Builds:
 # production release exactly `v<version>`, so the generated commit ref always exists.
 AutoUpdateMode: Version v%v
 UpdateCheckMode: HTTP
-UpdateCheckData: https://how2vote.au/app-version.json|"versionCode":\s*(\d+)|https://how2vote.au/app-version.json|"versionName":\s*"([\d.]+)"
-CurrentVersion: 1.3.0
-CurrentVersionCode: 10300000
+# versionCode URL | versionCode regex | versionName URL | versionName regex. Field 3 is the "."
+# sentinel: apply the regex to the page already fetched. fdroidserver builds a second fetch with no
+# headers (checkupdates.py check_http) and it is answered 403 at the edge, so never name a URL there.
+UpdateCheckData: https://how2vote.au/app-version.json|"versionCode":\s*(\d+)|.|"versionName":\s*"([\d.]+)"
+CurrentVersion: 1.3.5
+CurrentVersionCode: 10305000

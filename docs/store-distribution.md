@@ -11,7 +11,7 @@ see below), plus links the user chooses to follow out to the AEC or They Vote Fo
 
 ## Channel awareness
 
-One build-time flag, `PUBLIC_DIST_CHANNEL` (`web` default | `ios` | `android`), read only by
+One build-time flag, `PUBLIC_DIST_CHANNEL` (`web` default | `ios` | `android` | `fdroid`), read only by
 `apps/web/src/lib/channel.ts`. Native behaviour gates on `isNativeShell`, never on a specific
 platform:
 
@@ -298,8 +298,8 @@ insights — at each store's required device size (iPhone 6.7" 1290×2796, iPad 
 Android phone 1080×1920, Android 10" 1600×2560) and writes PNGs into the committed pack under
 `apps/mobile/fastlane/screenshots/`. The Play feature graphic (1024×500) comes from the brand mark
 (`generate-native-assets.mjs`). On release, iOS `deliver` reads `fastlane/screenshots` and Android
-`supply` uploads them (the android job copies them into supply's images dir) — so a release is
-click-paste. Regenerate with `pnpm --filter @how2vote/web screenshots` whenever the UI changes,
+`supply` uploads them (`generate-store-metadata.mjs` stages them into supply's images dir) — so a
+release is click-paste. Regenerate with `pnpm --filter @how2vote/web screenshots` whenever the UI changes,
 and review them before submission.
 
 ## Channel freshness badges
@@ -389,11 +389,14 @@ How the pieces fit — each fact is enforced on every PR (guards named on the ri
 | --- | --- | --- |
 | Recipe (reference copy) | `docs/fdroid/au.how2vote.app.yml`; the authoritative copy lives in fdroiddata once the MR merges — mirror review changes back | recipe invariants in `check-fdroid-ready.mjs` |
 | Version discovery | `checkupdates` polls `https://how2vote.au/app-version.json`, published on every production deploy by `scripts/generate-app-version.mjs`; `AutoUpdateMode: Version v%v` maps the pair to the release tag | payload unit tests |
+| One fetch only | `UpdateCheckData`'s versionName URL is the **`.` sentinel** (re-use the fetched page), never the URL again: fdroidserver builds its second request with **no headers**, and that one is answered **403** at the edge. Both values are in the one JSON document | `check-fdroid-ready.mjs` asserts field 3 is `.` |
 | Version injection | the gradle files carry **no literal version**: the recipe's prebuild writes the build block's `$$VERCODE$$`/`$$VERSION$$` into `gradle.properties` — the same project properties store CI passes as `-P` flags | the `fdroid` job builds with **no** `-P` flags and asserts the APK's pair |
 | versionCode | the shared `resolve-store-version` encoding with the three `run_number` digits pinned to `000` (that action uses `run_number`, never `run_attempt`); the Play build of the same release always ranks higher, which is irrelevant across channels (different signing keys) but keeps the numbers cross-referenceable | formula-parity check |
 | Listing text | the fastlane **android** metadata tree is **committed** — F-Droid imports it from the repo at the tag; a gitignored tree would publish an empty listing | drift-checked against the generator |
+| Listing images | `ANDROID_IMAGE_MAP` in `generate-store-metadata.mjs` maps the screenshot pack to fastlane image names for both Android consumers: committed **symlinks** for F-Droid, staged **copies** for Play | `--check` asserts each link is a symlink and resolves; `android-release.yml` fails closed on an unstaged pack |
+| Listing **path** | F-Droid globs `<repo root>/fastlane/metadata/android/<locale>/`, `<repo root>/metadata/<locale>/` and `src/<flavour>/fastlane/…` — all relative to the **checkout root, never the build subdir** — so the committed listing lives at **`fastlane/metadata/android/en-US/`**. Locale is `en-US`, F-Droid's fallback locale | presence in `check-fdroid-ready.mjs`, bytes in `generate-store-metadata.mjs --check` |
 | Scanner | no Google service reference anywhere in the gradle files (the Capacitor template's dormant push-services block is removed) | scanner simulation in `check-fdroid-ready.mjs` |
-| Channel | F-Droid ships the **`android`** channel build — deliberately not a fourth channel value, so nothing can drift between the Play and F-Droid binaries except the version pair and the signer | — |
+| Channel | F-Droid ships the **`fdroid`** channel (`PUBLIC_DIST_CHANNEL=fdroid`), a fourth value in `apps/web/src/lib/channel.ts`. An F-Droid install cannot be updated through Play (different signing keys), so the in-app update remedy resolves to `f-droid.org/packages/<appId>` rather than `market://`. Nothing else differs from the `android` build | `check-store-channel.mjs`; the `fdroid` job builds this channel, and the per-channel behaviour specs cover the branch |
 
 The `fdroid` job in `mobile-ci.yml` mirrors the recipe step for step (property
 injection → android-channel web build → `cap sync` → `gradlew assembleRelease`, then asserts the
@@ -402,24 +405,41 @@ here first.
 
 **Publication steps (one-time):**
 
-1. Fork `gitlab.com/fdroid/fdroiddata`; copy the reference recipe to
-   `metadata/au.how2vote.app.yml`; set the first build block's `versionName`/`versionCode`/
-   `commit` to a real release tag (`versionCode` = the pair published at
-   `https://how2vote.au/app-version.json`).
-2. Dry-run with fdroidserver before opening the MR: `fdroid readmeta`, `fdroid checkupdates
-   au.how2vote.app`, then `fdroid build -v -l au.how2vote.app`.
-3. Open the MR and respond to packager review; mirror any conventions the packagers require
+1. Fork `gitlab.com/fdroid/fdroiddata` (the fork must be **public** with an **unprotected** branch —
+   F-Droid fast-forward-merges and cannot rebase a protected branch); copy the reference recipe to
+   `metadata/au.how2vote.app.yml`. The build block and `CurrentVersion*` must name a real release tag
+   and the pair published at `https://how2vote.au/app-version.json` — keep the reference copy in
+   step with each release so the two never disagree.
+2. **The pinned tag must be one whose tree contains `fastlane/metadata/android/en-US/`** — F-Droid
+   reads the listing out of the checkout at that exact ref. Check with
+   `git ls-tree -r --name-only <tag> | grep '^fastlane/'`.
+3. Dry-run with fdroidserver before opening the MR: `fdroid readmeta`, `fdroid lint
+   au.how2vote.app`, `fdroid rewritemeta au.how2vote.app` (fdroiddata CI enforces canonical field
+   order, and the submitted copy carries **no comments**), `fdroid checkupdates au.how2vote.app`,
+   then `fdroid build -v -l au.how2vote.app`.
+4. Open the MR and respond to packager review; mirror any conventions the packagers require
    (e.g. a srclib-based Node install instead of NodeSource in `sudo:`) back into `docs/fdroid/`.
-4. After merge the app appears in the index within a build cycle or two. F-Droid signs with
+5. After merge the app appears in the index within a build cycle or two. F-Droid signs with
    **its own key** — reproducible builds under our signature (`AllowedAPKSigningKeys`) is a
    later, optional upgrade.
-5. Wire `FDROID_LIVE_VERSION` for the README badge from the index:
+6. Wire `FDROID_LIVE_VERSION` for the README badge from the index:
    `https://f-droid.org/api/v1/packages/au.how2vote.app`.
 
-**Screenshots**: the listing ships text-only — F-Droid reads images from
-`metadata/android/<locale>/images/**` in the repo at the tag, but that directory is where the
-release workflow *stages* supply uploads, and a second committed copy of the screenshot pack is
-deliberately avoided.
+**Screenshots** ship as **symlinks**. F-Droid reads images from `<locale>/images/**` beside the
+listing text, so three committed links point into the screenshot pack:
+
+| Link (committed, mode `120000`) | → target |
+| --- | --- |
+| `fastlane/metadata/android/en-US/images/phoneScreenshots` | `apps/mobile/fastlane/screenshots/android-phone` |
+| `fastlane/metadata/android/en-US/images/tenInchScreenshots` | `apps/mobile/fastlane/screenshots/android-tablet` |
+| `fastlane/metadata/android/en-US/images/featureGraphic.png` | `apps/mobile/fastlane/screenshots/android-feature/feature.png` |
+
+`ANDROID_IMAGE_MAP` in `generate-store-metadata.mjs` defines these and Play's staged copies, so one
+`pnpm --filter @how2vote/web screenshots` run feeds all three channels and git holds one copy of the
+pack. fdroidserver resolves the links: its scanner skips symlinks and `_strip_and_copy_image` follows
+them. `--check` asserts each link *is* a symlink and resolves — a checkout without symlink support
+materialises them as text files, and a moved pack leaves them dangling. The app icon is not linked;
+fdroidserver extracts it from the built APK.
 
 ## GitHub configuration (all secrets/vars, per current patterns)
 

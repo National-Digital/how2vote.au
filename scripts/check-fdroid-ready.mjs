@@ -19,9 +19,11 @@
  *      version pair the recipe itself declares (the CurrentVersion header and each build block) is
  *      evaluated against that encoding, so a hand-edited digit cannot mis-rank a release.
  *   4. The recipe reference itself — public repo URL, right subdir, gradle build, the
- *      property-injection prebuild line, the update-check endpoint, AGPL license.
+ *      property-injection prebuild line, the update-check endpoint, AGPL license, and a
+ *      single-fetch UpdateCheckData.
  *   5. Listing metadata — the fastlane android text tree is COMMITTED (F-Droid imports it from
- *      the repo at the tag; a gitignored tree would publish an empty listing).
+ *      the repo at the tag; a gitignored tree would publish an empty listing), at the repo-root
+ *      path fdroidserver globs (see FDROID_LISTING_RELS).
  *   6. No remote content — capacitor.config.ts must never grow a `server` block; the offline
  *      guarantee and store rule 2.5.2 both hang on bundled assets (and F-Droid would reject a
  *      wrapper around a remote site outright).
@@ -66,11 +68,26 @@ export const FORBIDDEN = [
   "installreferrer",
 ];
 
-/** The committed listing files F-Droid imports from the repo at the release tag. */
+/** The committed Play listing text (source of the F-Droid mirror below). */
 export const LISTING_RELS = [
   "apps/mobile/fastlane/metadata/android/en-AU/title.txt",
   "apps/mobile/fastlane/metadata/android/en-AU/short_description.txt",
   "apps/mobile/fastlane/metadata/android/en-AU/full_description.txt",
+];
+
+/**
+ * The listing files F-Droid imports. fdroidserver globs three locations, all relative to the repo
+ * checkout ROOT rather than the build subdir:
+ *   <checkout>/fastlane/metadata/android/<locale>/
+ *   <checkout>/metadata/<locale>/
+ *   <checkout>/src/<buildFlavor>/fastlane/metadata/android/<locale>/   (flavour builds only)
+ * Nothing under apps/mobile/ is read. generate-store-metadata.mjs writes these; --check diffs
+ * their bytes.
+ */
+export const FDROID_LISTING_RELS = [
+  "fastlane/metadata/android/en-US/title.txt",
+  "fastlane/metadata/android/en-US/short_description.txt",
+  "fastlane/metadata/android/en-US/full_description.txt",
 ];
 
 /** The one shared versionCode formula, as each side spells it. */
@@ -155,6 +172,29 @@ export function verdict(files) {
     }
   }
 
+  // 4a — UpdateCheckData is `codeURL|codeRegex|nameURL|nameRegex`. fdroidserver sends
+  // `User-Agent: F-Droid` on the first request but constructs the second with no headers
+  // (checkupdates.py check_http), and that request is answered 403 at the edge. The `.` sentinel
+  // re-uses the fetched page, which both regexes match — the pair is in one JSON document.
+  if (recipe !== null) {
+    const ucd = recipe.match(/^UpdateCheckData:[ \t]*(\S+)[ \t]*$/m)?.[1];
+    if (ucd === undefined) {
+      push(`${RECIPE_REL}: UpdateCheckData missing — UpdateCheckMode HTTP needs it`);
+    } else {
+      const fields = ucd.split("|");
+      if (fields.length !== 4) {
+        push(
+          `${RECIPE_REL}: UpdateCheckData must have 4 |-separated fields, found ${fields.length}`,
+        );
+      } else if (fields[2] !== ".") {
+        push(
+          `${RECIPE_REL}: UpdateCheckData's versionName URL is "${fields[2]}" — it must be the "." ` +
+            `sentinel; a URL there triggers a second, headerless fetch that the edge answers 403`,
+        );
+      }
+    }
+  }
+
   // 4b — every version pair the recipe declares matches the shared encoding. checkupdates derives
   // these from the published endpoint, but the placeholder block and the CurrentVersion header are
   // hand-written: a wrong digit here ranks a release below its predecessor on the F-Droid index.
@@ -225,7 +265,15 @@ export function verdict(files) {
   // only assert the files exist IN THE TREE, i.e. were not re-gitignored).
   for (const rel of LISTING_RELS) {
     if (typeof files[rel] !== "string" || files[rel].trim() === "") {
-      push(`${rel}: missing or empty — F-Droid imports the listing from the repo at the tag`);
+      push(`${rel}: missing or empty — the source of the F-Droid listing mirror`);
+    }
+  }
+  for (const rel of FDROID_LISTING_RELS) {
+    if (typeof files[rel] !== "string" || files[rel].trim() === "") {
+      push(
+        `${rel}: missing or empty — the path fdroidserver globs for the listing. ` +
+          `Run node scripts/generate-store-metadata.mjs and commit the tree`,
+      );
     }
   }
 
@@ -246,6 +294,7 @@ function main() {
   const rels = [
     ...GRADLE_RELS,
     ...LISTING_RELS,
+    ...FDROID_LISTING_RELS,
     RECIPE_REL,
     ".github/actions/resolve-store-version/action.yml",
     "scripts/generate-app-version.mjs",
