@@ -534,30 +534,31 @@ jobs:
           git diff --exit-code apps/mobile/fastlane/metadata/android fastlane/metadata/android \
             || { echo "::error::committed fastlane android metadata drifted — run 'node scripts/generate-store-metadata.mjs' and commit"; exit 1; }
 
-      # ---- From here on, mirror docs/fdroid/au.how2vote.app.yml step for step. The point is to
-      # ---- build EXACTLY the way F-Droid's buildserver will: version pair injected via
-      # ---- gradle.properties (never -P flags), web bundle built from source, assembleRelease.
+      # ---- fdroid-recipe-build.mjs runs each recipe phase the way fdroidserver does (one bash,
+      # ---- "; " joined, cwd = subdir). The commands must come from the recipe, never be restated
+      # ---- here: a restatement can pass while the buildserver fails.
       # 9.9.9 under the shared encoding, (MAJOR*10000 + MINOR*100 + PATCH)*1000, is 90909000.
-      - name: Inject version pair the way the recipe's prebuild does
-        run: printf 'versionCode=90909000\nversionName=9.9.9\n' >> apps/mobile/android/gradle.properties
+      - run: corepack enable
 
-      # The fdroid channel, matching the recipe: F-Droid installs cannot be updated through Play (a
-      # different signing key), so the in-app update remedy has to point at the F-Droid listing.
-      # Building this mirror on the `android` channel would stop it mirroring the thing it verifies.
-      - name: Build web bundle (fdroid channel)
-        uses: ./.github/actions/build-web-channel
+      - uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e # v6
         with:
-          channel: fdroid
-          app-version: 9.9.9
+          node-version-file: .nvmrc
+          cache: pnpm
 
-      - name: Sync Capacitor Android project
-        run: pnpm --filter @how2vote/mobile sync:android
+      # Installs dependencies and injects the version pair into gradle.properties — the recipe's
+      # prebuild, so a broken injection path fails here rather than on the buildserver.
+      - name: Recipe prebuild
+        run: node scripts/fdroid-recipe-build.mjs prebuild --version 9.9.9 --code 90909000
 
       - name: Set up Java
         uses: actions/setup-java@03ad4de0992f5dab5e18fcb136590ce7c4a0ac95 # v5.6.0
         with:
           distribution: temurin
           java-version: "21"
+
+      # Builds the fdroid-channel web bundle and runs cap sync, from the recipe's own build phase.
+      - name: Recipe build
+        run: node scripts/fdroid-recipe-build.mjs build --version 9.9.9 --code 90909000
 
       # assembleRelease (APK), not bundleRelease: F-Droid builds and signs APKs. No -P flags — if
       # the property-injection path broke, the assertion below catches the 0.0.0-dev fallback.

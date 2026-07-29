@@ -195,6 +195,24 @@ export function verdict(files) {
     }
   }
 
+  // 4a2 — the Node major the recipe's sudo installs must match .nvmrc. The CI mirror does not run
+  // `sudo` (the runner provides Node), so a drift here is invisible until the buildserver runs.
+  const nvmrc = need(".nvmrc");
+  if (recipe !== null && nvmrc !== null) {
+    const recipeMajor = recipe.match(/deb\.nodesource\.com\/setup_(\d+)\.x/)?.[1];
+    const wanted = nvmrc.trim().split(".")[0];
+    if (recipeMajor === undefined) {
+      push(
+        `${RECIPE_REL}: no nodesource setup_<major>.x line — the buildserver needs Node installed`,
+      );
+    } else if (recipeMajor !== wanted) {
+      push(
+        `${RECIPE_REL}: installs Node ${recipeMajor} but .nvmrc pins ${wanted} — the F-Droid build ` +
+          `would run a different Node major than every other build of this repo`,
+      );
+    }
+  }
+
   // 4b — every version pair the recipe declares matches the shared encoding. checkupdates derives
   // these from the published endpoint, but the placeholder block and the CurrentVersion header are
   // hand-written: a wrong digit here ranks a release below its predecessor on the F-Droid index.
@@ -298,6 +316,7 @@ function main() {
     RECIPE_REL,
     ".github/actions/resolve-store-version/action.yml",
     "scripts/generate-app-version.mjs",
+    ".nvmrc",
     "apps/mobile/capacitor.config.ts",
     "apps/mobile/package.json",
     "LICENSE",
