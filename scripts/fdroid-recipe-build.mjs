@@ -39,7 +39,9 @@ export const PHASES = ["prebuild", "build"];
  */
 export function phaseCommands(recipe, phase) {
   const lines = recipe.split("\n");
-  const start = lines.findIndex((l) => new RegExp(`^\\s{4}${phase}:\\s*$`).test(l));
+  // Compared as a string, never compiled: phase reaches here from argv.
+  const header = `    ${phase}:`;
+  const start = lines.findIndex((l) => l.trimEnd() === header);
   if (start === -1) return [];
   /** @type {string[]} */
   const cmds = [];

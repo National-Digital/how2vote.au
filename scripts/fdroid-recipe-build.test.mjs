@@ -61,3 +61,13 @@ describe("recipe command hygiene", () => {
     expect(build).toContain("--filter @how2vote/web...");
   });
 });
+
+describe("phase argument handling", () => {
+  it("treats the phase as a literal, so regex metacharacters cannot match", () => {
+    const recipe = ["    build:", "      - true", "    gradle:"].join("\n");
+    expect(phaseCommands(recipe, "buil.")).toEqual([]);
+    expect(phaseCommands(recipe, "(build)")).toEqual([]);
+    expect(phaseCommands(recipe, ".*")).toEqual([]);
+    expect(phaseCommands(recipe, "build")).toEqual(["true"]);
+  });
+});
