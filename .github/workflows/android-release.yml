@@ -38,8 +38,12 @@ permissions:
   contents: read
 
 concurrency:
-  # One lane for all Android releases so two quick releases serialize. Never cancel a signing/upload.
-  group: android-release
+  # One lane PER RELEASE, not one lane for all of them. The promote job waits on the play-store
+  # environment's reviewer, and a run parked at an environment gate still occupies its concurrency
+  # group — so a single group made one unapproved promotion block every later release indefinitely,
+  # with the queued runs showing only "pending". Keyed by ref, an unapproved v1 blocks nothing but
+  # another v1. Still never cancels in progress: a signing or store upload must always finish.
+  group: android-release-${{ github.event.release.tag_name || github.ref }}
   cancel-in-progress: false
 
 jobs:
