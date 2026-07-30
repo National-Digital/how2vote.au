@@ -414,9 +414,10 @@ workflow: a restatement can pass while the buildserver fails.
 
 1. Fork `gitlab.com/fdroid/fdroiddata` (the fork must be **public** with an **unprotected** branch —
    F-Droid fast-forward-merges and cannot rebase a protected branch); copy the reference recipe to
-   `metadata/au.how2vote.app.yml`. The build block and `CurrentVersion*` must name a real release tag
-   and the pair published at `https://how2vote.au/app-version.json` — keep the reference copy in
-   step with each release so the two never disagree.
+   `metadata/au.how2vote.app.yml`. The build block's `commit` is the **full hash** of the release
+   tag (fdroiddata prefers it — a tag can be moved after review); `CurrentVersion*` must be the pair
+   published at `https://how2vote.au/app-version.json` — keep the reference copy in step with each
+   release so the two never disagree.
 2. **The pinned tag must be one whose tree contains `fastlane/metadata/android/en-US/`** — F-Droid
    reads the listing out of the checkout at that exact ref. Check with
    `git ls-tree -r --name-only <tag> | grep '^fastlane/'`.

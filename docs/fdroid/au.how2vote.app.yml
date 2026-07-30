@@ -11,7 +11,8 @@
 # Versioning: the gradle files carry NO literal version (values arrive as project properties).
 # checkupdates therefore polls https://how2vote.au/app-version.json (published on every
 # production deploy by scripts/generate-app-version.mjs) for the versionName/versionCode pair,
-# writes them into a new build block below (AutoUpdateMode: Version → commit: v<versionName>),
+# writes them into a new build block below (AutoUpdateMode: Version → the v<versionName> tag, or
+# the hash it resolves to when a clone is available),
 # and at build time the prebuild line feeds $$VERSION$$/$$VERCODE$$ back into gradle via
 # gradle.properties. versionCode = (MAJOR×10000 + MINOR×100 + PATCH)×1000 — the shared
 # resolve-store-version encoding with the run-number digits pinned to 000, so an F-Droid build
@@ -47,9 +48,12 @@ AllowedAPKSigningKeys: 617efd39535bb3af10ce0778b6f20ee4597f221baeb3f3e07547bfcc1
 Builds:
   # First submitted release; checkupdates appends every later release automatically with the
   # same shape.
+  # commit is the full hash, not the v1.3.10 tag: a tag can be moved after review, a hash cannot.
+  # Same tree either way. Keep versionName/versionCode/commit adjacent — the guard validates the
+  # triple as a unit.
   - versionName: 1.3.10
     versionCode: 10310000
-    commit: v1.3.10
+    commit: 615f25814211dd7ce7a0667533e37a3e2fc3943d
     subdir: apps/mobile/android
     sudo:
       # Node toolchain for the SvelteKit web bundle the shell wraps. Node major must satisfy
