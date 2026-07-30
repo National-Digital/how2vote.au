@@ -111,17 +111,30 @@ jobs:
           # PR title). Both drive scripts/next-version.mjs.
           PR_TITLE: ${{ github.event.pull_request.title }}
         run: |
+          # Fail closed: an empty version would deploy a null app-version.json payload silently.
+          set -euo pipefail
           NEXT=$(node scripts/next-version.mjs "${PR_TITLE:-$(git log -1 --pretty=%s)}")
           if [ "${{ github.event_name }}" = "pull_request" ]; then
             echo "branch=pr-${{ github.event.pull_request.number }}" >> "$GITHUB_OUTPUT"
             echo "noindex=1" >> "$GITHUB_OUTPUT"
             echo "version=${NEXT}-pr${{ github.event.pull_request.number }}" >> "$GITHUB_OUTPUT"
-          else
+            echo "Resolved version: ${NEXT}-pr${{ github.event.pull_request.number }}"
+          elif [ "${{ github.event_name }}" = "push" ]; then
             echo "branch=main" >> "$GITHUB_OUTPUT"
             echo "noindex=" >> "$GITHUB_OUTPUT"
             echo "version=${NEXT}" >> "$GITHUB_OUTPUT"
+            echo "Resolved version: ${NEXT}"
+          else
+            # Only a push can tag and release (see the tag job's `if`), so only a push may deploy a
+            # bumped version. A scheduled or dispatched redeploy re-publishes the version already
+            # released: bumping here would advertise a versionName at app-version.json that no tag
+            # will ever exist for, and F-Droid's checkupdates would pin a ref that cannot resolve.
+            CURRENT=$(node scripts/next-version.mjs --print-current)
+            echo "branch=main" >> "$GITHUB_OUTPUT"
+            echo "noindex=" >> "$GITHUB_OUTPUT"
+            echo "version=${CURRENT}" >> "$GITHUB_OUTPUT"
+            echo "Resolved version: ${CURRENT} (redeploy of the released version; next would be ${NEXT})"
           fi
-          echo "Resolved version: ${NEXT}"
 
       - name: Build
         if: steps.secrets.outputs.ready == 'true'
