@@ -586,19 +586,22 @@ jobs:
         run: |
           APK=apps/mobile/android/app/build/outputs/apk/release/app-release-unsigned.apk
           AAPT2=$(ls "$ANDROID_HOME"/build-tools/*/aapt2 | sort -V | tail -1)
-          EXPECTED="android.permission.INTERNET"
+          # Two entries, both accounted for in the register: INTERNET, and the app-local signature
+          # permission androidx.core injects so its context-registered receivers are not exported.
+          EXPECTED=$(printf '%s\n' \
+            "android.permission.INTERNET" \
+            "au.how2vote.app.DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION" | sort -u)
           DUMP=$("$AAPT2" dump permissions "$APK")
           echo "$DUMP"
           # Matches the sdk-scoped variants too (uses-permission-sdk-23), which a dependency can
           # introduce and which a plain "uses-permission:" match would miss.
           ACTUAL=$(echo "$DUMP" | sed -n "s/^uses-permission[^:]*: name='\([^']*\)'.*/\1/p" | sort -u)
           if [ "$ACTUAL" != "$EXPECTED" ]; then
-            # One line: a GitHub annotation cannot carry the newlines aapt2's list has.
-            FLAT=$(echo "$ACTUAL" | tr '\n' ' ')
-            echo "::error::merged APK permissions changed — expected [$EXPECTED], got [${FLAT:-none}]. A dependency added a permission: keep it only if it is genuinely needed, and update the permissions register in docs/store-distribution.md plus the manifest comment in the same PR."
+            # One line each: a GitHub annotation cannot carry the newlines aapt2's list has.
+            echo "::error::merged APK permissions changed — expected [$(echo "$EXPECTED" | tr '\n' ' ')], got [$(echo "$ACTUAL" | tr '\n' ' ')]. A dependency changed the set: keep an addition only if it is genuinely needed, and update the permissions register in docs/store-distribution.md plus the manifest comment in the same PR."
             exit 1
           fi
-          echo "✓ merged permission set is $EXPECTED and nothing else"
+          echo "✓ merged permission set matches the register"
 
   comment:
     name: Preview install links

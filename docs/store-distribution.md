@@ -153,8 +153,9 @@ call site is removed rather than left declared. Egress itself (CSP, `connect-src
 register) is a separate matter, covered by the research posture above and `docs/privacy/`; the store
 privacy declarations have their own section below.
 
-**Android — declared.** One `uses-permission`, `android.permission.INTERNET`
-(`apps/mobile/android/app/src/main/AndroidManifest.xml`). It is used for three things:
+**Android — declared.** One `uses-permission` of ours, `android.permission.INTERNET`
+(`apps/mobile/android/app/src/main/AndroidManifest.xml`) — what the built APK ends up requesting is
+under "merged" below. It is used for three things:
 
 1. **User-initiated first-party requests.** The contact form (`apps/web/src/lib/forms.ts` →
    `POST /api/forms`) and the optional research contribution (`apps/web/src/lib/survey.ts` →
@@ -176,13 +177,20 @@ config, over-the-air asset or dataset updates, or any startup request. Dataset, 
 fonts are compiled into the binary, so the quiz, the comparison and the card work with no
 connection.
 
-**Android — merged.** What ships is the manifest merger's output, not the authored file: Gradle
-folds in every dependency's library manifest. None of the six Capacitor packages the shell depends
-on (`android`, `app`, `browser`, `core`, `preferences`, `share`) declares a permission, so the merged
-set is `INTERNET` alone. The `fdroid` job asserts that against the built APK
-(`aapt2 dump permissions`) and fails if it changes, so a dependency that adds a permission cannot
-reach a store listing or an F-Droid review while this register still claims one. The job runs when a
-PR touches `apps/mobile/**` or `pnpm-lock.yaml`, and on a draft PR only once it is marked ready.
+**Android — merged.** What ships is the manifest merger's output, not the authored file: Gradle folds
+in every dependency's library manifest, and the built APK requests **two**:
+
+| In the APK | Origin | What it grants |
+| --- | --- | --- |
+| `android.permission.INTERNET` | this manifest | as above |
+| `au.how2vote.app.DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION` | injected by `androidx.core` | nothing outside the app — a `signature`-level permission the app both declares and uses, so its context-registered broadcast receivers are not exported (required from Android 14 / `targetSdk` 34). Only code signed with our key can hold it, and no other app can be granted it |
+
+None of the Capacitor packages the shell depends on (`android`, `app`, `browser`, `core`,
+`preferences`, `share`) declares a permission of its own. The `fdroid` job asserts the pair against
+the built APK (`aapt2 dump permissions`) and fails if the set changes, so a dependency that adds one
+cannot reach a store listing or an F-Droid review while this register still says otherwise. The job
+runs when a PR touches `apps/mobile/**` or `pnpm-lock.yaml`, and on a draft PR only once it is
+marked ready.
 
 **iOS.** No purpose strings at all: `apps/mobile/ios/App/App/Info.plist` carries no
 `NS*UsageDescription` key and no `UIBackgroundModes`. Neither platform uses camera, microphone,
@@ -462,7 +470,7 @@ How the pieces fit — each fact is enforced on every PR (guards named on the ri
 | Artifact host | `dist.how2vote.au` — Cloudflare R2 bucket `how2vote-dist`, read-only over that domain, keyed `app/<channel>/how2vote-<channel>-<version>.apk`. Not a GitHub release asset: releases here are **immutable**, and `deploy.yml` publishes before dispatching the store workflows, so an asset can never be attached afterwards. The channel appears in both the path and the filename because a saved APK loses its URL and its signature decides whether it installs | `fdroid-publish` refuses to replace a published object, then re-downloads over the public domain and compares SHA-256 with the signed file |
 | Signing flags | `apksigner --alignment-preserved` is **required**: apksigner re-aligns the zip by default, shifting nearly every entry, and any digest computed over the original layout then fails — F-Droid could never match its own build. v1 (JAR) signing is disabled: minSdk 24 supports v2 everywhere, and v1 adds ~200 KB of per-entry manifests | `fdroid-apk` runs `apksigcopier compare` against the unsigned build, which is the check F-Droid's verification performs |
 | Signature classes | the F-Droid APK is signed by our dedicated F-Droid key; Play distributes split APKs signed by Google's escrowed key. Same package name, different signers — neither can update over the other, so the two are separate install classes and a user must uninstall before switching | — |
-| Permissions | one declaration, `INTERNET`, used only for the user-initiated first-party form and opt-in research POSTs, outbound links, and the `https://localhost` WebView origin Capacitor requires it for. Full register under "Declared permissions" above | the `fdroid` job asserts the **merged** set from the built APK with `aapt2 dump permissions` |
+| Permissions | one declaration of ours, `INTERNET`, used only for the user-initiated first-party form and opt-in research POSTs, outbound links, and the `https://localhost` WebView origin Capacitor requires it for; the merged APK also carries the app-local signature permission `androidx.core` injects. Full register under "Declared permissions" above | the `fdroid` job asserts the **merged** set from the built APK with `aapt2 dump permissions` |
 | Scanner | no Google service reference anywhere in the gradle files (the Capacitor template's dormant push-services block is removed) | scanner simulation in `check-fdroid-ready.mjs` |
 | Channel | F-Droid ships the **`fdroid`** channel (`PUBLIC_DIST_CHANNEL=fdroid`), a fourth value in `apps/web/src/lib/channel.ts`. An F-Droid install cannot be updated through Play (different signing keys), so the in-app update remedy resolves to `f-droid.org/packages/<appId>` rather than `market://`. Nothing else differs from the `android` build | `check-store-channel.mjs`; the `fdroid` job builds this channel, and the per-channel behaviour specs cover the branch |
 
