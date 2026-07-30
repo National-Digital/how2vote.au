@@ -498,10 +498,9 @@ workflow: a restatement can pass while the buildserver fails.
    then `fdroid build -v -l au.how2vote.app`.
 4. Open the MR and respond to packager review; mirror any conventions the packagers require
    (e.g. a srclib-based Node install instead of NodeSource in `sudo:`) back into `docs/fdroid/`.
-   **While the MR is open the pin does not move**, even as releases keep shipping: bumping the
-   reviewed tag invalidates any build a packager has already run, and `checkupdates` picks up
-   every release since the pin the first time it runs after merge. Step 1's "in step with each
-   release" applies from then on.
+   **Keep the recipe at the current release, including mid-review**: fdroiddata CI runs
+   `fdroid checkupdates` and fails on any diff. Append a block and bump `CurrentVersion*` in both
+   the MR and this mirror per release; never rewrite the reviewed block.
 5. After merge the app appears in the index within a build cycle or two. Because `Binaries:` and
    `AllowedAPKSigningKeys:` are both set, F-Droid builds the tag, compares against our published
    APK, and on a match publishes **our** binary under **our** signature; it falls back to signing
