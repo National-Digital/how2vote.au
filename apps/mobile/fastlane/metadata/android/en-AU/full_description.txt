@@ -3,7 +3,7 @@ How2Vote is an independent, non-partisan comparison tool for Australian federal 
 Answer 50 propositions parliament has actually voted on. The app shows how closely each party's recorded parliamentary votes match your positions — against the candidates on your ballot, in official ballot order. Then build your own voting plan: nothing is ranked for you and no preference is recommended. You author your own preference order.
 
 WORKS FULLY OFFLINE
-The complete dataset ships inside the app — questions, scoring and your card all work with no connection, including at a polling place with no signal.
+The complete dataset ships inside the app — questions, scoring and your card all work with no connection, including at a polling place with no signal. The app goes online only for what you ask it to: sending the contact form, contributing to the anonymous research if you opt in, or opening a link out to the AEC or They Vote For You.
 
 BUILT FROM THE PARLIAMENTARY RECORD
 Comparisons are built from recorded parliamentary votes (public Hansard data via They Vote For You), not campaign statements. Every proposition links to the parliamentary divisions behind it, so everything you are shown can be checked at the source.
