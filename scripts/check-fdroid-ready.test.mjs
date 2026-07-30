@@ -186,19 +186,49 @@ describe("recipe version pairs", () => {
     expect(errors.some((e) => e.includes("checkupdates needs both"))).toBe(true);
   });
 
-  it("declares a build-block commit that is exactly v<versionName>", () => {
+  it("declares a build-block commit that is either v<versionName> or a full hash", () => {
     const recipe = readFileSync(resolve(ROOT, RECIPE_REL), "utf8");
     const name = recipe.match(/versionName:\s*([\d.]+)/)?.[1];
     const commit = recipe.match(/^\s*commit:[ \t]*(\S+)/m)?.[1];
-    expect(commit).toBe(`v${name}`);
+    expect(commit === `v${name}` || /^[0-9a-f]{40}$/.test(commit)).toBe(true);
   });
 
-  it("catches a build-block commit that does not match its versionName", () => {
+  it("accepts the v<versionName> tag form", () => {
     const files = realFiles();
-    files[RECIPE_REL] = files[RECIPE_REL].replace(/^(\s*)commit: \S+$/m, "$1commit: v9.9.9");
-    const { ok, errors } = verdict(files);
+    const name = files[RECIPE_REL].match(/versionName:\s*([\d.]+)/)?.[1];
+    files[RECIPE_REL] = files[RECIPE_REL].replace(/^(\s*)commit: \S+$/m, `$1commit: v${name}`);
+    expect(verdict(files, { revParse: () => null })).toEqual({ ok: true, errors: [] });
+  });
+
+  it("catches a commit ref that is neither the tag nor a full hash", () => {
+    const files = realFiles();
+    for (const bad of ["v9.9.9", "615f2581", "main", "615F25814211DD7CE7A0667533E37A3E2FC3943D"]) {
+      files[RECIPE_REL] = realFiles()[RECIPE_REL].replace(
+        /^(\s*)commit: \S+$/m,
+        `$1commit: ${bad}`,
+      );
+      const { ok, errors } = verdict(files, { revParse: () => null });
+      expect(ok, `${bad} should be rejected`).toBe(false);
+      expect(errors.some((e) => e.includes("or a full "))).toBe(true);
+    }
+  });
+
+  it("catches a hash that is not the commit its versionName's tag points at", () => {
+    const files = realFiles();
+    const wrong = "a".repeat(40);
+    files[RECIPE_REL] = files[RECIPE_REL].replace(/^(\s*)commit: \S+$/m, `$1commit: ${wrong}`);
+    const { ok, errors } = verdict(files, { revParse: () => "b".repeat(40) });
     expect(ok).toBe(false);
-    expect(errors.some((e) => e.includes('must be "v'))).toBe(true);
+    expect(errors.some((e) => e.includes("is not what v"))).toBe(true);
+  });
+
+  it("skips the hash-to-tag check when the tag is absent (a CI checkout has no tags)", () => {
+    const files = realFiles();
+    files[RECIPE_REL] = files[RECIPE_REL].replace(
+      /^(\s*)commit: \S+$/m,
+      `$1commit: ${"c".repeat(40)}`,
+    );
+    expect(verdict(files, { revParse: () => null })).toEqual({ ok: true, errors: [] });
   });
 
   it("catches a block whose fields are interleaved and so would skip triple validation", () => {

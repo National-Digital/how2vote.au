@@ -34,6 +34,7 @@
  * Usage: node scripts/check-fdroid-ready.mjs
  */
 
+import { execFileSync } from "node:child_process";
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { resolve, dirname } from "node:path";
@@ -96,10 +97,30 @@ const FORMULA_BASH = "(10#$MAJOR * 10000 + 10#$MINOR * 100 + 10#$PATCH) * 1000";
 const FORMULA_JS = "(major * 10000 + minor * 100 + patch) * 1000";
 
 /**
+ * The commit a ref names, or null when it cannot be resolved — a CI checkout has no tags unless it
+ * asked for them, and an unresolvable ref must skip the check rather than fail it.
+ *
+ * @param {string} ref
+ * @returns {string | null}
+ */
+export function gitRevParse(ref) {
+  try {
+    return execFileSync("git", ["rev-parse", "--verify", "--quiet", `${ref}^{commit}`], {
+      encoding: "utf8",
+      stdio: ["ignore", "pipe", "ignore"],
+    }).trim();
+  } catch {
+    return null;
+  }
+}
+
+/**
  * @param {Record<string,string>} files map of rel-path → contents (missing = fail closed)
+ * @param {{ revParse?: (ref: string) => string | null }} [options]
  * @returns {{ ok: boolean, errors: string[] }}
  */
-export function verdict(files) {
+export function verdict(files, options = {}) {
+  const revParse = options.revParse ?? gitRevParse;
   const errors = [];
   const push = (m) => errors.push(m);
   const need = (rel) => {
@@ -266,11 +287,27 @@ export function verdict(files) {
     }
     for (const [, name, code, commit] of blocks) {
       pairs.push([`build block ${name}`, name, code]);
-      // deploy.yml tags every release exactly v<version>, and AutoUpdateMode generates commit
-      // refs the same way — a hand-written block that deviates points the buildserver at a ref
-      // that will never exist.
-      if (commit !== `v${name}`) {
-        push(`${RECIPE_REL}: build block ${name}: commit "${commit}" must be "v${name}"`);
+      // Two forms are legitimate: the v<version> tag deploy.yml creates for every release, and the
+      // full commit hash fdroiddata prefers (a tag can be moved after review). checkupdates emits
+      // either — it resolves the tag to a hash only when a clone is available. Anything else points
+      // the buildserver at a ref that will never exist.
+      const isTag = commit === `v${name}`;
+      const isHash = /^[0-9a-f]{40}$/.test(commit);
+      if (!isTag && !isHash) {
+        push(
+          `${RECIPE_REL}: build block ${name}: commit "${commit}" must be "v${name}" or a full ` +
+            `40-character commit hash`,
+        );
+      } else if (isHash) {
+        // When the tag is in the checkout, prove the hash is the one it names — a transposed digit
+        // would otherwise pin an unrelated tree that still builds.
+        const tagged = revParse(`v${name}`);
+        if (tagged !== null && tagged !== commit) {
+          push(
+            `${RECIPE_REL}: build block ${name}: commit ${commit} is not what v${name} points at ` +
+              `(${tagged})`,
+          );
+        }
       }
     }
     for (const [label, name, code] of pairs) {
