@@ -11,9 +11,8 @@
 # Versioning: the gradle files carry NO literal version (values arrive as project properties).
 # checkupdates therefore polls https://how2vote.au/app-version.json (published on every
 # production deploy by scripts/generate-app-version.mjs) for the versionName/versionCode pair,
-# writes them into a new build block below (AutoUpdateMode: Version → the v<versionName> tag, or
-# the hash it resolves to when a clone is available),
-# and at build time the prebuild line feeds $$VERSION$$/$$VERCODE$$ back into gradle via
+# writes them into a new build block below (AutoUpdateMode: Version → the tag, or the hash it
+# resolves to), and at build time the prebuild line feeds $$VERSION$$/$$VERCODE$$ back into gradle via
 # gradle.properties. versionCode = (MAJOR×10000 + MINOR×100 + PATCH)×1000 — the shared
 # resolve-store-version encoding with the run-number digits pinned to 000, so an F-Droid build
 # of a release always ranks below the Play build of the same release (different signers; the
@@ -46,11 +45,7 @@ Binaries: https://dist.how2vote.au/app/fdroid/how2vote-fdroid-%v.apk
 AllowedAPKSigningKeys: 617efd39535bb3af10ce0778b6f20ee4597f221baeb3f3e07547bfcc1ac7d213
 
 Builds:
-  # First submitted release; checkupdates appends every later release automatically with the
-  # same shape.
-  # commit is the full hash, not the v1.3.10 tag: a tag can be moved after review, a hash cannot.
-  # Same tree either way. Keep versionName/versionCode/commit adjacent — the guard validates the
-  # triple as a unit.
+  # commit is the full hash, not the tag: a tag can be moved after review.
   - versionName: 1.3.10
     versionCode: 10310000
     commit: 615f25814211dd7ce7a0667533e37a3e2fc3943d
@@ -86,6 +81,29 @@ Builds:
       - yes
     output: app/build/outputs/apk/release/app-release-unsigned.apk
 
+  # One block per release, appended by checkupdates. Must track releases even mid-review.
+  - versionName: 1.3.12
+    versionCode: 10312000
+    commit: 1af3679261a98bbfdfe8c2d91de92dc889e53b2e
+    subdir: apps/mobile/android
+    sudo:
+      - apt-get update
+      - apt-get install -y --no-install-recommends curl ca-certificates
+      - curl -fsSL https://deb.nodesource.com/setup_24.x | bash -
+      - apt-get install -y nodejs
+      - npm install -g corepack && corepack enable
+    prebuild:
+      - printf 'versionCode=$$VERCODE$$\nversionName=$$VERSION$$\n' >> gradle.properties
+      - (cd ../../.. && corepack install && pnpm install --frozen-lockfile)
+    scanignore:
+      - node_modules
+    build:
+      - (cd ../../.. && APP_VERSION=$$VERSION$$ PUBLIC_DIST_CHANNEL=fdroid pnpm --filter @how2vote/web... build)
+      - (cd ../../.. && pnpm --filter @how2vote/mobile sync:android)
+    gradle:
+      - yes
+    output: app/build/outputs/apk/release/app-release-unsigned.apk
+
 # %v in the pattern below = the versionName found by the update check; deploy.yml tags every
 # production release exactly `v<version>`, so the generated commit ref always exists.
 AutoUpdateMode: Version v%v
@@ -94,5 +112,5 @@ UpdateCheckMode: HTTP
 # sentinel: apply the regex to the page already fetched. fdroidserver builds a second fetch with no
 # headers (checkupdates.py check_http) and it is answered 403 at the edge, so never name a URL there.
 UpdateCheckData: https://how2vote.au/app-version.json|"versionCode":\s*(\d+)|.|"versionName":\s*"([\d.]+)"
-CurrentVersion: 1.3.10
-CurrentVersionCode: 10310000
+CurrentVersion: 1.3.12
+CurrentVersionCode: 10312000
