@@ -315,7 +315,15 @@ jobs:
           V: ${{ needs.build.outputs.app-version }}
         run: |
           set -euo pipefail
-          pip install --quiet apksigcopier
+          # Pinned by version AND digest: pip refuses anything whose hash differs, so a moved or
+          # replaced release cannot change the tool that decides our builds are reproducible.
+          # click is apksigcopier's only dependency; --require-hashes needs every one pinned.
+          # Update both together, from pypi.org/pypi/<name>/json.
+          cat > "$RUNNER_TEMP/apksigcopier.txt" <<'REQ'
+          apksigcopier==1.1.1 --hash=sha256:0834bb7d6f3607bb0994cf8cd2e26b8f0c9d481e13b75872e0fa9cec052e519b
+          click==8.4.2 --hash=sha256:e6f9f66136c816745b9d65817da91d61d957fb16e02e4dcd0552553c5a197b76
+          REQ
+          pip install --quiet --require-hashes -r "$RUNNER_TEMP/apksigcopier.txt"
           BT=$(ls -d "$ANDROID_HOME"/build-tools/* | sort -V | tail -1)
           PATH="$BT:$PATH" apksigcopier compare "how2vote-fdroid-$V.apk" \
             apps/mobile/android/app/build/outputs/apk/release/app-release-unsigned.apk --unsigned

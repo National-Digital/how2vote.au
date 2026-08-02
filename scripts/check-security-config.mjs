@@ -132,6 +132,12 @@ const rel = (p) => new URL(p, root);
 const HEADERS = rel("apps/web/static/_headers");
 const REGISTER = rel("docs/legal/security-register.json");
 
+/**
+ * Workflows ONLY — deliberately not the shared gather in check-action-pinning.mjs. The rules below
+ * are about the workflow token (`permissions:`, least privilege), and `permissions:` is not valid
+ * in composite-action syntax, so sweeping `.github/actions` in here would fail every one of them
+ * for lacking a key it cannot have.
+ */
 function gatherWorkflows() {
   const listed = execFileSync("git", ["ls-files", ".github/workflows"], {
     cwd: fileURLToPath(root),
