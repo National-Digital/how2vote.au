@@ -20,7 +20,9 @@
  *      evaluated against that encoding, so a hand-edited digit cannot mis-rank a release.
  *   4. The recipe reference itself — public repo URL, right subdir, gradle build, the
  *      property-injection prebuild line, the update-check endpoint, AGPL license, and a
- *      single-fetch UpdateCheckData.
+ *      single-fetch UpdateCheckData. Also the buildserver toolchain, which no CI job executes:
+ *      Node from a Debian suite shipping .nvmrc's major (never an installer piped into a shell),
+ *      pnpm at package.json's pinned version, and one command per phase item.
  *   5. Listing metadata — the fastlane android text tree is COMMITTED (F-Droid imports it from
  *      the repo at the tag; a gitignored tree would publish an empty listing), at the repo-root
  *      path fdroidserver globs (see FDROID_LISTING_RELS).
@@ -91,6 +93,56 @@ export const FDROID_LISTING_RELS = [
   "fastlane/metadata/android/en-US/short_description.txt",
   "fastlane/metadata/android/en-US/full_description.txt",
 ];
+
+/**
+ * Node major shipped by each Debian suite the recipe may install the toolchain from. The
+ * buildserver runs trixie, which ships Node 20, so a repo on a later major installs from a suite
+ * added to sources.list for that one apt-get. Add a suite only after checking what it actually
+ * ships (packages.debian.org/<suite>/nodejs) — the value cannot be derived from the recipe text.
+ *
+ * @type {Record<string, string>}
+ */
+export const DEBIAN_NODE_MAJOR = {
+  trixie: "20",
+  forky: "24",
+};
+
+/** Phase keys whose list items fdroidserver runs as shell commands. */
+const PHASE_KEYS = ["sudo", "prebuild", "build", "postbuild"];
+
+/**
+ * Every shell command the recipe declares, across all build blocks. A deliberate line scanner
+ * rather than a YAML dependency, for the same reason as fdroid-recipe-build.mjs: this runs in CI
+ * with no install step of its own.
+ *
+ * @param {string} recipe recipe file contents
+ * @returns {[string, string][]} [command, phase] pairs in declaration order
+ */
+export function phaseItems(recipe) {
+  /** @type {[string, string][]} */
+  const items = [];
+  let phase = null;
+  for (const line of recipe.split("\n")) {
+    const key = line.match(/^[ \t]*([a-z]+):[ \t]*$/)?.[1];
+    if (key !== undefined) {
+      phase = PHASE_KEYS.includes(key) ? key : null;
+      continue;
+    }
+    if (phase === null) continue;
+    const item = line.match(/^[ \t]*-[ \t]+(.*)$/);
+    if (item) {
+      items.push([item[1].trim(), phase]);
+    } else if (/^[ \t]*#/.test(line) || line.trim() === "") {
+      continue;
+    } else if (items.length > 0 && /^[ \t]{6,}\S/.test(line)) {
+      // Continuation of a folded scalar: YAML rejoins wrapped lines with a single space.
+      items[items.length - 1][0] += ` ${line.trim()}`;
+    } else {
+      phase = null; // dedented out of the phase list
+    }
+  }
+  return items;
+}
 
 /** The one shared versionCode formula, as each side spells it. */
 const FORMULA_BASH = "(10#$MAJOR * 10000 + 10#$MINOR * 100 + 10#$PATCH) * 1000";
@@ -235,21 +287,78 @@ export function verdict(files, options = {}) {
     }
   }
 
-  // 4a2 — the Node major the recipe's sudo installs must match .nvmrc. The CI mirror does not run
-  // `sudo` (the runner provides Node), so a drift here is invisible until the buildserver runs.
+  // 4a2 — the toolchain the recipe's sudo phase provisions. The CI mirror does not run `sudo` (the
+  // runner provides Node), so every drift here is invisible until the buildserver runs.
   const nvmrc = need(".nvmrc");
+  const rootPkg = need("package.json");
+  if (recipe !== null) {
+    // No installer script piped into a shell: the buildserver cannot verify what it would run, and
+    // the toolchain version would come from whatever upstream serves that day.
+    const piped = recipe.match(/^[ \t]*-[ \t]*(.*\|[ \t]*(?:ba)?sh\b.*)$/m)?.[1];
+    if (piped !== undefined) {
+      push(
+        `${RECIPE_REL}: "${piped}" pipes a downloaded script into a shell — install from Debian ` +
+          `instead, so the buildserver gets a verified, versioned package`,
+      );
+    }
+  }
   if (recipe !== null && nvmrc !== null) {
-    const recipeMajor = recipe.match(/deb\.nodesource\.com\/setup_(\d+)\.x/)?.[1];
+    const suite = recipe.match(/^[ \t]*-[ \t]*apt-get install\b.*-t[ \t]+(\S+)/m)?.[1];
     const wanted = nvmrc.trim().split(".")[0];
-    if (recipeMajor === undefined) {
+    if (suite === undefined) {
       push(
-        `${RECIPE_REL}: no nodesource setup_<major>.x line — the buildserver needs Node installed`,
+        `${RECIPE_REL}: no "apt-get install -t <suite>" line — the buildserver needs Node ` +
+          `installed from a named Debian suite`,
       );
-    } else if (recipeMajor !== wanted) {
+    } else if (!(suite in DEBIAN_NODE_MAJOR)) {
       push(
-        `${RECIPE_REL}: installs Node ${recipeMajor} but .nvmrc pins ${wanted} — the F-Droid build ` +
-          `would run a different Node major than every other build of this repo`,
+        `${RECIPE_REL}: installs Node from Debian ${suite}, whose Node major is not recorded — ` +
+          `check packages.debian.org/${suite}/nodejs and add it to DEBIAN_NODE_MAJOR`,
       );
+    } else if (DEBIAN_NODE_MAJOR[suite] !== wanted) {
+      push(
+        `${RECIPE_REL}: Debian ${suite} ships Node ${DEBIAN_NODE_MAJOR[suite]} but .nvmrc pins ` +
+          `${wanted} — the F-Droid build would run a different Node major than every other build ` +
+          `of this repo`,
+      );
+    }
+  }
+  // pnpm is not packaged by Debian, so the recipe installs it by exact version. That version is the
+  // one corepack hands every other build of this repo, or the lockfile could resolve differently.
+  if (recipe !== null && rootPkg !== null) {
+    const recipePnpm = recipe.match(/^[ \t]*-[ \t]*npm install -g pnpm@(\S+)[ \t]*$/m)?.[1];
+    const wanted = rootPkg.match(/"packageManager":[ \t]*"pnpm@([^"]+)"/)?.[1];
+    if (wanted === undefined) {
+      push(`package.json: no "packageManager": "pnpm@<version>" — the recipe's pin has no source`);
+    } else if (recipePnpm === undefined) {
+      push(
+        `${RECIPE_REL}: no "npm install -g pnpm@<version>" line — the buildserver needs pnpm ` +
+          `${wanted} to install the lockfile`,
+      );
+    } else if (recipePnpm !== wanted) {
+      push(
+        `${RECIPE_REL}: installs pnpm ${recipePnpm} but package.json pins ${wanted} — the ` +
+          `F-Droid build would resolve the lockfile with a different pnpm than every other build`,
+      );
+    }
+  }
+
+  // 4a3 — one command per phase item. fdroidserver joins each phase list with "; " and runs it
+  // under `bash -e -x`: a chained item hides which command failed, and a `cd` leaks into every
+  // later command in the same phase (reach the workspace root with `pnpm -C`).
+  if (recipe !== null) {
+    for (const [cmd, phase] of phaseItems(recipe)) {
+      if (/&&|\|\||;/.test(cmd)) {
+        push(
+          `${RECIPE_REL}: ${phase} command "${cmd}" chains with &&, || or ; — give each command ` +
+            `its own list item so a failure is attributable`,
+        );
+      } else if (/^\(|(^|\s)cd[ \t]/.test(cmd)) {
+        push(
+          `${RECIPE_REL}: ${phase} command "${cmd}" changes directory — it leaks into the rest of ` +
+            `the phase; reach the workspace root with "pnpm -C" instead`,
+        );
+      }
     }
   }
 
@@ -373,6 +482,7 @@ function main() {
     ".github/actions/resolve-store-version/action.yml",
     "scripts/generate-app-version.mjs",
     ".nvmrc",
+    "package.json",
     "apps/mobile/capacitor.config.ts",
     "apps/mobile/package.json",
     "LICENSE",

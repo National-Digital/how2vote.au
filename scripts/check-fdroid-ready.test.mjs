@@ -9,6 +9,7 @@ import {
   GRADLE_RELS,
   LISTING_RELS,
   RECIPE_REL,
+  phaseItems,
   verdict,
 } from "./check-fdroid-ready.mjs";
 import { encodeVersionCode } from "./generate-app-version.mjs";
@@ -22,6 +23,7 @@ const RELS = [
   ".github/actions/resolve-store-version/action.yml",
   "scripts/generate-app-version.mjs",
   ".nvmrc",
+  "package.json",
   "apps/mobile/capacitor.config.ts",
   "apps/mobile/package.json",
   "LICENSE",
@@ -246,12 +248,83 @@ describe("recipe version pairs", () => {
 });
 
 describe("toolchain parity", () => {
-  it("catches the recipe's Node major drifting from .nvmrc", () => {
+  it("catches a suite whose Node major is not .nvmrc's", () => {
     const files = realFiles();
-    files[RECIPE_REL] = files[RECIPE_REL].replace("setup_24.x", "setup_22.x");
+    files[RECIPE_REL] = files[RECIPE_REL].replaceAll("-t forky", "-t trixie");
     const { ok, errors } = verdict(files);
     expect(ok).toBe(false);
     expect(errors.some((e) => e.includes(".nvmrc pins"))).toBe(true);
+  });
+
+  it("catches a suite with no recorded Node major", () => {
+    const files = realFiles();
+    files[RECIPE_REL] = files[RECIPE_REL].replaceAll("-t forky", "-t duke");
+    const { ok, errors } = verdict(files);
+    expect(ok).toBe(false);
+    expect(errors.some((e) => e.includes("is not recorded"))).toBe(true);
+  });
+
+  it("catches an installer script piped into a shell", () => {
+    const files = realFiles();
+    files[RECIPE_REL] = files[RECIPE_REL].replace(
+      "      - apt-get update\n",
+      "      - curl -fsSL https://deb.nodesource.com/setup_24.x | bash -\n",
+    );
+    const { ok, errors } = verdict(files);
+    expect(ok).toBe(false);
+    expect(errors.some((e) => e.includes("pipes a downloaded script into a shell"))).toBe(true);
+  });
+
+  it("catches the recipe's pnpm pin drifting from package.json", () => {
+    const files = realFiles();
+    const pinned = /"packageManager":[ \t]*"pnpm@([^"]+)"/.exec(files["package.json"])?.[1];
+    expect(pinned).toBeDefined();
+    files[RECIPE_REL] = files[RECIPE_REL].replaceAll(`pnpm@${pinned}`, "pnpm@10.0.0");
+    const { ok, errors } = verdict(files);
+    expect(ok).toBe(false);
+    expect(errors.some((e) => e.includes("but package.json pins"))).toBe(true);
+  });
+
+  it("catches a dropped pnpm pin", () => {
+    const files = realFiles();
+    files[RECIPE_REL] = files[RECIPE_REL].replaceAll(/^.*npm install -g pnpm@.*\n/gm, "");
+    const { ok, errors } = verdict(files);
+    expect(ok).toBe(false);
+    expect(errors.some((e) => e.includes('no "npm install -g pnpm@<version>" line'))).toBe(true);
+  });
+});
+
+describe("one command per phase item", () => {
+  it("catches a chained command", () => {
+    const files = realFiles();
+    files[RECIPE_REL] = files[RECIPE_REL].replace(
+      "      - npm install -g pnpm@",
+      "      - npm install -g corepack && corepack enable\n      - npm install -g pnpm@",
+    );
+    const { ok, errors } = verdict(files);
+    expect(ok).toBe(false);
+    expect(errors.some((e) => e.includes("chains with &&"))).toBe(true);
+  });
+
+  it("catches a command that changes directory", () => {
+    const files = realFiles();
+    files[RECIPE_REL] = files[RECIPE_REL].replaceAll(
+      "pnpm -C ../../.. install --frozen-lockfile",
+      "cd ../../..",
+    );
+    const { ok, errors } = verdict(files);
+    expect(ok).toBe(false);
+    expect(errors.some((e) => e.includes("changes directory"))).toBe(true);
+  });
+
+  it("reads every command from every build block", () => {
+    const recipe = readFileSync(resolve(ROOT, RECIPE_REL), "utf8");
+    const blocks = recipe.match(/^[ \t]*-[ \t]*versionName:/gm)?.length ?? 0;
+    expect(blocks).toBeGreaterThan(1);
+    const installs = phaseItems(recipe).filter(
+      ([cmd, phase]) => phase === "prebuild" && cmd.includes("--frozen-lockfile"),
+    );
+    expect(installs).toHaveLength(blocks);
   });
 });
 

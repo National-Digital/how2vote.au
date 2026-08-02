@@ -472,6 +472,8 @@ How the pieces fit — each fact is enforced on every PR (guards named on the ri
 | Signature classes | the F-Droid APK is signed by our dedicated F-Droid key; Play distributes split APKs signed by Google's escrowed key. Same package name, different signers — neither can update over the other, so the two are separate install classes and a user must uninstall before switching | — |
 | Permissions | one declaration of ours, `INTERNET`, used only for the user-initiated first-party form and opt-in research POSTs, outbound links, and the `https://localhost` WebView origin Capacitor requires it for; the merged APK also carries the app-local signature permission `androidx.core` injects. Full register under "Declared permissions" above | the `fdroid` job asserts the **merged** set from the built APK with `aapt2 dump permissions` |
 | Scanner | no Google service reference anywhere in the gradle files (the Capacitor template's dormant push-services block is removed) | scanner simulation in `check-fdroid-ready.mjs` |
+| Buildserver toolchain | Node comes from **Debian forky** (`apt-get install -t forky nodejs npm`): the buildserver runs trixie, which ships Node 20, while `.nvmrc` pins 24. Never an installer script piped into a shell — the buildserver cannot verify what that would run, and the version would be whatever upstream serves that day. pnpm is not packaged by Debian, so it is installed at `package.json`'s exact `packageManager` version | `check-fdroid-ready.mjs` maps each Debian suite to the Node major it ships and asserts `.nvmrc`'s, asserts the pnpm pin equals `packageManager`, and rejects a pipe into a shell. No CI job runs the `sudo` phase, so these are static-only |
+| Phase commands | one command per list item in `sudo`/`prebuild`/`build` — never a `;`/`&&` chain, never a `cd`. fdroidserver joins each list with `; ` into one `bash -e -x`, so a chained item hides which command failed, and a `cd` leaks into every command after it. The workspace root is reached with `pnpm -C ../../..` | `check-fdroid-ready.mjs` scans every block's phase items; the harness test asserts the same over the real recipe |
 | Channel | F-Droid ships the **`fdroid`** channel (`PUBLIC_DIST_CHANNEL=fdroid`), a fourth value in `apps/web/src/lib/channel.ts`. An F-Droid install cannot be updated through Play (different signing keys), so the in-app update remedy resolves to `f-droid.org/packages/<appId>` rather than `market://`. Nothing else differs from the `android` build | `check-store-channel.mjs`; the `fdroid` job builds this channel, and the per-channel behaviour specs cover the branch |
 
 The `fdroid` job in `mobile-ci.yml` **executes the recipe's own commands** rather than restating
@@ -497,7 +499,8 @@ workflow: a restatement can pass while the buildserver fails.
    order, and the submitted copy carries **no comments**), `fdroid checkupdates au.how2vote.app`,
    then `fdroid build -v -l au.how2vote.app`.
 4. Open the MR and respond to packager review; mirror any conventions the packagers require
-   (e.g. a srclib-based Node install instead of NodeSource in `sudo:`) back into `docs/fdroid/`.
+   (e.g. a srclib-based Node install instead of a distro package in `sudo:`) back into
+   `docs/fdroid/`, and make CI assert them so they cannot regress.
    **Keep the recipe at the current release, including mid-review**: fdroiddata CI runs
    `fdroid checkupdates` and fails on any diff. Append a block and bump `CurrentVersion*` in both
    the MR and this mirror per release; never rewrite the reviewed block.
