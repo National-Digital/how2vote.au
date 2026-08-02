@@ -14,12 +14,12 @@ describe("recipe phase extraction", () => {
   it("undoes YAML line folding so a wrapped command stays one command", () => {
     const folded = [
       "    build:",
-      "      - cd ../../.. && pnpm --filter",
+      "      - pnpm -C ../../.. --filter",
       "        @how2vote/web build",
       "    gradle:",
     ].join("\n");
     expect(phaseCommands(folded, "build")).toEqual([
-      "cd ../../.. && pnpm --filter @how2vote/web build",
+      "pnpm -C ../../.. --filter @how2vote/web build",
     ]);
   });
 
@@ -42,16 +42,24 @@ describe("recipe phase extraction", () => {
 });
 
 describe("recipe command hygiene", () => {
-  // fdroidserver runs a phase as ONE shell rooted at subdir, so a bare `cd` leaks into the next
-  // command. Every command that changes directory must be a subshell.
-  it("wraps directory-changing commands in subshells", () => {
+  // fdroidserver joins a phase's list with "; " and runs it as ONE shell rooted at subdir. Each
+  // item is a single command: a chain hides which one failed in the build log, and a `cd` would
+  // leak into every command after it. The workspace root is reached with `pnpm -C`.
+  it("keeps every phase command a single command that stays in subdir", () => {
     for (const phase of PHASES) {
-      for (const cmd of phaseCommands(recipe, phase)) {
-        if (cmd.includes("cd ")) {
-          expect(cmd.startsWith("("), `${phase}: "${cmd}" must be a subshell`).toBe(true);
-          expect(cmd.endsWith(")")).toBe(true);
-        }
+      const cmds = phaseCommands(recipe, phase);
+      expect(cmds.length).toBeGreaterThan(0);
+      for (const cmd of cmds) {
+        expect(/&&|\|\||;/.test(cmd), `${phase}: "${cmd}" must not chain commands`).toBe(false);
+        expect(/^\(|(^|\s)cd[ \t]/.test(cmd), `${phase}: "${cmd}" must not cd`).toBe(false);
       }
+    }
+  });
+
+  // The web bundle is built from the workspace root while the shell stays in subdir.
+  it("reaches the workspace root with pnpm -C", () => {
+    for (const cmd of phaseCommands(recipe, "build")) {
+      expect(cmd).toContain("pnpm -C ../../..");
     }
   });
 

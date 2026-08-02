@@ -23,10 +23,11 @@
  * only when executed directly.
  *
  * Usage:
- *   node scripts/check-action-pinning.mjs        # scans .github/workflows/*.yml|*.yaml
+ *   node scripts/check-action-pinning.mjs        # scans .github/workflows + .github/actions
  */
 
-import { readdirSync, readFileSync } from "node:fs";
+import { execFileSync } from "node:child_process";
+import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 
 /** A full git commit SHA: exactly 40 lowercase hex chars. Short shas and tags are rejected. */
@@ -115,22 +116,36 @@ export function verdict(files) {
 
 /* c8 ignore start -- CLI/fs plumbing, exercised via CI not unit tests */
 const root = new URL("..", import.meta.url);
-const WORKFLOWS_DIR = new URL(".github/workflows/", root);
+
+/**
+ * Every file whose `uses:`/`run:` steps GitHub executes: the workflows AND the composite actions
+ * they call. A composite action's steps run with the same token and privileges, so leaving them
+ * out under-enforces every rule applied here. Tracked files only — an untracked local YAML is not
+ * what CI runs. Shared with check-supply-chain.mjs so the two guards cannot scan different sets.
+ *
+ * @returns {Array<{ path: string, text: string }>}
+ */
+export function gatherActionFiles() {
+  const listed = execFileSync("git", ["ls-files", ".github/workflows", ".github/actions"], {
+    cwd: fileURLToPath(root),
+    encoding: "utf8",
+  })
+    .split("\n")
+    .filter((p) => /\.ya?ml$/.test(p));
+  return listed.map((p) => ({ path: p, text: readFileSync(new URL(p, root), "utf8") }));
+}
 
 function main() {
-  let entries;
+  let files;
   try {
-    entries = readdirSync(WORKFLOWS_DIR).filter((n) => n.endsWith(".yml") || n.endsWith(".yaml"));
+    files = gatherActionFiles();
   } catch (err) {
-    console.error(`::error::action-pinning: cannot read .github/workflows: ${err.message}`);
+    console.error(
+      `::error::action-pinning: cannot list .github workflow/action files: ${err.message}`,
+    );
     process.exit(1);
     return;
   }
-
-  const files = entries.map((name) => ({
-    path: `.github/workflows/${name}`,
-    text: readFileSync(new URL(name, WORKFLOWS_DIR), "utf8"),
-  }));
 
   const result = verdict(files);
   if (!result.ok) {
@@ -146,7 +161,8 @@ function main() {
     return;
   }
   console.info(
-    `action pinning OK — every uses: across ${files.length} workflow file(s) is digest/commit-pinned`,
+    `action pinning OK — every uses: across ${files.length} workflow/action file(s) is ` +
+      `digest/commit-pinned`,
   );
 }
 
