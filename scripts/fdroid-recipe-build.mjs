@@ -14,6 +14,7 @@
  * check-fdroid-ready.mjs asserts the version it would install matches .nvmrc.
  *
  * Usage:
+ *   node scripts/fdroid-recipe-build.mjs init     --version 9.9.9 --code 90909000
  *   node scripts/fdroid-recipe-build.mjs prebuild --version 9.9.9 --code 90909000
  *   node scripts/fdroid-recipe-build.mjs build    --version 9.9.9 --code 90909000
  *   node scripts/fdroid-recipe-build.mjs build --print   # show the shell line, run nothing
@@ -27,7 +28,7 @@ import { fileURLToPath } from "node:url";
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const RECIPE_REL = "docs/fdroid/au.how2vote.app.yml";
-export const PHASES = ["prebuild", "build"];
+export const PHASES = ["init", "prebuild", "build"];
 
 /**
  * Extracts one build-block phase's commands. Deliberately a small line scanner rather than a YAML
@@ -35,7 +36,7 @@ export const PHASES = ["prebuild", "build"];
  * install step of its own.
  *
  * @param {string} recipe recipe file contents
- * @param {string} phase `prebuild` or `build`
+ * @param {string} phase `init`, `prebuild` or `build`
  * @returns {string[]} commands in declaration order, with YAML line folding undone
  */
 export function phaseCommands(recipe, phase) {

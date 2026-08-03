@@ -545,7 +545,11 @@ jobs:
           node-version-file: .nvmrc
           cache: pnpm
 
-      # Installs dependencies and injects the version pair into gradle.properties — the recipe's
+      # Installs the JS dependency tree — the recipe's init phase (no version placeholders).
+      - name: Recipe init
+        run: node scripts/fdroid-recipe-build.mjs init
+
+      # Injects the version pair into the android project's gradle.properties — the recipe's
       # prebuild, so a broken injection path fails here rather than on the buildserver.
       - name: Recipe prebuild
         run: node scripts/fdroid-recipe-build.mjs prebuild --version 9.9.9 --code 90909000

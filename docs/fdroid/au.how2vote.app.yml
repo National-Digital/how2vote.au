@@ -2,18 +2,17 @@
 #
 # The authoritative copy lives in the fdroiddata repo (gitlab.com/fdroid/fdroiddata,
 # metadata/au.how2vote.app.yml) once the packaging MR is merged; this file is the version we
-# maintain, submit and diff against. mobile-ci's `fdroid` job executes the same steps this
-# recipe declares (property injection via gradle.properties, web build, cap sync,
-# `gradlew assembleRelease` with no -P flags) so a change that would break the F-Droid
+# maintain, submit and diff against. Shape follows fdroiddata's templates/build-react-native.yml
+# and the Build Metadata Reference, with fields in fdroidserver's canonical (rewritemeta) order.
+# mobile-ci's `fdroid` job executes the same phases this recipe declares (init, prebuild, build,
+# then `gradlew assembleRelease` with no -P flags) so a change that would break the F-Droid
 # buildserver goes red on the PR that makes it, and scripts/check-fdroid-ready.mjs statically
 # guards the invariants the recipe relies on. See docs/store-distribution.md § F-Droid.
 #
 # Versioning: the gradle files carry NO literal version (values arrive as project properties).
-# checkupdates therefore polls https://how2vote.au/app-version.json (published on every
-# production deploy by scripts/generate-app-version.mjs) for the versionName/versionCode pair,
-# writes them into a new build block below (AutoUpdateMode: Version → the tag, or the hash it
-# resolves to), and at build time the prebuild line feeds $$VERSION$$/$$VERCODE$$ back into gradle via
-# gradle.properties. versionCode = (MAJOR×10000 + MINOR×100 + PATCH)×1000 — the shared
+# checkupdates polls https://how2vote.au/app-version.json (published on every production deploy
+# by scripts/generate-app-version.mjs) for the versionName/versionCode pair and appends a build
+# block below. versionCode = (MAJOR×10000 + MINOR×100 + PATCH)×1000 — the shared
 # resolve-store-version encoding with the run-number digits pinned to 000, so an F-Droid build
 # of a release always ranks below the Play build of the same release (different signers; the
 # codes never compete within one channel).
@@ -33,106 +32,97 @@ AutoName: How2Vote
 RepoType: git
 Repo: https://github.com/National-Digital/how2vote.au.git
 
-# Reproducible builds. F-Droid builds the tag itself, compares the result with the APK published
-# below, and on a match publishes OURS under OUR signature rather than re-signing with its own key.
-# %v is the versionName found by the update check. android-release.yml publishes exactly this object
-# on every release, built through the same recipe phases so the comparison can succeed, and never
-# replaces one already published. The channel is in the filename because a saved APK loses its URL
-# and its signature decides whether it installs at all.
 Binaries: https://dist.how2vote.au/app/fdroid/how2vote-fdroid-%v.apk
-# Signer certificate digest of that APK (public). The release build asserts what it signs matches
-# this, so a wrong key or alias fails the release instead of publishing something F-Droid rejects.
-AllowedAPKSigningKeys: 617efd39535bb3af10ce0778b6f20ee4597f221baeb3f3e07547bfcc1ac7d213
 
 Builds:
-  # commit is the full hash, not the tag: a tag can be moved after review.
-  #
-  # Every phase is a list of single commands, never a `;`/`&&` chain and never a pipe into a shell:
-  # fdroidserver joins each list with "; " and runs it under `bash -e -x`, so one command per item
-  # keeps the failing step attributable in the build log. `pnpm -C` reaches the workspace root
-  # without a `cd` that would leak into the commands after it.
   - versionName: 1.3.10
     versionCode: 10310000
     commit: 615f25814211dd7ce7a0667533e37a3e2fc3943d
-    subdir: apps/mobile/android
+    subdir: apps/mobile/android/app
     sudo:
-      # Node toolchain for the SvelteKit web bundle the shell wraps, from Debian forky: trixie
-      # ships Node 20 and .nvmrc pins 24. pnpm is pinned to package.json's packageManager version
-      # — check-fdroid-ready.mjs asserts both, since the CI mirror never runs this phase.
       - echo "deb https://deb.debian.org/debian forky main" > /etc/apt/sources.list.d/forky.list
       - apt-get update
       - apt-get install -y -t forky nodejs npm
       - npm install -g pnpm@11.12.0
+    init:
+      - pnpm -C ../../../.. install --frozen-lockfile --filter @how2vote/web... --filter @how2vote/mobile
+    gradle:
+      - yes
     prebuild:
-      # The ONLY version source for this build: the block's declared pair, injected as gradle
-      # project properties (app/build.gradle reads them; -P flags are the store-CI route only).
-      - printf 'versionCode=$$VERCODE$$\nversionName=$$VERSION$$\n' >> gradle.properties
-      # JS dependency tree for the bundled web app — installed from the committed lockfile.
-      - pnpm -C ../../.. install --frozen-lockfile
+      - printf 'versionCode=$$VERCODE$$\nversionName=$$VERSION$$\n' >> ../gradle.properties
     scanignore:
       - node_modules
     build:
-      # Static web bundle with the channel baked in, then Capacitor copies it into the native
-      # project. Everything ships in the APK; no runtime fetch.
-      #
-      # `...` selects the package AND its workspace dependencies, topologically. packages/*/dist is
-      # gitignored, so a fresh checkout has none of them built.
-      - APP_VERSION=$$VERSION$$ PUBLIC_DIST_CHANNEL=fdroid pnpm -C ../../.. --filter @how2vote/web... build
-      - pnpm -C ../../.. --filter @how2vote/mobile sync:android
-    gradle:
-      - yes
-    output: app/build/outputs/apk/release/app-release-unsigned.apk
+      - APP_VERSION=$$VERSION$$ PUBLIC_DIST_CHANNEL=fdroid pnpm -C ../../../.. --filter @how2vote/web... build
+      - pnpm -C ../../../.. --filter @how2vote/mobile sync:android
 
-  # One block per release, appended by checkupdates. Must track releases even mid-review.
   - versionName: 1.3.12
     versionCode: 10312000
     commit: 1af3679261a98bbfdfe8c2d91de92dc889e53b2e
-    subdir: apps/mobile/android
+    subdir: apps/mobile/android/app
     sudo:
       - echo "deb https://deb.debian.org/debian forky main" > /etc/apt/sources.list.d/forky.list
       - apt-get update
       - apt-get install -y -t forky nodejs npm
       - npm install -g pnpm@11.12.0
+    init:
+      - pnpm -C ../../../.. install --frozen-lockfile --filter @how2vote/web... --filter @how2vote/mobile
+    gradle:
+      - yes
     prebuild:
-      - printf 'versionCode=$$VERCODE$$\nversionName=$$VERSION$$\n' >> gradle.properties
-      - pnpm -C ../../.. install --frozen-lockfile
+      - printf 'versionCode=$$VERCODE$$\nversionName=$$VERSION$$\n' >> ../gradle.properties
     scanignore:
       - node_modules
     build:
-      - APP_VERSION=$$VERSION$$ PUBLIC_DIST_CHANNEL=fdroid pnpm -C ../../.. --filter @how2vote/web... build
-      - pnpm -C ../../.. --filter @how2vote/mobile sync:android
-    gradle:
-      - yes
-    output: app/build/outputs/apk/release/app-release-unsigned.apk
+      - APP_VERSION=$$VERSION$$ PUBLIC_DIST_CHANNEL=fdroid pnpm -C ../../../.. --filter @how2vote/web... build
+      - pnpm -C ../../../.. --filter @how2vote/mobile sync:android
 
   - versionName: 1.3.13
     versionCode: 10313000
     commit: 83cbee362c1128a7dbf7534554792c254fc2039f
-    subdir: apps/mobile/android
+    subdir: apps/mobile/android/app
     sudo:
       - echo "deb https://deb.debian.org/debian forky main" > /etc/apt/sources.list.d/forky.list
       - apt-get update
       - apt-get install -y -t forky nodejs npm
       - npm install -g pnpm@11.12.0
+    init:
+      - pnpm -C ../../../.. install --frozen-lockfile --filter @how2vote/web... --filter @how2vote/mobile
+    gradle:
+      - yes
     prebuild:
-      - printf 'versionCode=$$VERCODE$$\nversionName=$$VERSION$$\n' >> gradle.properties
-      - pnpm -C ../../.. install --frozen-lockfile
+      - printf 'versionCode=$$VERCODE$$\nversionName=$$VERSION$$\n' >> ../gradle.properties
     scanignore:
       - node_modules
     build:
-      - APP_VERSION=$$VERSION$$ PUBLIC_DIST_CHANNEL=fdroid pnpm -C ../../.. --filter @how2vote/web... build
-      - pnpm -C ../../.. --filter @how2vote/mobile sync:android
+      - APP_VERSION=$$VERSION$$ PUBLIC_DIST_CHANNEL=fdroid pnpm -C ../../../.. --filter @how2vote/web... build
+      - pnpm -C ../../../.. --filter @how2vote/mobile sync:android
+
+  - versionName: 1.3.14
+    versionCode: 10314000
+    commit: 44758971202a0036be1a3fc92eaff72f6e40820a
+    subdir: apps/mobile/android/app
+    sudo:
+      - echo "deb https://deb.debian.org/debian forky main" > /etc/apt/sources.list.d/forky.list
+      - apt-get update
+      - apt-get install -y -t forky nodejs npm
+      - npm install -g pnpm@11.12.0
+    init:
+      - pnpm -C ../../../.. install --frozen-lockfile --filter @how2vote/web... --filter @how2vote/mobile
     gradle:
       - yes
-    output: app/build/outputs/apk/release/app-release-unsigned.apk
+    prebuild:
+      - printf 'versionCode=$$VERCODE$$\nversionName=$$VERSION$$\n' >> ../gradle.properties
+    scanignore:
+      - node_modules
+    build:
+      - APP_VERSION=$$VERSION$$ PUBLIC_DIST_CHANNEL=fdroid pnpm -C ../../../.. --filter @how2vote/web... build
+      - pnpm -C ../../../.. --filter @how2vote/mobile sync:android
 
-# %v in the pattern below = the versionName found by the update check; deploy.yml tags every
-# production release exactly `v<version>`, so the generated commit ref always exists.
+AllowedAPKSigningKeys: 617efd39535bb3af10ce0778b6f20ee4597f221baeb3f3e07547bfcc1ac7d213
+
 AutoUpdateMode: Version v%v
 UpdateCheckMode: HTTP
-# versionCode URL | versionCode regex | versionName URL | versionName regex. Field 3 is the "."
-# sentinel: apply the regex to the page already fetched. fdroidserver builds a second fetch with no
-# headers (checkupdates.py check_http) and it is answered 403 at the edge, so never name a URL there.
 UpdateCheckData: https://how2vote.au/app-version.json|"versionCode":\s*(\d+)|.|"versionName":\s*"([\d.]+)"
-CurrentVersion: 1.3.13
-CurrentVersionCode: 10313000
+CurrentVersion: 1.3.14
+CurrentVersionCode: 10314000

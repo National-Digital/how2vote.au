@@ -8,7 +8,7 @@ const recipe = readFileSync(new URL("../docs/fdroid/au.how2vote.app.yml", import
 describe("recipe phase extraction", () => {
   it("reads every phase the buildserver executes", () => {
     for (const phase of PHASES) expect(phaseCommands(recipe, phase).length).toBeGreaterThan(0);
-    expect(subdir(recipe)).toBe("apps/mobile/android");
+    expect(subdir(recipe)).toBe("apps/mobile/android/app");
   });
 
   it("undoes YAML line folding so a wrapped command stays one command", () => {
@@ -59,7 +59,7 @@ describe("recipe command hygiene", () => {
   // The web bundle is built from the workspace root while the shell stays in subdir.
   it("reaches the workspace root with pnpm -C", () => {
     for (const cmd of phaseCommands(recipe, "build")) {
-      expect(cmd).toContain("pnpm -C ../../..");
+      expect(cmd).toContain("pnpm -C ../../../..");
     }
   });
 
