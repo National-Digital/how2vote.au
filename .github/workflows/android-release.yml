@@ -250,6 +250,9 @@ jobs:
           distribution: temurin
           java-version: "21"
 
+      - name: Recipe init
+        run: node scripts/fdroid-recipe-build.mjs init
+
       - name: Recipe prebuild
         env:
           V: ${{ needs.build.outputs.app-version }}

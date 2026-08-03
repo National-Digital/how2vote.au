@@ -13,8 +13,10 @@
  *     near-full-bleed on paper; flips to chalk-on-slate via prefers-color-scheme)
  *     → favicon-32.png / favicon-16.png (light-scheme bake)
  *
- * Outputs land in static/ and are gitignored — deterministic build artifacts, never
- * hand-edited. Runs before `vite build` (see package.json prebuild:assets).
+ * Outputs land in static/ and are COMMITTED: the store shells build with `build:app`,
+ * which runs no generator (their install skips sharp's binaries entirely), yet the
+ * prerenderer requires every icon app.html links. Run `pnpm icons:generate` after
+ * changing the brand mark and commit the result; never hand-edit the outputs.
  */
 import { writeFile, mkdir } from "node:fs/promises";
 import { dirname, join, resolve } from "node:path";

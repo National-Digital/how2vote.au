@@ -11,9 +11,10 @@
  *   CF_PAGES_BRANCH=main   -> production deploy (the live site, how2vote.au)
  *   CF_PAGES_BRANCH=pr-123 -> isolated preview at pr-123.how2vote-au.pages.dev
  *
- * wrangler is a pinned devDependency, so `pnpm exec wrangler` runs the locked
- * version from node_modules/.bin and fails fast if it is missing — it never
- * silently fetches a floating version from the registry with the CF token in env.
+ * wrangler is a pinned devDependency of tools/deploy (kept out of the app-build
+ * closures the F-Droid buildserver installs), so the locked version is run via
+ * tools/deploy's own bin dir and fails fast if it is missing — never a floating
+ * version silently fetched from the registry with the CF token in env.
  *
  * Environment:
  *   CLOUDFLARE_ACCOUNT_ID  (required)
@@ -35,6 +36,9 @@ const HERE = dirname(fileURLToPath(import.meta.url));
 const REPO_ROOT = join(HERE, "..");
 const WEB_DIR = join(REPO_ROOT, "apps", "web");
 const BUILD_DIR = join(WEB_DIR, "build");
+// wrangler lives in tools/deploy, outside the app-build closures, so it is addressed by its own
+// bin path — `pnpm exec` from apps/web cannot see another workspace package's binaries.
+const WRANGLER = join(REPO_ROOT, "tools", "deploy", "node_modules", ".bin", "wrangler");
 
 const project = process.env.CF_PAGES_PROJECT || "how2vote-au";
 const branch = process.env.CF_PAGES_BRANCH || "main";
@@ -68,8 +72,6 @@ function main() {
   );
   const args = isProduction
     ? [
-        "exec",
-        "wrangler",
         "pages",
         "deploy",
         "build",
@@ -80,8 +82,6 @@ function main() {
         "--commit-dirty=true",
       ]
     : [
-        "exec",
-        "wrangler",
         "pages",
         "deploy",
         BUILD_DIR,
@@ -91,7 +91,11 @@ function main() {
         branch,
         "--commit-dirty=true",
       ];
-  execFileSync("pnpm", args, {
+  if (!existsSync(WRANGLER)) {
+    console.error(`❌ ${WRANGLER} not found — run pnpm install (tools/deploy holds wrangler).`);
+    process.exit(1);
+  }
+  execFileSync(WRANGLER, args, {
     stdio: "inherit",
     // Production reads wrangler.toml (functions + bindings) from apps/web; a preview deploys the build
     // dir from the repo root with no config, so no wrangler.toml is picked up.

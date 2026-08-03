@@ -1,0 +1,11 @@
+{
+  "name": "@how2vote/deploy",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Cloudflare deploy toolchain (wrangler). A separate package so the store app builds never install it: the F-Droid buildserver installs only the @how2vote/web and @how2vote/mobile closures, and workerd's prebuilt binaries must not appear in that tree.",
+  "license": "AGPL-3.0-or-later",
+  "type": "module",
+  "devDependencies": {
+    "wrangler": "^4.110.0"
+  }
+}

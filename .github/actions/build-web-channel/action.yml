@@ -31,10 +31,17 @@ runs:
         cache: pnpm
     - run: pnpm install --frozen-lockfile
       shell: bash
-    - name: Build (topological, channel-aware)
+    # build:app, not build: the store shells embed the vite output only. The og/icon/badge
+    # generators (and their sharp toolchain) are website concerns — keeping them out of this path
+    # keeps the F-Droid buildserver's install free of prebuilt binaries, and every app channel on
+    # the exact build the recipe runs.
+    - name: Build workspace dependencies (topological)
+      shell: bash
+      run: pnpm --filter "@how2vote/web^..." build
+    - name: Build (channel-aware app bundle)
       shell: bash
       env:
         APP_VERSION: ${{ inputs.app-version }}
         PUBLIC_DIST_CHANNEL: ${{ inputs.channel }}
         PUBLIC_APPLE_APP_ID: ${{ inputs.apple-app-id }}
-      run: pnpm build
+      run: pnpm --filter @how2vote/web build:app

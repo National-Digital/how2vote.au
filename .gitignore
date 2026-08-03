@@ -21,15 +21,6 @@ apps/web/static/.well-known/assetlinks.json
 apps/web/static/badges/*.json
 # F-Droid update-check endpoint — generated per deploy (scripts/generate-app-version.mjs)
 apps/web/static/app-version.json
-apps/web/static/apple-touch-icon.png
-apps/web/static/favicon-16.png
-apps/web/static/favicon-32.png
-apps/web/static/favicon.svg
-apps/web/static/icon-192.png
-apps/web/static/icon-512.png
-apps/web/static/icon-maskable-512.png
-apps/web/static/icon-maskable.svg
-apps/web/static/icon.svg
 
 # test / coverage
 coverage/

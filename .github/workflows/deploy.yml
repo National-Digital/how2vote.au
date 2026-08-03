@@ -202,7 +202,7 @@ jobs:
           fi
           # Inject the id into the placeholder binding for this run only (never committed).
           sed -i "s|REPLACE_WITH_D1_DATABASE_ID|${CF_D1_DATABASE_ID}|" apps/web/wrangler.toml
-          pnpm exec wrangler d1 migrations apply how2vote-research --remote --config apps/web/wrangler.toml
+          tools/deploy/node_modules/.bin/wrangler d1 migrations apply how2vote-research --remote --config apps/web/wrangler.toml
 
       - name: Verify production research schema is aggregate-only
         # Fail-closed deploy gate: after migrations are applied, read the live D1 table list and
@@ -227,7 +227,7 @@ jobs:
             exit 0
           fi
           sed -i "s|REPLACE_WITH_D1_DATABASE_ID|${CF_D1_DATABASE_ID}|" apps/web/wrangler.toml
-          tables=$(pnpm exec wrangler d1 execute how2vote-research --remote --json \
+          tables=$(tools/deploy/node_modules/.bin/wrangler d1 execute how2vote-research --remote --json \
             --config apps/web/wrangler.toml \
             --command "SELECT name FROM sqlite_master WHERE type='table'" \
             | node -e "let s='';process.stdin.on('data',d=>s+=d).on('end',()=>{const j=JSON.parse(s);const r=(Array.isArray(j)?j:[j]).flatMap(x=>x.results||[]);process.stdout.write(r.map(t=>t.name).join(','))})")
@@ -257,7 +257,7 @@ jobs:
             exit 0
           fi
           sed -i "s|REPLACE_WITH_D1_DATABASE_ID|${CF_D1_DATABASE_ID}|" apps/web/wrangler.toml
-          applied=$(pnpm exec wrangler d1 execute how2vote-research --remote --json \
+          applied=$(tools/deploy/node_modules/.bin/wrangler d1 execute how2vote-research --remote --json \
             --config apps/web/wrangler.toml \
             --command "SELECT name FROM d1_migrations" \
             | node -e "let s='';process.stdin.on('data',d=>s+=d).on('end',()=>{const j=JSON.parse(s);const r=(Array.isArray(j)?j:[j]).flatMap(x=>x.results||[]);process.stdout.write(r.map(t=>t.name).join(','))})")
@@ -329,7 +329,7 @@ jobs:
           CLOUDFLARE_ACCOUNT_ID: ${{ vars.CLOUDFLARE_ACCOUNT_ID }}
         run: |
           set -euo pipefail
-          if ! secrets=$(cd apps/web && pnpm exec wrangler pages secret list --project-name "$CF_PAGES_PROJECT" 2>/dev/null); then
+          if ! secrets=$(cd apps/web && ../../tools/deploy/node_modules/.bin/wrangler pages secret list --project-name "$CF_PAGES_PROJECT" 2>/dev/null); then
             echo "::error::Could not list Cloudflare Pages secrets — cannot confirm the research integrity secrets are provisioned."
             exit 1
           fi
