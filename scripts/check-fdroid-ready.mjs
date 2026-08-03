@@ -108,7 +108,7 @@ export const DEBIAN_NODE_MAJOR = {
 };
 
 /** Phase keys whose list items fdroidserver runs as shell commands. */
-const PHASE_KEYS = ["sudo", "prebuild", "build", "postbuild"];
+const PHASE_KEYS = ["sudo", "init", "prebuild", "build", "postbuild"];
 
 /**
  * Every shell command the recipe declares, across all build blocks. A deliberate line scanner
@@ -234,15 +234,22 @@ export function verdict(files, options = {}) {
     const wants = [
       ["Repo: https://github.com/National-Digital/how2vote.au.git", "public repo URL"],
       ["License: AGPL-3.0-or-later", "license"],
-      ["subdir: apps/mobile/android", "gradle subdir"],
+      // The gradle MODULE directory: fdroidserver auto-detects the APK under <subdir>/build/outputs.
+      ["subdir: apps/mobile/android/app", "gradle module subdir"],
       ["- yes", "gradle build flavour"],
       ["versionCode=$$VERCODE$$\\nversionName=$$VERSION$$", "property-injection prebuild line"],
       ["https://how2vote.au/app-version.json", "update-check endpoint"],
       ["AutoUpdateMode: Version v%v", "tag pattern"],
-      ["output: app/build/outputs/apk/release/app-release-unsigned.apk", "APK output glob"],
     ];
     for (const [needle, label] of wants) {
       if (!recipe.includes(needle)) push(`${RECIPE_REL}: ${label} — expected "${needle}"`);
+    }
+    // With the module subdir, an `output:` glob would switch fdroidserver from gradle APK
+    // detection to raw mode — redundant at best, and it masks a wrong build path.
+    if (/^\s+output:/m.test(recipe)) {
+      push(
+        `${RECIPE_REL}: output: is redundant — fdroidserver finds the APK under the module subdir`,
+      );
     }
   }
 
@@ -417,6 +424,17 @@ export function verdict(files, options = {}) {
               `(${tagged})`,
           );
         }
+      }
+    }
+    // CurrentVersion is checkupdates' bookkeeping copy of the newest build block — two hand-kept
+    // spellings of one fact until the MR is merged, so hold them equal here.
+    if (blocks.length > 0 && currentName !== undefined) {
+      const [, lastName, lastCode] = blocks[blocks.length - 1];
+      if (lastName !== currentName || lastCode !== currentCode) {
+        push(
+          `${RECIPE_REL}: CurrentVersion ${currentName} (${currentCode}) does not match the ` +
+            `newest build block ${lastName} (${lastCode}) — update both together`,
+        );
       }
     }
     for (const [label, name, code] of pairs) {

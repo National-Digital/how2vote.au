@@ -180,6 +180,21 @@ describe("recipe version pairs", () => {
     expect(errors.some((e) => e.includes("build block"))).toBe(true);
   });
 
+  it("catches CurrentVersion lagging the newest build block", () => {
+    const files = realFiles();
+    // The oldest block's pair is valid on its own, so only the linkage check can object.
+    const [, name, code] = files[RECIPE_REL].match(
+      /versionName:[ \t]*([\d.]+)[ \t]*\n[ \t]*versionCode:[ \t]*(\d+)/,
+    );
+    files[RECIPE_REL] = files[RECIPE_REL].replace(
+      /^CurrentVersion:.*$/m,
+      `CurrentVersion: ${name}`,
+    ).replace(/^CurrentVersionCode:.*$/m, `CurrentVersionCode: ${code}`);
+    const { ok, errors } = verdict(files);
+    expect(ok).toBe(false);
+    expect(errors.some((e) => e.includes("does not match the newest build block"))).toBe(true);
+  });
+
   it("catches the CurrentVersion header being dropped", () => {
     const files = realFiles();
     files[RECIPE_REL] = files[RECIPE_REL].replace(/^CurrentVersionCode:.*$/m, "");
@@ -309,8 +324,8 @@ describe("one command per phase item", () => {
   it("catches a command that changes directory", () => {
     const files = realFiles();
     files[RECIPE_REL] = files[RECIPE_REL].replaceAll(
-      "pnpm -C ../../.. install --frozen-lockfile",
-      "cd ../../..",
+      /^.*pnpm -C \.\.\/\.\.\/\.\.\/\.\. install .*$/gm,
+      "      - cd ../../../..",
     );
     const { ok, errors } = verdict(files);
     expect(ok).toBe(false);
@@ -322,9 +337,20 @@ describe("one command per phase item", () => {
     const blocks = recipe.match(/^[ \t]*-[ \t]*versionName:/gm)?.length ?? 0;
     expect(blocks).toBeGreaterThan(1);
     const installs = phaseItems(recipe).filter(
-      ([cmd, phase]) => phase === "prebuild" && cmd.includes("--frozen-lockfile"),
+      ([cmd, phase]) => phase === "init" && cmd.includes("--frozen-lockfile"),
     );
     expect(installs).toHaveLength(blocks);
+  });
+
+  it("catches an output: glob reappearing beside the module subdir", () => {
+    const files = realFiles();
+    files[RECIPE_REL] = files[RECIPE_REL].replaceAll(
+      "    gradle:",
+      "    output: app/build/outputs/apk/release/app-release-unsigned.apk\n    gradle:",
+    );
+    const { ok, errors } = verdict(files);
+    expect(ok).toBe(false);
+    expect(errors.some((e) => e.includes("output: is redundant"))).toBe(true);
   });
 });
 
