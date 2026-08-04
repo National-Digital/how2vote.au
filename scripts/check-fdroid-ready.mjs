@@ -390,6 +390,18 @@ export function verdict(files, options = {}) {
         );
       }
     }
+    // Every pnpm instance path the recipe names (install targets, scandelete entries) must be a
+    // version the lockfile resolves — pnpm keys these directories by version, so a stale path
+    // deletes nothing or installs beside the real package, failing only on the buildserver.
+    for (const [, dir, v] of recipe.matchAll(/\.pnpm\/((?:@[\w.-]+\+)?[\w.-]+)@([\d.]+)\//g)) {
+      const key = `${dir.replace("+", "/")}@${v}`;
+      if (!lock.includes(`\n  ${key}:`) && !lock.includes(`\n  '${key}':`)) {
+        push(
+          `${RECIPE_REL}: .pnpm/${dir}@${v}/ is not a package version pnpm-lock.yaml resolves — ` +
+            `update the path and the lockfile in the same PR`,
+        );
+      }
+    }
     // The rollup binding is installed into pnpm's rollup@<version> instance directory; a stale
     // version in those paths would build fine and then fail at require time on the buildserver.
     const rollupPin = recipe.match(/^[ \t]*-[ \t]*rollup@v(\S+)[ \t]*$/m)?.[1];
