@@ -395,6 +395,17 @@ describe("source-built toolchain", () => {
     expect(errors.some((e) => e.includes("without --no-optional"))).toBe(true);
   });
 
+  it("catches a pnpm instance path the lockfile does not resolve", () => {
+    const files = realFiles();
+    files[RECIPE_REL] = files[RECIPE_REL].replace(
+      ".pnpm/@capacitor+cli@8.4.2/",
+      ".pnpm/@capacitor+cli@1.0.0/",
+    );
+    const { ok, errors } = verdict(files);
+    expect(ok).toBe(false);
+    expect(errors.some((e) => e.includes("@capacitor+cli@1.0.0"))).toBe(true);
+  });
+
   it("catches the rollup instance path drifting from the srclib pin", () => {
     const files = realFiles();
     files[RECIPE_REL] = files[RECIPE_REL].replaceAll(".pnpm/rollup@4.62.4/", ".pnpm/rollup@4.0.0/");

@@ -17,7 +17,11 @@
 # same reason. The two bundler natives the build does execute are compiled from the srclibs
 # pinned below — at the versions the lockfile resolves, which check-fdroid-ready.mjs holds
 # equal — esbuild via ESBUILD_BINARY_PATH, rollup's parser binding installed into the one
-# rollup@<version> instance path pnpm creates.
+# rollup@<version> instance path pnpm creates. The Capacitor CLI's project-template tarballs are
+# the sole scanner-flagged archives left in the tree. `cap update` runs in prebuild (the gitignored
+# cordova-plugins gradle subproject is regenerated from a template while it still exists), the scan
+# then deletes the archives, and the shell embeds via `cap copy` — sync would re-extract mid-build
+# what the scan removed.
 #
 # Versioning: the gradle files carry NO literal version (values arrive as project properties).
 # checkupdates polls https://how2vote.au/app-version.json (published on every production deploy
@@ -61,9 +65,15 @@ Builds:
     srclibs:
       - esbuild@v0.28.1
       - rollup@v4.62.4
+    scandelete:
+      - node_modules/.pnpm/@capacitor+cli@8.4.2/node_modules/@capacitor/cli/assets
     prebuild:
       - printf 'versionCode=$$VERCODE$$\nversionName=$$VERSION$$\n' >> ../gradle.properties
       - cargo fetch --locked --manifest-path $$rollup$$/rust/Cargo.toml
+      - mkdir -p src/main/assets
+      - mkdir -p ../../../web/build
+      - touch ../../../web/build/index.html
+      - pnpm -C ../../../.. --filter @how2vote/mobile exec cap update android
     build:
       - go build -C $$esbuild$$ ./cmd/esbuild
       - cargo build --release --offline --manifest-path $$rollup$$/rust/bindings_napi/Cargo.toml
@@ -71,7 +81,7 @@ Builds:
       - printf '{"name":"@rollup/rollup-linux-x64-gnu","version":"4.62.4","main":"./rollup.linux-x64-gnu.node"}' > ../../../../node_modules/.pnpm/rollup@4.62.4/node_modules/@rollup/rollup-linux-x64-gnu/package.json
       - pnpm -C ../../../.. --filter @how2vote/web^... build
       - ESBUILD_BINARY_PATH=$$esbuild$$/esbuild APP_VERSION=$$VERSION$$ PUBLIC_DIST_CHANNEL=fdroid pnpm -C ../../../.. --filter @how2vote/web build:app
-      - pnpm -C ../../../.. --filter @how2vote/mobile sync:android
+      - pnpm -C ../../../.. --filter @how2vote/mobile exec cap copy android
 
 AllowedAPKSigningKeys: 617efd39535bb3af10ce0778b6f20ee4597f221baeb3f3e07547bfcc1ac7d213
 
