@@ -1,7 +1,15 @@
 import { describe, expect, it } from "vitest";
 import { readFileSync } from "node:fs";
 
-import { PHASES, phaseCommands, shellLine, signingKeys, subdir } from "./fdroid-recipe-build.mjs";
+import {
+  PHASES,
+  SRCLIB_REPOS,
+  phaseCommands,
+  shellLine,
+  signingKeys,
+  srclibRefs,
+  subdir,
+} from "./fdroid-recipe-build.mjs";
 
 const recipe = readFileSync(new URL("../docs/fdroid/au.how2vote.app.yml", import.meta.url), "utf8");
 
@@ -39,6 +47,37 @@ describe("recipe phase extraction", () => {
   it("joins commands with '; ', as fdroidserver does", () => {
     expect(shellLine(["a", "b"], { version: "1.0.0", code: "1" })).toBe("a; b");
   });
+
+  it("substitutes srclib checkout paths", () => {
+    const line = shellLine(["go build -C $$esbuild$$ ./cmd/esbuild"], {
+      version: "1.0.0",
+      code: "1",
+      srclibs: { esbuild: "/srclib/esbuild" },
+    });
+    expect(line).toBe("go build -C /srclib/esbuild ./cmd/esbuild");
+  });
+});
+
+describe("srclibs", () => {
+  it("reads every pin, and each has a repo mapping mirroring fdroiddata's srclibs/", () => {
+    const libs = srclibRefs(recipe);
+    expect(libs.length).toBeGreaterThan(0);
+    for (const { name, ref } of libs) {
+      expect(SRCLIB_REPOS[name], `srclib ${name} needs a SRCLIB_REPOS entry`).toBeDefined();
+      expect(ref).toMatch(/^v\d/);
+    }
+  });
+
+  it("only ever references declared srclibs from phase commands", () => {
+    const declared = new Set(srclibRefs(recipe).map(({ name }) => name));
+    for (const phase of PHASES) {
+      for (const cmd of phaseCommands(recipe, phase)) {
+        for (const [, name] of cmd.matchAll(/\$\$(?!VERSION|VERCODE)([A-Za-z0-9_-]+)\$\$/g)) {
+          expect(declared.has(name), `${phase}: "${cmd}" references undeclared srclib`).toBe(true);
+        }
+      }
+    }
+  });
 });
 
 describe("recipe command hygiene", () => {
@@ -58,15 +97,20 @@ describe("recipe command hygiene", () => {
 
   // The web bundle is built from the workspace root while the shell stays in subdir.
   it("reaches the workspace root with pnpm -C", () => {
-    for (const cmd of phaseCommands(recipe, "build")) {
+    const pnpmCmds = phaseCommands(recipe, "build").filter((cmd) => /(^|\s)pnpm\s/.test(cmd));
+    expect(pnpmCmds.length).toBeGreaterThan(0);
+    for (const cmd of pnpmCmds) {
       expect(cmd).toContain("pnpm -C ../../../..");
     }
   });
 
-  // packages/*/dist is gitignored, so a fresh checkout must build workspace dependencies first.
-  it("builds the web package with its workspace dependencies", () => {
+  // packages/*/dist is gitignored, so a fresh checkout must build workspace dependencies first —
+  // then the app bundle (build:app, no website asset generators) with the source-built esbuild.
+  it("builds workspace dependencies, then the app bundle with the srclib esbuild", () => {
     const build = phaseCommands(recipe, "build").join("; ");
-    expect(build).toContain("--filter @how2vote/web...");
+    expect(build).toContain("--filter @how2vote/web^... build");
+    expect(build).toContain("--filter @how2vote/web build:app");
+    expect(build).toContain("ESBUILD_BINARY_PATH=$$esbuild$$/esbuild");
   });
 });
 

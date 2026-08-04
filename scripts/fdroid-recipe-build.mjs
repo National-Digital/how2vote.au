@@ -22,13 +22,26 @@
  */
 
 import { spawnSync } from "node:child_process";
-import { readFileSync } from "node:fs";
+import { readFileSync, rmSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const RECIPE_REL = "docs/fdroid/au.how2vote.app.yml";
 export const PHASES = ["init", "prebuild", "build"];
+
+/**
+ * The repos behind the recipe's srclibs, mirroring fdroiddata's srclibs/<name>.yml (which is
+ * where fdroidserver reads them from — a srclib used here must exist there under the same name).
+ * fdroidserver clones each at the pinned ref and substitutes $$<name>$$ with the checkout path;
+ * materialiseSrclibs() below does the same into build/srclib/, fdroidserver's own layout.
+ *
+ * @type {Record<string, string>}
+ */
+export const SRCLIB_REPOS = {
+  esbuild: "https://github.com/evanw/esbuild.git",
+  rollup: "https://github.com/rollup/rollup.git",
+};
 
 /**
  * Extracts one build-block phase's commands. Deliberately a small line scanner rather than a YAML
@@ -92,13 +105,75 @@ export function signingKeys(recipe) {
 }
 
 /**
+ * The recipe's srclib pins. Reuses the phase scanner: `srclibs:` is a list at the same indent as
+ * the command phases, just with `name@ref` entries instead of commands.
+ *
+ * @param {string} recipe
+ * @returns {{name: string, ref: string}[]}
+ */
+export function srclibRefs(recipe) {
+  return phaseCommands(recipe, "srclibs").map((entry) => {
+    const at = entry.indexOf("@");
+    return { name: entry.slice(0, at), ref: entry.slice(at + 1) };
+  });
+}
+
+/**
  * @param {string[]} cmds
- * @param {{version: string, code: string}} pair
+ * @param {{version: string, code: string, srclibs?: Record<string, string>}} subs
  * @returns {string} the single shell line fdroidserver would execute
  */
-export function shellLine(cmds, { version, code }) {
-  return cmds.join("; ").replaceAll("$$VERSION$$", version).replaceAll("$$VERCODE$$", code);
+export function shellLine(cmds, { version, code, srclibs = {} }) {
+  let line = cmds.join("; ").replaceAll("$$VERSION$$", version).replaceAll("$$VERCODE$$", code);
+  for (const [name, dir] of Object.entries(srclibs)) {
+    line = line.replaceAll(`$$${name}$$`, dir);
+  }
+  return line;
 }
+
+/* c8 ignore start -- git/network plumbing, exercised via CI not unit tests */
+/**
+ * Clones each srclib a phase references at its pinned ref, exactly where fdroidserver would
+ * (build/srclib/<name>, gitignored). Idempotent: a checkout already at the pin is reused; one at
+ * anything else is re-cloned, so a pin bump in the recipe just works.
+ *
+ * @param {{name: string, ref: string}[]} libs
+ * @returns {Record<string, string>} srclib name → absolute checkout path
+ */
+function materialiseSrclibs(libs) {
+  /** @type {Record<string, string>} */
+  const paths = {};
+  for (const { name, ref } of libs) {
+    const repo = SRCLIB_REPOS[name];
+    if (repo === undefined) {
+      console.error(
+        `✗ srclib "${name}" has no repo mapping — add it to SRCLIB_REPOS (and make sure ` +
+          `fdroiddata's srclibs/${name}.yml exists; the buildserver reads it from there)`,
+      );
+      process.exit(1);
+    }
+    const dir = join(ROOT, "build", "srclib", name);
+    const at = spawnSync("git", ["-C", dir, "describe", "--tags", "--exact-match"], {
+      encoding: "utf8",
+    });
+    if (at.status === 0 && at.stdout.trim() === ref) {
+      paths[name] = dir;
+      continue;
+    }
+    rmSync(dir, { recursive: true, force: true });
+    console.info(`▶ srclib ${name}: cloning ${repo} at ${ref}`);
+    const clone = spawnSync("git", ["clone", "--depth", "1", "--branch", ref, repo, dir], {
+      stdio: "inherit",
+    });
+    if (clone.status !== 0) {
+      console.error(`✗ srclib ${name}: clone of ${repo} at ${ref} failed`);
+      process.exit(clone.status ?? 1);
+    }
+    paths[name] = dir;
+  }
+  return paths;
+}
+/* c8 ignore stop */
 
 /* c8 ignore start -- CLI/process plumbing */
 function main() {
@@ -128,7 +203,19 @@ function main() {
     console.error(`✗ ${RECIPE_REL}: no commands in the ${phase} phase`);
     process.exit(1);
   }
-  const line = shellLine(cmds, { version: arg("version", "9.9.9"), code: arg("code", "90909000") });
+  // Only the srclibs this phase actually references are materialised — and --print substitutes
+  // their (deterministic) paths without cloning anything.
+  const referenced = srclibRefs(recipe).filter(({ name }) =>
+    cmds.some((c) => c.includes(`$$${name}$$`)),
+  );
+  const srclibs = process.argv.includes("--print")
+    ? Object.fromEntries(referenced.map(({ name }) => [name, join(ROOT, "build", "srclib", name)]))
+    : materialiseSrclibs(referenced);
+  const line = shellLine(cmds, {
+    version: arg("version", "9.9.9"),
+    code: arg("code", "90909000"),
+    srclibs,
+  });
   const cwd = join(ROOT, subdir(recipe));
   if (process.argv.includes("--print")) {
     console.info(line);

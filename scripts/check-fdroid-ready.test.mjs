@@ -24,6 +24,7 @@ const RELS = [
   "scripts/generate-app-version.mjs",
   ".nvmrc",
   "package.json",
+  "pnpm-lock.yaml",
   "apps/mobile/capacitor.config.ts",
   "apps/mobile/package.json",
   "LICENSE",
@@ -182,14 +183,11 @@ describe("recipe version pairs", () => {
 
   it("catches CurrentVersion lagging the newest build block", () => {
     const files = realFiles();
-    // The oldest block's pair is valid on its own, so only the linkage check can object.
-    const [, name, code] = files[RECIPE_REL].match(
-      /versionName:[ \t]*([\d.]+)[ \t]*\n[ \t]*versionCode:[ \t]*(\d+)/,
-    );
+    // 1.0.0/10000000 is a valid pair on its own, so only the linkage check can object.
     files[RECIPE_REL] = files[RECIPE_REL].replace(
       /^CurrentVersion:.*$/m,
-      `CurrentVersion: ${name}`,
-    ).replace(/^CurrentVersionCode:.*$/m, `CurrentVersionCode: ${code}`);
+      "CurrentVersion: 1.0.0",
+    ).replace(/^CurrentVersionCode:.*$/m, "CurrentVersionCode: 10000000");
     const { ok, errors } = verdict(files);
     expect(ok).toBe(false);
     expect(errors.some((e) => e.includes("does not match the newest build block"))).toBe(true);
@@ -333,13 +331,17 @@ describe("one command per phase item", () => {
   });
 
   it("reads every command from every build block", () => {
+    // One block per review policy ("Remove old version") — duplicate it to prove the parser
+    // still reads commands out of every block, not just the first.
     const recipe = readFileSync(resolve(ROOT, RECIPE_REL), "utf8");
     const blocks = recipe.match(/^[ \t]*-[ \t]*versionName:/gm)?.length ?? 0;
-    expect(blocks).toBeGreaterThan(1);
-    const installs = phaseItems(recipe).filter(
+    expect(blocks).toBe(1);
+    const block = recipe.match(/^ {2}- versionName:[\s\S]*?(?=\nAllowedAPKSigningKeys:)/m)[0];
+    const doubled = recipe.replace(block, `${block}\n${block}`);
+    const installs = phaseItems(doubled).filter(
       ([cmd, phase]) => phase === "init" && cmd.includes("--frozen-lockfile"),
     );
-    expect(installs).toHaveLength(blocks);
+    expect(installs).toHaveLength(2);
   });
 
   it("catches an output: glob reappearing beside the module subdir", () => {
@@ -351,6 +353,62 @@ describe("one command per phase item", () => {
     const { ok, errors } = verdict(files);
     expect(ok).toBe(false);
     expect(errors.some((e) => e.includes("output: is redundant"))).toBe(true);
+  });
+});
+
+describe("source-built toolchain", () => {
+  it("catches a srclib pin drifting from the lockfile's resolution", () => {
+    const files = realFiles();
+    files[RECIPE_REL] = files[RECIPE_REL].replace(/- esbuild@v\S+/, "- esbuild@v0.9.9");
+    const { ok, errors } = verdict(files);
+    expect(ok).toBe(false);
+    expect(errors.some((e) => e.includes("not the version pnpm-lock.yaml resolves"))).toBe(true);
+  });
+
+  it("catches a dropped srclib", () => {
+    const files = realFiles();
+    files[RECIPE_REL] = files[RECIPE_REL].replace(/^.*- rollup@v\S+.*\n/m, "");
+    const { ok, errors } = verdict(files);
+    expect(ok).toBe(false);
+    expect(errors.some((e) => e.includes('no "rollup@v<version>" srclib'))).toBe(true);
+  });
+
+  it("catches scanignore reappearing", () => {
+    const files = realFiles();
+    files[RECIPE_REL] = files[RECIPE_REL].replace(
+      "    build:",
+      "    scanignore:\n      - node_modules\n    build:",
+    );
+    const { ok, errors } = verdict(files);
+    expect(ok).toBe(false);
+    expect(errors.some((e) => e.includes("scanignore reappeared"))).toBe(true);
+  });
+
+  it("catches init losing --no-optional", () => {
+    const files = realFiles();
+    files[RECIPE_REL] = files[RECIPE_REL].replace(
+      "--frozen-lockfile --no-optional",
+      "--frozen-lockfile",
+    );
+    const { ok, errors } = verdict(files);
+    expect(ok).toBe(false);
+    expect(errors.some((e) => e.includes("without --no-optional"))).toBe(true);
+  });
+
+  it("catches the rollup instance path drifting from the srclib pin", () => {
+    const files = realFiles();
+    files[RECIPE_REL] = files[RECIPE_REL].replaceAll(".pnpm/rollup@4.62.4/", ".pnpm/rollup@4.0.0/");
+    const { ok, errors } = verdict(files);
+    expect(ok).toBe(false);
+    expect(errors.some((e) => e.includes(".pnpm/rollup@4.0.0/"))).toBe(true);
+  });
+
+  it("catches the generated platform package.json version drifting from the srclib pin", () => {
+    const files = realFiles();
+    files[RECIPE_REL] = files[RECIPE_REL].replace('"version":"4.62.4"', '"version":"4.0.0"');
+    const { ok, errors } = verdict(files);
+    expect(ok).toBe(false);
+    expect(errors.some((e) => e.includes("platform package.json declares 4.0.0"))).toBe(true);
   });
 });
 

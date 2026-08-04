@@ -10,6 +10,11 @@ export default defineConfig({
   // on modern syntax. These targets keep one bundle safe for the web PWA and both shells.
   build: {
     target: ["es2021", "safari15", "chrome99"],
+    // terser, not esbuild's minifier: two passes compress this bundle ~4% smaller gzipped, which
+    // is what keeps the JS budget (budgets.json) holding on the vite 7 line — and it is pure JS,
+    // so the F-Droid closure stays free of prebuilt binaries.
+    minify: "terser",
+    terserOptions: { compress: { passes: 2 } },
   },
   // Copyright year, frozen at build time. `new Date()` here runs in Node when the config is loaded
   // — i.e. when the site is built — so the value reflects the last build (the last time anything

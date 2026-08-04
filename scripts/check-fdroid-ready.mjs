@@ -369,6 +369,70 @@ export function verdict(files, options = {}) {
     }
   }
 
+  // 4a4 — the bundler natives are compiled from source, at the versions the lockfile resolves.
+  // The srclib pins and the lockfile must move together, or the buildserver compiles a different
+  // bundler than every other build of this repo runs (esbuild's JS wrapper hard-fails on a
+  // version mismatch, so a drifted pin fails the release-side recipe build loudly — this catches
+  // it at PR time instead).
+  const lock = need("pnpm-lock.yaml");
+  if (recipe !== null && lock !== null) {
+    for (const name of ["esbuild", "rollup"]) {
+      const pin = recipe.match(new RegExp(`^[ \\t]*-[ \\t]*${name}@v(\\S+)[ \\t]*$`, "m"))?.[1];
+      if (pin === undefined) {
+        push(
+          `${RECIPE_REL}: no "${name}@v<version>" srclib — the buildserver builds ${name} from ` +
+            `source and needs the pin`,
+        );
+      } else if (!lock.includes(`\n  ${name}@${pin}:`)) {
+        push(
+          `${RECIPE_REL}: srclib ${name}@v${pin} is not the version pnpm-lock.yaml resolves — ` +
+            `update the pin and the lockfile in the same PR`,
+        );
+      }
+    }
+    // The rollup binding is installed into pnpm's rollup@<version> instance directory; a stale
+    // version in those paths would build fine and then fail at require time on the buildserver.
+    const rollupPin = recipe.match(/^[ \t]*-[ \t]*rollup@v(\S+)[ \t]*$/m)?.[1];
+    if (rollupPin !== undefined) {
+      for (const [, v] of recipe.matchAll(/\.pnpm\/rollup@([\d.]+)\//g)) {
+        if (v !== rollupPin) {
+          push(
+            `${RECIPE_REL}: a build command uses .pnpm/rollup@${v}/ but the srclib pins ` +
+              `v${rollupPin} — the two must move together`,
+          );
+        }
+      }
+      for (const [, v] of recipe.matchAll(/"version":"([\d.]+)"/g)) {
+        if (v !== rollupPin) {
+          push(
+            `${RECIPE_REL}: the generated platform package.json declares ${v} but the srclib ` +
+              `pins v${rollupPin} — the two must move together`,
+          );
+        }
+      }
+    }
+    // Prebuilt natives all arrive as npm optionalDependencies (esbuild/rollup platform packages,
+    // sharp's libvips, fsevents) — skipping optionals is what keeps the installed tree free of
+    // binary blobs, with the srclib builds supplying the two the build actually runs.
+    const inits = phaseItems(recipe).filter(([, phase]) => phase === "init");
+    for (const [cmd] of inits) {
+      if (cmd.includes("pnpm") && cmd.includes("install") && !cmd.includes("--no-optional")) {
+        push(
+          `${RECIPE_REL}: init installs without --no-optional — the npm-shipped prebuilt ` +
+            `binaries would land in the tree and fail the source scan`,
+        );
+      }
+    }
+  }
+  // scanignore hides binaries from the scanner without removing them, which F-Droid review
+  // rejects. Prebuilts are scandeleted and replaced with the srclib-built ones instead.
+  if (recipe !== null && /^[ \t]*scanignore:/m.test(recipe)) {
+    push(
+      `${RECIPE_REL}: scanignore reappeared — delete prebuilts with scandelete and build them ` +
+        `from the pinned srclibs; nothing in the tree may be merely ignored`,
+    );
+  }
+
   // 4b — every version pair the recipe declares matches the shared encoding. checkupdates derives
   // these from the published endpoint, but the placeholder block and the CurrentVersion header are
   // hand-written: a wrong digit here ranks a release below its predecessor on the F-Droid index.
@@ -501,6 +565,7 @@ function main() {
     "scripts/generate-app-version.mjs",
     ".nvmrc",
     "package.json",
+    "pnpm-lock.yaml",
     "apps/mobile/capacitor.config.ts",
     "apps/mobile/package.json",
     "LICENSE",

@@ -1,13 +1,21 @@
 packages:
   - "packages/*"
   - "apps/*"
+  - "tools/*"
 
 onlyBuiltDependencies:
-  - esbuild
   - sharp
   - workerd
 
 overrides:
+  # One vite for the whole tree. vitest depends on vite directly, and left alone it resolves the
+  # newest major (8, rolldown-based) for the packages that don't declare vite themselves — putting
+  # Rust prebuilts (rolldown, lightningcss) back into the closure the F-Droid buildserver installs.
+  # 7.x is the esbuild + rollup line, both of which F-Droid builds from source (srclibs exist).
+  vite: ^7.3.6
+  # auto-install-peers would otherwise inject vite's OPTIONAL lightningcss peer, and with it a
+  # Rust prebuilt this repo never uses — CSS goes through vite's default postcss/esbuild path.
+  "vite>lightningcss": "-"
   cookie@<0.7.0: ">=0.7.0"
   # postcss and es-module-lexer are pinned to these known-good patches as a supply-chain caution
   # (avoid auto-adopting the very newest transitive patches). NOTE: no repo-wide `minimumReleaseAge`
@@ -26,23 +34,34 @@ overrides:
   # client. mapshaper still pins adm-zip@^0.5.9 (excludes the fix), so forced to the patched line —
   # a durable fix rather than an expiring risk acceptance (docs/legal/security-register.json).
   adm-zip@<0.6.0: ">=0.6.0"
-  # fast-uri 3.x < 3.1.4 has a host-confusion flaw via a literal backslash authority delimiter
-  # (GHSA-v2hh-gcrm-f6hx, high). Only reached transitively via eslint-plugin-tsdoc ->
+  # fast-uri 3.x < 3.1.5 confuses the host when a backslash introduces the authority — twice:
+  # the original flaw (GHSA-v2hh-gcrm-f6hx) and its resurfacing after the 3.1.4 fix
+  # (GHSA-7p8r-x3mc-p8w7, both high). Only reached transitively via eslint-plugin-tsdoc ->
   # @microsoft/tsdoc-config -> ajv in the dev-only lint toolchain; forced to the patched line.
-  fast-uri@>=3.0.0 <3.1.4: "3.1.4"
+  fast-uri@>=3.0.0 <3.1.5: "3.1.5"
   # sharp < 0.35.0 inherits libvips CVEs (GHSA-f88m-g3jw-g9cj, high). The app's own sharp is
   # already 0.35.3; this forces the second instance pulled in via wrangler -> miniflare
   # (dev-only Workers emulation) onto the same patched line.
   sharp@<0.35.0: "0.35.3"
-  # brace-expansion <= 5.0.7 has an unbounded-expansion DoS (GHSA-mh99-v99m-4gvg, high) — a crafted
-  # brace pattern can OOM the process. Reached only in dev tooling glob matching (single 5.x instance
-  # in the tree), never on user input, but forced to the patched line to keep the gate clean.
-  brace-expansion@<5.0.8: ">=5.0.8"
+  # brace-expansion <= 5.0.8 has an unbounded-expansion DoS — a crafted brace pattern can OOM the
+  # process (GHSA-mh99-v99m-4gvg), and 5.0.9 closes the bypass of that mitigation via unbounded
+  # intermediate arrays (GHSA-rgw5-rvv9-x895, both high). Reached only in dev tooling glob matching
+  # (single 5.x instance in the tree), never on user input, but forced to the patched line to keep
+  # the gate clean.
+  brace-expansion@<5.0.9: ">=5.0.9"
+  # undici 7.x < 7.29.0 can disclose one user's response to another (and crash at parse time) on
+  # degenerate private cache directives (GHSA-4cwx-7wf7-3272, high). Only reached via wrangler ->
+  # miniflare (dev-only Workers emulation in tools/deploy) and never in anything that ships;
+  # forced to the patched line to keep the gate clean.
+  undici@>=7.0.0 <7.29.0: ">=7.29.0 <8.0.0"
 
 allowBuilds:
   # mapshaper optionals for formats we don't use (sqlite/msgpack); never build their natives.
   better-sqlite3: false
-  esbuild: true
+  # esbuild's postinstall only copies the @esbuild platform binary over its JS launcher shim; the
+  # shim spawns that binary directly when the copy is skipped, so nothing is lost — and the
+  # F-Droid install (--no-optional, ESBUILD_BINARY_PATH) must never materialise a prebuilt.
+  esbuild: false
   msgpackr-extract: false
   sharp: true
   workerd: true
