@@ -69,6 +69,66 @@ describe("store metadata", () => {
     expect(notes).toMatch(/contact\/feedback form/i);
   });
 
+  it("names an official source for every piece of government information", () => {
+    // Each URL must be present and absolute, so the stores render it as a link, not dead text.
+    expect(copy.sources.items.length).toBeGreaterThan(0);
+    for (const path of ["ios/description.txt", "android/full_description.txt"]) {
+      for (const { url } of copy.sources.items) {
+        expect(files[path], `${path} omits ${url}`).toContain(url);
+        expect(url).toMatch(/^https:\/\//);
+      }
+    }
+    // The AEC and the parliamentary record are the two government sources the app draws on.
+    const urls = copy.sources.items.map((s) => s.url).join(" ");
+    expect(urls).toContain("aec.gov.au");
+    expect(urls).toContain("aph.gov.au");
+  });
+
+  it("disclaims government affiliation near the top of both descriptions", () => {
+    for (const path of ["ios/description.txt", "android/full_description.txt"]) {
+      const at = files[path].indexOf(copy.disclaimer.body);
+      expect(at, `${path} omits the disclaimer`).toBeGreaterThan(-1);
+      expect(at, `${path} buries the disclaimer at ${at}`).toBeLessThanOrEqual(600);
+    }
+    expect(copy.disclaimer.body).toMatch(/not affiliated with/i);
+    expect(copy.disclaimer.body).toMatch(/Australian Electoral Commission/);
+  });
+
+  it("detects a dropped source link, a buried disclaimer and a relative URL", () => {
+    const [first] = copy.sources.items;
+    const dropped = {
+      ...files,
+      "android/full_description.txt": files["android/full_description.txt"].replace(first.url, ""),
+    };
+    expect(validateMetadata(dropped, operator, copy).some((i) => i.includes(first.url))).toBe(true);
+
+    // Same text, moved past the visible window — present but not "easy to see".
+    const buried = {
+      ...files,
+      "ios/description.txt":
+        files["ios/description.txt"].replace(copy.disclaimer.body, "") +
+        `\n${"x".repeat(700)}\n${copy.disclaimer.body}`,
+    };
+    expect(validateMetadata(buried, operator, copy).some((i) => i.includes("buried"))).toBe(true);
+
+    const relative = {
+      ...copy,
+      sources: { ...copy.sources, items: [{ label: "AEC", url: "www.aec.gov.au" }] },
+    };
+    expect(
+      validateMetadata(files, operator, relative).some((i) => i.includes("absolute https:// URL")),
+    ).toBe(true);
+  });
+
+  it("keeps the repository URL absolute so the stores link it", () => {
+    expect(copy.repoUrl).toMatch(/^https:\/\/github\.com\//);
+    expect(
+      validateMetadata(files, operator, { ...copy, repoUrl: "github.com/x/y" }).some((i) =>
+        i.includes("repoUrl"),
+      ),
+    ).toBe(true);
+  });
+
   it("catches an over-limit field", () => {
     const broken = { ...files, "ios/name.txt": "x".repeat(31) };
     expect(validateMetadata(broken, operator, copy).some((i) => i.includes("ios/name.txt"))).toBe(

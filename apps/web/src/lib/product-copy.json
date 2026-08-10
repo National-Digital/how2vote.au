@@ -1,8 +1,31 @@
 {
   "_comment": "Single source for the generated store listings (scripts/generate-store-metadata.mjs); a unit test asserts the App Store and Play descriptions are built from these exact strings, so the two listings can never drift apart. Consumed node-side by the generator only (kept out of the web client bundle). Page CONTENT (privacy, terms, about, …) is not here — those live as real pages that the native shells bundle verbatim, so they cannot drift by construction.",
   "tagline": "Vote on their record.",
-  "repoUrl": "github.com/National-Digital/how2vote.au",
+  "repoUrl": "https://github.com/National-Digital/how2vote.au",
   "pitch": "How2Vote is an independent, non-partisan comparison tool for Australian federal elections.",
+  "_sourcesComment": "An app presenting government information must name an official source for it and disclaim government affiliation, in the store description itself. Both are validated invariants, not optional copy — see validateGovernmentInfo in scripts/generate-store-metadata.mjs.",
+  "disclaimer": {
+    "heading": "NOT A GOVERNMENT APP",
+    "body": "How2Vote is an independent tool. It is not affiliated with, endorsed by or authorised by the Australian Electoral Commission, the Parliament of Australia or any other government entity, and it does not provide or facilitate government services."
+  },
+  "sources": {
+    "heading": "OFFICIAL SOURCES",
+    "intro": "Every piece of electoral and parliamentary information in the app comes from these public sources, and can be checked against them:",
+    "items": [
+      {
+        "label": "Candidates, ballot paper order and electoral divisions — Australian Electoral Commission",
+        "url": "https://www.aec.gov.au"
+      },
+      {
+        "label": "Recorded parliamentary votes (Hansard divisions) — Parliament of Australia",
+        "url": "https://www.aph.gov.au"
+      },
+      {
+        "label": "Compiled division-by-division voting records — They Vote For You, by the OpenAustralia Foundation",
+        "url": "https://theyvoteforyou.org.au"
+      }
+    ]
+  },
   "howItWorks": "Answer 50 propositions parliament has actually voted on. The app shows how closely each party's recorded parliamentary votes match your positions — against the candidates on your ballot, in official ballot order. Then build your own voting plan: nothing is ranked for you and no preference is recommended. You author your own preference order.",
   "claims": {
     "offline": {
