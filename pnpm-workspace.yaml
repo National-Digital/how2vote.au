@@ -21,13 +21,20 @@ overrides:
   # (avoid auto-adopting the very newest transitive patches). NOTE: no repo-wide `minimumReleaseAge`
   # gate is enabled — with the current lockfile pnpm rejects several recently-published entries
   # (eslint, mapshaper, …), so turning it on needs the lockfile to settle or those pinned first.
-  postcss: 8.5.18
+  postcss: 8.5.26
   es-module-lexer: 2.3.0
-  # file-type < 21.3.1 has an infinite-loop DoS in its ASF parser on malformed input
-  # (GHSA-5v7r-6r5c-r473). Only reached transitively via mapshaper -> @ngageoint/geopackage
-  # in the dev-only maps toolchain, and never fed untrusted audio, but forced to the patched
-  # line to keep the dependency tree clean.
-  file-type@>=13.0.0 <21.3.1: ">=21.3.1"
+  # nanoid < 3.3.17 can loop indefinitely on a negative or zero size (GHSA-28wg-ghj8-5hjv,
+  # GHSA-2v37-7h3g-55p8, both high). Reached only via postcss in the dev-only vite/eslint
+  # toolchain; postcss 8.5.26 already requires the patched line, and this pins it against a
+  # future postcss that relaxes the range.
+  nanoid@<3.3.17: ">=3.3.17"
+  # GeoPackage is a format the maps toolchain never reads — it takes the AEC's shapefile — and it
+  # is the sole path to image-size, whose DoS advisories (GHSA-w3rx-r6r6-pgpr, GHSA-5p2g-fcmc-qvqq,
+  # both high) have NO published fix: the patched range is >= 2.0.3 and 2.0.2 is the newest release.
+  # Dropping the dependency removes the vulnerable code outright, where no override could, and takes
+  # file-type (GHSA-5v7r-6r5c-r473) with it. mapshaper require()s it lazily inside its GeoPackage
+  # read/write paths and already guards on the module being absent, so nothing we call can reach it.
+  "mapshaper>@ngageoint/geopackage": "-"
   # adm-zip < 0.6.0 lets a crafted ZIP trigger a 4GB memory allocation (GHSA-xcpc-8h2w-3j85, high).
   # Only reached transitively via mapshaper in the dev-only maps toolchain, where it unzips official
   # AEC shapefiles a maintainer fetches (never attacker-controlled input) and never ships to the

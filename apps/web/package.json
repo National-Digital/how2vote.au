@@ -39,7 +39,6 @@
     "svelte": "^5.56.4",
     "svelte-check": "^4.7.2",
     "terser": "^5.49.0",
-    "tslib": "^2.8.1",
     "typescript": "^6.0.3",
     "vite": "^7.3.6",
     "vitest": "^4.1.10"
