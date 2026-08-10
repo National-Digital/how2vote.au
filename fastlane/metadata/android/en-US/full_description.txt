@@ -1,5 +1,8 @@
 How2Vote is an independent, non-partisan comparison tool for Australian federal elections.
 
+NOT A GOVERNMENT APP
+How2Vote is an independent tool. It is not affiliated with, endorsed by or authorised by the Australian Electoral Commission, the Parliament of Australia or any other government entity, and it does not provide or facilitate government services.
+
 Answer 50 propositions parliament has actually voted on. The app shows how closely each party's recorded parliamentary votes match your positions — against the candidates on your ballot, in official ballot order. Then build your own voting plan: nothing is ranked for you and no preference is recommended. You author your own preference order.
 
 WORKS FULLY OFFLINE
@@ -8,10 +11,16 @@ The complete dataset ships inside the app — questions, scoring and your card a
 BUILT FROM THE PARLIAMENTARY RECORD
 Comparisons are built from recorded parliamentary votes (public Hansard data via They Vote For You), not campaign statements. Every proposition links to the parliamentary divisions behind it, so everything you are shown can be checked at the source.
 
+OFFICIAL SOURCES
+Every piece of electoral and parliamentary information in the app comes from these public sources, and can be checked against them:
+- Candidates, ballot paper order and electoral divisions — Australian Electoral Commission: https://www.aec.gov.au
+- Recorded parliamentary votes (Hansard divisions) — Parliament of Australia: https://www.aph.gov.au
+- Compiled division-by-division voting records — They Vote For You, by the OpenAustralia Foundation: https://theyvoteforyou.org.au
+
 PRIVATE BY DESIGN
 No account. No sign-up. Your answers and weights stay on your device.
 
 NEUTRAL BY CONSTRUCTION
-The interface is strictly two-tone, so match quality is never encoded as party colour. The scoring method is public, deterministic and reproducible, and the app is open source under AGPL-3.0-or-later. github.com/National-Digital/how2vote.au
+The interface is strictly two-tone, so match quality is never encoded as party colour. The scoring method is public, deterministic and reproducible, and the app is open source under AGPL-3.0-or-later. https://github.com/National-Digital/how2vote.au
 
 Authorised by General Consulting Services Pty Ltd as trustee for the Australian Business Trust, trading as National Digital, Gold Coast, Queensland.

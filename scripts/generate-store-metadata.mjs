@@ -17,8 +17,9 @@
  * because no workflow of ours runs for an F-Droid build; `--check` byte-compares it.
  *
  * Every field is validated against the stores' hard length limits and the repo's brand rule (no
- * registration symbols/claims — see check-brand-trademark.mjs), and the description must carry
- * the authorisation line. Pure logic is exported (buildMetadata / validateMetadata) for unit
+ * registration symbols/claims — see check-brand-trademark.mjs), and the description must carry the
+ * authorisation line plus the government-information disclaimer and source links the stores require
+ * (validateGovernmentInfo). Pure logic is exported (buildMetadata / validateMetadata) for unit
  * tests; fs/CLI plumbing runs only when executed directly.
  *
  * Usage:
@@ -123,8 +124,17 @@ export function authorisationLine(operator) {
 export function buildMetadata(operator, copy) {
   const authorisation = authorisationLine(operator);
   const c = copy.claims;
+  // Absolute URLs only: the stores auto-link a fully-qualified URL and render anything else as
+  // dead text, and these source links are a policy requirement (see validateGovernmentInfo).
+  const sources = `${copy.sources.heading}
+${copy.sources.intro}
+${copy.sources.items.map((s) => `- ${s.label}: ${s.url}`).join("\n")}`;
   // Composed ENTIRELY from the shared product-copy source, so the listing tracks the web app.
+  // The disclaimer sits directly under the pitch so it is visible before the listing is expanded.
   const description = `${copy.pitch}
+
+${copy.disclaimer.heading}
+${copy.disclaimer.body}
 
 ${copy.howItWorks}
 
@@ -133,6 +143,8 @@ ${c.offline.body}
 
 ${c.record.heading}
 ${c.record.body}
+
+${sources}
 
 ${c.private.heading}
 ${c.private.body}
@@ -202,12 +214,62 @@ export function validateMetadata(files, operator, copy) {
   // edit moves the web app and both listings together.
   if (copy) {
     for (const [key, claim] of Object.entries(copy.claims)) {
-      for (const path of ["ios/description.txt", "android/full_description.txt"]) {
+      for (const path of DESCRIPTIONS) {
         if (!files[path]?.includes(claim.body)) {
           issues.push(`${path}: missing shared product-copy claim "${key}"`);
         }
       }
     }
+    issues.push(...validateGovernmentInfo(files, copy));
+  }
+  return issues;
+}
+
+/** Store descriptions — the fields the government-information policy applies to. */
+const DESCRIPTIONS = ["ios/description.txt", "android/full_description.txt"];
+
+/** How far into the description the non-affiliation disclaimer must appear (characters). */
+const DISCLAIMER_WINDOW = 600;
+
+/**
+ * Both stores require an app presenting government information to name an official source for it
+ * and to disclaim government affiliation, in the description itself. Every part is checked: a
+ * silently dropped source link or a buried disclaimer is a listing rejection, not a cosmetic defect.
+ */
+export function validateGovernmentInfo(files, copy) {
+  const issues = [];
+  const { disclaimer, sources } = copy;
+  if (!sources?.items?.length)
+    return ["product-copy.json: no government-information sources listed"];
+  for (const path of DESCRIPTIONS) {
+    const content = files[path];
+    if (!content) continue;
+    const at = content.indexOf(disclaimer.body);
+    if (at === -1) {
+      issues.push(`${path}: missing the non-affiliation disclaimer (Misleading Claims policy)`);
+    } else if (at > DISCLAIMER_WINDOW) {
+      issues.push(
+        `${path}: the non-affiliation disclaimer is buried at character ${at} — it must appear ` +
+          `within the first ${DISCLAIMER_WINDOW} so it is visible before the listing is expanded`,
+      );
+    }
+    for (const { label, url } of sources.items) {
+      if (!content.includes(url)) {
+        issues.push(`${path}: missing the source link for "${label}" (${url})`);
+      }
+    }
+  }
+  // Relative URLs are shown as dead text by both stores, which fails the "clear and accessible
+  // link" requirement even though the text is present.
+  for (const { label, url } of sources.items) {
+    if (!url.startsWith("https://")) {
+      issues.push(
+        `product-copy.json: source "${label}" must be an absolute https:// URL, got ${url}`,
+      );
+    }
+  }
+  if (!copy.repoUrl?.startsWith("https://")) {
+    issues.push(`product-copy.json: repoUrl must be an absolute https:// URL to render as a link`);
   }
   return issues;
 }

@@ -1,1 +1,1 @@
-Updated with the latest compiled parliamentary voting-record dataset and app improvements. Full changelog: github.com/National-Digital/how2vote.au/releases
+Updated with the latest compiled parliamentary voting-record dataset and app improvements. Full changelog: https://github.com/National-Digital/how2vote.au/releases
