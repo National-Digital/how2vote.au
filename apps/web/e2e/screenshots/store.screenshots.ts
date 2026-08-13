@@ -10,8 +10,9 @@ import { seedEligibility } from "../flow-helpers";
 //
 // All PNGs are written under the COMMITTED apps/mobile/fastlane/screenshots/ tree (the
 // fastlane/metadata/ dir is generated + gitignored, so committed assets can't live there). The
-// release workflows point deliver at fastlane/screenshots/en-AU (iOS) and copy the android trees
-// into supply's images path at release time. Regenerated every release; commit an initial set.
+// release workflows point deliver at fastlane/screenshots/ios (a locale-only view of this tree,
+// via symlink — deliver rejects non-locale directory names) and copy the android trees into
+// supply's images path at release time. Regenerated every release; commit an initial set.
 const REPO = resolve(dirname(fileURLToPath(import.meta.url)), "../../../..");
 const SHOTS = resolve(REPO, "apps/mobile/fastlane/screenshots");
 

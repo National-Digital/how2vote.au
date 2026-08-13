@@ -69,7 +69,7 @@ platform :ios do
       app_version: ENV.fetch("APP_VERSION"),
       build_number: ENV.fetch("BUILD_NUMBER"),
       metadata_path: "fastlane/metadata/ios",
-      screenshots_path: "fastlane/screenshots",
+      screenshots_path: "fastlane/screenshots/ios",
       skip_binary_upload: true,
       skip_screenshots: false,
       overwrite_screenshots: true,
