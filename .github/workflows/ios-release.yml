@@ -21,16 +21,8 @@ name: iOS release
 # every change goes through App Review, which is why this must be fully automated.
 #
 # Requires secrets ASC_KEY_ID, ASC_ISSUER_ID, ASC_API_KEY_P8 (base64 .p8) and variable
-# APPLE_TEAM_ID.
-#
-# APPLE_TEAM_ID is the enrolment switch, and it is deliberately a VARIABLE rather than a secret so
-# this workflow can tell two different situations apart:
-#
-#   unset   -> the Apple Developer Program enrolment has not landed, so there is no iOS channel to
-#              release to. The job does not run at all (skipped — not a green no-op that looks like
-#              a successful release).
-#   set     -> iOS is a live channel. The three ASC secrets MUST be present, and the run FAILS
-#              CLOSED if any is missing, because "no credentials" then means a release did not ship.
+# APPLE_TEAM_ID. The build job is skipped while APPLE_TEAM_ID is unset, and fails closed when it
+# is set but a secret is missing.
 
 on:
   release:
@@ -58,8 +50,8 @@ jobs:
     name: Build & TestFlight
     runs-on: macos-15
     timeout-minutes: 60
-    # Not enrolled yet → no iOS channel → nothing to release. See the header: this is the one
-    # switch that distinguishes "not a channel" from "a channel that failed to publish".
+    env:
+      DEVELOPER_DIR: /Applications/Xcode_26.3.app
     if: vars.APPLE_TEAM_ID != ''
     outputs:
       app-version: ${{ steps.version.outputs.version }}
