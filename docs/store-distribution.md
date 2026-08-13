@@ -367,7 +367,8 @@ line.
 insights — at each store's required device size (iPhone 6.7" 1290×2796, iPad 12.9" 2048×2732,
 Android phone 1080×1920, Android 10" 1600×2560) and writes PNGs into the committed pack under
 `apps/mobile/fastlane/screenshots/`. The Play feature graphic (1024×500) comes from the brand mark
-(`generate-native-assets.mjs`). On release, iOS `deliver` reads `fastlane/screenshots` and Android
+(`generate-native-assets.mjs`). On release, iOS `deliver` reads `fastlane/screenshots/ios` (a
+locale-only symlink view — deliver rejects the android-* directory names) and Android
 `supply` uploads them (`generate-store-metadata.mjs` stages them into supply's images dir) — so a
 release is click-paste. Regenerate with `pnpm --filter @how2vote/web screenshots` whenever the UI changes,
 and review them before submission.
