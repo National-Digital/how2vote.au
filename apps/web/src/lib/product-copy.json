@@ -10,18 +10,22 @@
   },
   "sources": {
     "heading": "OFFICIAL SOURCES",
-    "intro": "Every piece of electoral and parliamentary information in the app comes from these public sources, and can be checked against them:",
+    "intro": "Every piece of electoral and parliamentary information in the app comes from these public sources, and can be checked against them. This is the complete list:",
     "items": [
       {
-        "label": "Candidates, ballot paper order and electoral divisions — Australian Electoral Commission",
-        "url": "https://www.aec.gov.au"
+        "label": "Candidates, ballot paper order, electoral divisions and election dates — Australian Electoral Commission, 2025 federal election downloads",
+        "url": "https://www.aec.gov.au/election/fe25/downloads-statistics.htm"
       },
       {
-        "label": "Recorded parliamentary votes (Hansard divisions) — Parliament of Australia",
-        "url": "https://www.aph.gov.au"
+        "label": "Electoral division boundaries used for the maps — Australian Electoral Commission, electoral boundaries GIS downloads",
+        "url": "https://www.aec.gov.au/Electorates/gis/gis_datadownload.htm"
       },
       {
-        "label": "Compiled division-by-division voting records — They Vote For You, by the OpenAustralia Foundation",
+        "label": "The parliamentary record the vote comparisons are drawn from (Hansard divisions) — Parliament of Australia",
+        "url": "https://www.aph.gov.au/Parliamentary_Business/Hansard"
+      },
+      {
+        "label": "The compiled division-by-division voting records the app actually reads — They Vote For You, by the OpenAustralia Foundation",
         "url": "https://theyvoteforyou.org.au"
       }
     ]
