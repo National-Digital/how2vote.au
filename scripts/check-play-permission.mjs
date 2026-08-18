@@ -16,6 +16,12 @@
  *   PLAY_SERVICE_ACCOUNT_JSON='{...}' node scripts/check-play-permission.mjs
  *   PLAY_SERVICE_ACCOUNT_FILE=key.json node scripts/check-play-permission.mjs
  *
+ * One refusal is NOT a permissions failure: while a listing change is waiting in Google's review
+ * queue, Play declines to auto-submit any further edit and answers 400 naming
+ * `changesNotSentForReview`. The release path already handles that (fastlane supply re-commits with
+ * the flag and the change waits in the console), so the probe passes it through. Every other
+ * refusal still fails closed.
+ *
  * Exit codes: 0 permitted · 1 refused, the probe could not run, or no credential is configured.
  * There is deliberately no green "skipped" outcome: this probe's whole job is to notice that the
  * account can no longer publish, and a vanished credential is one of the ways that happens.
@@ -25,6 +31,8 @@ import { createSign } from "node:crypto";
 
 const PACKAGE = "au.how2vote.app";
 const API = "https://androidpublisher.googleapis.com/androidpublisher/v3";
+/** Play's wording when an outstanding review — not a missing grant — blocks auto-submission. */
+const REVIEW_PENDING = "changesNotSentForReview";
 /** Marker text staged during the probe. Never committed — the edit is always discarded. */
 const PROBE_TEXT = "permission probe — never committed";
 
@@ -124,6 +132,16 @@ try {
 
 if (verdict.ok) {
   console.info(`Play publish permission OK — the service account can apply edits to ${PACKAGE}.`);
+  process.exit(0);
+}
+
+// A change already awaiting review, not a missing grant — see the note at the top of this file.
+if (verdict.status === 400 && (verdict.message ?? "").includes(REVIEW_PENDING)) {
+  console.info(
+    `Play publish permission OK — a listing change for ${PACKAGE} is awaiting Google's review, so ` +
+      `Play will not auto-submit this edit. The release commits it as an unsubmitted change; send ` +
+      `it for review in Play Console once the outstanding one clears.`,
+  );
   process.exit(0);
 }
 
