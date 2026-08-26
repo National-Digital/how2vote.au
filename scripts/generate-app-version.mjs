@@ -59,6 +59,29 @@ export function encodeVersionCode(version) {
 }
 
 /**
+ * The semver a store versionCode was built from — the inverse of encodeVersionCode.
+ * Store uploads append the workflow run number to the baseline (see above), so the low three
+ * digits are discarded before decoding rather than treated as part of the version.
+ * @param {number|string} code e.g. 20100007
+ * @returns {string|null} e.g. "2.1.0", or null for input this scheme cannot have produced
+ */
+export function decodeVersionCode(code) {
+  const n = Number(code);
+  if (!Number.isInteger(n) || n <= 0) return null;
+  const baseline = Math.floor(n / 1000);
+  // Below 1000 there is no baseline at all, only run-number digits — 0.0.0 is not a release.
+  if (baseline < 1) return null;
+  const major = Math.floor(baseline / 10000);
+  const minor = Math.floor(baseline / 100) % 100;
+  const patch = baseline % 100;
+  const version = `${major}.${minor}.${patch}`;
+  // Round-trip rather than trust the arithmetic: anything the encoder would not have produced
+  // (a versionCode from some other scheme, or a carry out of the minor/patch fields) decodes to
+  // null instead of a plausible-looking wrong version.
+  return encodeVersionCode(version) === baseline * 1000 ? version : null;
+}
+
+/**
  * The endpoint payload for a given APP_VERSION. Null fields (never a missing file) for
  * anything that is not a release version.
  * @param {string|undefined} appVersion
