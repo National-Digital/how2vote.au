@@ -343,13 +343,20 @@ export function verdict(input = {}) {
 const root = new URL("..", import.meta.url);
 const rel = (p) => new URL(p, root);
 
-const CODE_EXT = /\.(svelte|ts|js|mjs|cjs)$/;
+const CODE_EXT = /\.(svelte|ts|js|mjs|cjs|swift)$/;
 const IS_TEST = /\.(test|spec)\.[cm]?[jt]sx?$/;
 const SELF_REL = "scripts/check-neutrality-claims.mjs";
 // Public copy lives under apps/web/src. The engine module (plan.ts etc.) and route/component copy
 // are all in scope; tests, this guard and the registers are excluded (they legitimately quote the
 // very phrases the guard bans, as fixtures/wording).
-const SCAN_PREFIX = "apps/web/src/";
+//
+// The native iOS core (ADR 0018) renders its own screens, so user-facing copy can reach a voter
+// from Swift as readily as from Svelte. A prefix-scoped guard that stopped at apps/web/src would be
+// a ban that simply does not apply to half the shipped surface — a worse failure than an allow-list
+// with a missing entry, because nothing announces the gap. Swift is scanned under the same rules;
+// stripComments already handles its `//` and block comments, and D9's generated notice file is
+// scanned like any other source rather than trusted for being generated.
+const SCAN_PREFIXES = ["apps/web/src/", "apps/mobile/ios/App/App/"];
 /** Top-level prose docs, outside SCAN_PREFIX, that are also externally visible and drift-prone. */
 const SCAN_EXTRA = ["README.md", "SECURITY.md"];
 
@@ -369,7 +376,11 @@ function gatherSources() {
   })
     .split("\n")
     .filter(
-      (p) => p.startsWith(SCAN_PREFIX) && CODE_EXT.test(p) && !IS_TEST.test(p) && p !== SELF_REL,
+      (p) =>
+        SCAN_PREFIXES.some((prefix) => p.startsWith(prefix)) &&
+        CODE_EXT.test(p) &&
+        !IS_TEST.test(p) &&
+        p !== SELF_REL,
     );
   // The front-page prose (README.md, SECURITY.md) is externally visible on GitHub and is a documented
   // drift source for the "ranks candidates" / "anonymous" claims the legal rebuild removed, so it is

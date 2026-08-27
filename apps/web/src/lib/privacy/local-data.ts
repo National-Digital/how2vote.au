@@ -42,6 +42,46 @@ export const STORAGE_KEY_PREFIX = "how2vote:";
  */
 export const AGE_ELIGIBILITY_KEY = `${STORAGE_KEY_PREFIX}age-ok:v1`;
 
+/**
+ * Marker the NATIVE core writes to native Preferences at launch to declare that it — not this
+ * WebView — owns the core's state on this device (ADR 0018 D3).
+ *
+ * The durable mirror treats `localStorage` as the only source of truth: its backup pass PRUNES every
+ * `how2vote:*` key that Preferences has and `localStorage` does not, then overwrites the rest.
+ * Applied to a key the native core wrote, that deletes a voter's in-progress answers on the next
+ * visibility change, because this WebView never saw them.
+ *
+ * The claim is made at RUNTIME rather than inferred from the build channel, because the question is
+ * not "is this iOS" but "is the native core the writer of this key" — and those come apart. The iOS
+ * build renders some routes natively and some in the WebView (D1, and the D4 fallback), so ownership
+ * is per-screen where a channel is per-build; a channel gate would also claim native ownership in
+ * every release shipped before the native screens existed, removing eviction protection from state
+ * the WebView was still the sole writer of.
+ *
+ * Swept by {@link clearLocalDeviceData} like any other namespaced key, so "delete my data" resets
+ * the claim along with the data.
+ */
+export const NATIVE_CORE_MARKER_KEY = `${STORAGE_KEY_PREFIX}native-core:v1`;
+
+/**
+ * Key prefixes the native core owns, and is the sole writer of, once it has declared itself with
+ * {@link NATIVE_CORE_MARKER_KEY}. Until then these are ordinary mirrored keys and nothing changes
+ * for the web PWA, Android or F-Droid.
+ *
+ * A consequence worth stating plainly: no route served by the WebView may WRITE one of these keys
+ * while the marker is present, or the single-writer rule breaks in the direction this exists to
+ * prevent. `scripts/check-native-state-keys.mjs` holds the native side to the same list.
+ */
+export const NATIVE_OWNED_KEY_PREFIXES: readonly string[] = [
+  `${STORAGE_KEY_PREFIX}quiz:`,
+  `${STORAGE_KEY_PREFIX}saved:`,
+  `${STORAGE_KEY_PREFIX}election:`,
+];
+
+/** True when `key` belongs to the native core's state. */
+export const isNativeOwnedKey = (key: string): boolean =>
+  NATIVE_OWNED_KEY_PREFIXES.some((prefix) => key.startsWith(prefix));
+
 /** Namespace every Cache Storage cache the service worker creates shares. */
 export const CACHE_NAME_PREFIX = "how2vote-";
 

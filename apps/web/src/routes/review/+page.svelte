@@ -8,6 +8,7 @@
   import { loadData, type Question } from "$lib/data";
   import { election } from "$lib/election.svelte";
   import { quiz } from "$lib/quiz.svelte";
+  import { nativeRoute } from "$lib/native-router.svelte";
 
   let questions = $state<Question[]>([]);
 
@@ -22,6 +23,10 @@
       goto("/ballot");
       return;
     }
+    // Waits for the handover answer: the quiz keys are the native core's to write on iOS (ADR 0018
+    // D3), and syncQuestions writes them, so a WebView-served route must not run until it knows it
+    // is the one rendering.
+    if (!nativeRoute.isWeb) return;
     if (dataLoaded) return;
     dataLoaded = true;
     loadError = false;
@@ -67,7 +72,9 @@
     answers can count ten times as much.
   </p>
 
-  {#if loadError}
+  {#if !nativeRoute.isWeb}
+    <p class="note ui" role="status">Loading your answers…</p>
+  {:else if loadError}
     <p class="note ui" role="alert">
       Couldn't load your answers. Please check your connection and
       <a href="/review" onclick={() => location.reload()}>try again</a>.

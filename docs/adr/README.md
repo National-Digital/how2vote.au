@@ -24,3 +24,4 @@ design built on them, then the product-level decisions.
 | [0015](0015-first-party-telemetry-and-anti-abuse.md) | First-party/Cloudflare telemetry & anti-abuse | Accepted (D2 superseded in part by 0017) |
 | [0016](0016-deliberate-freeze-and-longevity.md) | Deliberate freeze posture and a longevity re-review | Accepted |
 | [0017](0017-self-hosted-proof-of-work-challenge.md) | Self-hosted proof-of-work challenge and forms relay | Accepted |
+| [0018](0018-native-ios-core.md) | Native iOS core for the answer-to-card path | Accepted (planned) |

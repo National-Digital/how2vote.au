@@ -17,6 +17,8 @@ const CAPACITOR = "Capacitor";
 const AGE_KEY = "how2vote:age-ok:v1";
 const QUIZ_KEY = "how2vote:quiz:v2:2025";
 const SAVED_KEY = "how2vote:saved:v1";
+const MARKER = "how2vote:native-core:v1";
+const THEME_KEY = "how2vote:theme";
 
 /** Records every Preferences operation in order, so the prune-before-write ordering is assertable. */
 type Ops = { op: "set" | "remove"; key: string }[];
@@ -223,5 +225,102 @@ describe("the web PWA is untouched", () => {
 
     expect(local.size).toBe(0);
     expect(store.get(QUIZ_KEY)).toBe("durable");
+  });
+});
+
+/**
+ * Once the native core declares ownership, Preferences stops being a backup of this WebView's state
+ * for the core's keys and becomes the state itself. The mirror has to stand down for exactly those
+ * keys, and for nothing else.
+ */
+describe("a native core that owns the core's state", () => {
+  // The hazard this exists for: the native core saves answers the WebView never sees, and the very
+  // next visibility change prunes them as orphans.
+  it("keeps a natively-written key the WebView has never seen", async () => {
+    const { store } = installBridge({ [MARKER]: "1", [QUIZ_KEY]: '{"native":"answers"}' });
+    installLocalStorage({ [THEME_KEY]: "dark" });
+    const { backupToNative } = await load();
+
+    await backupToNative();
+
+    expect(store.get(QUIZ_KEY)).toBe('{"native":"answers"}');
+  });
+
+  it("never writes a stale WebView copy over fresher native state", async () => {
+    const { store, ops } = installBridge({ [MARKER]: "1", [QUIZ_KEY]: "native-fresh" });
+    installLocalStorage({ [QUIZ_KEY]: "webview-stale" });
+    const { backupToNative } = await load();
+
+    await backupToNative();
+
+    expect(store.get(QUIZ_KEY)).toBe("native-fresh");
+    expect(ops.filter((o) => o.key === QUIZ_KEY)).toHaveLength(0);
+  });
+
+  it("still mirrors keys the native core does not own", async () => {
+    const { store } = installBridge({ [MARKER]: "1" });
+    installLocalStorage({ [THEME_KEY]: "dark" });
+    const { backupToNative } = await load();
+
+    await backupToNative();
+
+    expect(store.get(THEME_KEY)).toBe("dark");
+  });
+
+  it("still prunes an orphan the native core does not own", async () => {
+    const { store } = installBridge({ [MARKER]: "1", [THEME_KEY]: "orphan" });
+    installLocalStorage({});
+    const { backupToNative } = await load();
+
+    await backupToNative();
+
+    expect(store.has(THEME_KEY)).toBe(false);
+  });
+
+  // Preferences is authoritative for these keys, so a restore must overwrite rather than only heal.
+  it("overwrites a stale WebView copy on restore, so the WebView reads native state", async () => {
+    installBridge({ [MARKER]: "1", [SAVED_KEY]: "native-fresh" });
+    const local = installLocalStorage({ [SAVED_KEY]: "webview-stale" });
+    const { restoreFromNative } = await load();
+
+    await restoreFromNative();
+
+    expect(local.get(SAVED_KEY)).toBe("native-fresh");
+  });
+
+  it("leaves a non-owned key's live value alone on restore", async () => {
+    installBridge({ [MARKER]: "1", [THEME_KEY]: "durable" });
+    const local = installLocalStorage({ [THEME_KEY]: "live" });
+    const { restoreFromNative } = await load();
+
+    await restoreFromNative();
+
+    expect(local.get(THEME_KEY)).toBe("live");
+  });
+
+  it("never prunes or mirrors the ownership marker itself", async () => {
+    const { store } = installBridge({ [MARKER]: "1" });
+    const local = installLocalStorage({});
+    const { backupToNative, restoreFromNative } = await load();
+
+    await restoreFromNative();
+    await backupToNative();
+
+    expect(store.get(MARKER)).toBe("1");
+    expect(local.has(MARKER)).toBe(false);
+  });
+});
+
+describe("without an ownership claim, nothing changes", () => {
+  // Android, F-Droid and every iOS build shipped before the native core rely on this.
+  it("mirrors and prunes the core's keys exactly as before", async () => {
+    const { store } = installBridge({ [SAVED_KEY]: "orphan" });
+    installLocalStorage({ [QUIZ_KEY]: "webview-owned" });
+    const { backupToNative } = await load();
+
+    await backupToNative();
+
+    expect(store.get(QUIZ_KEY)).toBe("webview-owned");
+    expect(store.has(SAVED_KEY)).toBe(false);
   });
 });
