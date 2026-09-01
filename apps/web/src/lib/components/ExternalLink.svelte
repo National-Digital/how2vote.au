@@ -16,6 +16,7 @@
   // so a link cannot quietly go back to being unannounced.
   import type { Snippet } from "svelte";
   import { inAppBrowserFor, isNativeShell } from "$lib/channel";
+  import { ORG } from "$lib/org";
 
   let {
     href,
@@ -41,12 +42,28 @@
     children: Snippet;
   } = $props();
 
+  const PUBLISHER_HOST = new URL(ORG.website).host;
+  const hostOf = (url: string): string | null => {
+    try {
+      return new URL(url).host;
+    } catch {
+      return null; // A relative path: same origin, so not the publisher's site.
+    }
+  };
+
   const offOrigin = $derived(/^[a-z]+:\/\//i.test(href));
+  // Only the publisher's own site may see a referrer, so the visits it receives from here are
+  // attributable; a party or parliamentary site learning a reader came from a voting tool is a
+  // disclosure about that reader. `strict-origin` sends the origin, never the page, and is needed
+  // because the sitewide `Referrer-Policy: no-referrer` otherwise makes `rel` moot.
+  const toPublisher = $derived(hostOf(href) === PUBLISHER_HOST);
   const cue = $derived(
     offOrigin && isNativeShell ? "opens in an in-app browser" : "opens in a new tab",
   );
   const relValue = $derived(
-    ["noopener", "noreferrer", ...rel.split(/\s+/).filter(Boolean)].join(" "),
+    ["noopener", ...(toPublisher ? [] : ["noreferrer"]), ...rel.split(/\s+/).filter(Boolean)].join(
+      " ",
+    ),
   );
   const label = $derived(ariaLabel ? `${ariaLabel} (${cue})` : undefined);
 
@@ -75,7 +92,14 @@
   }
 </script>
 
-<a {href} class={className} target="_blank" rel={relValue} aria-label={label} {onclick}
+<a
+  {href}
+  class={className}
+  target="_blank"
+  rel={relValue}
+  referrerpolicy={toPublisher ? "strict-origin" : undefined}
+  aria-label={label}
+  {onclick}
   >{@render children()}{#if icon}<span class="ext" aria-hidden="true">&nbsp;↗</span
     >{/if}{#if !label}<span class="visually-hidden"> ({cue})</span>{/if}</a
 >
