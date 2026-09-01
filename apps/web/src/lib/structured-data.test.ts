@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { ELECTIONS } from "@how2vote/data-schema";
+import { ORG } from "./org";
 import { SITE_URL } from "./seo";
 import {
   ORG_ID,
@@ -32,13 +33,23 @@ describe("siteGraph", () => {
     expect(types).toEqual(["Organization", "WebSite", "WebApplication"]);
   });
 
-  it("gives every node a stable @id on the canonical origin", () => {
+  it("gives every node a stable @id: the site's own here, the publisher's on its own origin", () => {
     expect(node("Organization")["@id"]).toBe(ORG_ID);
     expect(node("WebSite")["@id"]).toBe(WEBSITE_ID);
     expect(node("WebApplication")["@id"]).toBe(WEBAPP_ID);
-    for (const id of [ORG_ID, WEBSITE_ID, WEBAPP_ID]) {
+    for (const id of [WEBSITE_ID, WEBAPP_ID]) {
       expect(id.startsWith(SITE_URL + "/#")).toBe(true);
     }
+    // Literal, not derived: the string has to match the publisher's other sites byte for byte, and
+    // a test built from the same expression as the code would pass whatever the code said.
+    expect(ORG_ID).toBe("https://nationaldigital.com.au/#organization");
+  });
+
+  it("describes the publisher, not this site, on the Organization node", () => {
+    const org = node("Organization");
+    expect(org.url).toBe(ORG.website);
+    expect(org.legalName).toBe(ORG.legalName);
+    expect(org.logo).toBeUndefined();
   });
 
   it("links WebSite and WebApplication to the Organization by @id (not re-declared)", () => {
