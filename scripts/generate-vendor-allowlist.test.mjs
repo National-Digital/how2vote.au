@@ -38,11 +38,15 @@ describe("hostFromSource", () => {
 });
 
 describe("derivation is a pure function of the registry", () => {
-  it("projects each CSP directive from the registry services — all empty (no browser third party)", () => {
+  it("projects each CSP directive from the registry services — only the page counter's hosts", () => {
     const csp = deriveCsp(REGISTRY);
     expect(Object.keys(csp).sort()).toEqual([...CSP_DIRECTIVES].sort());
-    // Forms + anti-abuse are self-hosted now, so NO directive carries any third-party host.
-    for (const hosts of Object.values(csp)) expect(hosts).toEqual([]);
+    // Forms + anti-abuse are self-hosted, so the counter is the only browser-loaded service: its
+    // script host and the host its counts go to, and nothing in the directives it does not need.
+    expect(csp["script-src"]).toEqual(["static.cloudflareinsights.com"]);
+    expect(csp["connect-src"]).toEqual(["cloudflareinsights.com"]);
+    expect(csp["img-src"]).toEqual([]);
+    expect(csp["frame-src"]).toEqual([]);
   });
 
   it("returns sorted, de-duplicated host lists", () => {
@@ -53,9 +57,12 @@ describe("derivation is a pure function of the registry", () => {
     );
   });
 
-  it("includes infrastructure egress hosts in the network allowlist but no browser hosts", () => {
+  it("includes infrastructure egress hosts in the network allowlist alongside the browser hosts", () => {
     expect(deriveInfrastructureHosts(REGISTRY)).toContain("theyvoteforyou.org.au");
-    expect(deriveBrowserHosts(REGISTRY)).toEqual([]);
+    expect(deriveBrowserHosts(REGISTRY)).toEqual([
+      "cloudflareinsights.com",
+      "static.cloudflareinsights.com",
+    ]);
     expect(deriveNetworkAllowlist(REGISTRY)).toContain("theyvoteforyou.org.au");
     expect(deriveNetworkAllowlist(REGISTRY)).toContain("api.cloudflare.com");
     // Third-party form and challenge hosts must never appear in the allowlist.

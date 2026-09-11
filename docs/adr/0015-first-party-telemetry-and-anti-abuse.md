@@ -33,6 +33,13 @@ Two hard constraints bound any change:
 
 ## Decisions of record
 
+> **Correction (2026-09-11).** D1 below is wrong about the mechanism, and the site reported nothing
+> for it. Cloudflare Web Analytics has no edge-only mode: it counts what a beacon script on the page
+> reports, so a token with no script on the page has no data. The beacon is now loaded by
+> `$lib/privacy/page-counter` and registered as a browser-loaded service, which is what puts its
+> hosts in the CSP. Everything D1 claims about cookies and identifiers still holds; the claim that no
+> client tag exists does not.
+
 **D1 — Usage analytics: Cloudflare Web Analytics (cookieless, edge).** Google Analytics is removed
 entirely. Usage is measured by Cloudflare Web Analytics at the edge — no client tag, no cookie, no
 device identifier, no cross-border ad-tech transfer. Because it collects no personal information and

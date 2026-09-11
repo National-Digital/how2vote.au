@@ -70,7 +70,7 @@
       "evidence_owner": "cameron-young",
       "review_date": "2026-07-20",
       "expiry_date": "2027-07-20",
-      "permitted_qualification": "Tied to the cookieless, edge-only construction of Cloudflare Web Analytics (sets no cookie, stores nothing on the device, assigns no identifier); the claim follows from that design and is scoped to this provider, not a product-wide assertion.",
+      "permitted_qualification": "Tied to the cookieless construction of Cloudflare Web Analytics (sets no cookie, stores nothing on the device, assigns no identifier); the claim follows from that design and is scoped to this provider, not a product-wide assertion.",
       "prohibited_absolute_wording": "we never collect any information about you",
       "mustContain": ["cookieless"]
     },

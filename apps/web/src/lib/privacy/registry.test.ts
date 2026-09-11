@@ -44,11 +44,16 @@ describe("third-party registry integrity", () => {
     }
   });
 
-  it("declares NO browser-loaded third-party service at all (forms + anti-abuse are self-hosted)", () => {
+  it("declares exactly one browser-loaded service: the cookieless page counter", () => {
     // Turnstile and Formspree are gone: the anti-abuse challenge is a self-hosted proof-of-work and
-    // the forms post to our own /api/forms — nothing third-party loads in the browser, so the
-    // services list is empty and the CSP gains no external origin from it.
-    expect(services).toEqual([]);
+    // the forms post to our own /api/forms. The one service that does load in the browser is the
+    // page counter, and it earns its no-consent classification by setting nothing and keeping
+    // nothing — a service that took a cookie or an identifier could not be registered this way.
+    expect(services.map((s) => s.id)).toEqual(["cloudflare-web-analytics"]);
+    const counter = services[0]!;
+    expect(counter.category).toBe("strictly-necessary");
+    expect(counter.consentRequired).toBe(false);
+    expect(counter.cookies).toEqual([]);
     expect(services.find((s) => s.id === "turnstile")).toBeUndefined();
     expect(services.find((s) => s.id === "formspree")).toBeUndefined();
   });
@@ -86,9 +91,13 @@ describe("consent state", () => {
     expect(ids).not.toContain("analytics");
   });
 
-  it("lists nothing under any category — no browser-loaded service remains", () => {
+  it("lists the page counter as strictly necessary, and nothing as analytics", () => {
+    // The counter sits outside the consent UI because it is not consent-gated, not because it is
+    // hidden: a service under "analytics" would have to be opt-in, and this one measures no person.
     expect(servicesForCategory("analytics")).toEqual([]);
-    expect(servicesForCategory("strictly-necessary")).toEqual([]);
+    expect(servicesForCategory("strictly-necessary").map((s) => s.id)).toEqual([
+      "cloudflare-web-analytics",
+    ]);
   });
 });
 
@@ -150,16 +159,20 @@ describe("CSP derived from the registry", () => {
     "font-src": ["self"],
   };
 
-  it("adds NO third-party origin from the shipped registry (fully first-party CSP)", () => {
+  it("adds the page counter's two origins from the shipped registry, and nothing else", () => {
     const merged = mergeRegistryCsp(base);
-    // With no browser-loaded service registered, every directive keeps only its base tokens: no
-    // challenges.cloudflare.com, no formspree.io, no external origin at all.
-    expect(merged["script-src"]).toEqual(["self"]);
-    expect(merged["connect-src"]).toEqual(["self"]);
+    // The tag is refused without the script host and reports nothing without the connect host, so
+    // both are asserted. Every other directive keeps only its base tokens.
+    expect(merged["script-src"]).toEqual(["self", "https://static.cloudflareinsights.com"]);
+    expect(merged["connect-src"]).toEqual(["self", "https://cloudflareinsights.com"]);
     expect(merged["img-src"]).toEqual(["self", "data:"]);
-    for (const sources of Object.values(merged)) {
-      expect(sources.some((s) => /^https?:\/\//i.test(s))).toBe(false);
-    }
+    const external = Object.values(merged)
+      .flat()
+      .filter((s) => /^https?:\/\//i.test(s));
+    expect([...new Set(external)].sort()).toEqual([
+      "https://cloudflareinsights.com",
+      "https://static.cloudflareinsights.com",
+    ]);
   });
 
   it("appends a service's origins after the base tokens (mechanism, synthetic registry)", () => {

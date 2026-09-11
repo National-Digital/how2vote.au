@@ -294,12 +294,16 @@
 <h2>6. Analytics</h2>
 <p>
   We measure how the Service is used with <strong>Cloudflare Web Analytics</strong>, which counts
-  page views and general usage
-  <strong>in aggregate, at our hosting provider's edge network</strong>. It is
-  <strong>cookieless</strong>: it sets no cookie, stores nothing on your device and assigns you no
-  identifier, so it cannot be used to recognise or track you across visits or across sites. Because
-  it collects no personal information and needs no cookie, there is nothing to switch on and no
-  consent banner to dismiss.
+  page views and general usage <strong>in aggregate</strong>. A small script from our hosting
+  provider reports that a page was opened. It is <strong>cookieless</strong>: it sets no cookie,
+  stores nothing on your device and assigns you no identifier, so it cannot be used to recognise or
+  track you across visits or across sites. Because it collects no personal information and needs no
+  cookie, there is nothing to switch on and no consent banner to dismiss.
+</p>
+<p>
+  Where the address of a page carries a fragment — which is how a shared link encodes a result, see
+  section 4 — the counting script is not loaded at all, so that page opening is never counted rather
+  than counted with the fragment in view.
 </p>
 <p>Analytics never receives:</p>
 <ul>
@@ -406,9 +410,9 @@
     </article>
   {:else}
     <p class="none">
-      None — no third-party service loads in your browser. The anti-spam check is self-hosted and
-      usage is measured by cookieless edge analytics; infrastructure providers we rely on (hosting,
-      source control, data sources) are listed in the providers table below.
+      None — no third-party service loads in your browser. The anti-spam check is self-hosted;
+      infrastructure providers we rely on (hosting, source control, data sources) are listed in the
+      providers table below.
     </p>
   {/each}
 </div>

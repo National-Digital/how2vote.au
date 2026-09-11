@@ -21,6 +21,7 @@
   import { theme } from "$lib/theme.svelte";
   import { consent } from "$lib/privacy/consent.svelte";
   import { hasConfigurableConsent } from "$lib/privacy/registry";
+  import { startPageCounter } from "$lib/privacy/page-counter";
   import { registerWebmcpTools } from "$lib/webmcp";
 
   let { children } = $props();
@@ -104,9 +105,11 @@
     // Read the one-bit age-eligibility acknowledgement before the guard below can act on it, so a
     // returning adult resumes without re-declaring and a fresh device fails closed to the gate.
     ageGate.hydrate();
-    // Hydrate the consent store from the device. Usage is now measured by cookieless Cloudflare Web
-    // Analytics at the edge (no gtag, no cookie, no client tag), so there is nothing to consent to
-    // by default and the banner stays hidden (see hasConfigurableConsent below). The store and its UI
+    // Count this page view, unless the address carries a share fragment (see page-counter.ts).
+    startPageCounter();
+    // Hydrate the consent store from the device. Usage is measured by cookieless Cloudflare Web
+    // Analytics (no gtag, no cookie, no identifier kept for a visitor), so there is nothing to
+    // consent to by default and the banner stays hidden (see hasConfigurableConsent below). The store and its UI
     // are kept intact and dormant so a future consent-gated service is a one-line registry edit, not
     // a rebuild; hydrate() still reads any prior decision so it is honoured the moment that happens.
     consent.hydrate();
@@ -291,8 +294,8 @@
      shows until a choice is made; the preferences modal is reachable any time from the footer.
      Both are additionally gated on hasConfigurableConsent — a registry-derived flag that is true
      only when some consent-required category has a live service. Today nothing on the site needs
-     consent (analytics is edge-side + cookieless; the anti-spam check is self-hosted and
-     cookieless), so the flag is false
+     consent (the page counter is cookieless and keeps no identifier; the anti-spam check is
+     self-hosted and cookieless), so the flag is false
      and neither surfaces; adding a consent-gated service back to the registry flips it true and the
      UI returns with no code change. -->
 {#if hasConfigurableConsent && consent.ready && !consent.hasDecided && !consent.isSettingsOpen}

@@ -870,6 +870,24 @@
           "publicFundingClaimed": false
         },
         {
+          "id": "2026-H2-CF-WEB-ANALYTICS",
+          "kind": "cash",
+          "category": "Cookieless usage measurement",
+          "supplier": "Cloudflare Web Analytics",
+          "payer": "National Digital",
+          "sourceOfFundsCountry": "AU",
+          "purpose": "Cookieless aggregate page counting for the How2Vote website.",
+          "classification": "electoral",
+          "actualAmount": 0,
+          "electoralAmount": 0,
+          "classificationBasis": "Conservatively within scope, but no dedicated cash cost was incurred.",
+          "amountBasis": "Included in the Cloudflare account at no dedicated charge: $0.",
+          "evidenceStatus": "operator-attestation",
+          "taxBenefitClaimed": false,
+          "electionFundingClaimed": false,
+          "publicFundingClaimed": false
+        },
+        {
           "id": "2026-H2-CF-R2",
           "kind": "cash",
           "category": "Release artifact distribution",
