@@ -24,6 +24,6 @@
   },
   "devDependencies": {
     "@capacitor/cli": "^8.4.2",
-    "sharp": "^0.35.3"
+    "sharp": "^0.35.4"
   }
 }
