@@ -23,7 +23,7 @@
       "provider": "Cloudflare, Inc.",
       "category": "strictly-necessary",
       "consentRequired": false,
-      "purpose": "Counts how often each page is opened, so the project can see which parts of the tool are used. It sets no cookie, keeps no identifier for a visitor and builds no profile, and it is never told anything about your answers or your card \u2014 so it measures the site rather than the person, and needs no consent.",
+      "purpose": "Counts how often each page is opened, so the project can see which parts of the tool are used. It sets no cookie, keeps no identifier for a visitor and builds no profile, and it is never told anything about your answers or your card. The count is of page views, no visitor can be picked out of it, and it needs no consent.",
       "csp": {
         "script-src": ["https://static.cloudflareinsights.com"],
         "connect-src": ["https://cloudflareinsights.com"]
