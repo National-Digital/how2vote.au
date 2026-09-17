@@ -498,11 +498,6 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
           VERSION: ${{ needs.deploy.outputs.version }}
-          # Which version each store is actually serving, for the freshness badges
-          # (scripts/generate-store-badges.mjs). Empty on previews and whenever the store could not
-          # be read -> a grey "not published" badge. Never the repo's own version: the repo runs
-          # ahead of every store, so that would advertise a build nobody has.
-          ANDROID_LIVE_VERSION: ${{ needs.live-versions.outputs.android }}
           APPLE_TEAM_ID: ${{ vars.APPLE_TEAM_ID }}
           REPO: ${{ github.repository }}
         run: |
