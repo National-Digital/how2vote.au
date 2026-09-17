@@ -48,6 +48,8 @@ const OPERATOR_REL = "apps/web/src/lib/operator.json";
 // Shared product copy — the SAME file the web app reads, so store listings cannot drift from the
 // site (a unit test asserts every claim string appears in the built descriptions).
 const COPY_REL = "apps/web/src/lib/product-copy.json";
+/** The election registry, for the review note that says where the full flow is. */
+const ELECTIONS_REL = "data/dist/elections.json";
 const OUT_REL = "apps/mobile/fastlane/metadata";
 const LOCALE = "en-AU";
 /** Repo-root path fdroidserver globs, and its fallback locale. */
@@ -117,11 +119,40 @@ export function authorisationLine(operator) {
 }
 
 /**
+ * The reviewer's route to the full flow, when the default election has no ballot yet.
+ *
+ * The app opens on the current election. Before an election is called the AEC has published no
+ * ballot for it, so its dataset carries no electorates and the electorate and voting-plan steps
+ * have nothing to show — roughly half the app, the printable plan included, is unreachable from the
+ * default. A reviewer taking the obvious path therefore sees the smaller product, which is close to
+ * the impression App Store guideline 4.2 was raised on. Naming the election that does have a ballot
+ * costs one paragraph.
+ *
+ * Derived rather than written, so it retires itself: once the current election is called it carries
+ * its own ballot, `provisionalStage` is no longer "pending", and the paragraph stops being emitted.
+ *
+ * @param {{id: string, label: string, shortLabel: string, current?: boolean, provisionalStage?: string}[]} elections
+ * @returns {string} the paragraph, with a trailing blank line, or "" when the default is complete
+ */
+export function reviewerRoute(elections) {
+  const current = elections.find((e) => e.current);
+  if (current?.provisionalStage !== "pending") return "";
+  // Newest-first, and an election without a provisional stage is one with a real AEC ballot.
+  const withBallot = elections.find((e) => e.id !== current.id && !e.provisionalStage);
+  if (!withBallot) return "";
+  return `How to see the full app (please read first):
+- The app opens on "${current.label}", a provisional comparison against the current Parliament. That election has not been called, so the AEC has published no ballot for it — the electorate and voting-plan steps have no data to show and are unavailable there by design.
+- To exercise the complete flow, tap "${withBallot.shortLabel}" in the election selector at the top of the first screen. That gives the full path: answer the questions, choose your electorate, order the candidates on the real ballot, and produce a printable voting plan.
+
+`;
+}
+
+/**
  * Builds every metadata file for both stores as a flat map of `store-relative path → content`.
  * Locale directories are added by the writer. Content is deliberately identical across stores
  * wherever both accept it, so the listings can never drift apart.
  */
-export function buildMetadata(operator, copy) {
+export function buildMetadata(operator, copy, elections = []) {
   const authorisation = authorisationLine(operator);
   const c = copy.claims;
   // Absolute URLs only: the stores auto-link a fully-qualified URL and render anything else as
@@ -158,7 +189,7 @@ ${authorisation}`;
 
   const reviewNotes = `How2Vote is a non-partisan voter-information tool for Australian federal elections, operated by ${operator.tradingName} (${operator.legalName}).
 
-Key points for review:
+${reviewerRoute(elections)}Key points for review:
 - All comparison content derives from public parliamentary voting records (Hansard, via theyvoteforyou.org.au). The compilation method is public and deterministic: ${copy.repoUrl}
 - The app recommends no party and no preference order; results are shown in official ballot order and users author their own voting plan.
 - The dataset ships in the binary and the app works offline. There is no account and no login. The only data that leaves the device is the optional, opt-in aggregate research contribution and whatever the user types into the contact/feedback form.
@@ -361,7 +392,8 @@ function main() {
   const check = process.argv.includes("--check");
   const operator = JSON.parse(readFileSync(join(ROOT, OPERATOR_REL), "utf8"));
   const copy = JSON.parse(readFileSync(join(ROOT, COPY_REL), "utf8"));
-  const files = buildMetadata(operator, copy);
+  const elections = JSON.parse(readFileSync(join(ROOT, ELECTIONS_REL), "utf8"));
+  const files = buildMetadata(operator, copy, elections);
   const issues = validateMetadata(files, operator, copy);
   if (issues.length > 0) {
     console.error("✗ store metadata invalid:");

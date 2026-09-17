@@ -18,7 +18,12 @@
  * same data, the same namespace. `clearLocalDeviceData()` clears it too (see local-data.ts).
  */
 import { isNativeShell, nativePreferencesPlugin } from "./channel";
-import { AGE_ELIGIBILITY_KEY, STORAGE_KEY_PREFIX } from "./privacy/local-data";
+import {
+  AGE_ELIGIBILITY_KEY,
+  NATIVE_CORE_MARKER_KEY,
+  STORAGE_KEY_PREFIX,
+  isNativeOwnedKey,
+} from "./privacy/local-data";
 
 /**
  * Keys never written to the durable copy, because restoring one is worse than losing it.
@@ -29,10 +34,28 @@ import { AGE_ELIGIBILITY_KEY, STORAGE_KEY_PREFIX } from "./privacy/local-data";
  * the plan builder, print, share and the 18+-only research path. Losing the bit to eviction costs one
  * tap on a gate that is designed to be re-answered; restoring it wrongly costs the gate itself.
  */
-const NEVER_MIRRORED: readonly string[] = [AGE_ELIGIBILITY_KEY];
+const NEVER_MIRRORED: readonly string[] = [AGE_ELIGIBILITY_KEY, NATIVE_CORE_MARKER_KEY];
 
 const isMirrored = (key: string): boolean =>
   key.startsWith(STORAGE_KEY_PREFIX) && !NEVER_MIRRORED.includes(key);
+
+/**
+ * Whether the native core has declared itself the owner of the core's state on this device.
+ *
+ * Read from Preferences on every pass rather than cached at startup, so neither pass depends on the
+ * other having run first — `backupToNative` fires on visibility change and can precede a restore.
+ */
+let nativeCoreOwnsState = false;
+
+/**
+ * Whether the backup pass may touch a key at all.
+ *
+ * Once the native core owns a key, both halves of the pass are wrong for it: the prune would read
+ * "absent from localStorage" as an orphan and delete the voter's answers, and a write would replay
+ * whatever copy a restore left behind over a fresher native value.
+ */
+const isBackedUp = (key: string): boolean =>
+  isMirrored(key) && !(nativeCoreOwnsState && isNativeOwnedKey(key));
 
 /** Restore evicted `how2vote:*` keys from native Preferences into localStorage. Native-only. */
 export async function restoreFromNative(): Promise<void> {
@@ -40,10 +63,14 @@ export async function restoreFromNative(): Promise<void> {
   if (!isNativeShell || !prefs || typeof localStorage === "undefined") return;
   try {
     const { keys } = await prefs.keys();
+    nativeCoreOwnsState = keys.includes(NATIVE_CORE_MARKER_KEY);
     for (const key of keys) {
       if (!isMirrored(key)) continue;
-      // Only heal a MISSING key — never clobber a value the live session already holds.
-      if (localStorage.getItem(key) !== null) continue;
+      // Only heal a MISSING key — never clobber a value the live session already holds. The one
+      // exception is a key the native core owns: there Preferences is not a backup of this
+      // WebView's state, it IS the state, so a stale localStorage copy must give way to it.
+      const nativeOwned = nativeCoreOwnsState && isNativeOwnedKey(key);
+      if (!nativeOwned && localStorage.getItem(key) !== null) continue;
       const { value } = await prefs.get({ key });
       if (value !== null) localStorage.setItem(key, value);
     }
@@ -78,17 +105,23 @@ export async function backupToNative(): Promise<void> {
   const prefs = nativePreferencesPlugin();
   if (!isNativeShell || !prefs || typeof localStorage === "undefined") return;
   try {
+    // The ownership claim is read before anything is pruned: a pass that pruned first and asked
+    // afterwards would already have deleted the state it was meant to leave alone.
+    const { keys } = await prefs.keys();
+    nativeCoreOwnsState = keys.includes(NATIVE_CORE_MARKER_KEY);
+
     const live = new Set<string>();
     for (let i = 0; i < localStorage.length; i++) {
       const key = localStorage.key(i);
-      if (key && isMirrored(key)) live.add(key);
+      if (key && isBackedUp(key)) live.add(key);
     }
     // PRUNE FIRST. This pass is often cut short — its only triggers are visibilitychange/pagehide,
     // where the WebView may already be going away mid-await. Dropping orphans before writing means a
     // truncated pass still removes what the user deleted, instead of only re-writing what they kept.
     // It also retires a key that a previous build mirrored and NEVER_MIRRORED now excludes.
-    const { keys } = await prefs.keys();
     for (const key of keys) {
+      if (key === NATIVE_CORE_MARKER_KEY) continue;
+      if (nativeCoreOwnsState && isNativeOwnedKey(key)) continue;
       if (key.startsWith(STORAGE_KEY_PREFIX) && !live.has(key)) await prefs.remove({ key });
     }
     for (const key of live) {

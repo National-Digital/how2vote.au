@@ -45,3 +45,35 @@ runs:
         PUBLIC_DIST_CHANNEL: ${{ inputs.channel }}
         PUBLIC_APPLE_APP_ID: ${{ inputs.apple-app-id }}
       run: pnpm --filter @how2vote/web build:app
+    # The native iOS core evaluates the shared engine in JavaScriptCore (ADR 0018 D2). The bundle
+    # ships inside the web output so `cap sync` carries it into the app's `public` folder alongside
+    # the build that produced it — the two can then never fall out of step. iOS only: no other
+    # channel loads it, and keeping it out of their output keeps the F-Droid tree unchanged.
+    - name: Build the engine bundle for JavaScriptCore (iOS)
+      if: inputs.channel == 'ios'
+      shell: bash
+      run: |
+        pnpm -C packages/engine build:native
+        cp packages/engine/dist-native/how2vote-engine.js apps/web/build/how2vote-engine.js
+        echo "✓ engine bundle placed in the web output for cap sync"
+    # The native core reads the compiled datasets as files. The web app reaches them as hashed JS
+    # chunks instead (Vite bundles the JSON at build time), which JavaScriptCore has no loader for,
+    # so the native side needs the same payload as plain JSON. Copied rather than restructuring the
+    # web's data loading, which is what the offline guarantee rests on (ADR 0001).
+    #
+    # This does duplicate the datasets in the iOS app — the WebView still serves the document routes
+    # from the chunks — for about 1.1 MB. iOS only: no other channel reads these files, and keeping
+    # them out of the other outputs leaves the F-Droid tree byte-identical.
+    - name: Carry the compiled datasets for the native core (iOS)
+      if: inputs.channel == 'ios'
+      shell: bash
+      run: |
+        for dataset in data/dist/*/dataset.json; do
+          id="$(basename "$(dirname "$dataset")")"
+          mkdir -p "apps/web/build/data/dist/$id"
+          cp "$dataset" "apps/web/build/data/dist/$id/dataset.json"
+          # The manifest carries the generated provenance disclosure the quiz shows on its first
+          # question, so a native screen without it would drop a required statement.
+          cp "data/dist/$id/manifest.json" "apps/web/build/data/dist/$id/manifest.json"
+        done
+        echo "✓ $(ls -d apps/web/build/data/dist/*/ | wc -l) dataset(s) placed for the native core"

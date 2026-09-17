@@ -65,3 +65,6 @@ release-manifest.json
 # Generated CycloneDX SBOM (build artefact, regenerated deterministically from pnpm-lock.yaml)
 sbom.json
 sbom.cdx.json
+
+# The native engine bundle is built by `pnpm -C packages/engine build:native`, not committed.
+packages/engine/dist-native/

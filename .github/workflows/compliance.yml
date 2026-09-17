@@ -243,6 +243,12 @@ jobs:
       # The monochrome-palette arm runs in the web build (neutrality:check).
       - name: Neutrality claims + methodology binding
         run: node scripts/check-neutrality-claims.mjs
+      # Required-notice register for the native iOS core (ADR 0018 D9). The guards above are
+      # path-scoped to the web sources, so a notice authored in Swift would be copy no register
+      # governs; this asserts every registered notice still appears verbatim in its web source and
+      # that the generated Swift is exactly what the register renders.
+      - name: Native notice register in sync (web ↔ register ↔ generated Swift)
+        run: node scripts/check-native-copy.mjs
       # Public copy carries no categorical / quasi-legal wording unless a current, evidence-backed
       # permit in docs/legal/absolute-claims.json allows it. Unit test runs in the main `pnpm test`.
       - name: Absolute-claims register + banned-wording gate

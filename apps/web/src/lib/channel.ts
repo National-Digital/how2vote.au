@@ -172,3 +172,79 @@ export function nativeAppPlugin(): NativeAppPlugin | null {
   const app = nativePlugin<NativeAppPlugin>("App");
   return app && typeof app.addListener === "function" ? app : null;
 }
+
+/**
+ * Minimal surface of the app's own native router (iOS only, ADR 0018 D1). Defined in the app target
+ * rather than shipped as a package, so it is absent on the web and on Android and every caller must
+ * treat null as "render the web screen".
+ */
+type NativeRouterPlugin = {
+  present(options: {
+    route: string;
+    electionId: string;
+    editing?: boolean;
+    eligible?: boolean;
+    canExplore?: boolean;
+    allowedMapIds?: string[];
+  }): Promise<{ presented: boolean }>;
+  dismiss(): Promise<void>;
+  themeChanged(options: { theme: string }): Promise<void>;
+  addListener(
+    event: "nativeRouteExit",
+    handler: (data: { route: string }) => void,
+  ): Promise<{ remove: () => Promise<void> }> | { remove: () => void };
+  addListener(
+    event: "nativeThemeRequest",
+    handler: () => void,
+  ): Promise<{ remove: () => Promise<void> }> | { remove: () => void };
+};
+
+/**
+ * The router proxy, built once and kept.
+ *
+ * Asked for by name rather than read from `Capacitor.Plugins`, which is the difference between an
+ * app-target plugin and a packaged one. A packaged plugin ships JavaScript that registers itself, so
+ * it appears in that object; ours has no JavaScript side at all, so it never does — the bridge is
+ * listening, and nothing on this side ever asks it anything. `registerPlugin` builds the proxy that
+ * does the asking.
+ */
+/**
+ * Only a SUCCESSFUL lookup is remembered.
+ *
+ * Caching a miss turns a moment's absence into a permanent one: the bridge injects `Capacitor`
+ * before the app's scripts run, but anything that asked a fraction too early would have pinned the
+ * answer to "no native core" for the rest of the session, and every screen would have quietly
+ * served the web version.
+ */
+let routerProxy: NativeRouterPlugin | null = null;
+
+export function nativeRouterPlugin(): NativeRouterPlugin | null {
+  if (routerProxy !== null) return routerProxy;
+
+  if (!isNativeShell || typeof globalThis === "undefined") return null;
+  const capacitor = (
+    globalThis as {
+      Capacitor?: {
+        registerPlugin?: (name: string) => unknown;
+        Plugins?: Record<string, unknown>;
+      };
+    }
+  ).Capacitor;
+  if (!capacitor) return null;
+
+  // Deliberately NOT gated on `isPluginAvailable`: that answers from the plugin list the bridge
+  // publishes at page load, and a plugin registered by the app target is not in it — it reported
+  // the router missing on a device where it was demonstrably registered and listening. What is
+  // available is decided by CALLING it, and the caller remembers a rejection so a platform without
+  // the plugin pays for one failed call and no more.
+  // Falls back to the plugin table for a bridge that has already published it, so the accessor does
+  // not depend on which of the two mechanisms a Capacitor version happens to use.
+  const plugin =
+    typeof capacitor.registerPlugin === "function"
+      ? capacitor.registerPlugin("NativeRouter")
+      : capacitor.Plugins?.["NativeRouter"];
+
+  const candidate = plugin as NativeRouterPlugin | undefined;
+  routerProxy = candidate && typeof candidate.present === "function" ? candidate : null;
+  return routerProxy;
+}

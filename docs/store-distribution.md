@@ -140,7 +140,7 @@ native deployment floors so one bundle is safe everywhere:
 | Channel | Floor |
 | --- | --- |
 | Web PWA | Safari 15+, Chrome 99+ (evergreen) |
-| iOS shell | iOS 15 (`IPHONEOS_DEPLOYMENT_TARGET`) — WKWebView ≈ Safari 15 |
+| iOS shell | iOS 17 (`IPHONEOS_DEPLOYMENT_TARGET`) — raised from 15 for the native core (ADR 0018 D10) |
 | Android shell | `minSdk 24` (Android 7); System WebView auto-updates via Play |
 
 Tablet posture: portrait-first. Phones are orientation-locked; large screens (iPad, and Android
