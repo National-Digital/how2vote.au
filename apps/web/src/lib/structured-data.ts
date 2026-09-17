@@ -18,6 +18,7 @@
 import { ELECTIONS } from "@how2vote/data-schema";
 import { ORG } from "./org";
 import { SITE_URL, SITE_NAME } from "./seo";
+import { STORE_LINKS } from "./store-links";
 
 /** Stable node identifiers, referenced by `@id` from other nodes and across pages. */
 // The Organization's id is the publisher's own, not this site's: its other sites emit the same
@@ -36,7 +37,8 @@ const SITE_DESCRIPTION =
 /**
  * Sitewide entity graph: who publishes the site (Organization), the site itself (WebSite) and the
  * tool it hosts (WebApplication). The WebApplication and WebSite both point at the Organization by
- * `@id`; the WebApplication lists the public source repo under `sameAs`.
+ * `@id`; the WebApplication lists the public source repo and every live store listing under
+ * `sameAs`, so the site and the published apps resolve to one entity.
  */
 export function siteGraph() {
   return {
@@ -76,7 +78,10 @@ export function siteGraph() {
         isAccessibleForFree: true,
         offers: { "@type": "Offer", price: "0", priceCurrency: "AUD" },
         publisher: { "@id": ORG_ID },
-        sameAs: [SOURCE_REPO_URL],
+        // Read from STORE_LINKS rather than restated, so a listing that goes live is carried here
+        // by the same one-line switch that turns its badge on, and one that is not live is absent
+        // rather than a dead URL.
+        sameAs: [SOURCE_REPO_URL, ...Object.values(STORE_LINKS).filter((url) => url !== null)],
       },
     ],
   };
