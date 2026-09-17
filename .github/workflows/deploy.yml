@@ -50,6 +50,32 @@ env:
   CF_PAGES_PROJECT: how2vote-au
 
 jobs:
+  # Asks each store which version it is actually serving, for the freshness badges. A job of its
+  # own, not a step of the deploy: the badge generator is pure, offline and unit-tested, so the
+  # stores are queried by the workflow and handed in by environment, never reached from inside the
+  # build. Skipped on pull_request — preview badges are never published, so a preview has nothing
+  # to ask for.
+  live-versions:
+    name: Live store versions
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      contents: read
+    outputs:
+      fdroid: ${{ steps.fdroid.outputs.fdroid }}
+    if: github.event_name != 'pull_request'
+    steps:
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7
+      - uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e # v6
+        with:
+          node-version-file: .nvmrc
+      # Fails open: an unreadable index leaves the output empty and the badge renders grey. A
+      # missing badge is honest; a failed deploy over one is not. The index is public, so this
+      # step holds no credential.
+      - name: Resolve the live F-Droid version
+        id: fdroid
+        run: node scripts/resolve-fdroid-live-version.mjs
+
   deploy:
     name: Build & deploy
     runs-on: ubuntu-latest
@@ -64,8 +90,12 @@ jobs:
     outputs:
       ready: ${{ steps.secrets.outputs.ready }}
       version: ${{ steps.target.outputs.version }}
+    # `!cancelled()` so a skipped live-versions (every pull_request run) does not cascade into
+    # skipping the deploy itself, while a cancelled workflow still stops here.
+    needs: live-versions
     # Everything except a PR close — those go to the cleanup job below.
-    if: github.event_name != 'pull_request' || github.event.action != 'closed'
+    if: |
+      !cancelled() && (github.event_name != 'pull_request' || github.event.action != 'closed')
     steps:
       # Presence check only; the value is never printed. Passed via env so the
       # secret is never interpolated into the rendered shell script.
@@ -154,6 +184,11 @@ jobs:
           # assetlinks.json (the Play app-signing cert fingerprint, colon-hex). Not secret.
           APPLE_TEAM_ID: ${{ vars.APPLE_TEAM_ID }}
           ANDROID_CERT_SHA256: ${{ vars.ANDROID_CERT_SHA256 }}
+          # Which version each store is actually serving, for the freshness badges
+          # (scripts/generate-store-badges.mjs). Empty on previews and whenever the store could not
+          # be read -> a grey "not published" badge. Never the repo's own version: the repo runs
+          # ahead of every store, so that would advertise a build nobody has.
+          FDROID_LIVE_VERSION: ${{ needs.live-versions.outputs.fdroid }}
           # Apple's numeric App Store id → the in-app "update" store deep link (stale-data notice).
           PUBLIC_APPLE_APP_ID: ${{ vars.PUBLIC_APPLE_APP_ID }}
 
