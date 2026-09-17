@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import { ELECTIONS } from "@how2vote/data-schema";
 import { ORG } from "./org";
 import { SITE_URL } from "./seo";
+import { STORE_LINKS } from "./store-links";
 import {
   ORG_ID,
   WEBSITE_ID,
@@ -58,8 +59,23 @@ describe("siteGraph", () => {
   });
 
   it("lists the public source repo as the WebApplication's sameAs", () => {
-    expect(node("WebApplication").sameAs).toEqual([SOURCE_REPO_URL]);
+    expect(node("WebApplication").sameAs).toContain(SOURCE_REPO_URL);
     expect(SOURCE_REPO_URL).toBe("https://github.com/National-Digital/how2vote.au");
+  });
+
+  it("carries every live store listing, so the apps and the site resolve to one entity", () => {
+    // The failure this catches is silent: a listing goes live, its badge appears, and a crawler
+    // still has no way to connect the store record to this site.
+    const { sameAs } = node("WebApplication");
+    for (const url of Object.values(STORE_LINKS)) if (url !== null) expect(sameAs).toContain(url);
+  });
+
+  it("emits no placeholder for a listing that is not live", () => {
+    // A null reaching the graph would publish `"sameAs": [..., null]` — invalid, and a claim about
+    // a store the app is not on.
+    const sameAs = node("WebApplication").sameAs as unknown[];
+    expect(sameAs.every((url) => typeof url === "string" && url.startsWith("https://"))).toBe(true);
+    expect(new Set(sameAs).size).toBe(sameAs.length);
   });
 
   it("marks the WebApplication free (a $0 offer, accessible for free)", () => {
