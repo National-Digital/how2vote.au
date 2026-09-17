@@ -35,7 +35,7 @@
     "@sveltejs/kit": "^2.69.2",
     "@sveltejs/vite-plugin-svelte": "^6.2.4",
     "fast-check": "^4.9.0",
-    "sharp": "^0.35.3",
+    "sharp": "^0.35.4",
     "svelte": "^5.56.4",
     "svelte-check": "^4.7.2",
     "terser": "^5.49.0",
