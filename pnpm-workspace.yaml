@@ -41,15 +41,17 @@ overrides:
   # client. mapshaper still pins adm-zip@^0.5.9 (excludes the fix), so forced to the patched line —
   # a durable fix rather than an expiring risk acceptance (docs/legal/security-register.json).
   adm-zip@<0.6.0: ">=0.6.0"
-  # fast-uri 3.x < 3.1.5 confuses the host when a backslash introduces the authority — twice:
-  # the original flaw (GHSA-v2hh-gcrm-f6hx) and its resurfacing after the 3.1.4 fix
-  # (GHSA-7p8r-x3mc-p8w7, both high). Only reached transitively via eslint-plugin-tsdoc ->
-  # @microsoft/tsdoc-config -> ajv in the dev-only lint toolchain; forced to the patched line.
-  fast-uri@>=3.0.0 <3.1.5: "3.1.5"
-  # sharp < 0.35.0 inherits libvips CVEs (GHSA-f88m-g3jw-g9cj, high). The app's own sharp is
-  # already 0.35.3; this forces the second instance pulled in via wrangler -> miniflare
-  # (dev-only Workers emulation) onto the same patched line.
-  sharp@<0.35.0: "0.35.3"
+  # fast-uri 3.x < 3.1.6 confuses the host when a backslash introduces the authority, a flaw that
+  # has resurfaced after each partial fix (GHSA-v2hh-gcrm-f6hx, GHSA-7p8r-x3mc-p8w7,
+  # GHSA-f65p-4m7j-42xc, GHSA-jqff-g426-hqxp, GHSA-fph4-wmhf-6fwf, GHSA-5jgf-p345-68v8, all high;
+  # the last three name 3.1.5 itself). Only reached transitively via eslint-plugin-tsdoc ->
+  # @microsoft/tsdoc-config -> ajv in the dev-only lint toolchain; forced to the patched line, and
+  # held on 3.x because ajv requires it.
+  fast-uri@>=3.0.0 <3.1.6: "3.1.6"
+  # sharp < 0.35.4 inherits libvips CVEs (GHSA-f88m-g3jw-g9cj, GHSA-rgj7-g3m4-5g8c, both high).
+  # The direct dependency is declared at ^0.35.4 in apps/web and apps/mobile; this forces the
+  # instance pulled in via wrangler -> miniflare (dev-only Workers emulation) onto the same line.
+  sharp@<0.35.4: "0.35.4"
   # brace-expansion <= 5.0.8 has an unbounded-expansion DoS — a crafted brace pattern can OOM the
   # process (GHSA-mh99-v99m-4gvg), and 5.0.9 closes the bypass of that mitigation via unbounded
   # intermediate arrays (GHSA-rgw5-rvv9-x895, both high). Reached only in dev tooling glob matching
@@ -61,6 +63,17 @@ overrides:
   # miniflare (dev-only Workers emulation in tools/deploy) and never in anything that ships;
   # forced to the patched line to keep the gate clean.
   undici@>=7.0.0 <7.29.0: ">=7.29.0 <8.0.0"
+  # @xmldom/xmldom mishandles crafted markup — entity expansion, namespace and mutation-XSS flaws
+  # that let a document parse differently than it reads (GHSA-c7q8-3ch8-vqpv, GHSA-27p8-2357-5qqv,
+  # GHSA-8344-3jmq-59r6, GHSA-965w-775f-mr7g, GHSA-93r5-fhx6-vmg9, GHSA-w2rr-34g9-rvrj,
+  # GHSA-4w3w-2rp5-g8jm, GHSA-x4fp-j954-r2f4 and, on 0.9, GHSA-6mj3-qw4j-hgrw, GHSA-3px3-54cx-rmw9,
+  # GHSA-vr34-hp96-76pp, GHSA-g53g-w8rj-fmg7, all high). Two separate instances, neither shipped to
+  # the client and neither reading attacker-controlled input:
+  #   0.8.x via mapshaper, in the dev-only maps toolchain that reads official AEC shapefiles;
+  #   0.9.x via @capacitor/cli -> plist, which parses the shells' own Info.plist at build time.
+  # Both upstreams pin ranges that exclude the fix, so each line is forced to its own patch.
+  "@xmldom/xmldom@>=0.7.0 <0.8.15": "0.8.15"
+  "@xmldom/xmldom@>=0.9.0 <0.9.12": "0.9.12"
 
 allowBuilds:
   # mapshaper optionals for formats we don't use (sqlite/msgpack); never build their natives.
