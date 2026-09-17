@@ -56,7 +56,9 @@ describe("new-tab links are announced", () => {
     expect(source).toMatch(/class="visually-hidden"/);
     expect(source).toMatch(/ariaLabel \? `\$\{ariaLabel\} \(\$\{cue\}\)`/);
     expect(source).toMatch(/rel=\{relValue\}/);
-    expect(source).toMatch(/"noopener", "noreferrer"/);
+    expect(source).toMatch(/"noopener", \.\.\.\(toPublisher \? \[\] : \["noreferrer"\]\)/);
+    // Derived from the destination's host, so no call site can grant a referrer by passing a prop.
+    expect(source).toMatch(/toPublisher = \$derived\(hostOf\(href\) === PUBLISHER_HOST\)/);
   });
 });
 

@@ -20,7 +20,9 @@ import { ORG } from "./org";
 import { SITE_URL, SITE_NAME } from "./seo";
 
 /** Stable node identifiers, referenced by `@id` from other nodes and across pages. */
-export const ORG_ID = `${SITE_URL}/#org`;
+// The Organization's id is the publisher's own, not this site's: its other sites emit the same
+// string, so the nodes resolve to one organisation rather than several sharing a name.
+export const ORG_ID = `${ORG.website}/#organization`;
 export const WEBSITE_ID = `${SITE_URL}/#website`;
 export const WEBAPP_ID = `${SITE_URL}/#webapp`;
 export const INSIGHTS_DATASET_ID = `${SITE_URL}/insights#dataset`;
@@ -44,15 +46,13 @@ export function siteGraph() {
         // The publisher is the operating ENTITY, not the site/brand: the Organization node names
         // National Digital (with its full legal name) so search engines attribute the site to the
         // real party behind it, sourced from the single-source org record. The "How2Vote" brand
-        // lives on the WebSite/WebApplication `name` below, and this entity is linked to its own
-        // corporate site via `sameAs`.
+        // lives on the WebSite/WebApplication `name` below. Every property here must hold for the
+        // ENTITY, not this site, because the `@id` merges this node with the entity's own.
         "@type": "Organization",
         "@id": ORG_ID,
         name: ORG.tradingName,
         legalName: ORG.legalName,
-        url: SITE_URL,
-        logo: `${SITE_URL}/icon.svg`,
-        sameAs: [ORG.website],
+        url: ORG.website,
       },
       {
         "@type": "WebSite",

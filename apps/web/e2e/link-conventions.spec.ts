@@ -69,6 +69,21 @@ test("the glossary word is still a real link", async ({ page }) => {
   await tab.close();
 });
 
+test("only the publisher's own site is sent a referrer", async ({ page }) => {
+  await page.goto("/methodology");
+
+  const credit = page.locator("footer").getByRole("link", { name: /^National Digital/ });
+  await expect(credit).toHaveAttribute("rel", /noopener/);
+  await expect(credit).not.toHaveAttribute("rel", /noreferrer/);
+  // The attribute, not `rel`, is what carries this: the sitewide Referrer-Policy is no-referrer, and
+  // only a per-element policy overrides it. The origin goes; the page the reader was on does not.
+  await expect(credit).toHaveAttribute("referrerpolicy", "strict-origin");
+
+  const source = page.locator("footer").getByRole("link", { name: /^They Vote For You/ });
+  await expect(source).toHaveAttribute("rel", /noreferrer/);
+  await expect(source).not.toHaveAttribute("referrerpolicy", /.*/);
+});
+
 test("a link that opens a new tab says so", async ({ page }) => {
   await page.goto("/methodology");
 
