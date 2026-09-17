@@ -12,7 +12,6 @@ export const STORE_LINKS: {
 } = {
   // e.g. "https://apps.apple.com/au/app/how2vote/id0000000000"
   appStore: null,
-  // e.g. "https://play.google.com/store/apps/details?id=au.how2vote.app"
-  playStore: null,
+  playStore: "https://play.google.com/store/apps/details?id=au.how2vote.app",
   fDroid: "https://f-droid.org/packages/au.how2vote.app/",
 };
