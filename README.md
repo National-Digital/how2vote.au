@@ -51,9 +51,10 @@ score and no preference is recommended: you author your own preference order.
 
 Built as a fully static, offline-capable PWA, and **packaged unchanged** as native iOS and Android
 shells — Capacitor wrappers around the exact same build, dataset included. Both shells are built on
-every release; **store distribution is pending** and no listing is live yet (see
-[`docs/store-distribution.md`](docs/store-distribution.md)). No account, no server-side scoring,
-no tracking by default — analytics is strictly opt-in.
+every release, and the Android build is published on
+[F-Droid](https://f-droid.org/packages/au.how2vote.app/); the App Store and Google Play channels
+are described in [`docs/store-distribution.md`](docs/store-distribution.md). No account, no
+server-side scoring, no tracking by default — analytics is strictly opt-in.
 
 </div>
 

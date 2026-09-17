@@ -397,7 +397,7 @@ APIs are queried by whatever sets them, never by the generator:
 | --- | --- | --- |
 | `IOS_LIVE_VERSION` | `ios.json` | App Store Connect API |
 | `ANDROID_LIVE_VERSION` | `android.json` | Play Developer API |
-| `FDROID_LIVE_VERSION` | `fdroid.json` | F-Droid index |
+| `FDROID_LIVE_VERSION` | `fdroid.json` | F-Droid index (`resolve-fdroid-live-version.mjs`) |
 
 An unset channel emits a grey **"not published"** badge, so the README renders identically before
 and after a store goes live and nothing needs editing on launch day. The `web` badge always
@@ -510,8 +510,9 @@ workflow: a restatement can pass while the buildserver fails.
    `AllowedAPKSigningKeys:` are both set, F-Droid builds the tag, compares against our published
    APK, and on a match publishes **our** binary under **our** signature; it falls back to signing
    its own build with the F-Droid key only if the comparison fails.
-6. Wire `FDROID_LIVE_VERSION` for the README badge from the index:
-   `https://f-droid.org/api/v1/packages/au.how2vote.app`.
+6. The README badge follows automatically: `scripts/resolve-fdroid-live-version.mjs` reads
+   `https://f-droid.org/api/v1/packages/au.how2vote.app` in `deploy.yml`'s `live-versions` job and
+   hands `FDROID_LIVE_VERSION` to the build. The index is public, so the job holds no credential.
 
 **Screenshots** ship as **symlinks**. F-Droid reads images from `<locale>/images/**` beside the
 listing text, so three committed links point into the screenshot pack:
