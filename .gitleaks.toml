@@ -20,10 +20,17 @@ useDefault = true
 # the world to read. Only the keystore and its password are sensitive, and they live solely in Actions
 # secrets. Canonical fdroidserver formatting emits it as `AllowedAPKSigningKeys: <digest>`, and that
 # keyword-plus-high-entropy shape is what the default generic-api-key rule flags.
+#
+# The Cloudflare Web Analytics site token is public by construction: the beacon script carries it to
+# every visitor, so it identifies the site rather than authorising anything. The Cloudflare API token
+# that created it is the sensitive half, and it lives solely in Actions secrets. It appears in
+# `apps/web/src/lib/privacy/page-counter.ts`, where the `TOKEN = <32 hex characters>` shape is what
+# the default generic-api-key rule flags.
 [allowlist]
-description = "Values that are public by design: reCAPTCHA v3 site key, F-Droid signer digest"
+description = "Values that are public by design: reCAPTCHA v3 site key, F-Droid signer digest, Cloudflare Web Analytics site token"
 regexTarget = "line"
 regexes = [
   '''6LeN2U8tAAAAAOBXIIa5De5K1VfTpeavkqWmP7Py''',
   '''617efd39535bb3af10ce0778b6f20ee4597f221baeb3f3e07547bfcc1ac7d213''',
+  '''859ae981d4af49fc8b6cbb11f349c73f''',
 ]
