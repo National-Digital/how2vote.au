@@ -61,15 +61,18 @@ export function normaliseCopy(text) {
         .map((m) => m[1] ?? m[2])
         .join(" ")} `,
   );
-  return withAttributeCopy
-    .replace(/&nbsp;/g, " ")
-    .replace(/&amp;/g, "&")
-    .replace(/&lt;/g, "<")
-    .replace(/&gt;/g, ">")
-    .replace(/&quot;/g, '"')
-    .replace(/&#39;|&apos;/g, "'")
-    .replace(/\s+/g, " ")
-    .trim();
+  return (
+    withAttributeCopy
+      .replace(/&nbsp;/g, " ")
+      .replace(/&lt;/g, "<")
+      .replace(/&gt;/g, ">")
+      .replace(/&quot;/g, '"')
+      .replace(/&#39;|&apos;/g, "'")
+      // Last, so `&amp;lt;` decodes to the text `&lt;` rather than being unescaped twice into `<`.
+      .replace(/&amp;/g, "&")
+      .replace(/\s+/g, " ")
+      .trim()
+  );
 }
 
 /**

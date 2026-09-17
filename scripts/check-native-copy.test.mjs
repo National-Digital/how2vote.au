@@ -41,6 +41,10 @@ describe("normaliseCopy", () => {
     expect(normaliseCopy("AEC&#39;s rules &amp; notes")).toBe("AEC's rules & notes");
   });
 
+  it("unescapes each entity once, so an escaped entity stays text", () => {
+    expect(normaliseCopy("use &amp;lt; to show a less-than")).toBe("use &lt; to show a less-than");
+  });
+
   it("returns empty for a non-string rather than throwing", () => {
     expect(normaliseCopy(undefined)).toBe("");
   });
