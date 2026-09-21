@@ -5,6 +5,7 @@ import {
   FDROID_FILES,
   authorisationLine,
   buildMetadata,
+  reviewerRoute,
   fdroidTargetRel,
   validateMetadata,
 } from "./generate-store-metadata.mjs";
@@ -183,5 +184,34 @@ describe("F-Droid listing mirror", () => {
     for (const { name, dir } of ANDROID_IMAGE_MAP) {
       expect(dir).toBe(!name.includes("."));
     }
+  });
+});
+
+describe("reviewerRoute", () => {
+  const NEXT = {
+    id: "next",
+    label: "Next Federal Election",
+    shortLabel: "Next",
+    current: true,
+    provisionalStage: "pending",
+  };
+  const Y2025 = { id: "2025", label: "2025 Federal Election", shortLabel: "2025" };
+
+  it("names the election that has a ballot while the default has none", () => {
+    const note = reviewerRoute([NEXT, Y2025]);
+    expect(note).toContain("Next Federal Election");
+    expect(note).toContain('tap "2025"');
+  });
+
+  // The whole point of deriving it: a note telling a reviewer to switch elections is wrong the
+  // moment the default carries its own ballot, and nobody would think to delete it by hand.
+  it("retires itself once the current election is called", () => {
+    const called = { ...NEXT, provisionalStage: undefined };
+    expect(reviewerRoute([called, Y2025])).toBe("");
+  });
+
+  it("says nothing when there is no election to point at", () => {
+    expect(reviewerRoute([NEXT])).toBe("");
+    expect(reviewerRoute([])).toBe("");
   });
 });

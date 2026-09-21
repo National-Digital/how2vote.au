@@ -42,6 +42,7 @@
     "close-out:check": "node scripts/check-close-out.mjs",
     "store-channel:check": "node scripts/check-store-channel.mjs",
     "native-plugins:check": "node scripts/check-native-plugins.mjs",
+    "native-brand:check": "node scripts/check-native-brand.mjs",
     "store-metadata:check": "node scripts/generate-store-metadata.mjs --check",
     "staleness:check": "node scripts/check-staleness.mjs",
     "clear-all:check": "node scripts/check-clear-all.mjs",

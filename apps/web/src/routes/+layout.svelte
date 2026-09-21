@@ -14,6 +14,7 @@
   import { ageGate } from "$lib/age.svelte";
   import { DIST_CHANNEL, isNativeShell, nativeAppPlugin } from "$lib/channel";
   import { backupToNative, restoreFromNative } from "$lib/native-storage";
+  import { wireNativeRouter } from "$lib/native-router.svelte";
   import { election } from "$lib/election.svelte";
   import { SITE_URL } from "$lib/seo";
   import { quiz } from "$lib/quiz.svelte";
@@ -91,6 +92,16 @@
   });
 
   afterNavigate(() => observeChrome());
+
+  // Native core (iOS, ADR 0018 D1). Reports every navigation to the shell, which serves the route
+  // natively or takes its cover down; and heals this side's state when the voter leaves a native
+  // screen, before the router moves. Registered here, and nowhere else, so there is one caller: two
+  // would race on the same cover, and a page that never renders cannot be the one that dismisses it.
+  // At initialisation, which is what afterNavigate requires — and it fires for the initial load too.
+  wireNativeRouter(
+    () => election.id,
+    (path) => void goto(path),
+  );
 
   onMount(() => {
     // Every listener this hook registers pushes its own teardown, so the single cleanup below

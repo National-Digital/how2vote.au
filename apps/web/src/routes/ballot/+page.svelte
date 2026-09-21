@@ -1,6 +1,5 @@
 <script lang="ts">
   import ExternalLink from "$lib/components/ExternalLink.svelte";
-  import { onMount } from "svelte";
   import { goto } from "$app/navigation";
   import ElectorateMap from "$lib/components/ElectorateMap.svelte";
   import Meta from "$lib/components/Meta.svelte";
@@ -10,6 +9,7 @@
   import { election } from "$lib/election.svelte";
   import { manifestFor } from "$lib/manifest";
   import { quiz } from "$lib/quiz.svelte";
+  import { nativeRoute } from "$lib/native-router.svelte";
 
   let step = $state<1 | 2 | 3>(1);
   let chosenState = $state<string | null>(null);
@@ -20,7 +20,14 @@
   // dataset, so we start loading it up front — it is usually ready by the time a state is picked.
   let data = $state<Data | null>(null);
   let loadError = $state(false);
-  onMount(() => {
+  // Waits for the handover answer before doing anything: setBallot writes quiz state, which is the
+  // native core's to write on iOS (ADR 0018 D3), and a WebView-served route must not write a key the
+  // native core owns. An $effect rather than onMount for that reason: the answer arrives after mount,
+  // so a one-shot hook could only ever run too early.
+  let started = false;
+  $effect(() => {
+    if (!nativeRoute.isWeb || started) return;
+    started = true;
     // A provisional/upcoming election ships no ballot (no electorates), so there is nothing to pick:
     // set the sentinel national ballot and go straight to the questions. Detected from the tiny
     // manifest (no dataset needed), so this forwards before any electorate UI can flash.
@@ -84,7 +91,9 @@
 <Progress value={step} max={3} label="Ballot setup progress" />
 
 <div class="body">
-  {#if step === 1}
+  {#if !nativeRoute.isWeb}
+    <p class="note ui" role="status">Loading…</p>
+  {:else if step === 1}
     <h1>Where will you vote?</h1>
     <div class="states">
       {#each states as s (s.code)}

@@ -179,6 +179,20 @@ class Quiz {
     this.hydrated = true;
   }
 
+  /**
+   * Re-reads the loaded election's progress from storage, discarding what is in memory.
+   *
+   * Needed where another writer has changed the record behind this store: the native core owns the
+   * quiz keys in the iOS shell (ADR 0018 D3), so when a native screen hands control back, the
+   * answers it recorded are in storage and not here. {@link useElection} cannot do this — it is
+   * idempotent for the election already loaded, which is exactly the case that needs re-reading.
+   */
+  rehydrate(): void {
+    if (!this.loadedId) return;
+    this.load(this.loadedId);
+    this.hydrated = true;
+  }
+
   /** Loads persisted state for an election if present and fresh; otherwise resets to defaults. */
   private load(electionId: string): void {
     this.state = null;

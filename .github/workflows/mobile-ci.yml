@@ -71,7 +71,7 @@ jobs:
           FILES=$(gh api "repos/$GITHUB_REPOSITORY/pulls/$PR/files" --paginate --jq '.[].filename')
           echo "$FILES" | sed 's/^/  /'
           # `fastlane/` (repo root) is the F-Droid listing tree.
-          APP='^(apps/(mobile|web)/|packages/|fastlane/|pnpm-lock\.yaml|\.nvmrc|docs/fdroid/|\.github/(workflows/mobile-ci\.yml|actions/(build-web-channel|resolve-store-version)/)|scripts/(check-fdroid-ready|check-native-plugins|check-store-channel|generate-app-version|generate-store-metadata)\.mjs)'
+          APP='^(apps/(mobile|web)/|packages/|fastlane/|pnpm-lock\.yaml|\.nvmrc|docs/fdroid/|\.github/(workflows/mobile-ci\.yml|actions/(build-web-channel|resolve-store-version)/)|scripts/(check-engine-bundle|check-fdroid-ready|check-ios-sources|check-native-answer-scale|check-native-brand|check-native-jurisdictions|check-native-router|check-native-state-keys|check-native-plugins|check-store-channel|generate-app-version|generate-store-metadata)\.mjs)'
           # apps/web and packages are deliberately absent here: they are input to the bundle, not to
           # the native build graph.
           NATIVE='^(apps/mobile/|pnpm-lock\.yaml|\.nvmrc|docs/fdroid/|\.github/(workflows/mobile-ci\.yml|actions/(build-web-channel|resolve-store-version)/)|scripts/(check-fdroid-ready|check-native-plugins|generate-app-version|generate-store-metadata)\.mjs)'
@@ -110,6 +110,43 @@ jobs:
       - name: Native plugin parity (both shells register every plugin)
         run: node scripts/check-native-plugins.mjs
 
+      # Xcode's classic project model builds a Swift file only if project.pbxproj references it four
+      # times over, so a file added to the folder is present, reviewable and never compiled. A
+      # generated notice file that is not built looks exactly like one that is.
+      - name: Every iOS Swift source is compiled by the App target
+        run: node scripts/check-ios-sources.mjs
+
+      # On-device state is shared between the native core and the WebView. The ownership marker, the
+      # owned key prefixes and the Preferences namespace must agree across both, or state is either
+      # pruned as orphans, written by two owners, or placed where the data wipe cannot reach it.
+      - name: Native and web agree on who owns which state
+        run: node scripts/check-native-state-keys.mjs
+
+      # Each answer carries the points that reach the scoring engine, so the label-to-points binding
+      # IS the meaning of a tap. A native scale that drifts still reads correctly and still scores —
+      # it just records the opposite of what the voter chose, with nothing downstream able to tell.
+      - name: The native quiz offers the web's answer scale
+        run: node scripts/check-native-answer-scale.mjs
+
+      # Handing a route from the WebView to a native screen is four literals agreeing across a
+      # storyboard, a Swift subclass, a plugin and the web. Every link fails silently: the app
+      # builds, launches, and shows the web screen it always did.
+      - name: The native route handover is wired
+        run: node scripts/check-native-router.mjs
+
+      # The logo is baked outlines, not a font, precisely so it renders identically everywhere. A
+      # native screen drawing the name as text is a different mark in whatever face the platform
+      # picks, missing the boxed numeral the mark is built around.
+      - name: The native wordmark is the web's wordmark
+        run: node scripts/check-native-brand.mjs
+
+      # Each code is matched against the compiled dataset to build that state's electorate list, so a
+      # code that differs by a character does not look wrong — it returns an empty list and the
+      # picker appears broken for everyone who lives there. A missing entry is worse: a whole state
+      # with no way to reach the questionnaire, on one channel only.
+      - name: The native picker offers the same states
+        run: node scripts/check-native-jurisdictions.mjs
+
       # The STATIC half of the F-Droid gate — scanner-clean gradle files, the version-injection
       # contract, versionCode formula parity, recipe invariants, committed listing. A second of
       # text checks, so it runs in the cheap tier; the actual recipe-mirror build is the fdroid job.
@@ -132,6 +169,45 @@ jobs:
             exit 1
           fi
           echo "✓ ios channel baked into build"
+
+      # The engine bundle the native iOS core evaluates in JavaScriptCore (ADR 0018 D2/D5). Built
+      # here rather than committed, then checked: it must be self-contained and host-independent —
+      # JavaScriptCore has no DOM, no loader and no network — and it must still reproduce the
+      # committed golden artifacts byte for byte, which is what makes "one engine, never two" a
+      # fact rather than an intention. Runs on Linux; the Swift bridge that calls it is exercised
+      # on the macOS runner.
+      - name: Build the native engine bundle
+        run: pnpm -C packages/engine build && pnpm -C packages/engine build:native
+
+      - name: Engine bundle is host-independent and golden-identical
+        run: node scripts/check-engine-bundle.mjs
+
+      # The bridge loads the bundle from the synced `public` folder, so it must be in the web
+      # output before `cap sync` runs — otherwise the app builds cleanly and has no engine.
+      - name: Engine bundle rides the iOS web output
+        run: |
+          test -f apps/web/build/how2vote-engine.js \
+            || { echo "::error::engine bundle missing from apps/web/build — JSCEngine would find nothing"; exit 1; }
+          echo "✓ engine bundle present in the ios web output"
+
+      # `QuestionLoader` reads these as files. A dataset that is not in the output builds cleanly,
+      # passes every compile check, and then throws on the first question screen on a device — so it
+      # is asserted here rather than discovered there. Every committed election must be present: the
+      # app can be opened on any of them.
+      - name: Compiled datasets ride the iOS web output
+        run: |
+          missing=0
+          for dataset in data/dist/*/dataset.json; do
+            id="$(basename "$(dirname "$dataset")")"
+            for file in dataset.json manifest.json; do
+              if [ ! -f "apps/web/build/data/dist/$id/$file" ]; then
+                echo "::error::$file for election $id missing from apps/web/build — the native quiz would find nothing"
+                missing=1
+              fi
+            done
+          done
+          [ "$missing" = "0" ] || exit 1
+          echo "✓ $(ls -d data/dist/*/ | wc -l) dataset(s) and manifest(s) present in the ios web output"
 
       - name: Unit tests (channel + share URL invariants included)
         run: pnpm --filter @how2vote/web test
@@ -467,6 +543,71 @@ jobs:
           channel: ios
           app-version: ${{ steps.version.outputs.name }}
 
+      # The engine runs on JavaScriptCore on device, not on Node. Two engines can agree on every
+      # specified behaviour and still differ where the specification leaves a choice — number
+      # formatting, property order, localeCompare collation — and each of those changes the bytes of
+      # a card without changing any logic. Compiled together with JSCEngine.swift, so the shipping
+      # bridge is exercised rather than a copy of it. Runs before the build: a parity failure makes
+      # the binary pointless, and this costs seconds where xcodebuild costs minutes.
+      - name: Engine parity under JavaScriptCore
+        run: |
+          set -euo pipefail
+          swiftc -O \
+            apps/mobile/ios/App/App/Engine/JSCEngine.swift \
+            apps/mobile/ios/Parity/EngineParity.swift \
+            -o "$RUNNER_TEMP/engine-parity"
+          "$RUNNER_TEMP/engine-parity" "$PWD"
+
+      # The quiz and review rules — resume position, cursor clamping, importance surviving a changed
+      # answer, the ×10 star refusing a middling one, and what a refused write costs — compiled from
+      # the SHIPPING view models rather than a copy. The project has no XCTest target (that means a native target, a build phase and a
+      # scheme in project.pbxproj); this is the same command-line shape the engine parity harness
+      # already uses, and it covers the logic the SwiftUI view has none of its own.
+      - name: Quiz and review logic holds
+        run: |
+          set -euo pipefail
+          swiftc -O \
+            apps/mobile/ios/App/App/Model/QuizExit.swift \
+            apps/mobile/ios/App/App/Model/QuestionSet.swift \
+            apps/mobile/ios/App/App/Model/AnswerScale.swift \
+            apps/mobile/ios/App/App/Model/Jurisdictions.swift \
+            apps/mobile/ios/App/App/Model/Manifest.swift \
+            apps/mobile/ios/App/App/State/NativeState.swift \
+            apps/mobile/ios/App/App/State/QuizState.swift \
+            apps/mobile/ios/App/App/Engine/JSCEngine.swift \
+            apps/mobile/ios/App/App/Views/QuizViewModel.swift \
+            apps/mobile/ios/App/App/Views/ReviewViewModel.swift \
+            apps/mobile/ios/App/App/Views/BallotViewModel.swift \
+            apps/mobile/ios/Parity/QuizLogic.swift \
+            -o "$RUNNER_TEMP/quiz-logic"
+          "$RUNNER_TEMP/quiz-logic"
+
+      # A partial SVG reader fails quietly: a command it skips draws a boundary that is subtly the
+      # wrong shape, and the shape is a voter's own electorate shown back to them. Runs the reader
+      # over every division of every committed state, and over the withholding rule that keeps a
+      # map the emergency levers have closed from being drawn.
+      - name: Boundary maps read
+        run: |
+          set -euo pipefail
+          swiftc -O \
+            apps/mobile/ios/App/App/Model/StateMap.swift \
+            apps/mobile/ios/Parity/MapLogic.swift \
+            -o "$RUNNER_TEMP/map-logic"
+          "$RUNNER_TEMP/map-logic" "$PWD"
+
+      # The logo is the app's identity on the first screen a reviewer opens, and a partial SVG
+      # reader draws it subtly wrong rather than failing. Asserts the parsed outlines measure to the
+      # geometry the brand source declares — and that a mark missing a glyph run would be caught.
+      - name: The wordmark reads to its declared geometry
+        run: |
+          set -euo pipefail
+          swiftc -O \
+            apps/mobile/ios/App/App/Design/SVGPath.swift \
+            apps/mobile/ios/App/App/Generated/BrandMark.swift \
+            apps/mobile/ios/Parity/BrandParity.swift \
+            -o "$RUNNER_TEMP/brand-mark"
+          "$RUNNER_TEMP/brand-mark"
+
       - name: Sync Capacitor iOS project
         run: pnpm --filter @how2vote/mobile sync:ios
 
@@ -506,6 +647,109 @@ jobs:
             echo "- sha256: \`$SUM\`"
             echo "- simulator only — an unsigned simulator build cannot run on a physical iPhone"
           } >> "$GITHUB_STEP_SUMMARY"
+
+      # The build proves the app COMPILES. It does not prove it launches, and those come apart
+      # exactly where the native core is going: a shell that boots into the wrong view controller,
+      # a missing resource, or an engine bundle the app cannot find are all launch-time faults that
+      # a green build reports as success. Booting it once is the cheapest thing that would notice.
+      #
+      # The screenshot is the other half. There is no simulator on the development machine, so this
+      # is the only place the native screens are ever SEEN before TestFlight — worth the artifact
+      # for a change whose whole purpose is what a reviewer sees on opening the app.
+      - name: The app launches, and the native core serves it
+        env:
+          BUNDLE_ID: au.how2vote.app
+        run: |
+          set -euo pipefail
+          APP="$RUNNER_TEMP/dd/Build/Products/Release-iphonesimulator/App.app"
+
+          # Newest available iPhone, resolved rather than pinned: a hard-coded device name breaks on
+          # every Xcode image bump, and the claim under test is not device-specific.
+          DEVICE=$(xcrun simctl list devices available -j \
+            | node -e 'let s="";process.stdin.on("data",d=>s+=d).on("end",()=>{
+                const r=JSON.parse(s).devices;
+                const runtime=(rt)=>Number(/iOS-(\d+)/.exec(rt)?.[1] ?? 0);
+                const phones=Object.entries(r)
+                  // The deployment target is iOS 17; an older runtime fails to install with a
+                  // message about the device, not about the target.
+                  .filter(([rt]) => runtime(rt) >= 17)
+                  .flatMap(([rt, ds]) => ds.filter(d => /iPhone/.test(d.name)).map(d => ({...d, v: runtime(rt)})))
+                  .sort((a, b) => a.v - b.v);
+                if(!phones.length){console.error("no iOS 17+ iPhone simulator available");process.exit(1)}
+                console.log(phones[phones.length-1].udid);
+              })')
+          echo "simulator: $DEVICE"
+
+          xcrun simctl boot "$DEVICE" || true
+          xcrun simctl bootstatus "$DEVICE" -b
+          xcrun simctl install "$DEVICE" "$APP"
+
+          LOG="$RUNNER_TEMP/console.log"
+
+          PID=$(xcrun simctl launch "$DEVICE" "$BUNDLE_ID" | awk -F': ' '{print $2}')
+          echo "launched pid $PID"
+          # Simulator apps are host processes, so the host can watch this one directly. Long enough
+          # for the web assets to load and the bridge to come up; a crash on launch is immediate.
+          sleep 15
+
+          if ! ps -p "$PID" > /dev/null 2>&1; then
+            echo "::error::the app did not stay running after launch"
+            find ~/Library/Logs/DiagnosticReports -name "App*" -newermt "-5 minutes" 2>/dev/null \
+              | head -3 | xargs -I{} sh -c 'echo "--- {} ---"; head -60 "{}"'
+            exit 1
+          fi
+
+          xcrun simctl io "$DEVICE" screenshot "$RUNNER_TEMP/launch.png"
+
+          # Queried after the fact rather than streamed alongside. A stream has to be attached before
+          # the app writes anything, and losing that race produces an empty capture — which reads
+          # exactly like an app that logged nothing, and cost a full round trip to tell apart. The
+          # log store already holds the entries; asking it afterwards cannot race.
+          xcrun simctl spawn "$DEVICE" log show --last 3m --style compact \
+            --predicate 'eventMessage CONTAINS "How2Vote:"' > "$LOG" 2>&1 || true
+
+          # Everything above proves the app RUNS. None of it proves the native core was reached, and
+          # the two came apart once already: every static guard passed while the plugin was never
+          # registered, so the app served the web screens it always did and reported success.
+          echo "--- shell markers ---"
+          grep "How2Vote:" "$LOG" || echo "(none)"
+
+          # The whole chain, link by link, each with the diagnosis its absence actually means.
+          #
+          # Asserting only the last link tells you the core is unreached without saying where it
+          # broke, and every link here has broken at least once: the plugin registered but the web
+          # never looked it up; the web looked it up but the path it offered was the empty string.
+          # Naming the first missing link is the difference between a fix and a round trip.
+          #
+          # The marker forwarder comes first deliberately. Without it no web-side line can appear at
+          # all, so its absence would otherwise read as "the web never ran" — which it did, for nine
+          # rounds (see MainViewController.MarkerLog).
+          chain=(
+            "native router registered|the plugin never registered — the storyboard class, the registration, or the method table"
+            "marker log installed|the web console is not being forwarded; every web marker below is unobservable, not absent"
+            "web wiring — init reached|the layout never initialised the router wiring"
+            "web wiring — mount reached|the wiring initialised but never mounted — the first route is offered from onMount"
+            "web wiring — native router found|the web could not see the plugin; the bridge inventory is on the line above"
+            "web wiring — navigation reached, to=/|the landing's path did not arrive as \"/\" — check routePath and the capacitor: scheme"
+            "presenting landing|the shell was offered the landing and declined it; its reason is in the markers above"
+          )
+          for link in "${chain[@]}"; do
+            marker="${link%%|*}"
+            diagnosis="${link#*|}"
+            if ! grep -qF "How2Vote: $marker" "$LOG"; then
+              echo "::error::$diagnosis (missing marker: \"$marker\")"
+              exit 1
+            fi
+          done
+          echo "✓ app launched, and the native core is serving the landing"
+
+      - name: Attach the launch screenshot to this run
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
+        with:
+          name: how2vote-ios-launch-pr${{ github.event.pull_request.number || 0 }}-${{ github.run_number }}
+          path: ${{ runner.temp }}/launch.png
+          if-no-files-found: warn
+          retention-days: 14
 
       - name: Attach the app bundle to this run
         id: app-upload

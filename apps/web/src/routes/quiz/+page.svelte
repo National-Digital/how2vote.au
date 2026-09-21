@@ -14,9 +14,16 @@
   import { loadData, type Question } from "$lib/data";
   import { election } from "$lib/election.svelte";
   import { quiz } from "$lib/quiz.svelte";
+  import { nativeRoute } from "$lib/native-router.svelte";
 
   let announce = $state("");
   let advancing = $state(false);
+
+  // Whether this page renders the questionnaire, or a native screen is about to (ADR 0018 D1). The
+  // layout reports the navigation and the shell answers; until it has, this page must not load or
+  // WRITE, because the quiz keys are the native core's to write on iOS (D3) and a WebView-served
+  // route may render a native-owned surface but must not write one. On every other channel the
+  // answer is "web" from the start.
 
   // Questions come from the lazily-loaded dataset; quiz.total (persisted) gives an accurate count
   // for the header even before that chunk arrives.
@@ -46,6 +53,9 @@
       goto("/ballot");
       return;
     }
+    // Waits for the handover answer: loading the dataset would be wasted work if a native screen is
+    // about to open, and syncQuestions writes quiz state, which is the native core's to write there.
+    if (!nativeRoute.isWeb) return;
     if (dataLoaded) return;
     dataLoaded = true;
     loadError = false;
@@ -131,7 +141,9 @@
 <Progress value={index + 1} max={total} label="Quiz progress" />
 
 <div class="body" aria-live="off">
-  {#if question}
+  {#if !nativeRoute.isWeb}
+    <p class="kicker ui" role="status">Loading question…</p>
+  {:else if question}
     <div class="intro">
       {#if index === 0}
         <ProvenanceNotice electionId={election.id} />

@@ -9,6 +9,9 @@ export default tseslint.config(
   {
     ignores: [
       "**/dist/**",
+      // The engine bundle built for JavaScriptCore (ADR 0018 D2): generated output, checked by
+      // scripts/check-engine-bundle.mjs rather than linted.
+      "**/dist-native/**",
       "**/build/**",
       "**/.svelte-kit/**",
       "**/coverage/**",

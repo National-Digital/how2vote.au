@@ -15,6 +15,7 @@
   import { manifestFor } from "$lib/manifest";
   import { ageGate } from "$lib/age.svelte";
   import { quiz } from "$lib/quiz.svelte";
+  import { nativeRoute } from "$lib/native-router.svelte";
 
   let { electionId }: { electionId: string } = $props();
 
@@ -74,62 +75,66 @@
   }
 </script>
 
-<header class="top ui app-top">
-  <Logo size="sm" />
-  <ThemeToggle />
-</header>
+<!-- A native landing covers this page on iOS (ADR 0018 D1); rendering the web one underneath would
+     put a second copy of the first screen behind the one being read. -->
+{#if nativeRoute.isWeb}
+  <header class="top ui app-top">
+    <Logo size="sm" />
+    <ThemeToggle />
+  </header>
 
-<div class="body">
-  <div class="pick">
-    <p class="kicker ui">Federal election</p>
-    <ElectionToggle active={electionId} />
+  <div class="body">
+    <div class="pick">
+      <p class="kicker ui">Federal election</p>
+      <ElectionToggle active={electionId} />
+    </div>
+    <h1>How do your views compare?</h1>
+    <p class="lede">
+      {#if isUpcoming}
+        Answer {count} real questions the current Parliament has voted on and see how your views compare
+        with the parties' recorded votes.{" "}<span class="past"
+          >The next federal election hasn't been announced yet, so this is a provisional comparison
+          against the current Parliament — the questions may change, and there are no candidates or
+          printable how-to-vote plan yet.</span
+        >
+      {:else}
+        Answer {count} real questions parliament has voted on and see how your views compare with the
+        parties' recorded votes, for your {meta.year} ballot — House and Senate.{#if isPast}{" "}<span
+            class="past"
+            >This election has already been held — what follows is a historical comparison, scored
+            on the record as it stood then.</span
+          >{/if}
+      {/if}
+    </p>
+
+    <ul class="trust ui">
+      {#each trust as item (item)}
+        <li><span class="tick" aria-hidden="true">✓</span>{item}</li>
+      {/each}
+    </ul>
+
+    <ol class="steps ui">
+      {#each steps as s (s.n)}
+        <li><b>{s.n}</b>{s.d}</li>
+      {/each}
+    </ol>
+
+    <div class="cta">
+      {#if canResume}
+        <button type="button" class="btn" onclick={resume}>
+          Continue — question {quiz.recorded + 1} of {quiz.total}
+        </button>
+        <button type="button" class="link" onclick={start}>Start again</button>
+      {:else if hasCard}
+        <button type="button" class="btn" onclick={viewCard}>See my comparison</button>
+        <button type="button" class="link" onclick={start}>Start again</button>
+      {:else}
+        <button type="button" class="btn" onclick={start}>See how my views compare</button>
+        <a class="link" href="/methodology">How the matching works</a>
+      {/if}
+    </div>
   </div>
-  <h1>How do your views compare?</h1>
-  <p class="lede">
-    {#if isUpcoming}
-      Answer {count} real questions the current Parliament has voted on and see how your views compare
-      with the parties' recorded votes.{" "}<span class="past"
-        >The next federal election hasn't been announced yet, so this is a provisional comparison
-        against the current Parliament — the questions may change, and there are no candidates or
-        printable how-to-vote plan yet.</span
-      >
-    {:else}
-      Answer {count} real questions parliament has voted on and see how your views compare with the parties'
-      recorded votes, for your {meta.year} ballot — House and Senate.{#if isPast}{" "}<span
-          class="past"
-          >This election has already been held — what follows is a historical comparison, scored on
-          the record as it stood then.</span
-        >{/if}
-    {/if}
-  </p>
-
-  <ul class="trust ui">
-    {#each trust as item (item)}
-      <li><span class="tick" aria-hidden="true">✓</span>{item}</li>
-    {/each}
-  </ul>
-
-  <ol class="steps ui">
-    {#each steps as s (s.n)}
-      <li><b>{s.n}</b>{s.d}</li>
-    {/each}
-  </ol>
-
-  <div class="cta">
-    {#if canResume}
-      <button type="button" class="btn" onclick={resume}>
-        Continue — question {quiz.recorded + 1} of {quiz.total}
-      </button>
-      <button type="button" class="link" onclick={start}>Start again</button>
-    {:else if hasCard}
-      <button type="button" class="btn" onclick={viewCard}>See my comparison</button>
-      <button type="button" class="link" onclick={start}>Start again</button>
-    {:else}
-      <button type="button" class="btn" onclick={start}>See how my views compare</button>
-      <a class="link" href="/methodology">How the matching works</a>
-    {/if}
-  </div>
-</div>
+{/if}
 
 <style>
   .top {

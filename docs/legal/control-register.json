@@ -56,6 +56,21 @@
           "status": "passing",
           "enforcedBy": "scripts/check-legal-review.mjs",
           "note": "Freshness (>12 months fails), effective-date (a passed commencement needs a review on/after it) and data-change. The data-change gate is not satisfied by touching legal-review.json: a PR changing a legally-sensitive path must ADD a changeLog entry naming an active signatory as reviewer, with a disposition of reviewed (which must also advance lastReviewDate) or no-review-required. The docs/legal/ registers are themselves sensitive paths, and reviewers resolve against signatories.json as it stood at the PR base, so a PR cannot mint its own approver."
+        },
+        {
+          "id": "native-state-ownership",
+          "type": "ci-job",
+          "owner": "eng-web",
+          "status": "passing",
+          "enforcedBy": "scripts/check-native-state-keys.mjs",
+          "note": "ADR 0018 D3. The native iOS core writes the core's state through UserDefaults under Capacitor Preferences' namespace, so it lands where clearLocalDeviceData() already sweeps — a store of its own would be outside the swept namespace. This asserts the ownership marker and owned key prefixes agree between apps/web/src/lib/privacy/local-data.ts and NativeState.swift, and that the Swift carries the Preferences group the plugin actually uses."
+        },
+        {
+          "id": "native-state-ownership-guard",
+          "type": "unit",
+          "owner": "eng-web",
+          "status": "passing",
+          "enforcedBy": "scripts/check-native-state-keys.test.mjs"
         }
       ],
       "evidence": [
@@ -136,6 +151,112 @@
           "owner": "eng-web",
           "status": "passing",
           "enforcedBy": "apps/web/src/lib/print-auth.test.ts"
+        },
+        {
+          "id": "native-copy",
+          "type": "ci-job",
+          "owner": "eng-web",
+          "status": "passing",
+          "enforcedBy": "scripts/check-native-copy.mjs",
+          "note": "Required-notice register (docs/legal/native-copy.json) for the native iOS core (ADR 0018 D9): each registered notice must appear verbatim in the web source it names, and the generated Swift (apps/mobile/ios/App/App/Generated/LegalCopy.swift) must be the exact rendering of the register. Web-side rewording and hand-edited Swift both fail the build, so the native channel cannot state copy the web-scoped guards never reviewed."
+        },
+        {
+          "id": "native-copy-guard",
+          "type": "unit",
+          "owner": "eng-web",
+          "status": "passing",
+          "enforcedBy": "scripts/check-native-copy.test.mjs"
+        },
+        {
+          "id": "native-router-wiring",
+          "type": "ci-job",
+          "owner": "eng-web",
+          "status": "passing",
+          "enforcedBy": "scripts/check-native-router.mjs",
+          "note": "ADR 0018 D1/D4. The handover from the WebView to a native screen depends on four literals agreeing across Main.storyboard, MainViewController.swift, NativeRouterPlugin.swift and the web's plugin lookup. Every link fails silently — a plugin defined in the app target is not auto-discovered, and the web reads window.Capacitor.Plugins by name with a null fallback, so a broken link is indistinguishable from running on the web. Fails closed when either side is unreadable."
+        },
+        {
+          "id": "native-router-guard",
+          "type": "unit",
+          "owner": "eng-web",
+          "status": "passing",
+          "enforcedBy": "scripts/check-native-router.test.mjs"
+        },
+        {
+          "id": "native-boundary-maps",
+          "type": "ci-job",
+          "owner": "eng-web",
+          "status": "passing",
+          "enforcedBy": "apps/mobile/ios/Parity/MapLogic.swift",
+          "note": "ADR 0018 D10/D10a. Compiles the shipping boundary reader with swiftc and runs it over every division of every committed state. The reader is a deliberately partial SVG path reader — the committed data uses only M, L and Z — and refuses anything it cannot draw rather than skipping it, because a silently skipped command draws a boundary that is subtly the wrong shape while still looking like one, and the shape is a voter's own electorate shown back to them. Also asserts the withholding rule: the allowed map ids are resolved by the WebView from the signed control plane and handed over, and a map absent from that list is not read, so an absent or empty list leaves the lever closed."
+        },
+        {
+          "id": "native-jurisdictions",
+          "type": "ci-job",
+          "owner": "eng-web",
+          "status": "passing",
+          "enforcedBy": "scripts/check-native-jurisdictions.mjs",
+          "note": "ADR 0018 D1. The native ballot picker offers the same states and territories, in the same order, as apps/web/src/lib/data.ts. The codes are not labels: each is matched against the compiled dataset to build that state's electorate list, so a code differing by a character returns an empty list and the picker appears broken for everyone who lives there, and a missing entry is a whole state with no way to reach the questionnaire on one channel only."
+        },
+        {
+          "id": "native-jurisdictions-guard",
+          "type": "unit",
+          "owner": "eng-web",
+          "status": "passing",
+          "enforcedBy": "scripts/check-native-jurisdictions.test.mjs"
+        },
+        {
+          "id": "native-answer-scale",
+          "type": "ci-job",
+          "owner": "eng-web",
+          "status": "passing",
+          "enforcedBy": "scripts/check-native-answer-scale.mjs",
+          "note": "ADR 0018 D2. Each answer carries the points that reach the scoring engine, so the label-to-points binding is the meaning of a tap. This asserts the options, their order, their points, their labels and secondary text, the answerLabel map and the importance mark agree between apps/web/src/lib/answers.ts and AnswerScale.swift. A drifted native scale reads correctly and scores without error while recording the opposite of what the voter chose — and so misstates a party's alignment with that voter."
+        },
+        {
+          "id": "native-answer-scale-guard",
+          "type": "unit",
+          "owner": "eng-web",
+          "status": "passing",
+          "enforcedBy": "scripts/check-native-answer-scale.test.mjs"
+        },
+        {
+          "id": "engine-bundle-parity",
+          "type": "ci-job",
+          "owner": "eng-web",
+          "status": "passing",
+          "enforcedBy": "scripts/check-engine-bundle.mjs",
+          "note": "ADR 0018 D2/D5: the native iOS core runs the SAME compiled engine in JavaScriptCore rather than a Swift reimplementation. The bundle is evaluated in a context with no DOM, no module loader and no host globals, and must reproduce the committed golden artifacts (packages/engine/src/__golden__) byte for byte — so the iOS channel cannot show a different result from the web for the same answers."
+        },
+        {
+          "id": "engine-bundle-guard",
+          "type": "unit",
+          "owner": "eng-web",
+          "status": "passing",
+          "enforcedBy": "scripts/check-engine-bundle.test.mjs"
+        },
+        {
+          "id": "ios-sources-compiled",
+          "type": "ci-job",
+          "owner": "eng-web",
+          "status": "passing",
+          "enforcedBy": "scripts/check-ios-sources.mjs",
+          "note": "Xcode's classic project model compiles a Swift file only when project.pbxproj registers it (file reference, build file, group membership, sources build phase). Without this, the generated required-notice file (ADR 0018 D9) could be present, in sync and never built — the register would report copy as shipped that no binary carries."
+        },
+        {
+          "id": "ios-sources-guard",
+          "type": "unit",
+          "owner": "eng-web",
+          "status": "passing",
+          "enforcedBy": "scripts/check-ios-sources.test.mjs"
+        },
+        {
+          "id": "engine-parity-jsc",
+          "type": "ci-job",
+          "owner": "eng-web",
+          "status": "passing",
+          "enforcedBy": "apps/mobile/ios/Parity/EngineParity.swift",
+          "note": "ADR 0018 D5 on the engine that ships. scripts/check-engine-bundle.mjs proves the bundle reproduces the golden artifacts on Node; this runs the same fixtures through JavaScriptCore, where implementation-defined behaviour (number formatting, property order, localeCompare collation) could change a card's bytes without changing any logic. Compiled together with JSCEngine.swift, so the shipping bridge is exercised. The two harnesses are held to the same artifact list by checkHarnessCoverage."
         }
       ],
       "evidence": [
@@ -187,6 +308,36 @@
           "owner": "eng-web",
           "status": "passing",
           "enforcedBy": "scripts/check-absolute-claims.test.mjs"
+        },
+        {
+          "id": "native-copy",
+          "type": "ci-job",
+          "owner": "eng-web",
+          "status": "passing",
+          "enforcedBy": "scripts/check-native-copy.mjs",
+          "note": "Required-notice register (docs/legal/native-copy.json) for the native iOS core (ADR 0018 D9): each registered notice must appear verbatim in the web source it names, and the generated Swift (apps/mobile/ios/App/App/Generated/LegalCopy.swift) must be the exact rendering of the register. Web-side rewording and hand-edited Swift both fail the build, so the native channel cannot state copy the web-scoped guards never reviewed."
+        },
+        {
+          "id": "native-copy-guard",
+          "type": "unit",
+          "owner": "eng-web",
+          "status": "passing",
+          "enforcedBy": "scripts/check-native-copy.test.mjs"
+        },
+        {
+          "id": "ios-sources-compiled",
+          "type": "ci-job",
+          "owner": "eng-web",
+          "status": "passing",
+          "enforcedBy": "scripts/check-ios-sources.mjs",
+          "note": "Xcode's classic project model compiles a Swift file only when project.pbxproj registers it (file reference, build file, group membership, sources build phase). Without this, the generated required-notice file (ADR 0018 D9) could be present, in sync and never built — the register would report copy as shipped that no binary carries."
+        },
+        {
+          "id": "ios-sources-guard",
+          "type": "unit",
+          "owner": "eng-web",
+          "status": "passing",
+          "enforcedBy": "scripts/check-ios-sources.test.mjs"
         }
       ],
       "evidence": [
@@ -233,6 +384,74 @@
           "status": "passing",
           "enforcedBy": "scripts/check-candidate-corrections.mjs",
           "note": "Correction / right-of-reply runtime suspension: data/corrections/suspensions.json is a data-driven list the runtime reads (apps/web card via $lib/corrections → generateCard); a flagged party's alignment is withdrawn ('under review') across House, Senate (below/above the line) and the evidence view. The guard proves the list is well-formed and every entry's partyKey exists in that election's registry (a typo can never silently fail to suspend). Simple + compatible with the fuller governance control plane; composes with EXPORTS_ENABLED."
+        },
+        {
+          "id": "native-router-wiring",
+          "type": "ci-job",
+          "owner": "eng-web",
+          "status": "passing",
+          "enforcedBy": "scripts/check-native-router.mjs",
+          "note": "ADR 0018 D1/D4. The handover from the WebView to a native screen depends on four literals agreeing across Main.storyboard, MainViewController.swift, NativeRouterPlugin.swift and the web's plugin lookup. Every link fails silently — a plugin defined in the app target is not auto-discovered, and the web reads window.Capacitor.Plugins by name with a null fallback, so a broken link is indistinguishable from running on the web. Fails closed when either side is unreadable."
+        },
+        {
+          "id": "native-router-guard",
+          "type": "unit",
+          "owner": "eng-web",
+          "status": "passing",
+          "enforcedBy": "scripts/check-native-router.test.mjs"
+        },
+        {
+          "id": "native-jurisdictions",
+          "type": "ci-job",
+          "owner": "eng-web",
+          "status": "passing",
+          "enforcedBy": "scripts/check-native-jurisdictions.mjs",
+          "note": "ADR 0018 D1. The native ballot picker offers the same states and territories, in the same order, as apps/web/src/lib/data.ts. The codes are not labels: each is matched against the compiled dataset to build that state's electorate list, so a code differing by a character returns an empty list and the picker appears broken for everyone who lives there, and a missing entry is a whole state with no way to reach the questionnaire on one channel only."
+        },
+        {
+          "id": "native-jurisdictions-guard",
+          "type": "unit",
+          "owner": "eng-web",
+          "status": "passing",
+          "enforcedBy": "scripts/check-native-jurisdictions.test.mjs"
+        },
+        {
+          "id": "native-answer-scale",
+          "type": "ci-job",
+          "owner": "eng-web",
+          "status": "passing",
+          "enforcedBy": "scripts/check-native-answer-scale.mjs",
+          "note": "ADR 0018 D2. Each answer carries the points that reach the scoring engine, so the label-to-points binding is the meaning of a tap. This asserts the options, their order, their points, their labels and secondary text, the answerLabel map and the importance mark agree between apps/web/src/lib/answers.ts and AnswerScale.swift. A drifted native scale reads correctly and scores without error while recording the opposite of what the voter chose — and so misstates a party's alignment with that voter."
+        },
+        {
+          "id": "native-answer-scale-guard",
+          "type": "unit",
+          "owner": "eng-web",
+          "status": "passing",
+          "enforcedBy": "scripts/check-native-answer-scale.test.mjs"
+        },
+        {
+          "id": "engine-bundle-parity",
+          "type": "ci-job",
+          "owner": "eng-web",
+          "status": "passing",
+          "enforcedBy": "scripts/check-engine-bundle.mjs",
+          "note": "ADR 0018 D2/D5: the native iOS core runs the SAME compiled engine in JavaScriptCore rather than a Swift reimplementation. The bundle is evaluated in a context with no DOM, no module loader and no host globals, and must reproduce the committed golden artifacts (packages/engine/src/__golden__) byte for byte — so the iOS channel cannot show a different result from the web for the same answers."
+        },
+        {
+          "id": "engine-bundle-guard",
+          "type": "unit",
+          "owner": "eng-web",
+          "status": "passing",
+          "enforcedBy": "scripts/check-engine-bundle.test.mjs"
+        },
+        {
+          "id": "engine-parity-jsc",
+          "type": "ci-job",
+          "owner": "eng-web",
+          "status": "passing",
+          "enforcedBy": "apps/mobile/ios/Parity/EngineParity.swift",
+          "note": "ADR 0018 D5 on the engine that ships. scripts/check-engine-bundle.mjs proves the bundle reproduces the golden artifacts on Node; this runs the same fixtures through JavaScriptCore, where implementation-defined behaviour (number formatting, property order, localeCompare collation) could change a card's bytes without changing any logic. Compiled together with JSCEngine.swift, so the shipping bridge is exercised. The two harnesses are held to the same artifact list by checkHarnessCoverage."
         }
       ],
       "evidence": [
@@ -338,6 +557,14 @@
           "owner": "eng-web",
           "status": "passing",
           "enforcedBy": "apps/web/e2e/age-gate.spec.ts"
+        },
+        {
+          "id": "native-quiz-logic",
+          "type": "ci-job",
+          "owner": "eng-web",
+          "status": "passing",
+          "enforcedBy": "apps/mobile/ios/Parity/QuizLogic.swift",
+          "note": "ADR 0018 D1. Compiles the shipping QuizViewModel with swiftc and asserts the quiz's rules, including the two that bear on this control: QuizState.save refuses to persist before the 18+ declaration (docs/adr/0011), and a refused write must cost resume rather than the answer or the quiz, so the gate cannot be worked around by a voter being stuck. Also covers resume position, a cursor left past the end of a shortened question set, importance surviving a changed answer, and the record naming the presentable question ids. A command-line harness because the project has no XCTest target."
         },
         {
           "id": "age-gate-isolation",
@@ -537,6 +764,22 @@
           "status": "passing",
           "enforcedBy": "scripts/check-aec-spatial.mjs",
           "note": "data/aec-spatial/source-record.json corrects the earlier (incorrect) CC BY 4.0 assertion to the AEC Spatial Data Download Data Licence and carries the full prescribed derivative-product notice (AEC data identity, Commonwealth copyright + recorded year, permission, 'AEC has not evaluated', no-warranty, limited end-user licence), generated into LICENSE-DATA.md and drift-gated. Guard cross-ties the licence name to the rights register and forces a copyright-year note (AEC page shows 2026 despite a 2013 update). The source archive is pinned by SHA-256, its licence captured in-repo, and a named reviewer has attested provenance (source verified, record current); scripts/verify-aec-archive.mjs + data/aec-spatial/REBUILD.md let any auditor reproduce the verification (the raw archive is git-ignored under the restricted-redistribution licence, so it is never committed)."
+        },
+        {
+          "id": "native-map-notice-display",
+          "type": "ci-job",
+          "owner": "eng-web",
+          "status": "passing",
+          "enforcedBy": "scripts/check-native-copy.mjs",
+          "note": "ADR 0018 D10. The four paragraphs of the prescribed derivative-product notice are registered in docs/legal/native-copy.json against data/aec-spatial/source-record.json itself — the record where the accepted wording lives and where the web reads it from too — and generated into the Swift the native map displays. The licence requires the notice to be DISPLAYED wherever the boundary data is shown, so it is rendered beside the map rather than behind a link, and a rewording of the record fails the build until the native rendering follows."
+        },
+        {
+          "id": "native-boundary-maps",
+          "type": "ci-job",
+          "owner": "eng-web",
+          "status": "passing",
+          "enforcedBy": "apps/mobile/ios/Parity/MapLogic.swift",
+          "note": "ADR 0018 D10/D10a. Runs the shipping boundary reader over every division of every committed state, and asserts the withholding rule that keeps a map the emergency levers have closed from being drawn."
         },
         {
           "id": "aec-spatial-map-notice-display",
@@ -932,6 +1175,21 @@
           "owner": "eng-web",
           "status": "passing",
           "enforcedBy": "packages/engine/src/share.test.ts"
+        },
+        {
+          "id": "native-state-ownership",
+          "type": "ci-job",
+          "owner": "eng-web",
+          "status": "passing",
+          "enforcedBy": "scripts/check-native-state-keys.mjs",
+          "note": "ADR 0018 D3. The native iOS core writes the core's state through UserDefaults under Capacitor Preferences' namespace, so it lands where clearLocalDeviceData() already sweeps — a store of its own would be outside the swept namespace. This asserts the ownership marker and owned key prefixes agree between apps/web/src/lib/privacy/local-data.ts and NativeState.swift, and that the Swift carries the Preferences group the plugin actually uses."
+        },
+        {
+          "id": "native-state-ownership-guard",
+          "type": "unit",
+          "owner": "eng-web",
+          "status": "passing",
+          "enforcedBy": "scripts/check-native-state-keys.test.mjs"
         }
       ],
       "evidence": [
@@ -996,6 +1254,21 @@
           "status": "passing",
           "enforcedBy": "apps/web/e2e/a11y.spec.ts",
           "note": "BLOCKING axe-core gate: every screen hard-asserts zero WCAG 2.0/2.1 A & AA violations (serious/critical and every other impact) across chromium + mobile-chromium, and a self-test proves the gate detects a seeded serious/critical violation (not a no-op). Broadened coverage: keyboard navigation / focus order / visible focus indicator, ARIA + keyboard operation of the consent dialogs, an explicit colour-contrast (WCAG 1.4.3) scan, forced-colours / Windows High Contrast (1.4.11), 400% zoom / 320px reflow (1.4.10) on content pages + the plan builder, the large-state Senate below-the-line ballot, the survey consent forms (survey-age + research consent + versioned Terms), the accessible anti-abuse path (no inaccessible in-page challenge — server-side siteverify only), and the printed s321D authorisation stamp present and in reading order (1.3.2). Runs as a required check in the compliance 'Accessibility and Product' job and in the main e2e job."
+        },
+        {
+          "id": "native-copy",
+          "type": "ci-job",
+          "owner": "eng-web",
+          "status": "passing",
+          "enforcedBy": "scripts/check-native-copy.mjs",
+          "note": "ADR 0018 D9. Registers the external-link cue the native core announces before a link is followed (WCAG 3.2.5) and holds it to the wording in apps/web/src/lib/components/ExternalLink.svelte, so the two channels cannot describe the same behaviour differently. The web side is separately held by link-conventions.test.ts."
+        },
+        {
+          "id": "native-copy-guard",
+          "type": "unit",
+          "owner": "eng-web",
+          "status": "passing",
+          "enforcedBy": "scripts/check-native-copy.test.mjs"
         },
         {
           "id": "lighthouse-accessibility",

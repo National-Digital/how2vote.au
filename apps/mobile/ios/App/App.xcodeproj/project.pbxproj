@@ -15,6 +15,35 @@
 		504EC30F1FED79650016851F /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 504EC30E1FED79650016851F /* Assets.xcassets */; };
 		504EC3121FED79650016851F /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 504EC3101FED79650016851F /* LaunchScreen.storyboard */; };
 		50B271D11FEDC1A000F3C39B /* public in Resources */ = {isa = PBXBuildFile; fileRef = 50B271D01FEDC1A000F3C39B /* public */; };
+		EB6D72AD7165D81974394781 /* LegalCopy.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1DB3EAA6A06919574812E4B4 /* LegalCopy.swift */; };
+		E9D17684A19C5003B8704EB4 /* JSCEngine.swift in Sources */ = {isa = PBXBuildFile; fileRef = 81A0BB97C8C700766AC7EFB7 /* JSCEngine.swift */; };
+		DB4013FA6CDF2EF3F26C463E /* NativeState.swift in Sources */ = {isa = PBXBuildFile; fileRef = D6A5AC54A6D0A39F12E3E708 /* NativeState.swift */; };
+		2729CB9F551692CCB5B80223 /* QuizState.swift in Sources */ = {isa = PBXBuildFile; fileRef = F899856821FF024F394EAB7C /* QuizState.swift */; };
+		196B8CE88C04F8856AEE06C4 /* AnswerScale.swift in Sources */ = {isa = PBXBuildFile; fileRef = C66601FD65C67DF6353D9CA9 /* AnswerScale.swift */; };
+		1880210E2D4D31FA0EB4F761 /* Theme.swift in Sources */ = {isa = PBXBuildFile; fileRef = 027C82DF175A194C0CF4AA47 /* Theme.swift */; };
+		3013123AA3CC907A2079E475 /* Manifest.swift in Sources */ = {isa = PBXBuildFile; fileRef = 67C4B89EABEFF1CD0BFF8029 /* Manifest.swift */; };
+		5FD4674BD3F3423E368E5389 /* QuestionSet.swift in Sources */ = {isa = PBXBuildFile; fileRef = 48F432CD681BEFB95703ACF1 /* QuestionSet.swift */; };
+		8B3220BBDFC46FE4E05767CA /* ExternalLinkView.swift in Sources */ = {isa = PBXBuildFile; fileRef = DFB378D07049C5EFDB8F5EB4 /* ExternalLinkView.swift */; };
+		2B2A2D682F51A2D994859910 /* QuizChrome.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5C8F1467BA36DFF023BEDF4A /* QuizChrome.swift */; };
+		1CA74781F86D3EFCA57DE7DA /* QuizView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 264611603A581DC219240BBB /* QuizView.swift */; };
+		751397474BF65A930B3F31B2 /* QuizViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 476791035ECB2FE6339F34FE /* QuizViewModel.swift */; };
+		5008AE270BDF82DF16937DB4 /* QuizExit.swift in Sources */ = {isa = PBXBuildFile; fileRef = 832C07A517ACFE3620289249 /* QuizExit.swift */; };
+		B2F19D8E6AA416A51024E441 /* MainViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 543C75F1264A95E798BD5EFE /* MainViewController.swift */; };
+		741F820A5DABDD7F37A97991 /* NativeCoreHost.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC4AC65ACA0E2A3BACE142A1 /* NativeCoreHost.swift */; };
+		FB5062AF1E7C91134F19C8E2 /* NativeRouterPlugin.swift in Sources */ = {isa = PBXBuildFile; fileRef = 076F12F8C93A4D29A24A3001 /* NativeRouterPlugin.swift */; };
+		C36AFE854DD831F55A71F41D /* ReviewView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 23D9F192FCDF92FE528245EA /* ReviewView.swift */; };
+		A813F92A1BB031B4D096D427 /* ReviewViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = F64064806740E5409AC86F15 /* ReviewViewModel.swift */; };
+		F9C6FA1E5FB1E6178E8C3419 /* StateMap.swift in Sources */ = {isa = PBXBuildFile; fileRef = B90CFE1E57D2D6702A7254FB /* StateMap.swift */; };
+		06EA1DE69BE90A3C58F0A746 /* ElectorateMapView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C9B2724BD5A852AB15A54C4C /* ElectorateMapView.swift */; };
+		250029D177A746577AA21512 /* Jurisdictions.swift in Sources */ = {isa = PBXBuildFile; fileRef = EE4972CAFE59C015E964765B /* Jurisdictions.swift */; };
+		D9BD0B5D8815A8A3F9CFAC23 /* BallotView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9BF7AA423FEA0662055E78FB /* BallotView.swift */; };
+		67F55FC1DE295BCA8CEE82F4 /* BallotViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2B5A392B30FC2268EE01D60B /* BallotViewModel.swift */; };
+		24E4C96D0DE735EF99993444 /* NativeTheme.swift in Sources */ = {isa = PBXBuildFile; fileRef = C7D6808D025AA120FA530648 /* NativeTheme.swift */; };
+		0790EB1A84CBB60D6B275A0C /* LandingViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 181E3DE7AA165FEACD41F3ED /* LandingViewModel.swift */; };
+		B3608E27DBD78FEAB78C73EC /* LandingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 15F30F77A450E009E19BEED8 /* LandingView.swift */; };
+		4067B29193E978EFB785DEDA /* Wordmark.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27EAD8344E17B0468848DC1A /* Wordmark.swift */; };
+		731C460866AA08E66FDAA8F0 /* BrandMark.swift in Sources */ = {isa = PBXBuildFile; fileRef = 45DEDD2F8ABFD31C51C1E453 /* BrandMark.swift */; };
+		4A29BAFE080F5D70AC855684 /* SVGPath.swift in Sources */ = {isa = PBXBuildFile; fileRef = C8FE2AA385A9FD51D3D11682 /* SVGPath.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -28,6 +57,35 @@
 		504EC3131FED79650016851F /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		50B271D01FEDC1A000F3C39B /* public */ = {isa = PBXFileReference; lastKnownFileType = folder; path = public; sourceTree = "<group>"; };
 		958DCC722DB07C7200EA8C5F /* debug.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; name = debug.xcconfig; path = ../debug.xcconfig; sourceTree = SOURCE_ROOT; };
+		1DB3EAA6A06919574812E4B4 /* LegalCopy.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = LegalCopy.swift; path = Generated/LegalCopy.swift; sourceTree = "<group>"; };
+		81A0BB97C8C700766AC7EFB7 /* JSCEngine.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = JSCEngine.swift; path = Engine/JSCEngine.swift; sourceTree = "<group>"; };
+		D6A5AC54A6D0A39F12E3E708 /* NativeState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = NativeState.swift; path = State/NativeState.swift; sourceTree = "<group>"; };
+		F899856821FF024F394EAB7C /* QuizState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = QuizState.swift; path = State/QuizState.swift; sourceTree = "<group>"; };
+		C66601FD65C67DF6353D9CA9 /* AnswerScale.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = AnswerScale.swift; path = Model/AnswerScale.swift; sourceTree = "<group>"; };
+		027C82DF175A194C0CF4AA47 /* Theme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = Theme.swift; path = Design/Theme.swift; sourceTree = "<group>"; };
+		67C4B89EABEFF1CD0BFF8029 /* Manifest.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = Manifest.swift; path = Model/Manifest.swift; sourceTree = "<group>"; };
+		48F432CD681BEFB95703ACF1 /* QuestionSet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = QuestionSet.swift; path = Model/QuestionSet.swift; sourceTree = "<group>"; };
+		DFB378D07049C5EFDB8F5EB4 /* ExternalLinkView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = ExternalLinkView.swift; path = Views/ExternalLinkView.swift; sourceTree = "<group>"; };
+		5C8F1467BA36DFF023BEDF4A /* QuizChrome.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = QuizChrome.swift; path = Views/QuizChrome.swift; sourceTree = "<group>"; };
+		264611603A581DC219240BBB /* QuizView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = QuizView.swift; path = Views/QuizView.swift; sourceTree = "<group>"; };
+		476791035ECB2FE6339F34FE /* QuizViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = QuizViewModel.swift; path = Views/QuizViewModel.swift; sourceTree = "<group>"; };
+		832C07A517ACFE3620289249 /* QuizExit.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = QuizExit.swift; path = Model/QuizExit.swift; sourceTree = "<group>"; };
+		543C75F1264A95E798BD5EFE /* MainViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = MainViewController.swift; path = Shell/MainViewController.swift; sourceTree = "<group>"; };
+		CC4AC65ACA0E2A3BACE142A1 /* NativeCoreHost.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = NativeCoreHost.swift; path = Shell/NativeCoreHost.swift; sourceTree = "<group>"; };
+		076F12F8C93A4D29A24A3001 /* NativeRouterPlugin.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = NativeRouterPlugin.swift; path = Shell/NativeRouterPlugin.swift; sourceTree = "<group>"; };
+		23D9F192FCDF92FE528245EA /* ReviewView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = ReviewView.swift; path = Views/ReviewView.swift; sourceTree = "<group>"; };
+		F64064806740E5409AC86F15 /* ReviewViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = ReviewViewModel.swift; path = Views/ReviewViewModel.swift; sourceTree = "<group>"; };
+		B90CFE1E57D2D6702A7254FB /* StateMap.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = StateMap.swift; path = Model/StateMap.swift; sourceTree = "<group>"; };
+		C9B2724BD5A852AB15A54C4C /* ElectorateMapView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = ElectorateMapView.swift; path = Views/ElectorateMapView.swift; sourceTree = "<group>"; };
+		EE4972CAFE59C015E964765B /* Jurisdictions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = Jurisdictions.swift; path = Model/Jurisdictions.swift; sourceTree = "<group>"; };
+		9BF7AA423FEA0662055E78FB /* BallotView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = BallotView.swift; path = Views/BallotView.swift; sourceTree = "<group>"; };
+		2B5A392B30FC2268EE01D60B /* BallotViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = BallotViewModel.swift; path = Views/BallotViewModel.swift; sourceTree = "<group>"; };
+		C7D6808D025AA120FA530648 /* NativeTheme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = NativeTheme.swift; path = State/NativeTheme.swift; sourceTree = "<group>"; };
+		181E3DE7AA165FEACD41F3ED /* LandingViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = LandingViewModel.swift; path = Views/LandingViewModel.swift; sourceTree = "<group>"; };
+		15F30F77A450E009E19BEED8 /* LandingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = LandingView.swift; path = Views/LandingView.swift; sourceTree = "<group>"; };
+		27EAD8344E17B0468848DC1A /* Wordmark.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = Wordmark.swift; path = Design/Wordmark.swift; sourceTree = "<group>"; };
+		45DEDD2F8ABFD31C51C1E453 /* BrandMark.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = BrandMark.swift; path = Generated/BrandMark.swift; sourceTree = "<group>"; };
+		C8FE2AA385A9FD51D3D11682 /* SVGPath.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = SVGPath.swift; path = Design/SVGPath.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -62,6 +120,35 @@
 		504EC3061FED79650016851F /* App */ = {
 			isa = PBXGroup;
 			children = (
+				C8FE2AA385A9FD51D3D11682 /* SVGPath.swift */,
+				45DEDD2F8ABFD31C51C1E453 /* BrandMark.swift */,
+				27EAD8344E17B0468848DC1A /* Wordmark.swift */,
+				15F30F77A450E009E19BEED8 /* LandingView.swift */,
+				181E3DE7AA165FEACD41F3ED /* LandingViewModel.swift */,
+				C7D6808D025AA120FA530648 /* NativeTheme.swift */,
+				2B5A392B30FC2268EE01D60B /* BallotViewModel.swift */,
+				9BF7AA423FEA0662055E78FB /* BallotView.swift */,
+				EE4972CAFE59C015E964765B /* Jurisdictions.swift */,
+				C9B2724BD5A852AB15A54C4C /* ElectorateMapView.swift */,
+				B90CFE1E57D2D6702A7254FB /* StateMap.swift */,
+				F64064806740E5409AC86F15 /* ReviewViewModel.swift */,
+				23D9F192FCDF92FE528245EA /* ReviewView.swift */,
+				076F12F8C93A4D29A24A3001 /* NativeRouterPlugin.swift */,
+				CC4AC65ACA0E2A3BACE142A1 /* NativeCoreHost.swift */,
+				543C75F1264A95E798BD5EFE /* MainViewController.swift */,
+				832C07A517ACFE3620289249 /* QuizExit.swift */,
+				476791035ECB2FE6339F34FE /* QuizViewModel.swift */,
+				264611603A581DC219240BBB /* QuizView.swift */,
+				5C8F1467BA36DFF023BEDF4A /* QuizChrome.swift */,
+				DFB378D07049C5EFDB8F5EB4 /* ExternalLinkView.swift */,
+				48F432CD681BEFB95703ACF1 /* QuestionSet.swift */,
+				67C4B89EABEFF1CD0BFF8029 /* Manifest.swift */,
+				027C82DF175A194C0CF4AA47 /* Theme.swift */,
+				C66601FD65C67DF6353D9CA9 /* AnswerScale.swift */,
+				F899856821FF024F394EAB7C /* QuizState.swift */,
+				D6A5AC54A6D0A39F12E3E708 /* NativeState.swift */,
+				81A0BB97C8C700766AC7EFB7 /* JSCEngine.swift */,
+				1DB3EAA6A06919574812E4B4 /* LegalCopy.swift */,
 				50379B222058CBB4000EE86E /* capacitor.config.json */,
 				504EC3071FED79650016851F /* AppDelegate.swift */,
 				504EC30B1FED79650016851F /* Main.storyboard */,
@@ -155,6 +242,35 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				4A29BAFE080F5D70AC855684 /* SVGPath.swift in Sources */,
+				731C460866AA08E66FDAA8F0 /* BrandMark.swift in Sources */,
+				4067B29193E978EFB785DEDA /* Wordmark.swift in Sources */,
+				B3608E27DBD78FEAB78C73EC /* LandingView.swift in Sources */,
+				0790EB1A84CBB60D6B275A0C /* LandingViewModel.swift in Sources */,
+				24E4C96D0DE735EF99993444 /* NativeTheme.swift in Sources */,
+				67F55FC1DE295BCA8CEE82F4 /* BallotViewModel.swift in Sources */,
+				D9BD0B5D8815A8A3F9CFAC23 /* BallotView.swift in Sources */,
+				250029D177A746577AA21512 /* Jurisdictions.swift in Sources */,
+				06EA1DE69BE90A3C58F0A746 /* ElectorateMapView.swift in Sources */,
+				F9C6FA1E5FB1E6178E8C3419 /* StateMap.swift in Sources */,
+				A813F92A1BB031B4D096D427 /* ReviewViewModel.swift in Sources */,
+				C36AFE854DD831F55A71F41D /* ReviewView.swift in Sources */,
+				FB5062AF1E7C91134F19C8E2 /* NativeRouterPlugin.swift in Sources */,
+				741F820A5DABDD7F37A97991 /* NativeCoreHost.swift in Sources */,
+				B2F19D8E6AA416A51024E441 /* MainViewController.swift in Sources */,
+				5008AE270BDF82DF16937DB4 /* QuizExit.swift in Sources */,
+				751397474BF65A930B3F31B2 /* QuizViewModel.swift in Sources */,
+				1CA74781F86D3EFCA57DE7DA /* QuizView.swift in Sources */,
+				2B2A2D682F51A2D994859910 /* QuizChrome.swift in Sources */,
+				8B3220BBDFC46FE4E05767CA /* ExternalLinkView.swift in Sources */,
+				5FD4674BD3F3423E368E5389 /* QuestionSet.swift in Sources */,
+				3013123AA3CC907A2079E475 /* Manifest.swift in Sources */,
+				1880210E2D4D31FA0EB4F761 /* Theme.swift in Sources */,
+				196B8CE88C04F8856AEE06C4 /* AnswerScale.swift in Sources */,
+				2729CB9F551692CCB5B80223 /* QuizState.swift in Sources */,
+				DB4013FA6CDF2EF3F26C463E /* NativeState.swift in Sources */,
+				E9D17684A19C5003B8704EB4 /* JSCEngine.swift in Sources */,
+				EB6D72AD7165D81974394781 /* LegalCopy.swift in Sources */,
 				504EC3081FED79650016851F /* AppDelegate.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -230,7 +346,7 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 15.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
 				MTL_ENABLE_DEBUG_INFO = YES;
 				ONLY_ACTIVE_ARCH = YES;
 				SDKROOT = iphoneos;
@@ -281,7 +397,7 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 15.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
 				MTL_ENABLE_DEBUG_INFO = NO;
 				SDKROOT = iphoneos;
 				SWIFT_COMPILATION_MODE = wholemodule;
@@ -299,7 +415,7 @@
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				INFOPLIST_FILE = App/Info.plist;
-				IPHONEOS_DEPLOYMENT_TARGET = 15.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -322,7 +438,7 @@
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				INFOPLIST_FILE = App/Info.plist;
-				IPHONEOS_DEPLOYMENT_TARGET = 15.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
