@@ -35,12 +35,17 @@ overrides:
   # file-type (GHSA-5v7r-6r5c-r473) with it. mapshaper require()s it lazily inside its GeoPackage
   # read/write paths and already guards on the module being absent, so nothing we call can reach it.
   "mapshaper>@ngageoint/geopackage": "-"
-  # adm-zip < 0.6.0 lets a crafted ZIP trigger a 4GB memory allocation (GHSA-xcpc-8h2w-3j85, high).
-  # Only reached transitively via mapshaper in the dev-only maps toolchain, where it unzips official
-  # AEC shapefiles a maintainer fetches (never attacker-controlled input) and never ships to the
-  # client. mapshaper still pins adm-zip@^0.5.9 (excludes the fix), so forced to the patched line —
-  # a durable fix rather than an expiring risk acceptance (docs/legal/security-register.json).
-  adm-zip@<0.6.0: ">=0.6.0"
+  # adm-zip < 0.6.1 lets a crafted ZIP trigger an unbounded memory allocation (GHSA-xcpc-8h2w-3j85,
+  # GHSA-7q85-xj36-vmfc, both high), and 0.5.9-0.6.0 follow destination symlinks on extract
+  # (GHSA-vwc7-r8mq-g2x9, medium). Only reached transitively via mapshaper in the dev-only maps
+  # toolchain, which is given extracted shapefiles and never ships to the client. mapshaper still
+  # pins adm-zip@^0.5.9 (excludes the fix), so forced to the patched line — a durable fix rather
+  # than an expiring risk acceptance (docs/legal/security-register.json).
+  adm-zip@<0.6.1: ">=0.6.1 <0.7.0"
+  # fflate < 0.8.3 can loop forever on a malformed ZIP64 archive (GHSA-px8p-9vwx-vf98, medium).
+  # Patches the instance loaded via ol -> zarrita -> numcodecs; mapshaper's own copy is bundled and
+  # used only in its browser build.
+  fflate@>=0.8.0 <0.8.3: "0.8.3"
   # fast-uri 3.x < 3.1.6 confuses the host when a backslash introduces the authority, a flaw that
   # has resurfaced after each partial fix (GHSA-v2hh-gcrm-f6hx, GHSA-7p8r-x3mc-p8w7,
   # GHSA-f65p-4m7j-42xc, GHSA-jqff-g426-hqxp, GHSA-fph4-wmhf-6fwf, GHSA-5jgf-p345-68v8, all high;
