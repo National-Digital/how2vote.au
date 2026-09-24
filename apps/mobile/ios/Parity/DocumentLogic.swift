@@ -10,13 +10,12 @@ import Foundation
 /// the screen draws, so a page passes only if nothing was dropped or invented between the web's
 /// HTML and the native layout.
 ///
-/// Build and run from the repository root, after `node scripts/build-native-documents.mjs --all
-/// --out "$TMPDIR/native-documents"`:
+/// Build and run from the repository root, after `node scripts/build-native-documents.mjs`:
 ///
 ///     swiftc -O apps/mobile/ios/App/App/Model/NativeDocument.swift \
 ///            apps/mobile/ios/App/App/Model/DocumentLayout.swift \
 ///            apps/mobile/ios/Parity/DocumentLogic.swift -o "$TMPDIR/document-logic"
-///     "$TMPDIR/document-logic" "$TMPDIR/native-documents"
+///     "$TMPDIR/document-logic" apps/web/build/native-documents
 @main
 enum DocumentLogic {
     static func main() {
@@ -52,6 +51,8 @@ enum DocumentLogic {
             catchesATitleThatIsNotTheHeading(sample),
             catchesALostAccessibleName(),
             readsLinksAndTermsAsVoiceOverDoes(),
+            looksUpOnlyProjectedPageNames(),
+            refusesABreadcrumbThatDoesNotEndAtThePage(sample),
         ] {
             ran += 1
             failures.append(contentsOf: found)
@@ -198,6 +199,32 @@ enum DocumentLogic {
             failures.append("the fixture's term or link did not survive the layout")
         }
         return failures
+    }
+
+    /// A name reaches `Bundle.url` only in the shape the projection writes, so no path escapes the
+    /// projected documents.
+    private static func looksUpOnlyProjectedPageNames() -> [String] {
+        var failures: [String] = []
+        for name in ["privacy", "next/parties", "2025/parties/greens", "next/senate/nsw"]
+            where !NativeDocument.isDocumentName(name) {
+            failures.append("the page name \"\(name)\" was refused")
+        }
+        for name in ["", "../privacy", "Privacy", "next//parties", "a/b/c/d", "privacy.json", "next/parties/"]
+            where NativeDocument.isDocumentName(name) {
+            failures.append("the page name \"\(name)\" was accepted")
+        }
+        return failures
+    }
+
+    private static func refusesABreadcrumbThatDoesNotEndAtThePage(_ sample: Data?) -> [String] {
+        guard let sample, var doc = try? JSONSerialization.jsonObject(with: sample) as? [String: Any] else {
+            return ["the breadcrumb fixture could not be built"]
+        }
+        doc["crumbs"] = [["label": "Home", "href": "/"], ["label": "Elsewhere", "href": "/elsewhere"]]
+        return refused(
+            try? JSONSerialization.data(withJSONObject: doc),
+            "a breadcrumb trail that ends at a link rather than the page was accepted"
+        )
     }
 
     private static func sha256Hex(_ text: String) -> String {

@@ -23,6 +23,7 @@ import { STATES } from "$lib/data";
 import { isMapAvailable } from "$lib/governance";
 import { backupToNative, restoreFromNative } from "$lib/native-storage";
 import { clearLocalDeviceData } from "$lib/privacy/local-data";
+import { election as activeElection, savedElectionId } from "$lib/election.svelte";
 import { now } from "$lib/now.svelte";
 import { quiz, type Persisted } from "$lib/quiz.svelte";
 import { saved } from "$lib/saved.svelte";
@@ -65,7 +66,43 @@ const NATIVE_ROUTES = new Set([
   ...NATIVE_DOCUMENTS.map((name) => `/${name}`),
 ]);
 
+/**
+ * Documents whose text reports the selected election, so they are prerendered — and projected — for
+ * the current one only. They are offered to the native core only while that election is selected;
+ * with any other, the WebView renders them.
+ */
+export const CURRENT_ELECTION_DOCUMENTS = ["about"] as const;
+
+/**
+ * The election data sections the native core draws the same way: each section's index and every
+ * page under it, for every election (`/2025/issues`, `/next/parties/greens`, …). Every one is held
+ * to its hydrated text by the same spec as the documents.
+ */
+export const NATIVE_DATA_SECTIONS = ["issues", "parties", "electorates", "senate"] as const;
+
 const DOCUMENT_PATHS = new Set<string>(NATIVE_DOCUMENTS.map((name) => `/${name}`));
+
+/** The projected page a path names, or null when it is not one the native core draws. */
+function documentName(path: string, electionId: string): string | null {
+  if (DOCUMENT_PATHS.has(path)) return path.slice(1);
+  // The current election by the store, once it holds the visitor's choice; before then — a direct
+  // load, when the router first asks — by the stored choice it has yet to restore.
+  const chosen = activeElection.settled ? electionId : (savedElectionId() ?? electionId);
+  if (
+    electionId === CURRENT_ELECTION_ID &&
+    chosen === CURRENT_ELECTION_ID &&
+    (CURRENT_ELECTION_DOCUMENTS as readonly string[]).includes(path.slice(1))
+  ) {
+    return path.slice(1);
+  }
+  const [, election, section, ...rest] = path.split("/");
+  const isData =
+    ELECTION_IDS.includes(election ?? "") &&
+    (NATIVE_DATA_SECTIONS as readonly string[]).includes(section ?? "") &&
+    rest.length <= 1 &&
+    rest.every((segment) => /^[a-z0-9-]+$/.test(segment));
+  return isData ? path.slice(1) : null;
+}
 
 /**
  * The shell's name for a path.
@@ -74,9 +111,9 @@ const DOCUMENT_PATHS = new Set<string>(NATIVE_DOCUMENTS.map((name) => `/${name}`
  * election to show through `electionId`. The documents are one screen too, told which page to
  * draw through `document`. Everything else is its path without the slash.
  */
-function routeName(path: string): string {
+function routeName(path: string, electionId: string): string {
   if (path === "/" || ELECTION_IDS.some((id) => path === `/${id}`)) return "landing";
-  if (DOCUMENT_PATHS.has(path)) return "document";
+  if (documentName(path, electionId) !== null) return "document";
   return path.replace(/^\//, "");
 }
 
@@ -198,7 +235,8 @@ class NativeRoute {
     }
 
     const path = routePath(url);
-    if (!NATIVE_ROUTES.has(path)) {
+    const document = documentName(path, electionId);
+    if (!NATIVE_ROUTES.has(path) && document === null) {
       this.#renderer = "web";
       this.#pending = null;
       if (this.#covered) {
@@ -221,7 +259,8 @@ class NativeRoute {
       // open.
       await backupToNative();
       const { presented } = await router.present({
-        route: routeName(path),
+        // From the document decided above, not a second reading of the stores after the await.
+        route: document !== null ? "document" : routeName(path, electionId),
         electionId: id,
         // From the navigation's own URL, not `location`: a queued sync would otherwise read
         // whatever the address bar happens to hold when it finally runs.
@@ -239,7 +278,7 @@ class NativeRoute {
         theme: theme.pref,
         // An explorer's quiz lives only in memory (ADR 0012), so the native core is handed it.
         session: explorerSession(id),
-        ...(DOCUMENT_PATHS.has(path) ? { document: path.slice(1), anchor: fragment(url) } : {}),
+        ...(document === null ? {} : { document, anchor: fragment(url) }),
       });
       // A later navigation may have overtaken this call; its answer, not this one, is current.
       if (this.#pending !== request) return;

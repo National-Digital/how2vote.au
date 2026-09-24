@@ -245,4 +245,18 @@ describe("verifyNativeChrome", () => {
     const host = COMMITTED.host.replace('case "review":', 'case "summary", "review":');
     expect(hostScreens(host)).toMatchObject({ summary: "ReviewView", review: "ReviewView" });
   });
+
+  it("catches page text marked as decoration, which the on-screen check would skip", () => {
+    const doc = views.DocumentView.replace(
+      ".font(Self.headingFont(level))",
+      ".font(Self.headingFont(level)).accessibilityIdentifier(DocumentURL.decoration)",
+    );
+    expect(doc).not.toBe(views.DocumentView);
+    expect(
+      mutate({
+        ...withView("DocumentView", doc),
+        swiftSources: Object.values({ ...views, DocumentView: doc }),
+      }),
+    ).toContain("marks 2 elements as decoration");
+  });
 });

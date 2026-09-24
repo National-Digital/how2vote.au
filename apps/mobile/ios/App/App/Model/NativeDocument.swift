@@ -13,6 +13,8 @@ struct NativeDocument: Equatable {
 
     let route: String
     let title: String
+    /// A data page's breadcrumb trail, ending at the page itself; nil on a page with a plain top bar.
+    let crumbs: [Crumb]?
     let blocks: [Block]
     /// SHA-256 of the document's text, which the layout must reproduce from what it draws.
     let digest: String
@@ -38,6 +40,12 @@ struct NativeDocument: Equatable {
     /// A native control that stands in for an interactive part of the page.
     enum Slot: String, Decodable {
         case clearData = "clear-data"
+    }
+
+    struct Crumb: Equatable {
+        let label: String
+        /// The route a crumb leads up to; nil for the current page.
+        let href: String?
     }
 
     struct Definition: Equatable {
@@ -100,11 +108,17 @@ struct NativeDocument: Equatable {
 
 extension NativeDocument: Decodable {
     init(from decoder: Decoder) throws {
-        let c = try Strict(decoder, node: "document", fields: ["v", "route", "title", "blocks", "digest", "spoken", "drawn"])
+        let c = try Strict(decoder, node: "document", fields: ["v", "route", "title", "crumbs", "blocks", "digest", "spoken", "drawn"])
         let v = try c.decode(Int.self, "v")
         guard v == Self.version else { throw DecodeError.version(v) }
         route = try c.decode(String.self, "route")
         title = try c.decode(String.self, "title")
+        crumbs = try c.optional([Crumb].self, "crumbs")
+        if let crumbs {
+            guard crumbs.count >= 2, crumbs.last?.href == nil, crumbs.dropLast().allSatisfy({ $0.href?.hasPrefix("/") == true }) else {
+                throw DecodeError.invalid("a breadcrumb trail that does not end at the page")
+            }
+        }
         blocks = try c.decode([Block].self, "blocks")
         digest = try c.decode(String.self, "digest")
         spoken = try c.decode(String.self, "spoken")
@@ -228,6 +242,14 @@ extension NativeDocument.Definition: Decodable {
     }
 }
 
+extension NativeDocument.Crumb: Decodable {
+    init(from decoder: Decoder) throws {
+        let c = try Strict(decoder, node: "crumb", fields: ["label", "href"])
+        label = try c.decode(String.self, "label")
+        href = try c.optional(String.self, "href")
+    }
+}
+
 extension NativeDocument.SwitchOption: Decodable {
     init(from decoder: Decoder) throws {
         let c = try Strict(decoder, node: "switch option", fields: ["label", "href", "current"])
@@ -272,10 +294,13 @@ private struct Strict {
 // MARK: - Loading
 
 extension NativeDocument {
-    /// The documents the web offers the native core, by route name. Matches `NATIVE_DOCUMENTS` in
-    /// `native-router.svelte.ts`; a name outside it is never loaded.
+    /// A projected page's name: its path without the leading slash, such as `privacy` or
+    /// `next/parties/greens`. Anything else is never looked up.
     static func isDocumentName(_ name: String) -> Bool {
-        !name.isEmpty && name.allSatisfy { $0.isLowercase || $0 == "-" }
+        let segments = name.split(separator: "/", omittingEmptySubsequences: false)
+        return (1...3).contains(segments.count) && segments.allSatisfy { segment in
+            !segment.isEmpty && segment.allSatisfy { ($0.isASCII && ($0.isLowercase || $0.isNumber)) || $0 == "-" }
+        }
     }
 
     /// Reads and checks one projected document from the synced web assets.
@@ -283,8 +308,10 @@ extension NativeDocument {
     /// Throws when the file is missing, does not decode, or lays out to text other than the text the
     /// projection recorded — each of which makes the shell decline the route.
     static func load(name: String, bundle: Bundle = .main) throws -> (NativeDocument, DocumentLayout) {
-        guard isDocumentName(name),
-              let url = bundle.url(forResource: name, withExtension: "json", subdirectory: "public/native-documents")
+        let parts = name.split(separator: "/").map(String.init)
+        let directory = (["public/native-documents"] + parts.dropLast()).joined(separator: "/")
+        guard isDocumentName(name), let file = parts.last,
+              let url = bundle.url(forResource: file, withExtension: "json", subdirectory: directory)
         else { throw DecodeError.invalid("no projected document \"\(name)\"") }
         return try decodeChecked(Data(contentsOf: url))
     }

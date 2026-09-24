@@ -75,12 +75,14 @@ struct DocumentLayout: Equatable {
     }
 
     let title: String
+    let crumbs: [NativeDocument.Crumb]?
     private(set) var blocks: [Block] = []
     private(set) var links: [Link] = []
     private(set) var terms: [Term] = []
 
     init(_ document: NativeDocument) {
         title = document.title
+        crumbs = document.crumbs
         var laid: [Block] = []
         for block in document.blocks { laid.append(lay(block)) }
         blocks = laid

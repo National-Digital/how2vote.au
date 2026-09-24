@@ -261,6 +261,18 @@ export function verifyNativeChrome(raw) {
     }
   }
 
+  // The on-screen document check skips elements marked as decoration, so the mark must stay on the
+  // one glyph a document screen adds — a list marker — and never reach the page's text.
+  const marks = (input?.swiftSources ?? []).flatMap((source) => [
+    ...source.matchAll(/accessibilityIdentifier\(DocumentURL\.decoration\)/g),
+  ]).length;
+  if (marks !== 1) {
+    push(
+      `DocumentView marks ${marks} elements as decoration; only the list marker may be, or the ` +
+        `on-screen text check would skip page text`,
+    );
+  }
+
   return errors;
 }
 

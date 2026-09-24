@@ -25,7 +25,7 @@ struct DocumentView: View {
     var body: some View {
         VStack(spacing: 0) {
             StaleNotice()
-            TopBar(label: layout.title, backLabel: "Back to start", onBack: { onExit("/") })
+            TopBar(label: topBarLabel, backLabel: back.label, onBack: { onExit(back.href) })
             ScrollViewReader { proxy in
                 ScrollView {
                     VStack(alignment: .leading, spacing: 0) {
@@ -69,6 +69,17 @@ struct DocumentView: View {
         .sheet(item: $browsing) { page in
             SafariView(url: page.url).ignoresSafeArea()
         }
+    }
+
+    /// A data page's bar names the page and goes up its breadcrumb trail; a document's goes home,
+    /// as the web's `ContentPage` top bar does.
+    private var topBarLabel: String { layout.crumbs?.last?.label ?? layout.title }
+
+    private var back: (label: String, href: String) {
+        guard let parent = layout.crumbs?.dropLast().last, let href = parent.href else {
+            return ("Back to start", "/")
+        }
+        return ("Back to \(parent.label)", href)
     }
 
     /// Follows a link drawn in running text. Internal routes go back to the web, which stays the

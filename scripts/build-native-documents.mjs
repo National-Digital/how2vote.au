@@ -275,7 +275,7 @@ const ALLOWED_ATTRS = new Set([
 ]);
 
 /** The elements whose `id` the projection carries, so a fragment link to one can scroll to it. */
-const CARRIES_ID = new Set(["h1", "h2", "h3", "p", "section", "div", "dt"]);
+const CARRIES_ID = new Set(["h1", "h2", "h3", "p", "section", "div", "dt", "li"]);
 
 function checkAttrs(el, extra = []) {
   for (const a of Object.keys(el.attrs)) {
@@ -373,7 +373,9 @@ function toBlock(el) {
               throw new DocumentError(`<${li.tag ?? "text"}> directly inside <${el.tag}>`);
             checkAttrs(li);
             checkClasses(li, new Set());
-            return toBlocks(li.children);
+            const blocks = toBlocks(li.children);
+            // An item a link points at keeps its id, as a section around the item's content.
+            return li.attrs.id ? [{ t: "section", id: li.attrs.id, c: blocks }] : blocks;
           }),
       };
     }
@@ -709,8 +711,15 @@ export function projectDocument(html, route) {
   const blocks = normalise(flatten(toBlocks(content[0].children)));
   const h1 = blocks.find((b) => b.t === "heading" && b.level === 1);
   if (!h1) throw new DocumentError("no <h1>");
-  // The title heads the top bar, so it is the heading as drawn: nothing only VoiceOver hears.
-  const doc = { v: IR_VERSION, route, title: drawnText({ blocks: [h1] }), blocks };
+  const crumbs = breadcrumbs(main);
+  const doc = {
+    v: IR_VERSION,
+    route,
+    // The title heads the top bar, so it is the heading as drawn: nothing only VoiceOver hears.
+    title: drawnText({ blocks: [h1] }),
+    ...(crumbs ? { crumbs } : {}),
+    blocks,
+  };
   assertConserved(main, doc);
   return {
     ...doc,
@@ -718,6 +727,32 @@ export function projectDocument(html, route) {
     spoken: spokenText(doc),
     drawn: drawnText(doc),
   };
+}
+
+/**
+ * A data page's breadcrumb trail, which the native top bar draws: every crumb but the last links
+ * up, and the last is the page itself. Undefined on a page with a plain top bar.
+ */
+function breadcrumbs(main) {
+  const nav = main.children.find((c) => c.tag === "nav" && hasClass(c, "crumbs"));
+  if (!nav) return undefined;
+  const ol = nav.children.filter((c) => !isBlank(c));
+  if (ol.length !== 1 || ol[0].tag !== "ol") throw new DocumentError("breadcrumb is not one list");
+  const crumbs = ol[0].children
+    .filter((c) => !isBlank(c))
+    .map((li) => {
+      const inner = li.children?.filter((c) => !isBlank(c)) ?? [];
+      if (li.tag !== "li" || inner.length !== 1) throw new DocumentError("malformed breadcrumb");
+      const [el] = inner;
+      const label = collapse(textOf(el)).trim();
+      if (el.tag === "a" && el.attrs.href?.startsWith("/")) return { label, href: el.attrs.href };
+      if (el.tag === "span" && el.attrs["aria-current"] === "page") return { label };
+      throw new DocumentError("a breadcrumb that is neither a route nor the current page");
+    });
+  if (crumbs.length < 2 || crumbs.slice(0, -1).some((c) => !c.href) || crumbs.at(-1).href) {
+    throw new DocumentError("breadcrumb trail does not end at the current page");
+  }
+  return crumbs;
 }
 
 /** Fails when the projection's text differs from the page's, ignoring only whitespace. */
@@ -732,6 +767,16 @@ export function assertConserved(main, doc) {
 }
 
 /**
+ * The election data sections (`/<election>/issues`, …) the native core draws, read from the router.
+ *
+ * @param {string} router  apps/web/src/lib/native-router.svelte.ts
+ * @returns {string[]}
+ */
+export function nativeDataSections(router) {
+  return listIn(router, "NATIVE_DATA_SECTIONS");
+}
+
+/**
  * The documents the native core draws, read from the web router so the list has one home. Fails
  * closed: a router this cannot read ships no documents rather than a guess at them.
  *
@@ -739,9 +784,19 @@ export function assertConserved(main, doc) {
  * @returns {string[]}
  */
 export function nativeDocumentRoutes(router) {
-  const list = /export const NATIVE_DOCUMENTS = \[([^\]]*)\] as const;/.exec(router ?? "")?.[1];
-  if (list === undefined)
-    throw new DocumentError("native-router.svelte.ts declares no NATIVE_DOCUMENTS");
+  return [...listIn(router, "NATIVE_DOCUMENTS"), ...listIn(router, "CURRENT_ELECTION_DOCUMENTS")];
+}
+
+/** The documents drawn natively only while the current election is selected. */
+export function currentElectionDocuments(router) {
+  return listIn(router, "CURRENT_ELECTION_DOCUMENTS");
+}
+
+function listIn(router, name) {
+  const list = new RegExp(`export const ${name} = \\[([^\\]]*)\\] as const;`).exec(
+    router ?? "",
+  )?.[1];
+  if (list === undefined) throw new DocumentError(`native-router.svelte.ts declares no ${name}`);
   // Every entry must be read; one this cannot read would be offered and never projected.
   const entries = list
     .split(",")
@@ -749,9 +804,9 @@ export function nativeDocumentRoutes(router) {
     .filter(Boolean);
   const names = entries.map((e) => /^"([a-z0-9/-]+)"$/.exec(e)?.[1]);
   if (names.some((n) => n === undefined)) {
-    throw new DocumentError(`NATIVE_DOCUMENTS holds an entry this cannot read: ${list.trim()}`);
+    throw new DocumentError(`${name} holds an entry this cannot read: ${list.trim()}`);
   }
-  if (names.length === 0) throw new DocumentError("NATIVE_DOCUMENTS is empty");
+  if (names.length === 0) throw new DocumentError(`${name} is empty`);
   return names;
 }
 
@@ -768,32 +823,31 @@ function main() {
   const build = join(root, "apps/web/build");
   const at = process.argv.indexOf("--out");
   const out = at > 0 ? resolve(process.argv[at + 1]) : join(build, "native-documents");
-  const all = process.argv.includes("--all");
   const router = readFileSync(join(root, "apps/web/src/lib/native-router.svelte.ts"), "utf8");
   const routes = nativeDocumentRoutes(router).map((r) => ({
     route: `/${r}`,
     file: join(build, `${r}.html`),
-    required: true,
   }));
-  if (all) {
-    // One directory of data pages per compiled election, the current one included.
-    const elections = readdirSync(join(root, "data/dist")).filter((f) =>
-      existsSync(join(build, f)),
-    );
-    for (const e of elections) {
-      for (const file of htmlFiles(join(build, e))) {
-        routes.push({
-          route: `/${relative(build, file).replace(/\.html$/, "")}`,
-          file,
-          required: false,
-        });
+  // Every compiled election's data pages, the current one included, in the sections the router
+  // offers.
+  const sections = nativeDataSections(router);
+  const elections = readdirSync(join(root, "data/dist")).filter((f) => existsSync(join(build, f)));
+  for (const e of elections) {
+    for (const section of sections) {
+      const index = join(build, e, `${section}.html`);
+      const files = [
+        ...(existsSync(index) ? [index] : []),
+        ...(existsSync(join(build, e, section)) ? htmlFiles(join(build, e, section)) : []),
+      ];
+      for (const file of files) {
+        routes.push({ route: `/${relative(build, file).replace(/\.html$/, "")}`, file });
       }
     }
   }
 
   const failures = [];
   let written = 0;
-  for (const { route, file, required } of routes) {
+  for (const { route, file } of routes) {
     try {
       const doc = projectDocument(readFileSync(file, "utf8"), route);
       const dest = join(out, `${route}.json`);
@@ -802,20 +856,21 @@ function main() {
       written++;
     } catch (e) {
       if (!(e instanceof DocumentError)) throw e;
-      failures.push({ route, required, message: e.message });
+      failures.push({ route, message: e.message });
     }
   }
 
+  // Grouped by message, so one unmapped class across hundreds of data pages reads as one fault.
   const byMessage = new Map();
-  for (const f of failures.filter((f) => !f.required)) {
+  for (const f of failures) {
     const key = f.message.replace(/"[^"]*"/g, '"…"');
     byMessage.set(key, [...(byMessage.get(key) ?? []), f.route]);
   }
-  for (const f of failures.filter((f) => f.required))
-    console.error(`::error::native documents: ${f.route}: ${f.message}`);
-  for (const [message, rs] of byMessage) console.warn(`${rs.length} × ${message} (e.g. ${rs[0]})`);
+  for (const [message, rs] of byMessage) {
+    console.error(`::error::native documents: ${rs.length} × ${message} (e.g. ${rs[0]})`);
+  }
   console.info(`native documents: ${written}/${routes.length} projected, text conserved`);
-  if (failures.some((f) => f.required)) process.exit(1);
+  if (failures.length > 0) process.exit(1);
 }
 
 if (process.argv[1] && fileURLToPath(import.meta.url) === process.argv[1]) main();

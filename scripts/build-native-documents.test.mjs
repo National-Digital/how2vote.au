@@ -3,6 +3,7 @@ import {
   DocumentError,
   assertConserved,
   documentText,
+  nativeDataSections,
   nativeDocumentRoutes,
   parseMain,
   projectDocument,
@@ -67,7 +68,16 @@ describe("projectDocument", () => {
   });
 
   it("refuses an id it would drop, so a fragment link never goes nowhere", () => {
-    fails(`<ul><li id="x">one</li></ul>`).toThrow("carries an id the projection does not keep");
+    fails(`<blockquote id="x"><p>one</p></blockquote>`).toThrow(
+      "carries an id the projection does not keep",
+    );
+  });
+
+  it("keeps a list item's id, as a section around its content", () => {
+    const doc = project(`<ul><li id="person">A person</li></ul>`);
+    expect(doc.blocks[1].items[0]).toEqual([
+      { t: "section", id: "person", c: [{ t: "paragraph", c: [{ t: "text", s: "A person" }] }] },
+    ]);
   });
 
   it("keeps the whitespace around a glyph, as the web lays it out", () => {
@@ -231,6 +241,41 @@ describe("projectDocument", () => {
   });
 });
 
+describe("breadcrumbs", () => {
+  const trail = (items) =>
+    `<main><nav class="crumbs ui app-top" aria-label="Breadcrumb"><ol>${items}</ol></nav> <article><h1>Party</h1><p>Text.</p></article></main>`;
+
+  it("carries a data page's trail for the native top bar, outside its text", () => {
+    const doc = projectDocument(
+      trail(
+        `<li><a href="/">Home</a></li><li><a href="/next/parties">Parties</a></li><li><span aria-current="page">Greens</span></li>`,
+      ),
+      "/next/parties/greens",
+    );
+    expect(doc.crumbs).toEqual([
+      { label: "Home", href: "/" },
+      { label: "Parties", href: "/next/parties" },
+      { label: "Greens" },
+    ]);
+    expect(documentText(doc)).toBe("PartyText.");
+  });
+
+  it("refuses a trail that does not end at the current page", () => {
+    expect(() =>
+      projectDocument(trail(`<li><a href="/">Home</a></li><li><a href="/x">X</a></li>`), "/t"),
+    ).toThrow("does not end at the current page");
+    expect(() =>
+      projectDocument(
+        trail(`<li><a href="https://x.org">X</a></li><li><span aria-current="page">P</span></li>`),
+        "/t",
+      ),
+    ).toThrow("neither a route nor the current page");
+    expect(() =>
+      projectDocument(trail(`<li><span aria-current="page">Only</span></li>`), "/t"),
+    ).toThrow("does not end at the current page");
+  });
+});
+
 describe("assertConserved", () => {
   const markup = `<main>${TOP}<article><h1>Title</h1><p>Authorised by A, B.</p></article></main>`;
 
@@ -258,7 +303,18 @@ describe("nativeDocumentRoutes", () => {
       new URL("../apps/web/src/lib/native-router.svelte.ts", import.meta.url),
       "utf8",
     );
-    expect(nativeDocumentRoutes(router)).toEqual(expect.arrayContaining(["privacy", "terms"]));
+    expect(nativeDocumentRoutes(router)).toEqual(
+      expect.arrayContaining(["privacy", "terms", "about"]),
+    );
+  });
+
+  it("reads the election data sections the router offers", () => {
+    const router = readFileSync(
+      new URL("../apps/web/src/lib/native-router.svelte.ts", import.meta.url),
+      "utf8",
+    );
+    expect(nativeDataSections(router)).toEqual(expect.arrayContaining(["issues", "parties"]));
+    expect(() => nativeDataSections("")).toThrow("declares no NATIVE_DATA_SECTIONS");
   });
 
   it("refuses a list entry it cannot read, rather than skipping it", () => {
@@ -270,7 +326,10 @@ describe("nativeDocumentRoutes", () => {
   it("fails closed on a router it cannot read", () => {
     expect(() => nativeDocumentRoutes("const x = 1;")).toThrow("declares no NATIVE_DOCUMENTS");
     expect(() => nativeDocumentRoutes("export const NATIVE_DOCUMENTS = [] as const;")).toThrow(
-      "is empty",
+      "NATIVE_DOCUMENTS is empty",
     );
+    expect(() =>
+      nativeDocumentRoutes('export const NATIVE_DOCUMENTS = ["terms"] as const;'),
+    ).toThrow("declares no CURRENT_ELECTION_DOCUMENTS");
   });
 });

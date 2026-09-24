@@ -619,20 +619,18 @@ jobs:
             -o "$RUNNER_TEMP/chrome-logic"
           "$RUNNER_TEMP/chrome-logic"
 
-      # Every prerendered page — the documents the app ships and every election data page — decoded
-      # and laid out by the SHIPPING model, which must reproduce the projection's text digest and the
-      # text VoiceOver reads. The data pages are not shipped yet; laying them out here keeps the
-      # renderer honest about the whole vocabulary before they are.
+      # Every page the app ships — the documents and every election's data pages — decoded and laid
+      # out by the SHIPPING model, which must reproduce the projection's text digest and the text
+      # VoiceOver reads. The same check runs on device before a page is shown; here it fails the build.
       - name: Documents lay out with their text intact
         run: |
           set -euo pipefail
-          node scripts/build-native-documents.mjs --all --out "$RUNNER_TEMP/native-documents"
           swiftc -O \
             apps/mobile/ios/App/App/Model/NativeDocument.swift \
             apps/mobile/ios/App/App/Model/DocumentLayout.swift \
             apps/mobile/ios/Parity/DocumentLogic.swift \
             -o "$RUNNER_TEMP/document-logic"
-          "$RUNNER_TEMP/document-logic" "$RUNNER_TEMP/native-documents"
+          "$RUNNER_TEMP/document-logic" apps/web/build/native-documents
 
       # A partial SVG reader fails quietly: a command it skips draws a boundary that is subtly the
       # wrong shape, and the shape is a voter's own electorate shown back to them. Runs the reader

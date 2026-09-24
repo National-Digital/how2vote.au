@@ -4,7 +4,7 @@
 - Deciders: National Digital
 - Amends: [0018](0018-native-ios-core.md) D1 and D1a
 
-This ADR records how the iOS app draws document pages natively without anyone rewriting their
+This ADR records how the iOS app draws document pages, and the election data pages, natively without anyone rewriting their
 wording. The app draws each page from the HTML the web itself prerenders. The HTML is projected
 into a closed structure, and CI checks at every step that no text is lost on the way to the screen.
 The end state is an iOS app with no WebView at all. Moving pages across route by route is the
@@ -58,13 +58,19 @@ draw text verbatim.
    accessibility tree with the projection's spoken text.
 4. **Prerender to hydration.** A Playwright check requires each native document's hydrated text to
    equal its prerendered text, under voter state that could change it. A page whose text depends
-   on the voter's state cannot be native. About is excluded for this reason: it reports the
-   selected election's dataset.
+   on the voter's state cannot be native in that state. About reports the selected election's
+   dataset, so it is offered natively only while the current election is selected, which is the
+   election it was prerendered for. It is checked in that state (`CURRENT_ELECTION_DOCUMENTS`).
 
 **D4 — Controls are slots, and the web still does the work.** An interactive part of a page, such
 as privacy's "clear all my data", is a declared slot. Its labels are projected with the page. Its
 confirmation wording is registered in `docs/legal/native-copy.json`. The action itself is a
 request to the web, which owns the keys (ADR 0018 D3).
+
+**D4a — Election data pages are documents too.** Each election's `issues`, `parties`,
+`electorates` and `senate` pages are projected and drawn the same way. The router offers them by
+section (`NATIVE_DATA_SECTIONS`). The projection, layout and hydration checks cover every one of them; the on-screen check opens the issues, parties and electorates indexes, one party page, and one electorate page with its candidates in ballot order. Issue and Senate pages use no node kind those pages do not, and are held by the projection, layout and hydration checks. Their breadcrumb trail is chrome
+that the native top bar draws. It is projected alongside the page, outside the page's text.
 
 **D5 — The WebView goes route by route.** A route moves to the native side only when all four
 checks pass for it. The WebView is removed once no route is left that uses it. Until then, ADR
@@ -75,13 +81,13 @@ where the checks above already live.
 
 - Document pages are native on iOS with no second copy of their wording. Legal review of the
   wording is unchanged, and the legal register records the native rendering.
-- The iOS app ships the projected documents: about 155 KB for the seven documents.
+- The iOS app ships the projected pages: about 7.6 MB for the eight documents and 792 data pages,
+  or about 480 KB compressed.
 - Adding markup to a document page can fail the iOS build until the projection and the renderer
   learn it. That is the intended trade.
 - These remain in the WebView and need native counterparts, or screen logic run in
   JavaScriptCore, before the WebView can go:
-  - About;
-  - the election data pages, which already project;
+  - About, while a past election is selected;
   - contact;
   - survey;
   - insights;

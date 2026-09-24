@@ -264,6 +264,13 @@
       "disposition": "no-review-required",
       "reviewer": "cameron-young",
       "affectedControls": ["control-5", "control-24", "control-28"]
+    },
+    {
+      "date": "2026-09-24",
+      "change": "On iOS, the election data pages (issues, parties, electorates and Senate, for every election) are drawn natively from their prerendered HTML in the same way as the document pages (ADR 0019 D4a). The About page is also drawn natively, but only while the current election is selected; that is the election it is prerendered for, and with any other election selected the WebView renders it. Every page is held to its text by the projection, the native layout and the hydration check, and the simulator checks on screen the section indexes, a party page and an electorate page with its candidates in ballot order. Breadcrumb trails are drawn by the native top bar from the page's own trail. No wording is authored natively, and no register content, public wording, legal position, obligation, permitted use, or collection, use, disclosure, retention or overseas-processing practice is altered; no consent or Terms version is affected; no legal review was sought or is required.",
+      "disposition": "no-review-required",
+      "reviewer": "cameron-young",
+      "affectedControls": ["control-5", "control-24", "control-28"]
     }
   ],
   "nextMandatoryReviewDate": "2027-07-15",
