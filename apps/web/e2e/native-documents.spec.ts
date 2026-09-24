@@ -3,6 +3,7 @@ import { join, relative } from "node:path";
 import { fileURLToPath } from "node:url";
 import { expect, test, type Browser, type Page } from "@playwright/test";
 import {
+  ageGateDocuments,
   currentElectionDocuments,
   nativeDataSections,
   nativeDocumentRoutes,
@@ -20,8 +21,13 @@ import { seedEligibility, waitForHydration } from "./flow-helpers";
  * made native without passing here.
  */
 const router = readFileSync(new URL("../src/lib/native-router.svelte.ts", import.meta.url), "utf8");
-const routes: string[] = nativeDocumentRoutes(router);
+// A states file is rendered at build time and never served, so there is nothing to hydrate.
+const routes: string[] = nativeDocumentRoutes(router).filter(
+  (name: string) => !name.startsWith("states/"),
+);
 const currentOnly = new Set<string>(currentElectionDocuments(router));
+// The gate is only ever drawn for a visitor who has not declared: a declared adult is sent on.
+const undeclared = new Set<string>(ageGateDocuments(router));
 const sections: string[] = nativeDataSections(router);
 const elections = readdirSync(
   fileURLToPath(new URL("../../../data/dist/", import.meta.url)),
@@ -45,9 +51,19 @@ function dataPages(election: string): string[] {
     .map((file) => `/${relative(BUILD, file).replace(/\.html$/, "")}`);
 }
 
-/** The article's text, whitespace removed: layout whitespace is not content. */
+/**
+ * The page's text as the projection reads it — `<main>` less its top bar — whitespace removed,
+ * since layout whitespace is not content.
+ */
 async function articleText(page: Page): Promise<string> {
-  const text = await page.locator("main article").first().textContent();
+  const text = await page
+    .locator("main")
+    .first()
+    .evaluate((main) => {
+      const copy = main.cloneNode(true) as HTMLElement;
+      for (const bar of copy.querySelectorAll(".app-top")) bar.remove();
+      return copy.textContent;
+    });
   return (text ?? "").replace(/\s/g, "");
 }
 
@@ -56,8 +72,8 @@ async function articleText(page: Page): Promise<string> {
  * the native core draws only for the current election is checked with no election selected, which
  * is the current one.
  */
-async function seedVoterState(page: Page, pastElection = true): Promise<void> {
-  await seedEligibility(page);
+async function seedVoterState(page: Page, pastElection = true, declared = true): Promise<void> {
+  if (declared) await seedEligibility(page);
   await page.addInitScript((past: boolean) => {
     try {
       if (past) localStorage.setItem("how2vote:election:v1", "2022");
@@ -125,7 +141,7 @@ test.describe("native documents", () => {
       await prerendered.close();
       expect(before.length).toBeGreaterThan(100);
 
-      await seedVoterState(page, !currentOnly.has(name));
+      await seedVoterState(page, !currentOnly.has(name), !undeclared.has(name));
       await page.goto(`/${name}`);
       await waitForHydration(page);
       await page.waitForLoadState("networkidle");

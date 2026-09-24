@@ -71,7 +71,7 @@ jobs:
           FILES=$(gh api "repos/$GITHUB_REPOSITORY/pulls/$PR/files" --paginate --jq '.[].filename')
           echo "$FILES" | sed 's/^/  /'
           # `fastlane/` (repo root) is the F-Droid listing tree.
-          APP='^(apps/(mobile|web)/|packages/|fastlane/|docs/research/|docs/legal/native-copy\.json|data/aec-spatial/source-record\.json|pnpm-lock\.yaml|\.nvmrc|docs/fdroid/|\.github/(workflows/mobile-ci\.yml|actions/(build-web-channel|resolve-store-version)/)|scripts/(check-engine-bundle|check-fdroid-ready|check-ios-sources|check-native-answer-scale|check-native-brand|check-native-chrome|check-native-jurisdictions|check-native-router|check-native-state-keys|check-native-plugins|check-store-channel|generate-app-version|generate-store-metadata|build-native-documents)\.mjs)'
+          APP='^(apps/(mobile|web)/|packages/|fastlane/|docs/research/|docs/legal/native-copy\.json|data/aec-spatial/source-record\.json|pnpm-lock\.yaml|\.nvmrc|docs/fdroid/|\.github/(workflows/mobile-ci\.yml|actions/(build-web-channel|resolve-store-version)/)|scripts/(check-engine-bundle|check-fdroid-ready|check-ios-sources|check-native-answer-scale|check-native-brand|check-native-chrome|check-native-jurisdictions|check-native-router|check-native-state-keys|check-native-plugins|check-store-channel|generate-app-version|generate-store-metadata|build-native-documents|check-native-content)\.mjs|scripts/fixtures/native-content/)'
           # apps/web/src is in: the web's pages are what the native documents are drawn from, so a
           # change to any of them has to be laid out and checked on screen before it ships to iOS.
           # packages stay out: they are input to the bundle, not to the native build graph.
@@ -97,6 +97,9 @@ jobs:
     timeout-minutes: 20
     steps:
       - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7
+        with:
+          # The native-content gate compares its debt record with the PR base's.
+          fetch-depth: 0
 
       - name: Store metadata gate
         run: node scripts/generate-store-metadata.mjs --check
@@ -139,6 +142,19 @@ jobs:
       # authorisation, and the stale-data notice.
       - name: The native screens carry the layout chrome
         run: node scripts/check-native-chrome.mjs
+
+      # The native screens are a skeleton: every word they show comes from the web build. Screens
+      # built before that rule are listed in apps/mobile/ios/native-copy-debt.json, and the list may
+      # only shrink — new hand-written copy fails, and so does a list edited to admit it. It reads
+      # the Swift through the compiler's parse, with the image's Swift: Xcode's crashes parsing an
+      # extension, and the fixtures fail this step if the image's parse ever reads differently.
+      - name: No hand-written copy on the native screens
+        env:
+          NATIVE_CONTENT_BASE: ${{ github.event.pull_request.base.sha }}
+        run: |
+          set -euo pipefail
+          swiftc --version
+          node scripts/check-native-content.mjs
 
       # The logo is baked outlines, not a font, precisely so it renders identically everywhere. A
       # native screen drawing the name as text is a different mark in whatever face the platform
@@ -630,7 +646,7 @@ jobs:
             apps/mobile/ios/App/App/Model/DocumentLayout.swift \
             apps/mobile/ios/Parity/DocumentLogic.swift \
             -o "$RUNNER_TEMP/document-logic"
-          "$RUNNER_TEMP/document-logic" apps/web/build/native-documents
+          "$RUNNER_TEMP/document-logic" apps/web/build/native-documents apps/mobile/ios/native-contract.json
 
       # A partial SVG reader fails quietly: a command it skips draws a boundary that is subtly the
       # wrong shape, and the shape is a voter's own electorate shown back to them. Runs the reader

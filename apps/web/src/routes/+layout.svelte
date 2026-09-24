@@ -171,6 +171,8 @@
           try {
             const u = new URL(url);
             if (u.hostname !== canonicalHost) return;
+            // A states file is projected by the app, never opened from a link.
+            if (u.pathname.startsWith("/states/")) return;
             void goto(`${u.pathname}${u.search}${u.hash}`);
           } catch {
             /* unparseable url — ignore */

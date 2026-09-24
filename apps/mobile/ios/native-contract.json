@@ -1,0 +1,66 @@
+{
+  "version": 3,
+  "blocks": [
+    "heading",
+    "paragraph",
+    "list",
+    "definitions",
+    "quote",
+    "section",
+    "switch",
+    "slot",
+    "logo"
+  ],
+  "inlines": [
+    "text",
+    "break",
+    "strong",
+    "em",
+    "code",
+    "link",
+    "term",
+    "hidden",
+    "aside",
+    "glyph"
+  ],
+  "blockRoles": [
+    "clear-data",
+    "empty",
+    "evidence",
+    "intro",
+    "inventory",
+    "kicker",
+    "lede",
+    "meta",
+    "note",
+    "source",
+    "updated"
+  ],
+  "inlineRoles": [
+    "evidence",
+    "primary",
+    "provenance",
+    "secondary"
+  ],
+  "listRoles": [
+    "index",
+    "rows"
+  ],
+  "slots": [
+    "age-continue",
+    "age-declare",
+    "clear-data"
+  ],
+  "slotActions": {
+    "age-continue": [
+      "continue"
+    ],
+    "age-declare": [
+      "adult",
+      "minor"
+    ],
+    "clear-data": [
+      "clear"
+    ]
+  }
+}

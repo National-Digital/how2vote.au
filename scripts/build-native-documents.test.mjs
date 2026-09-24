@@ -1,6 +1,8 @@
 import { describe, expect, it } from "vitest";
 import {
   DocumentError,
+  CONTRACT,
+  VOCABULARY,
   assertConserved,
   documentText,
   nativeDataSections,
@@ -140,14 +142,21 @@ describe("projectDocument", () => {
 
   it("turns a glossary popover into the term's definition", () => {
     const doc = project(
-      `<p>Every <a href="/glossary#d" class="term" aria-expanded="false">division</a> <span popover="auto" class="pop" role="dialog" tabindex="-1"><span class="dfn"><strong>Division</strong> A recorded vote.</span> <span class="foot"><a class="more" href="/glossary#d">Full glossary</a> <button type="button" class="x">Close</button></span></span> is recorded.</p>`,
+      `<p>Every <a href="/glossary#d" class="term" aria-expanded="false">division</a> <span popover="auto" class="pop" role="dialog" aria-label="Definition: Division" tabindex="-1"><span class="dfn"><strong>Division</strong> A recorded vote.</span> <span class="foot"><a class="more" href="/glossary#d">Full glossary</a> <button type="button" class="x">Close</button></span></span> is recorded.</p>`,
     );
     const term = doc.blocks[1].c[1];
-    expect(term).toMatchObject({ t: "term", href: "/glossary#d" });
+    expect(term).toMatchObject({
+      t: "term",
+      href: "/glossary#d",
+      more: "Full glossary",
+      close: "Close",
+    });
     expect(documentText({ blocks: [{ t: "paragraph", c: term.definition }] })).toBe(
       "Division A recorded vote.",
     );
-    expect(documentText(doc)).not.toContain("Full glossary");
+    // The popover's controls are the page's words too: drawn natively, never read inline.
+    expect(documentText(doc)).toContain("Full glossaryClose");
+    expect(doc.spoken).not.toContain("Full glossary");
   });
 
   it("collapses whitespace as a browser does, across inline boundaries", () => {
@@ -159,20 +168,24 @@ describe("projectDocument", () => {
 
   it("carries the digest of its text and the text VoiceOver reads", () => {
     const doc = project(
-      `<p><a href="https://x.org" aria-label="A on LinkedIn (cue)">in</a> and <a href="/glossary#d" class="term">d</a> <span class="pop"><span class="dfn">Defined.</span></span></p>`,
+      `<p><a href="https://x.org" aria-label="A on LinkedIn (cue)">in</a> and <a href="/glossary#d" class="term">d</a> <span class="pop" aria-label="Definition: d"><span class="dfn">Defined.</span> <span class="foot"><a class="more" href="/glossary#d">More</a> <button type="button" class="x">Shut</button></span></span></p>`,
     );
     expect(doc.digest).toBe(createHash("sha256").update(documentText(doc)).digest("hex"));
-    expect(documentText(doc)).toBe("Titlein and dDefined.");
+    expect(documentText(doc)).toBe("Titlein and dDefined.MoreShut");
     expect(doc.spoken).toBe(spokenText(doc));
     expect(doc.spoken).toBe("TitleA on LinkedIn (cue) and d");
   });
 
   it("leaves a control to its native counterpart, and projects the text around it", () => {
     const doc = project(
-      `<section class="clear-data ui" aria-labelledby="h"><h2 id="h">Clear</h2> <p class="note">Only here.</p> <div class="actions"><button type="button" class="cancel start">Clear all</button></div></section>`,
+      `<section class="clear-data ui" aria-labelledby="h"><h2 id="h">Clear</h2> <p class="note">Only here.</p> <div class="actions"><button type="button" class="cancel start" value="clear">Clear all</button></div></section>`,
     );
     expect(doc.blocks[1]).toMatchObject({ t: "section", role: "clear-data" });
-    expect(doc.blocks[1].c[2]).toEqual({ t: "slot", name: "clear-data", controls: ["Clear all"] });
+    expect(doc.blocks[1].c[2]).toEqual({
+      t: "slot",
+      name: "clear-data",
+      controls: [{ label: "Clear all", action: "clear" }],
+    });
     expect(documentText(doc)).toContain("Only here.Clear all");
   });
 
@@ -218,6 +231,9 @@ describe("projectDocument", () => {
     );
     fails(
       `<p><a href="/glossary#d" class="term">d</a> <span class="pop"><span class="dfn">D</span> <span>extra</span></span></p>`,
+    ).toThrow("has no controls");
+    fails(
+      `<p><a href="/glossary#d" class="term">d</a> <span class="pop" aria-label="Definition: d"><span class="dfn">D</span> <span class="foot"><a class="more" href="/glossary#d">M</a> <button type="button" class="x">X</button></span> <span>extra</span></span></p>`,
     ).toThrow("undeclared content");
   });
 
@@ -238,6 +254,71 @@ describe("projectDocument", () => {
     expect(() => projectDocument(`<main><article><p>no title</p></article></main>`, "/t")).toThrow(
       "no <h1>",
     );
+  });
+});
+
+describe("screens and chrome", () => {
+  it("carries a plain top bar's label and back button name", () => {
+    expect(project("<p>Text.</p>").top).toEqual({ label: "Title", back: "Back" });
+  });
+
+  it("projects the age gate's wrappers, logo and answers", () => {
+    const doc = projectDocument(
+      `<main>${TOP}<div class="body"><div class="gate" role="status"><svg class="logo sm" role="img" aria-label="How2Vote"><path d="M0"></path></svg> <p class="kicker ui">Before</p> <h1>Old enough?</h1> <div class="cta declare"><button type="button" class="btn secondary" value="minor">No</button> <button type="button" class="btn" value="adult">Yes</button></div></div></div></main>`,
+      "/start",
+    );
+    expect(doc.blocks.map((b) => b.t + (b.role ? `:${b.role}` : ""))).toEqual([
+      "logo",
+      "paragraph:kicker",
+      "heading",
+      "slot",
+    ]);
+    expect(doc.blocks[0]).toEqual({ t: "logo", label: "How2Vote" });
+    // Reordered on the page, each answer still names what it does.
+    expect(doc.blocks[3]).toEqual({
+      t: "slot",
+      name: "age-declare",
+      controls: [
+        { label: "No", action: "minor" },
+        { label: "Yes", action: "adult" },
+      ],
+    });
+  });
+
+  it("refuses a slot whose buttons do not name exactly its actions", () => {
+    const gate = (buttons) =>
+      projectDocument(
+        `<main>${TOP}<article><h1>T</h1><div class="cta declare">${buttons}</div></article></main>`,
+        "/start",
+      );
+    expect(() =>
+      gate(`<button type="button">Yes</button> <button type="button">No</button>`),
+    ).toThrow("the age-declare slot's actions are");
+    expect(() =>
+      gate(
+        `<button type="button" value="adult">Yes</button> <button type="button" value="adult">No</button>`,
+      ),
+    ).toThrow("the age-declare slot's actions are");
+  });
+
+  it("refuses a top bar carrying an action, and a wrapper carrying attributes", () => {
+    const withAction = TOP.replace(
+      '<span class="label">Title</span>',
+      '<span class="label">Title</span> <span class="right"><button type="button">Skip</button></span>',
+    );
+    expect(() =>
+      projectDocument(`<main>${withAction}<article><h1>T</h1></article></main>`, "/t"),
+    ).toThrow("a top bar this renderer does not draw");
+    expect(() =>
+      projectDocument(`<main>${TOP}<div class="body" id="x"><h1>T</h1></div></main>`, "/t"),
+    ).toThrow("a wrapper carries id");
+  });
+});
+
+describe("the contract with the native skeleton", () => {
+  it("is recorded exactly as the projection's vocabulary", () => {
+    const recorded = JSON.parse(readFileSync(new URL(`../${CONTRACT}`, import.meta.url), "utf8"));
+    expect(recorded).toEqual(VOCABULARY);
   });
 });
 

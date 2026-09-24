@@ -53,7 +53,7 @@
         Cancel
       </button>
     {:else}
-      <button type="button" class="cancel start" onclick={() => (confirming = true)}>
+      <button type="button" class="cancel start" value="clear" onclick={() => (confirming = true)}>
         Clear all How2Vote data on this device
       </button>
     {/if}

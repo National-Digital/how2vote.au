@@ -22,7 +22,7 @@ import { CURRENT_ELECTION_ID, ELECTIONS, ELECTION_IDS } from "@how2vote/data-sch
 import { STATES } from "$lib/data";
 import { isMapAvailable } from "$lib/governance";
 import { backupToNative, restoreFromNative } from "$lib/native-storage";
-import { clearLocalDeviceData } from "$lib/privacy/local-data";
+import { performSlotAction } from "$lib/native-slot-actions";
 import { election as activeElection, savedElectionId } from "$lib/election.svelte";
 import { now } from "$lib/now.svelte";
 import { quiz, type Persisted } from "$lib/quiz.svelte";
@@ -74,6 +74,13 @@ const NATIVE_ROUTES = new Set([
 export const CURRENT_ELECTION_DOCUMENTS = ["about"] as const;
 
 /**
+ * The age gate's two states (ADR 0011/0012): the question at `/start`, and the explore-only
+ * explainer an under-18 sees after answering, rendered at build time as `states/start`. The native
+ * gate draws whichever applies and asks the web to act on each answer (`nativeSlotAction`).
+ */
+export const AGE_GATE_DOCUMENTS = ["start", "states/start"] as const;
+
+/**
  * The election data sections the native core draws the same way: each section's index and every
  * page under it, for every election (`/2025/issues`, `/next/parties/greens`, …). Every one is held
  * to its hydrated text by the same spec as the documents.
@@ -85,6 +92,8 @@ const DOCUMENT_PATHS = new Set<string>(NATIVE_DOCUMENTS.map((name) => `/${name}`
 /** The projected page a path names, or null when it is not one the native core draws. */
 function documentName(path: string, electionId: string): string | null {
   if (DOCUMENT_PATHS.has(path)) return path.slice(1);
+  // A declared adult is sent on by the page itself; drawing the question first would flash it.
+  if (path === "/start" && !ageGate.confirmed) return ageGate.minor ? "states/start" : "start";
   // The current election by the store, once it holds the visitor's choice; before then — a direct
   // load, when the router first asks — by the stored choice it has yet to restore.
   const chosen = activeElection.settled ? electionId : (savedElectionId() ?? electionId);
@@ -246,8 +255,8 @@ class NativeRoute {
       return;
     }
 
-    // A document opened at a fragment is a different request from the same document at the top.
-    const request = path + url.hash;
+    // A document opened at a fragment, or the gate in its other state, is a different request.
+    const request = `${path}${url.hash}|${document ?? ""}`;
     if (this.#pending === request) return;
     this.#pending = request;
     this.#renderer = "deciding";
@@ -367,14 +376,14 @@ const teardowns: Array<() => void> = [];
 
 /** Attaches the listeners if the shell is there, then offers the route to it. */
 function offer(url: URL, electionId: () => string, navigate: (path: string) => void): void {
-  attach(navigate);
+  attach(navigate, electionId);
   void nativeRoute.sync(url, electionId());
 }
 
 /** Listeners are attached once, the first time the shell is actually there to attach them to. */
 let attached = false;
 
-function attach(navigate: (path: string) => void): void {
+function attach(navigate: (path: string) => void, electionId: () => string): void {
   if (attached) return;
   const router = nativeRouterPlugin();
 
@@ -436,14 +445,19 @@ function attach(navigate: (path: string) => void): void {
     void backupToNative();
   });
 
-  // The native control asks; this side clears, with the same routine and the same clean reload the
-  // web control uses — which also clears the durable copy the native core reads.
-  const clearData = router.addListener("nativeClearData", () => {
-    void clearLocalDeviceData().then(() => window.location.assign("/"));
+  // A native control was pressed. The native side draws a slot's buttons from the page and never
+  // acts on them itself; this side does what the web page's own control does.
+  const slotAction = router.addListener("nativeSlotAction", ({ slot, action }) => {
+    performSlotAction(
+      slot,
+      action,
+      navigate,
+      () => void nativeRoute.sync(new URL(window.location.href), electionId()),
+    );
   });
 
   teardowns.push(() => {
-    void Promise.resolve(clearData).then((r) => r.remove());
+    void Promise.resolve(slotAction).then((r) => r.remove());
     void Promise.resolve(exit).then((r) => r.remove());
     void Promise.resolve(themeChange).then((r) => r.remove());
     void Promise.resolve(staleDismiss).then((r) => r.remove());

@@ -83,7 +83,7 @@ final class NativeCoreHost {
         document: DocumentRequest? = nil,
         chrome: SiteChrome,
         onDismissStale: @escaping (String) -> Void,
-        onClearData: @escaping () -> Void,
+        onSlotAction: @escaping (NativeDocument.Slot, String) -> Void,
         from presenter: UIViewController,
         onExit: @escaping (String) -> Void
     ) -> Bool {
@@ -105,7 +105,7 @@ final class NativeCoreHost {
         // screen still on display keeps the chrome and actions it was built with.
         let previous = (self.chrome, chromeActions, screenIdentity)
         self.chrome = chrome
-        chromeActions = SiteChromeActions(exit: onExit, dismissStale: onDismissStale, clearData: onClearData)
+        chromeActions = SiteChromeActions(exit: onExit, dismissStale: onDismissStale, slotAction: onSlotAction)
         screenIdentity = "\(route)|\(electionID)|\(isEditing)|\(document?.identity ?? "")"
         guard let screen = screen(
             for: route,

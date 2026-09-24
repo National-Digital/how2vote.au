@@ -25,7 +25,11 @@ struct DocumentView: View {
     var body: some View {
         VStack(spacing: 0) {
             StaleNotice()
-            TopBar(label: topBarLabel, backLabel: back.label, onBack: { onExit(back.href) })
+            if let crumbs = layout.crumbs {
+                Breadcrumbs(crumbs: crumbs, label: layout.crumbsLabel ?? "", onExit: onExit)
+            } else if let top = layout.top {
+                ProjectedTopBar(top: top) { onExit("/") }
+            }
             ScrollViewReader { proxy in
                 ScrollView {
                     VStack(alignment: .leading, spacing: 0) {
@@ -40,6 +44,8 @@ struct DocumentView: View {
                     .padding(.bottom, 24)
                 }
                 .onAppear {
+                    // A new screen, as the web's live region announces the gate's change of state.
+                    UIAccessibility.post(notification: .screenChanged, argument: nil)
                     guard let anchor else { return }
                     DispatchQueue.main.async { proxy.scrollTo(anchor, anchor: .top) }
                 }
@@ -69,17 +75,6 @@ struct DocumentView: View {
         .sheet(item: $browsing) { page in
             SafariView(url: page.url).ignoresSafeArea()
         }
-    }
-
-    /// A data page's bar names the page and goes up its breadcrumb trail; a document's goes home,
-    /// as the web's `ContentPage` top bar does.
-    private var topBarLabel: String { layout.crumbs?.last?.label ?? layout.title }
-
-    private var back: (label: String, href: String) {
-        guard let parent = layout.crumbs?.dropLast().last, let href = parent.href else {
-            return ("Back to start", "/")
-        }
-        return ("Back to \(parent.label)", href)
     }
 
     /// Follows a link drawn in running text. Internal routes go back to the web, which stays the
@@ -229,8 +224,13 @@ private struct DocumentBlock: View {
         case let .slot(slot, controls):
             switch slot {
             case .clearData:
-                ClearDataControl(label: controls[0])
+                ClearDataControl(label: controls[0].label)
+            case .ageDeclare, .ageContinue:
+                SlotButtons(slot: slot, controls: controls)
             }
+        case let .logo(label):
+            Wordmark(height: UIFontMetrics(forTextStyle: .body).scaledValue(for: 20), color: Theme.ink.resolve(scheme), label: label)
+                .padding(.bottom, 8)
         }
     }
 
@@ -246,13 +246,14 @@ private struct DocumentBlock: View {
         switch role {
         case .lede, .intro: return .title3
         case .updated, .note, .meta, .source, .evidence: return .footnote
+        case .kicker: return .caption2.weight(.semibold)
         case .inventory, .empty, .clearData, nil: return .body
         }
     }
 
     private static func isQuiet(_ role: NativeDocument.BlockRole?) -> Bool {
         switch role {
-        case .updated, .meta, .source, .evidence, .empty: return true
+        case .updated, .meta, .source, .evidence, .empty, .kicker: return true
         case .lede, .intro, .note, .inventory, .clearData, nil: return false
         }
     }
@@ -382,10 +383,10 @@ private struct TermSheet: View {
             RunText(run: term.definition, layout: layout)
                 .font(.body)
             HStack(spacing: 20) {
-                Button("Full glossary") { onGlossary(term.href) }
+                Button(term.more) { onGlossary(term.href) }
                     .underline()
                 Spacer()
-                Button("Close") { dismiss() }
+                Button(term.close) { dismiss() }
             }
             .font(.subheadline)
             .frame(minHeight: 44)
@@ -394,6 +395,8 @@ private struct TermSheet: View {
         .frame(maxWidth: .infinity, alignment: .leading)
         .foregroundStyle(Theme.ink.resolve(scheme))
         .background(Theme.raise.resolve(scheme))
+        .accessibilityElement(children: .contain)
+        .accessibilityLabel(term.label)
         .presentationDetents([.medium])
     }
 }
@@ -450,7 +453,7 @@ private struct ClearDataControl: View {
                     .font(.subheadline.weight(.semibold))
                 Button(clearing ? LegalCopy.clearDataClearing : LegalCopy.clearDataYes) {
                     clearing = true
-                    actions.clearData()
+                    actions.slotAction(.clearData, "clear")
                 }
                 .buttonStyle(PrimaryButton())
                 .disabled(clearing)
@@ -472,5 +475,121 @@ private extension View {
     /// Marks the view as a fragment a link can scroll to, when the page gives it an id.
     @ViewBuilder func anchor(_ id: String?) -> some View {
         if let id { self.id(id) } else { self }
+    }
+}
+
+/// A page's plain top bar, as `TopBar.svelte` draws it: its label, and a back button named as the
+/// page names it.
+private struct ProjectedTopBar: View {
+    @Environment(\.colorScheme) private var scheme
+
+    let top: NativeDocument.TopBar
+    let onBack: () -> Void
+
+    var body: some View {
+        HStack(spacing: 8) {
+            if let back = top.back {
+                Button(action: onBack) {
+                    Image(systemName: "chevron.left")
+                        .font(.body.weight(.medium))
+                        .frame(minWidth: 44, minHeight: 44, alignment: .leading)
+                }
+                .accessibilityLabel(back)
+            }
+            Spacer(minLength: 0)
+            Text(top.label)
+                .font(.footnote)
+                .foregroundStyle(Theme.ink2.resolve(scheme))
+            Spacer(minLength: 0)
+            Color.clear.frame(width: 44, height: 44)
+        }
+        .foregroundStyle(Theme.ink2.resolve(scheme))
+        .padding(.horizontal, Theme.gutter)
+        .padding(.top, 4)
+        .frame(minHeight: 56)
+    }
+}
+
+/// A data page's breadcrumb trail, as `Breadcrumb.svelte` draws it: links up, then the page.
+private struct Breadcrumbs: View {
+    @Environment(\.colorScheme) private var scheme
+
+    let crumbs: [NativeDocument.Crumb]
+    let label: String
+    let onExit: (String) -> Void
+
+    var body: some View {
+        HStack(spacing: 6) {
+            ForEach(Array(crumbs.enumerated()), id: \.offset) { index, crumb in
+                if index > 0 {
+                    // The web's separator is drawn by its stylesheet, not written in the page.
+                    Image(systemName: "chevron.right")
+                        .imageScale(.small)
+                        .foregroundStyle(Theme.ink2.resolve(scheme))
+                        .accessibilityHidden(true)
+                }
+                if let href = crumb.href {
+                    Button(crumb.label) { onExit(href) }
+                        .underline()
+                        .buttonStyle(.plain)
+                        .lineLimit(1)
+                } else {
+                    Text(crumb.label)
+                        .lineLimit(1)
+                        .truncationMode(.tail)
+                        .accessibilityAddTraits(.isStaticText)
+                }
+            }
+            Spacer(minLength: 0)
+        }
+        .font(.caption)
+        .foregroundStyle(Theme.ink2.resolve(scheme))
+        .padding(.horizontal, Theme.gutter)
+        .frame(minHeight: 44)
+        .accessibilityElement(children: .contain)
+        .accessibilityLabel(label)
+    }
+}
+
+/// A slot's buttons, labelled from the page. Pressing one asks the web to do what the page's own
+/// button does — by the action the page names on it — and the first is the page's primary action.
+/// One press is enough: the buttons stand down until the screen that answers it is drawn, so a second
+/// tap cannot race the first round trip.
+private struct SlotButtons: View {
+    @Environment(\.colorScheme) private var scheme
+    @Environment(\.siteChromeActions) private var actions
+
+    let slot: NativeDocument.Slot
+    let controls: [NativeDocument.Control]
+
+    @State private var pressed = false
+
+    private func press(_ control: NativeDocument.Control) {
+        guard !pressed else { return }
+        pressed = true
+        actions.slotAction(slot, control.action)
+    }
+
+    var body: some View {
+        VStack(spacing: 10) {
+            ForEach(Array(controls.enumerated()), id: \.offset) { index, control in
+                let label = control.label
+                if index == 0 {
+                    Button(label) { press(control) }
+                        .buttonStyle(PrimaryButton())
+                } else {
+                    Button(label) { press(control) }
+                        .font(.callout.weight(.semibold))
+                        .frame(maxWidth: .infinity, minHeight: 50)
+                        .overlay(
+                            RoundedRectangle(cornerRadius: Theme.radius)
+                                .strokeBorder(Theme.rule.resolve(scheme), lineWidth: 1.5)
+                        )
+                        .foregroundStyle(Theme.ink.resolve(scheme))
+                }
+            }
+        }
+        .padding(.top, 8)
+        .disabled(pressed)
     }
 }

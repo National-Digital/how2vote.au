@@ -15,16 +15,16 @@ import Foundation
 ///     swiftc -O apps/mobile/ios/App/App/Model/NativeDocument.swift \
 ///            apps/mobile/ios/App/App/Model/DocumentLayout.swift \
 ///            apps/mobile/ios/Parity/DocumentLogic.swift -o "$TMPDIR/document-logic"
-///     "$TMPDIR/document-logic" apps/web/build/native-documents
+///     "$TMPDIR/document-logic" apps/web/build/native-documents apps/mobile/ios/native-contract.json
 @main
 enum DocumentLogic {
     static func main() {
-        guard CommandLine.arguments.count == 2 else {
-            print("::error::usage: document-logic <projected documents directory>")
+        guard CommandLine.arguments.count == 3 else {
+            print("::error::usage: document-logic <projected documents directory> <native-contract.json>")
             exit(2)
         }
         let root = URL(fileURLWithPath: CommandLine.arguments[1])
-        var failures: [String] = []
+        var failures = keepsToTheContract(URL(fileURLWithPath: CommandLine.arguments[2]))
 
         let files = projected(under: root)
         guard !files.isEmpty else {
@@ -65,6 +65,82 @@ enum DocumentLogic {
         }
         print("document logic OK — \(files.count) pages laid out with their text intact, \(ran) rules hold")
     }
+
+    /// The renderer draws exactly the vocabulary the projection may emit: a kind, role or slot the
+    /// web learned and the renderer did not — or one the renderer still carries after the web
+    /// dropped it — fails here, before any page is laid out.
+    private static func keepsToTheContract(_ file: URL) -> [String] {
+        struct Contract: Decodable {
+            let version: Int
+            let blocks, inlines, blockRoles, inlineRoles, listRoles, slots: [String]
+            let slotActions: [String: [String]]
+        }
+        guard let data = try? Data(contentsOf: file),
+              let contract = try? JSONDecoder().decode(Contract.self, from: data)
+        else { return ["the contract at \(file.path) could not be read"] }
+        var failures: [String] = []
+        func same(_ what: String, _ contract: [String], _ renderer: [String]) {
+            let want = Set(contract), have = Set(renderer)
+            for missing in want.subtracting(have).sorted() {
+                failures.append("the contract has \(what) \"\(missing)\", which the renderer does not draw")
+            }
+            for extra in have.subtracting(want).sorted() {
+                failures.append("the renderer draws \(what) \"\(extra)\", which the contract does not have")
+            }
+        }
+        if contract.version != NativeDocument.version {
+            failures.append("the contract is version \(contract.version); the renderer draws \(NativeDocument.version)")
+        }
+        same("block", contract.blocks, NativeDocument.blockKinds)
+        same("inline", contract.inlines, NativeDocument.inlineKinds)
+        same("block role", contract.blockRoles, NativeDocument.BlockRole.allCases.map(\.rawValue))
+        same("inline role", contract.inlineRoles, NativeDocument.InlineRole.allCases.map(\.rawValue))
+        same("list role", contract.listRoles, NativeDocument.ListRole.allCases.map(\.rawValue))
+        same("slot", contract.slots, NativeDocument.Slot.allCases.map(\.rawValue))
+        for slot in NativeDocument.Slot.allCases where contract.slotActions[slot.rawValue] != slot.actions.sorted() {
+            failures.append("the \(slot.rawValue) slot's actions differ from the contract's")
+        }
+        // Listing a kind is not drawing it: each must actually decode, from a node of its own.
+        same("block fixture", contract.blocks, Array(blockFixtures.keys))
+        same("inline fixture", contract.inlines, Array(inlineFixtures.keys))
+        for (kind, json) in blockFixtures.sorted(by: { $0.key < $1.key })
+            where (try? JSONDecoder().decode(NativeDocument.Block.self, from: Data(json.utf8))) == nil {
+            failures.append("the renderer lists block \"\(kind)\" but does not decode one")
+        }
+        for (kind, json) in inlineFixtures.sorted(by: { $0.key < $1.key })
+            where (try? JSONDecoder().decode(NativeDocument.Inline.self, from: Data(json.utf8))) == nil {
+            failures.append("the renderer lists inline \"\(kind)\" but does not decode one")
+        }
+        return failures
+    }
+
+    private static let text = #"{"t":"text","s":"x"}"#
+
+    /// One minimal node of every kind the contract names.
+    private static let blockFixtures: [String: String] = [
+        "heading": #"{"t":"heading","level":2,"c":[\#(text)]}"#,
+        "paragraph": #"{"t":"paragraph","c":[\#(text)]}"#,
+        "list": #"{"t":"list","ordered":false,"items":[[{"t":"paragraph","c":[\#(text)]}]]}"#,
+        "definitions": #"{"t":"definitions","items":[{"term":[\#(text)],"detail":[]}]}"#,
+        "quote": #"{"t":"quote","c":[{"t":"paragraph","c":[\#(text)]}]}"#,
+        "section": #"{"t":"section","c":[]}"#,
+        "switch": #"{"t":"switch","label":"E","options":[{"label":"A","href":"/a","current":true}]}"#,
+        "slot": #"{"t":"slot","name":"clear-data","controls":[{"label":"Clear","action":"clear"}]}"#,
+        "logo": #"{"t":"logo","label":"L"}"#,
+    ]
+
+    private static let inlineFixtures: [String: String] = [
+        "text": text,
+        "break": #"{"t":"break"}"#,
+        "strong": #"{"t":"strong","c":[\#(text)]}"#,
+        "em": #"{"t":"em","c":[\#(text)]}"#,
+        "code": #"{"t":"code","c":[\#(text)]}"#,
+        "link": #"{"t":"link","href":"/a","external":false,"c":[\#(text)]}"#,
+        "term": #"{"t":"term","href":"/g","c":[\#(text)],"definition":[\#(text)],"label":"D","more":"M","close":"C"}"#,
+        "hidden": #"{"t":"hidden","c":[\#(text)]}"#,
+        "aside": #"{"t":"aside","role":"provenance","c":[\#(text)]}"#,
+        "glyph": #"{"t":"glyph","s":"↗"}"#,
+    ]
 
     private static func projected(under root: URL) -> [URL] {
         let walker = FileManager.default.enumerator(at: root, includingPropertiesForKeys: nil)
@@ -166,18 +242,18 @@ enum DocumentLogic {
     }
 
     private static let labelled = #"""
-    {"v":2,"route":"/t","title":"T","digest":"DIGEST","spoken":"SPOKEN","drawn":"TSee x and division.","blocks":[
+    {"v":3,"route":"/t","title":"T","top":{"label":"T","back":"Back"},"digest":"DIGEST","spoken":"SPOKEN","drawn":"TSee x and division.","blocks":[
       {"t":"heading","level":1,"c":[{"t":"text","s":"T"}]},
       {"t":"paragraph","c":[{"t":"text","s":"See "},
         {"t":"link","href":"https://x.org","external":true,"label":"X on the web (cue)","c":[{"t":"text","s":"x"},{"t":"hidden","c":[{"t":"text","s":"(cue)"}]}]},
         {"t":"text","s":" and "},
-        {"t":"term","href":"/glossary#d","c":[{"t":"text","s":"division"}],"definition":[{"t":"text","s":"A vote."}]},
+        {"t":"term","href":"/glossary#d","c":[{"t":"text","s":"division"}],"definition":[{"t":"text","s":"A vote."}],"label":"Definition: Division","more":"More","close":"Shut"},
         {"t":"text","s":"."}]}]}
     """#
 
     private static func fixture(spoken: String) -> Data {
         // The text the projection would record, computed independently of the layout.
-        let text = "TSee x(cue) and divisionA vote.."
+        let text = "TSee x(cue) and divisionA vote.MoreShut."
         let digest = sha256Hex(text)
         return Data(labelled.replacingOccurrences(of: "DIGEST", with: digest)
             .replacingOccurrences(of: "SPOKEN", with: spoken).utf8)
@@ -195,7 +271,8 @@ enum DocumentLogic {
         guard case let .paragraph(_, _, run) = layout.blocks[1] else { return ["the fixture laid out without its paragraph"] }
         if run.visible != "See x and division." { failures.append("the drawn text was \"\(run.visible)\"") }
         if !layout.needsSpokenLabel(run) { failures.append("a paragraph with a labelled link was not given its spoken text") }
-        if layout.terms.first?.text != "division" || layout.links.first?.external != true {
+        if layout.terms.first?.text != "division" || layout.terms.first?.more != "More"
+            || layout.links.first?.external != true {
             failures.append("the fixture's term or link did not survive the layout")
         }
         return failures
@@ -220,6 +297,8 @@ enum DocumentLogic {
         guard let sample, var doc = try? JSONSerialization.jsonObject(with: sample) as? [String: Any] else {
             return ["the breadcrumb fixture could not be built"]
         }
+        doc["top"] = nil
+        doc["crumbsLabel"] = "Breadcrumb"
         doc["crumbs"] = [["label": "Home", "href": "/"], ["label": "Elsewhere", "href": "/elsewhere"]]
         return refused(
             try? JSONSerialization.data(withJSONObject: doc),

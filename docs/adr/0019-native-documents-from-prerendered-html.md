@@ -72,6 +72,35 @@ request to the web, which owns the keys (ADR 0018 D3).
 section (`NATIVE_DATA_SECTIONS`). The projection, layout and hydration checks cover every one of them; the on-screen check opens the issues, parties and electorates indexes, one party page, and one electorate page with its candidates in ballot order. Issue and Senate pages use no node kind those pages do not, and are held by the projection, layout and hydration checks. Their breadcrumb trail is chrome
 that the native top bar draws. It is projected alongside the page, outside the page's text.
 
+**D4b — A screen's states are prerendered too.** Some screens have a state the build does not
+reach on its own, such as the age gate's explore-only explainer, which appears only after an
+answer. Such a state is rendered at build time into a states file (`states/start.html`) from the
+same component the live page uses, so there is still one copy of the wording. A states file is
+not a page: it exists only in the iOS channel's build, is removed from every other channel's, and
+is never precached, so no visitor can open that copy out of the flow that explains it.
+
+The native screen draws whichever state applies. Each control names its action on the page (the
+button's `value`), and the projection requires each slot to carry exactly its expected actions.
+Pressing one asks the web to do what the page's own control does (`nativeSlotAction`), through the
+same functions the page calls. The action is named, never positional, so a page that reorders its
+buttons cannot swap what they do.
+
+**D6 — The iOS app is a skeleton, and it has a contract with the web build.** The goal is that no
+iOS screen shows hand-written copy. Every word comes from the web build: projected pages, the
+chrome handed over with each route, and the datasets. Two checks hold this in place as the web
+interface changes:
+
+- **The contract** (`apps/mobile/ios/native-contract.json`) lists every node kind, role and slot a
+  projected page may contain. The projection may emit nothing outside it, and `DocumentLogic`
+  requires the Swift renderer to draw exactly it. A web change that needs something new fails the
+  projection first, then fails the renderer, until the skeleton has learned it. Wording changes
+  need no skeleton change at all. Styling is not covered, as ADR 0018 D10 intends.
+- **The hand-written copy record** (`apps/mobile/ios/native-copy-debt.json`) lists every string
+  literal in Swift that is not plainly a name, key or diagnostic, all of it on screens built before
+  this rule. `scripts/check-native-content.mjs` reads the literals from the compiler's parse and
+  fails new copy. It also fails a record that has grown against the PR base, so the record can only
+  shrink as those screens move to the web build.
+
 **D5 — The WebView goes route by route.** A route moves to the native side only when all four
 checks pass for it. The WebView is removed once no route is left that uses it. Until then, ADR
 0018 D4's runtime fallback remains. Removing the WebView means moving that failure to build time,
@@ -94,5 +123,8 @@ where the checks above already live.
   - offline;
   - saved;
   - the card.
+- The landing, quiz, ballot and review screens still hold the hand-written copy the record lists,
+  and the registered notices in `docs/legal/native-copy.json` are still typed copies checked
+  against the web source rather than read from the build. Both are the next moves.
 - Existing installs keep their data. The `how2vote:` keys and the native-core ownership marker are
   not changed by any of this.

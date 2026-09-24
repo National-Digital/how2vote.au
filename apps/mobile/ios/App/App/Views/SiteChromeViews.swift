@@ -7,8 +7,8 @@ struct SiteChromeActions {
     var exit: (String) -> Void = { _ in }
     /// Records that the voter dismissed the stale-data notice for this dataVersion.
     var dismissStale: (String) -> Void = { _ in }
-    /// Asks the web to clear everything this app stores on the device.
-    var clearData: () -> Void = {}
+    /// Asks the web to do what a projected slot's control does on the page, by the action it names.
+    var slotAction: (NativeDocument.Slot, String) -> Void = { _, _ in }
 }
 
 private struct SiteChromeKey: EnvironmentKey {

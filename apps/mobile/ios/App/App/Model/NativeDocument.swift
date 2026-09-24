@@ -9,12 +9,21 @@ import Foundation
 /// WebView renders it instead (ADR 0018 D4).
 struct NativeDocument: Equatable {
     /// The projection version this renderer draws.
-    static let version = 2
+    static let version = 3
+
+    /// The node kinds this renderer draws, by the names the projection writes. `DocumentLogic`
+    /// holds these, and the role and slot cases, to `apps/mobile/ios/native-contract.json`.
+    static let blockKinds = ["heading", "paragraph", "list", "definitions", "quote", "section", "switch", "slot", "logo"]
+    static let inlineKinds = ["text", "break", "strong", "em", "code", "link", "term", "hidden", "aside", "glyph"]
 
     let route: String
     let title: String
     /// A data page's breadcrumb trail, ending at the page itself; nil on a page with a plain top bar.
     let crumbs: [Crumb]?
+    /// The trail's accessible name.
+    let crumbsLabel: String?
+    /// A page's plain top bar; nil on a page with a breadcrumb trail.
+    let top: TopBar?
     let blocks: [Block]
     /// SHA-256 of the document's text, which the layout must reproduce from what it draws.
     let digest: String
@@ -24,22 +33,39 @@ struct NativeDocument: Equatable {
     /// hidden by mistake is caught, not merely still spoken.
     let drawn: String
 
-    enum BlockRole: String, Decodable {
-        case updated, lede, note, intro, meta, source, evidence, inventory, empty
+    enum BlockRole: String, Decodable, CaseIterable {
+        case updated, lede, note, intro, meta, source, evidence, inventory, empty, kicker
         case clearData = "clear-data"
     }
 
-    enum InlineRole: String, Decodable {
+    enum InlineRole: String, Decodable, CaseIterable {
         case provenance, evidence, primary, secondary
     }
 
-    enum ListRole: String, Decodable {
+    enum ListRole: String, Decodable, CaseIterable {
         case rows, index
     }
 
     /// A native control that stands in for an interactive part of the page.
-    enum Slot: String, Decodable {
+    enum Slot: String, Decodable, CaseIterable {
         case clearData = "clear-data"
+        case ageDeclare = "age-declare"
+        case ageContinue = "age-continue"
+
+        /// The actions its controls carry — `SLOT_ACTIONS` in `build-native-documents.mjs`.
+        var actions: [String] {
+            switch self {
+            case .clearData: return ["clear"]
+            case .ageDeclare: return ["adult", "minor"]
+            case .ageContinue: return ["continue"]
+            }
+        }
+    }
+
+    struct TopBar: Equatable {
+        let label: String
+        /// The back button's accessible name; nil when the bar has no back button.
+        let back: String?
     }
 
     struct Crumb: Equatable {
@@ -68,7 +94,23 @@ struct NativeDocument: Equatable {
         case quote([Block])
         case section(role: BlockRole?, id: String?, content: [Block])
         case electionSwitch(label: String, options: [SwitchOption])
-        case slot(Slot, controls: [String])
+        case slot(Slot, controls: [Control])
+        /// The drawn wordmark, by the name the page gives it.
+        case logo(label: String)
+    }
+
+    /// One control of a slot: the page's label, and the action the page names on it.
+    struct Control: Equatable {
+        let label: String
+        let action: String
+    }
+
+    /// A glossary term's popover: its definition, its accessible name and its two controls.
+    struct TermPopover: Equatable {
+        let definition: [Inline]
+        let label: String
+        let more: String
+        let close: String
     }
 
     indirect enum Inline: Equatable {
@@ -78,7 +120,7 @@ struct NativeDocument: Equatable {
         case emphasis([Inline])
         case code([Inline])
         case link(href: String, external: Bool, role: InlineRole?, label: String?, content: [Inline])
-        case term(href: String, content: [Inline], definition: [Inline])
+        case term(href: String, content: [Inline], popover: TermPopover)
         /// Read by VoiceOver, not drawn.
         case hidden([Inline])
         /// Drawn, never heard: the web's ↗ beside an external link.
@@ -108,12 +150,21 @@ struct NativeDocument: Equatable {
 
 extension NativeDocument: Decodable {
     init(from decoder: Decoder) throws {
-        let c = try Strict(decoder, node: "document", fields: ["v", "route", "title", "crumbs", "blocks", "digest", "spoken", "drawn"])
+        let c = try Strict(
+            decoder,
+            node: "document",
+            fields: ["v", "route", "title", "crumbs", "crumbsLabel", "top", "blocks", "digest", "spoken", "drawn"]
+        )
         let v = try c.decode(Int.self, "v")
         guard v == Self.version else { throw DecodeError.version(v) }
         route = try c.decode(String.self, "route")
         title = try c.decode(String.self, "title")
         crumbs = try c.optional([Crumb].self, "crumbs")
+        crumbsLabel = try c.optional(String.self, "crumbsLabel")
+        top = try c.optional(TopBar.self, "top")
+        guard (crumbs == nil) != (top == nil), (crumbs == nil) == (crumbsLabel == nil) else {
+            throw DecodeError.invalid("a page needs exactly one of a top bar and a breadcrumb trail")
+        }
         if let crumbs {
             guard crumbs.count >= 2, crumbs.last?.href == nil, crumbs.dropLast().allSatisfy({ $0.href?.hasPrefix("/") == true }) else {
                 throw DecodeError.invalid("a breadcrumb trail that does not end at the page")
@@ -129,6 +180,7 @@ extension NativeDocument: Decodable {
 extension NativeDocument.Block: Decodable {
     init(from decoder: Decoder) throws {
         let t = try Strict.type(decoder)
+        guard NativeDocument.blockKinds.contains(t) else { throw NativeDocument.DecodeError.unknownNode(t) }
         switch t {
         case "heading":
             let c = try Strict(decoder, node: t, fields: ["t", "level", "id", "c"])
@@ -171,14 +223,17 @@ extension NativeDocument.Block: Decodable {
             self = .electionSwitch(label: try c.decode(String.self, "label"), options: options)
         case "slot":
             let c = try Strict(decoder, node: t, fields: ["t", "name", "controls"])
-            let controls = try c.decode([String].self, "controls")
-            guard !controls.isEmpty else { throw NativeDocument.DecodeError.invalid("a slot with no controls") }
+            let controls = try c.decode([NativeDocument.Control].self, "controls")
             let name = try c.decode(NativeDocument.Slot.self, "name")
-            // The native clear-data control draws one button; a second would be page text it drops.
-            if name == .clearData, controls.count != 1 {
-                throw NativeDocument.DecodeError.invalid("the clear-data slot holds \(controls.count) controls")
+            // Each slot's controls are exactly the actions it is drawn for, so a page cannot add a button
+            // the native control would drop, nor swap what one does by moving it.
+            guard controls.map(\.action).sorted() == name.actions.sorted() else {
+                throw NativeDocument.DecodeError.invalid("the \(name.rawValue) slot's actions are not \(name.actions)")
             }
             self = .slot(name, controls: controls)
+        case "logo":
+            let c = try Strict(decoder, node: t, fields: ["t", "label"])
+            self = .logo(label: try c.decode(String.self, "label"))
         default:
             throw NativeDocument.DecodeError.unknownNode(t)
         }
@@ -188,6 +243,7 @@ extension NativeDocument.Block: Decodable {
 extension NativeDocument.Inline: Decodable {
     init(from decoder: Decoder) throws {
         let t = try Strict.type(decoder)
+        guard NativeDocument.inlineKinds.contains(t) else { throw NativeDocument.DecodeError.unknownNode(t) }
         typealias Inlines = [NativeDocument.Inline]
         switch t {
         case "text":
@@ -218,11 +274,16 @@ extension NativeDocument.Inline: Decodable {
                 content: try c.decode(Inlines.self, "c")
             )
         case "term":
-            let c = try Strict(decoder, node: t, fields: ["t", "href", "c", "definition"])
+            let c = try Strict(decoder, node: t, fields: ["t", "href", "c", "definition", "label", "more", "close"])
             self = .term(
                 href: try c.decode(String.self, "href"),
                 content: try c.decode(Inlines.self, "c"),
-                definition: try c.decode(Inlines.self, "definition")
+                popover: NativeDocument.TermPopover(
+                    definition: try c.decode(Inlines.self, "definition"),
+                    label: try c.decode(String.self, "label"),
+                    more: try c.decode(String.self, "more"),
+                    close: try c.decode(String.self, "close")
+                )
             )
         case "aside":
             let c = try Strict(decoder, node: t, fields: ["t", "role", "c"])
@@ -233,12 +294,28 @@ extension NativeDocument.Inline: Decodable {
     }
 }
 
+extension NativeDocument.Control: Decodable {
+    init(from decoder: Decoder) throws {
+        let c = try Strict(decoder, node: "control", fields: ["label", "action"])
+        label = try c.decode(String.self, "label")
+        action = try c.decode(String.self, "action")
+    }
+}
+
 extension NativeDocument.Definition: Decodable {
     init(from decoder: Decoder) throws {
         let c = try Strict(decoder, node: "definition", fields: ["term", "id", "detail"])
         term = try c.decode([NativeDocument.Inline].self, "term")
         id = try c.optional(String.self, "id")
         detail = try c.decode([NativeDocument.Block].self, "detail")
+    }
+}
+
+extension NativeDocument.TopBar: Decodable {
+    init(from decoder: Decoder) throws {
+        let c = try Strict(decoder, node: "top bar", fields: ["label", "back"])
+        label = try c.decode(String.self, "label")
+        back = try c.optional(String.self, "back")
     }
 }
 

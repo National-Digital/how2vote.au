@@ -38,9 +38,10 @@ public class NativeRouterPlugin: CAPPlugin, CAPBridgedPlugin {
     /// the WebView's key to write, for the same reason as the theme.
     private static let staleDismissEvent = "nativeStaleDismiss"
 
-    /// Emitted when the voter confirms "clear all my data" on a native document. The web clears:
-    /// it owns the keys, and its routine already clears the durable copy the native core reads.
-    private static let clearDataEvent = "nativeClearData"
+    /// Emitted when the voter presses a control a projected page's slot stands in for. The web
+    /// does what that control does on the page — it owns the keys and the flow, so the native side
+    /// draws the button and never acts on it itself.
+    private static let slotActionEvent = "nativeSlotAction"
 
     @objc func present(_ call: CAPPluginCall) {
         guard let route = call.getString("route") else {
@@ -115,9 +116,9 @@ public class NativeRouterPlugin: CAPPlugin, CAPBridgedPlugin {
                 onDismissStale: { [weak self] version in
                     self?.notifyListeners(Self.staleDismissEvent, data: ["dataVersion": version])
                 },
-                onClearData: { [weak self] in
-                    QuizState.sessionRecords.removeAll()
-                    self?.notifyListeners(Self.clearDataEvent, data: [:])
+                onSlotAction: { [weak self] slot, action in
+                    if slot == .clearData { QuizState.sessionRecords.removeAll() }
+                    self?.notifyListeners(Self.slotActionEvent, data: ["slot": slot.rawValue, "action": action])
                 },
                 from: controller
             ) { [weak self] path in

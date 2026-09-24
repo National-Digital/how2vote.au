@@ -30,6 +30,9 @@ final class DocumentConservationTests: XCTestCase {
         let spoken: String
     }
 
+    /// The age gate's two states, reached from the landing rather than the footer.
+    private static let gate: Set<String> = ["start"]
+
     override func setUp() {
         continueAfterFailure = true
     }
@@ -39,7 +42,7 @@ final class DocumentConservationTests: XCTestCase {
         let documents = (bundle.urls(forResourcesWithExtension: "json", subdirectory: "native-documents") ?? [])
             .map { $0.deletingPathExtension().lastPathComponent }
         XCTAssertFalse(documents.isEmpty, "the test bundle carries no projected documents")
-        for name in documents where Self.footerLabels[name] == nil {
+        for name in documents where Self.footerLabels[name] == nil && !Self.gate.contains(name) {
             XCTFail("\(name): no footer link is known to open it")
         }
 
@@ -63,7 +66,7 @@ final class DocumentConservationTests: XCTestCase {
                 XCTFail("\(name): the footer link \"\(label)\" could not be reached")
                 continue
             }
-            guard let shown = shownDocument(titled: projected.title, in: app) else {
+            guard let shown = shownDocument(startingWith: projected.spoken, in: app) else {
                 XCTFail("\(name): not drawn natively — the shell declined it, or it never arrived")
                 continue
             }
@@ -93,7 +96,7 @@ final class DocumentConservationTests: XCTestCase {
         )
         tapUntilShown(app.buttons[election.label].firstMatch, in: app)
         let index = try projected("2025/electorates")
-        guard let shownIndex = shownDocument(titled: index.title, in: app) else {
+        guard let shownIndex = shownDocument(startingWith: index.spoken, in: app) else {
             return XCTFail("2025/electorates: not drawn natively")
         }
         compare("2025/electorates", expected: index.spoken, shown: shownIndex)
@@ -109,7 +112,7 @@ final class DocumentConservationTests: XCTestCase {
         )
         tapUntilShown(app.buttons[current.label].firstMatch, in: app)
         XCTAssertNotNil(
-            shownDocument(titled: try projected("next/electorates").title, in: app),
+            shownDocument(startingWith: try projected("next/electorates").spoken, in: app),
             "next/electorates: not drawn natively after switching back"
         )
     }
@@ -164,7 +167,7 @@ final class DocumentConservationTests: XCTestCase {
     private func openAndCompare(_ name: String, from label: String, in app: XCUIApplication) throws {
         let page = try projected(name)
         XCTAssertTrue(open(label, in: app), "\(name): the footer link \"\(label)\" could not be reached")
-        guard let shown = shownDocument(titled: page.title, in: app) else {
+        guard let shown = shownDocument(startingWith: page.spoken, in: app) else {
             return XCTFail("\(name): not drawn natively")
         }
         compare(name, expected: page.spoken, shown: shown)
@@ -177,7 +180,7 @@ final class DocumentConservationTests: XCTestCase {
         let page = try projected(target)
         let element = app.links[link.label].firstMatch.exists ? app.links[link.label].firstMatch : app.buttons[link.label].firstMatch
         tapUntilShown(element, in: app)
-        guard let shown = shownDocument(titled: page.title, in: app) else {
+        guard let shown = shownDocument(startingWith: page.spoken, in: app) else {
             return XCTFail("\(target): not drawn natively, or \"\(link.label)\" could not be followed")
         }
         compare(target, expected: page.spoken, shown: shown)
@@ -193,6 +196,67 @@ final class DocumentConservationTests: XCTestCase {
         if element.exists, element.isHittable { element.tap() }
     }
 
+    /// The gate in both states, as a first-time visitor meets it: from the landing's call to action,
+    /// then answering "under 18" with the button the page labels. Both states must read exactly as
+    /// the page does.
+    func testTheAgeGateShowsThePagesTextInBothStates() throws {
+        let bundle = Bundle(for: Self.self)
+        func projected(_ name: String) throws -> (Projected, [String: Any]) {
+            let parts = name.split(separator: "/").map(String.init)
+            let directory = (["native-documents"] + parts.dropLast()).joined(separator: "/")
+            let url = try XCTUnwrap(bundle.url(forResource: parts.last, withExtension: "json", subdirectory: directory))
+            let data = try Data(contentsOf: url)
+            let json = try XCTUnwrap(try JSONSerialization.jsonObject(with: data) as? [String: Any])
+            return (try JSONDecoder().decode(Projected.self, from: data), json)
+        }
+        /// A slot's controls as the page wrote them: each one's action, and its label.
+        func controls(_ slot: String, in json: [String: Any]) -> [String: String] {
+            var found: [String: String] = [:]
+            func walk(_ value: Any) {
+                if let dict = value as? [String: Any] {
+                    if dict["t"] as? String == "slot", dict["name"] as? String == slot {
+                        for control in dict["controls"] as? [[String: Any]] ?? [] {
+                            if let action = control["action"] as? String, let label = control["label"] as? String {
+                                found[action] = label
+                            }
+                        }
+                    }
+                    dict.values.forEach(walk)
+                } else if let list = value as? [Any] {
+                    list.forEach(walk)
+                }
+            }
+            walk(json["blocks"] as Any)
+            return found
+        }
+
+        let (ask, askJSON) = try projected("start")
+        let (explore, _) = try projected("states/start")
+        let answers = controls("age-declare", in: askJSON)
+        let under = try XCTUnwrap(answers["minor"], "the question names no under-18 answer")
+
+        let app = XCUIApplication()
+        app.launch()
+        // The landing's own call to action for a first-time visitor.
+        let begin = app.buttons["See how my views compare"]
+        XCTAssertTrue(begin.waitForExistence(timeout: 30), "the native landing never appeared")
+        begin.tap()
+
+        guard let asked = shownDocument(startingWith: ask.spoken, in: app) else {
+            return XCTFail("start: not drawn natively — the shell declined it, or it never arrived")
+        }
+        compare("start", expected: ask.spoken, shown: asked)
+
+        // Tapped by what it does, as the page names it — never by where it sits.
+        let answer = app.buttons[under]
+        XCTAssertTrue(answer.waitForExistence(timeout: 10), "start: the page's \"\(under)\" is not on screen")
+        answer.tap()
+        guard let explained = shownDocument(startingWith: explore.spoken, in: app) else {
+            return XCTFail("states/start: the gate did not move to the explainer natively")
+        }
+        compare("states/start", expected: explore.spoken, shown: explained)
+    }
+
     /// Scrolls to a footer link and follows it.
     private func open(_ label: String, in app: XCUIApplication) -> Bool {
         let link = app.buttons[label].firstMatch
@@ -206,13 +270,15 @@ final class DocumentConservationTests: XCTestCase {
         return true
     }
 
-    /// The accessibility snapshot of the document on screen, once it is the one asked for.
-    private func shownDocument(titled title: String, in app: XCUIApplication) -> XCUIElementSnapshot? {
+    /// The accessibility snapshot of the document on screen, once it is the one asked for: the screen
+    /// must begin with the page's own text, not merely mention its heading somewhere.
+    private func shownDocument(startingWith spoken: String, in app: XCUIApplication) -> XCUIElementSnapshot? {
         let container = app.otherElements["native-document"]
+        let opening = String(spoken.filter { !$0.isWhitespace }.prefix(40))
         let deadline = Date().addingTimeInterval(20)
         while Date() < deadline {
             if container.exists, let snapshot = try? container.snapshot(),
-               texts(in: snapshot).first == title {
+               texts(in: snapshot).joined().filter({ !$0.isWhitespace }).hasPrefix(opening) {
                 return snapshot
             }
             Thread.sleep(forTimeInterval: 0.25)

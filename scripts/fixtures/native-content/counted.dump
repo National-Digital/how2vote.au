@@ -1,0 +1,283 @@
+(source_file "counted.swift"
+  (struct_decl range=[counted.swift:2:1 - line:27:1] "Counted" inherits="<null>"
+    (pattern_binding_decl range=[counted.swift:3:5 - line:3:27]
+      (pattern_named "greeting")
+      (original_init=string_literal_expr type="<null>" encoding=utf8 value="Welcome back" builtin_initializer="**NULL**" initializer="**NULL**")
+      (processed_init=string_literal_expr type="<null>" encoding=utf8 value="Welcome back" builtin_initializer="**NULL**" initializer="**NULL**"))
+    (var_decl range=[counted.swift:3:16 - line:3:16] "greeting" let static)
+    (pattern_binding_decl range=[counted.swift:4:5 - line:4:62]
+      (pattern_typed
+        (pattern_named "title")
+        (type_unqualified_ident id="String" unbound)))
+    (var_decl range=[counted.swift:4:9 - line:4:9] "title"
+      (accessor_decl range=[counted.swift:4:23 - line:4:62] <anonymous @ 0x63d5f6a2f5c8> get for="title"
+        (parameter "self") thrown_type="<null>"
+        (parameter_list)
+        (brace_stmt range=[counted.swift:4:23 - line:4:62]
+          (interpolated_string_literal_expr type="<null>" literal_capacity=13 interpolation_count=2 builder_init="**NULL**" result_init="**NULL**"
+            (tap_expr implicit type="<null>" var="counted.(file).Counted.<anonymous>.$interpolation"
+              (<null expr>)
+              (brace_stmt implicit range=[counted.swift:4:26 - line:4:60]
+                (var_decl implicit "$interpolation")
+                (call_expr implicit type="<null>" isolation_crossing="none"
+                  (unresolved_dot_expr implicit type="<null>" field="appendLiteral(_:)" function_ref=unapplied
+                    (declref_expr implicit type="<null>" decl="counted.(file).Counted.<anonymous>.$interpolation" function_ref=unapplied))
+                  (argument_list implicit
+                    (argument
+                      (string_literal_expr type="<null>" encoding=utf8 value="Question " builtin_initializer="**NULL**" initializer="**NULL**"))))
+                (call_expr type="<null>" isolation_crossing="none"
+                  (unresolved_dot_expr implicit type="<null>" field="appendInterpolation" function_ref=unapplied
+                    (declref_expr implicit type="<null>" decl="counted.(file).Counted.<anonymous>.$interpolation" function_ref=unapplied))
+                  (argument_list
+                    (argument
+                      (sequence_expr type="<null>"
+                        (unresolved_decl_ref_expr type="<null>" name="cursor" function_ref=unapplied)
+                        (unresolved_decl_ref_expr type="<null>" name="+" function_ref=unapplied)
+                        (integer_literal_expr type="<null>" value="1" builtin_initializer="**NULL**" initializer="**NULL**")))))
+                (call_expr implicit type="<null>" isolation_crossing="none"
+                  (unresolved_dot_expr implicit type="<null>" field="appendLiteral(_:)" function_ref=unapplied
+                    (declref_expr implicit type="<null>" decl="counted.(file).Counted.<anonymous>.$interpolation" function_ref=unapplied))
+                  (argument_list implicit
+                    (argument
+                      (string_literal_expr type="<null>" encoding=utf8 value=" of " builtin_initializer="**NULL**" initializer="**NULL**"))))
+                (call_expr type="<null>" isolation_crossing="none"
+                  (unresolved_dot_expr implicit type="<null>" field="appendInterpolation" function_ref=unapplied
+                    (declref_expr implicit type="<null>" decl="counted.(file).Counted.<anonymous>.$interpolation" function_ref=unapplied))
+                  (argument_list
+                    (argument
+                      (unresolved_decl_ref_expr type="<null>" name="total" function_ref=unapplied))))
+                (call_expr implicit type="<null>" isolation_crossing="none"
+                  (unresolved_dot_expr implicit type="<null>" field="appendLiteral(_:)" function_ref=unapplied
+                    (declref_expr implicit type="<null>" decl="counted.(file).Counted.<anonymous>.$interpolation" function_ref=unapplied))
+                  (argument_list implicit
+                    (argument
+                      (string_literal_expr type="<null>" encoding=utf8 value="" builtin_initializer="**NULL**" initializer="**NULL**"))))))))))
+    (pattern_binding_decl range=[counted.swift:5:5 - line:19:5]
+      (pattern_typed
+        (pattern_named "body")
+        (type_opaque_return
+          (type_unqualified_ident id="View" unbound))))
+    (var_decl range=[counted.swift:5:9 - line:5:9] "body"
+      (accessor_decl range=[counted.swift:5:25 - line:19:5] <anonymous @ 0x63d5f6a35f18> get for="body"
+        (parameter "self") thrown_type="<null>"
+        (parameter_list)
+        (brace_stmt range=[counted.swift:5:25 - line:19:5]
+          (call_expr type="<null>" isolation_crossing="none"
+            (unresolved_decl_ref_expr type="<null>" name="Text" function_ref=unapplied)
+            (argument_list
+              (argument
+                (string_literal_expr type="<null>" encoding=utf8 value="Where will you vote?" builtin_initializer="**NULL**" initializer="**NULL**"))))
+          (call_expr type="<null>" isolation_crossing="none"
+            (unresolved_decl_ref_expr type="<null>" name="Text" function_ref=unapplied)
+            (argument_list
+              (argument
+                (interpolated_string_literal_expr type="<null>" literal_capacity=16 interpolation_count=2 builder_init="**NULL**" result_init="**NULL**"
+                  (tap_expr implicit type="<null>" var="counted.(file).Counted.<anonymous>.$interpolation"
+                    (<null expr>)
+                    (brace_stmt implicit range=[counted.swift:7:15 - line:7:58]
+                      (var_decl implicit "$interpolation")
+                      (call_expr implicit type="<null>" isolation_crossing="none"
+                        (unresolved_dot_expr implicit type="<null>" field="appendLiteral(_:)" function_ref=unapplied
+                          (declref_expr implicit type="<null>" decl="counted.(file).Counted.<anonymous>.$interpolation" function_ref=unapplied))
+                        (argument_list implicit
+                          (argument
+                            (string_literal_expr type="<null>" encoding=utf8 value="Search " builtin_initializer="**NULL**" initializer="**NULL**"))))
+                      (call_expr type="<null>" isolation_crossing="none"
+                        (unresolved_dot_expr implicit type="<null>" field="appendInterpolation" function_ref=unapplied
+                          (declref_expr implicit type="<null>" decl="counted.(file).Counted.<anonymous>.$interpolation" function_ref=unapplied))
+                        (argument_list
+                          (argument
+                            (sequence_expr type="<null>"
+                              (unresolved_dot_expr type="<null>" field="state" function_ref=unapplied
+                                (unresolved_decl_ref_expr type="<null>" name="model" function_ref=unapplied))
+                              (unresolved_decl_ref_expr type="<null>" name="??" function_ref=unapplied)
+                              (string_literal_expr type="<null>" encoding=utf8 value="all" builtin_initializer="**NULL**" initializer="**NULL**")))))
+                      (call_expr implicit type="<null>" isolation_crossing="none"
+                        (unresolved_dot_expr implicit type="<null>" field="appendLiteral(_:)" function_ref=unapplied
+                          (declref_expr implicit type="<null>" decl="counted.(file).Counted.<anonymous>.$interpolation" function_ref=unapplied))
+                        (argument_list implicit
+                          (argument
+                            (string_literal_expr type="<null>" encoding=utf8 value=" (" builtin_initializer="**NULL**" initializer="**NULL**"))))
+                      (call_expr type="<null>" isolation_crossing="none"
+                        (unresolved_dot_expr implicit type="<null>" field="appendInterpolation" function_ref=unapplied
+                          (declref_expr implicit type="<null>" decl="counted.(file).Counted.<anonymous>.$interpolation" function_ref=unapplied))
+                        (argument_list
+                          (argument
+                            (call_expr type="<null>" isolation_crossing="none"
+                              (unresolved_decl_ref_expr type="<null>" name="count" function_ref=unapplied)
+                              (argument_list
+                                (argument
+                                  (unresolved_decl_ref_expr type="<null>" name="x" function_ref=unapplied)))))))
+                      (call_expr implicit type="<null>" isolation_crossing="none"
+                        (unresolved_dot_expr implicit type="<null>" field="appendLiteral(_:)" function_ref=unapplied
+                          (declref_expr implicit type="<null>" decl="counted.(file).Counted.<anonymous>.$interpolation" function_ref=unapplied))
+                        (argument_list implicit
+                          (argument
+                            (string_literal_expr type="<null>" encoding=utf8 value=") seats" builtin_initializer="**NULL**" initializer="**NULL**"))))))))))
+          (call_expr type="<null>" isolation_crossing="none"
+            (unresolved_decl_ref_expr type="<null>" name="ExternalLinkView" function_ref=unapplied)
+            (argument_list labels="title:url:"
+              (argument label="title"
+                (string_literal_expr type="<null>" encoding=utf8 value="Look up your electorate" builtin_initializer="**NULL**" initializer="**NULL**"))
+              (argument label="url"
+                (unresolved_decl_ref_expr type="<null>" name="url" function_ref=unapplied))))
+          (call_expr type="<null>" isolation_crossing="none"
+            (unresolved_decl_ref_expr type="<null>" name="QuizProgress" function_ref=unapplied)
+            (argument_list labels="label:step:"
+              (argument label="label"
+                (string_literal_expr type="<null>" encoding=utf8 value="Ballot setup progress" builtin_initializer="**NULL**" initializer="**NULL**"))
+              (argument label="step"
+                (string_literal_expr type="<null>" encoding=utf8 value="Step" builtin_initializer="**NULL**" initializer="**NULL**"))))
+          (call_expr type="<null>" isolation_crossing="none"
+            (unresolved_decl_ref_expr type="<null>" name="Image" function_ref=unapplied)
+            (argument_list labels="named:"
+              (argument label="named"
+                (string_literal_expr type="<null>" encoding=utf8 value="A sentence as an image name" builtin_initializer="**NULL**" initializer="**NULL**"))))
+          (call_expr type="<null>" isolation_crossing="none"
+            (unresolved_decl_ref_expr type="<null>" name="Text" function_ref=unapplied)
+            (argument_list
+              (argument
+                (string_literal_expr type="<null>" encoding=utf8 value="A \"raw\" sentence" builtin_initializer="**NULL**" initializer="**NULL**"))))
+          (call_expr type="<null>" isolation_crossing="none"
+            (unresolved_decl_ref_expr type="<null>" name="Text" function_ref=unapplied)
+            (argument_list
+              (argument
+                (string_literal_expr type="<null>" encoding=utf8 value="A multi-line\nsentence" builtin_initializer="**NULL**" initializer="**NULL**"))))
+          (call_expr type="<null>" isolation_crossing="none"
+            (unresolved_decl_ref_expr type="<null>" name="Button" function_ref=unapplied)
+            (argument_list
+              (argument
+                (string_literal_expr type="<null>" encoding=utf8 value="Done" builtin_initializer="**NULL**" initializer="**NULL**"))
+              (argument
+                (closure_expr type="<null>" discriminator=0 single_expression
+                  (parameter_list range=[counted.swift:16:24 - line:16:24])
+                  (brace_stmt range=[counted.swift:16:24 - line:16:60]
+                    (call_expr type="<null>" isolation_crossing="none"
+                      (unresolved_dot_expr type="<null>" field="append" function_ref=unapplied
+                        (unresolved_decl_ref_expr type="<null>" name="rows" function_ref=unapplied))
+                      (argument_list
+                        (argument
+                          (string_literal_expr type="<null>" encoding=utf8 value="Shown to the voter" builtin_initializer="**NULL**" initializer="**NULL**")))))))))
+          (call_expr type="<null>" isolation_crossing="none"
+            (unresolved_decl_ref_expr type="<null>" name="Button" function_ref=unapplied)
+            (argument_list
+              (argument
+                (string_literal_expr type="<null>" encoding=utf8 value="Retry" builtin_initializer="**NULL**" initializer="**NULL**"))
+              (argument
+                (closure_expr type="<null>" discriminator=1 single_expression
+                  (parameter_list range=[counted.swift:17:25 - line:17:25])
+                  (brace_stmt range=[counted.swift:17:25 - line:17:62]
+                    (call_expr type="<null>" isolation_crossing="none"
+                      (unresolved_decl_ref_expr type="<null>" name="NSLog" function_ref=unapplied)
+                      (argument_list
+                        (argument
+                          (string_literal_expr type="<null>" encoding=utf8 value="a diagnostic in a closure" builtin_initializer="**NULL**" initializer="**NULL**")))))))))
+          (call_expr type="<null>" isolation_crossing="none"
+            (unresolved_decl_ref_expr type="<null>" name="NSLog" function_ref=unapplied)
+            (argument_list
+              (argument
+                (interpolated_string_literal_expr type="<null>" literal_capacity=0 interpolation_count=1 builder_init="**NULL**" result_init="**NULL**"
+                  (tap_expr implicit type="<null>" var="counted.(file).Counted.<anonymous>.$interpolation"
+                    (<null expr>)
+                    (brace_stmt implicit range=[counted.swift:18:16 - line:18:47]
+                      (var_decl implicit "$interpolation")
+                      (call_expr implicit type="<null>" isolation_crossing="none"
+                        (unresolved_dot_expr implicit type="<null>" field="appendLiteral(_:)" function_ref=unapplied
+                          (declref_expr implicit type="<null>" decl="counted.(file).Counted.<anonymous>.$interpolation" function_ref=unapplied))
+                        (argument_list implicit
+                          (argument
+                            (string_literal_expr type="<null>" encoding=utf8 value="" builtin_initializer="**NULL**" initializer="**NULL**"))))
+                      (call_expr type="<null>" isolation_crossing="none"
+                        (unresolved_dot_expr implicit type="<null>" field="appendInterpolation" function_ref=unapplied
+                          (declref_expr implicit type="<null>" decl="counted.(file).Counted.<anonymous>.$interpolation" function_ref=unapplied))
+                        (argument_list
+                          (argument
+                            (call_expr type="<null>" isolation_crossing="none"
+                              (closure_expr type="<null>" discriminator=2 single_expression
+                                (parameter_list range=[counted.swift:18:18 - line:18:18])
+                                (brace_stmt range=[counted.swift:18:18 - line:18:43]
+                                  (string_literal_expr type="<null>" encoding=utf8 value="A closure's sentence" builtin_initializer="**NULL**" initializer="**NULL**")))
+                              (argument_list)))))
+                      (call_expr implicit type="<null>" isolation_crossing="none"
+                        (unresolved_dot_expr implicit type="<null>" field="appendLiteral(_:)" function_ref=unapplied
+                          (declref_expr implicit type="<null>" decl="counted.(file).Counted.<anonymous>.$interpolation" function_ref=unapplied))
+                        (argument_list implicit
+                          (argument
+                            (string_literal_expr type="<null>" encoding=utf8 value="" builtin_initializer="**NULL**" initializer="**NULL**")))))))))))))
+    (func_decl range=[counted.swift:20:5 - line:26:5] "announce()"
+      (parameter "self") thrown_type="<null>"
+      (parameter_list range=[counted.swift:20:18 - line:20:19])
+      (brace_stmt range=[counted.swift:20:21 - line:26:5]
+        (call_expr type="<null>" isolation_crossing="none"
+          (unresolved_dot_expr type="<null>" field="post" function_ref=unapplied
+            (unresolved_decl_ref_expr type="<null>" name="UIAccessibility" function_ref=unapplied))
+          (argument_list labels="notification:argument:"
+            (argument label="notification"
+              (unresolved_member_expr type="<null>" name="announcement" function_ref=unapplied))
+            (argument label="argument"
+              (interpolated_string_literal_expr type="<null>" literal_capacity=17 interpolation_count=1 builder_init="**NULL**" result_init="**NULL**"
+                (tap_expr implicit type="<null>" var="counted.(file).Counted.announce().$interpolation"
+                  (<null expr>)
+                  (brace_stmt implicit range=[counted.swift:21:70 - line:21:94]
+                    (var_decl implicit "$interpolation")
+                    (call_expr implicit type="<null>" isolation_crossing="none"
+                      (unresolved_dot_expr implicit type="<null>" field="appendLiteral(_:)" function_ref=unapplied
+                        (declref_expr implicit type="<null>" decl="counted.(file).Counted.announce().$interpolation" function_ref=unapplied))
+                      (argument_list implicit
+                        (argument
+                          (string_literal_expr type="<null>" encoding=utf8 value="Answer updated: " builtin_initializer="**NULL**" initializer="**NULL**"))))
+                    (call_expr type="<null>" isolation_crossing="none"
+                      (unresolved_dot_expr implicit type="<null>" field="appendInterpolation" function_ref=unapplied
+                        (declref_expr implicit type="<null>" decl="counted.(file).Counted.announce().$interpolation" function_ref=unapplied))
+                      (argument_list
+                        (argument
+                          (unresolved_decl_ref_expr type="<null>" name="label" function_ref=unapplied))))
+                    (call_expr implicit type="<null>" isolation_crossing="none"
+                      (unresolved_dot_expr implicit type="<null>" field="appendLiteral(_:)" function_ref=unapplied
+                        (declref_expr implicit type="<null>" decl="counted.(file).Counted.announce().$interpolation" function_ref=unapplied))
+                      (argument_list implicit
+                        (argument
+                          (string_literal_expr type="<null>" encoding=utf8 value="." builtin_initializer="**NULL**" initializer="**NULL**"))))))))))
+        (call_expr type="<null>" isolation_crossing="none"
+          (unresolved_dot_expr type="<null>" field="append" function_ref=unapplied
+            (unresolved_decl_ref_expr type="<null>" name="lines" function_ref=unapplied))
+          (argument_list
+            (argument
+              (string_literal_expr type="<null>" encoding=utf8 value="A visible line" builtin_initializer="**NULL**" initializer="**NULL**"))))
+        (call_expr type="<null>" isolation_crossing="none"
+          (unresolved_dot_expr type="<null>" field="append" function_ref=unapplied
+            (unresolved_decl_ref_expr type="<null>" name="problems" function_ref=unapplied))
+          (argument_list
+            (argument
+              (string_literal_expr type="<null>" encoding=utf8 value="appended outside the model" builtin_initializer="**NULL**" initializer="**NULL**"))))
+        (pattern_binding_decl range=[counted.swift:24:9 - line:24:50]
+          (pattern_named "a")
+          (original_init=call_expr type="<null>" isolation_crossing="none"
+            (unresolved_dot_expr type="<null>" field="value" function_ref=unapplied
+              (unresolved_decl_ref_expr type="<null>" name="defaults" function_ref=unapplied))
+            (argument_list
+              (argument
+                (string_literal_expr type="<null>" encoding=utf8 value="Shown as a value" builtin_initializer="**NULL**" initializer="**NULL**"))))
+          (processed_init=call_expr type="<null>" isolation_crossing="none"
+            (unresolved_dot_expr type="<null>" field="value" function_ref=unapplied
+              (unresolved_decl_ref_expr type="<null>" name="defaults" function_ref=unapplied))
+            (argument_list
+              (argument
+                (string_literal_expr type="<null>" encoding=utf8 value="Shown as a value" builtin_initializer="**NULL**" initializer="**NULL**")))))
+        (var_decl range=[counted.swift:24:13 - line:24:13] "a" let)
+        (call_expr type="<null>" isolation_crossing="none"
+          (unresolved_decl_ref_expr type="<null>" name="Text" function_ref=unapplied)
+          (argument_list labels="verbatim:"
+            (argument label="verbatim"
+              (string_literal_expr type="<null>" encoding=utf8 value="Check your enrolment at https://check.aec.gov.au before election day" builtin_initializer="**NULL**" initializer="**NULL**")))))))
+  (struct_decl range=[counted.swift:29:1 - line:31:1] "Status" inherits="<null>"
+    (pattern_binding_decl range=[counted.swift:30:5 - line:30:92]
+      (pattern_typed
+        (pattern_named "description")
+        (type_unqualified_ident id="String" unbound)))
+    (var_decl range=[counted.swift:30:9 - line:30:9] "description"
+      (accessor_decl range=[counted.swift:30:29 - line:30:92] <anonymous @ 0x63d5f6a6a4c0> get for="description"
+        (parameter "self") thrown_type="<null>"
+        (parameter_list)
+        (brace_stmt range=[counted.swift:30:29 - line:30:92]
+          (string_literal_expr type="<null>" encoding=utf8 value="We couldn\xE2\x80\x99t load this election \xE2\x80\x94 check your connection" builtin_initializer="**NULL**" initializer="**NULL**"))))))

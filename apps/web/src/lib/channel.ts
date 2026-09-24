@@ -207,8 +207,8 @@ type NativeRouterPlugin = {
     handler: () => void,
   ): Promise<{ remove: () => Promise<void> }> | { remove: () => void };
   addListener(
-    event: "nativeClearData",
-    handler: () => void,
+    event: "nativeSlotAction",
+    handler: (data: { slot: string; action: string }) => void,
   ): Promise<{ remove: () => Promise<void> }> | { remove: () => void };
 };
 

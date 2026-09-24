@@ -46,6 +46,10 @@ struct DocumentLayout: Equatable {
         let href: String
         let text: String
         let definition: Run
+        /// The popover's accessible name, and its two controls' labels.
+        let label: String
+        let more: String
+        let close: String
     }
 
     indirect enum Block: Equatable {
@@ -56,7 +60,8 @@ struct DocumentLayout: Equatable {
         case quote([Block])
         case section(role: NativeDocument.BlockRole?, id: String?, content: [Block])
         case electionSwitch(label: String, options: [NativeDocument.SwitchOption])
-        case slot(NativeDocument.Slot, controls: [String])
+        case slot(NativeDocument.Slot, controls: [NativeDocument.Control])
+        case logo(label: String)
 
         static func == (lhs: Block, rhs: Block) -> Bool {
             switch (lhs, rhs) {
@@ -69,6 +74,7 @@ struct DocumentLayout: Equatable {
             case let (.section(a, b, c), .section(d, e, f)): return a == d && b == e && c == f
             case let (.electionSwitch(a, b), .electionSwitch(c, d)): return a == c && b == d
             case let (.slot(a, b), .slot(c, d)): return a == c && b == d
+            case let (.logo(a), .logo(b)): return a == b
             default: return false
             }
         }
@@ -76,6 +82,8 @@ struct DocumentLayout: Equatable {
 
     let title: String
     let crumbs: [NativeDocument.Crumb]?
+    let crumbsLabel: String?
+    let top: NativeDocument.TopBar?
     private(set) var blocks: [Block] = []
     private(set) var links: [Link] = []
     private(set) var terms: [Term] = []
@@ -83,6 +91,8 @@ struct DocumentLayout: Equatable {
     init(_ document: NativeDocument) {
         title = document.title
         crumbs = document.crumbs
+        crumbsLabel = document.crumbsLabel
+        top = document.top
         var laid: [Block] = []
         for block in document.blocks { laid.append(lay(block)) }
         blocks = laid
@@ -108,6 +118,8 @@ struct DocumentLayout: Equatable {
             return .electionSwitch(label: label, options: options)
         case let .slot(slot, controls):
             return .slot(slot, controls: controls)
+        case let .logo(label):
+            return .logo(label: label)
         }
     }
 
@@ -150,9 +162,16 @@ struct DocumentLayout: Equatable {
                 links.append(Link(href: href, external: external, label: label, primary: role == .primary))
                 s.link = links.count - 1
                 append(content, style: s, to: &run)
-            case let .term(href, content, definition):
-                let definitionRun = self.run(definition)
-                terms.append(Term(href: href, text: Self.plain(content), definition: definitionRun))
+            case let .term(href, content, popover):
+                let definitionRun = self.run(popover.definition)
+                terms.append(Term(
+                    href: href,
+                    text: Self.plain(content),
+                    definition: definitionRun,
+                    label: popover.label,
+                    more: popover.more,
+                    close: popover.close
+                ))
                 s.term = terms.count - 1
                 append(content, style: s, to: &run)
             }
@@ -181,7 +200,7 @@ struct DocumentLayout: Equatable {
         for (i, span) in run.spans.enumerated() {
             if !span.decorative { out += span.text }
             if let t = span.term, i == run.spans.count - 1 || run.spans[i + 1].term != t {
-                out += text(of: terms[t].definition)
+                out += text(of: terms[t].definition) + terms[t].more + terms[t].close
             }
         }
         return out
@@ -231,7 +250,9 @@ struct DocumentLayout: Equatable {
             case let .electionSwitch(_, options):
                 return options.map(\.label).joined()
             case let .slot(_, controls):
-                return controls.joined()
+                return controls.map(\.label).joined()
+            case .logo:
+                return ""
             }
         }.joined()
     }

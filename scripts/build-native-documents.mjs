@@ -21,7 +21,10 @@ import { existsSync, mkdirSync, readFileSync, readdirSync, statSync, writeFileSy
 import { dirname, join, relative, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
-export const IR_VERSION = 2;
+export const IR_VERSION = 3;
+
+/** Where the contract between the web build and the native skeleton is recorded. */
+export const CONTRACT = "apps/mobile/ios/native-contract.json";
 
 const VOID = new Set(["br", "hr", "img", "input", "wbr"]);
 const ENTITIES = { amp: "&", lt: "<", gt: ">", quot: '"', apos: "'", nbsp: "\u00a0" };
@@ -38,6 +41,7 @@ export const BLOCK_ROLES = {
   evidence: "evidence",
   services: "inventory",
   none: "empty",
+  kicker: "kicker",
   "clear-data": "clear-data",
 };
 
@@ -54,8 +58,10 @@ export const LIST_ROLES = { rows: "rows", cols: "index" };
 
 /** Subtrees the native screen draws itself, whose text is therefore not part of the document. */
 export const CHROME = [
-  { match: (el) => hasClass(el, "app-top"), reason: "the screen's top bar; native draws its own" },
-  { match: (el) => hasClass(el, "foot") && el.parentClass === "pop", reason: "popover controls" },
+  {
+    match: (el) => hasClass(el, "app-top"),
+    reason: "the screen's top bar, projected separately as `top` or `crumbs`",
+  },
 ];
 
 /**
@@ -68,10 +74,93 @@ export const SLOTS = [
     name: "clear-data",
     match: (el) => hasClass(el, "actions") && el.parentClass === "clear-data",
   },
+  { name: "age-declare", match: (el) => hasClass(el, "cta") && hasClass(el, "declare") },
+  { name: "age-continue", match: (el) => hasClass(el, "cta") && hasClass(el, "explore") },
 ];
 
+/**
+ * What each slot's buttons do, by the action the page names on each (`value`). The native control
+ * acts on the name, never on a button's position, so a page that reorders its buttons cannot swap
+ * what they do — and a slot whose actions are not exactly these fails the build.
+ */
+export const SLOT_ACTIONS = {
+  "clear-data": ["clear"],
+  "age-declare": ["adult", "minor"],
+  "age-continue": ["continue"],
+};
+
+/**
+ * Everything a projected page can contain: the contract between the web build and the native
+ * skeleton. `apps/mobile/ios/native-contract.json` records it; the projection may emit nothing
+ * outside it, and `DocumentLogic` holds the Swift renderer to exactly it — so a web change that
+ * needs a new kind of node fails here, then fails the renderer, until both have learned it.
+ */
+export const VOCABULARY = {
+  version: IR_VERSION,
+  blocks: [
+    "heading",
+    "paragraph",
+    "list",
+    "definitions",
+    "quote",
+    "section",
+    "switch",
+    "slot",
+    "logo",
+  ],
+  inlines: ["text", "break", "strong", "em", "code", "link", "term", "hidden", "aside", "glyph"],
+  blockRoles: [...new Set(Object.values(BLOCK_ROLES))].sort(),
+  inlineRoles: [...new Set(Object.values(INLINE_ROLES))].sort(),
+  listRoles: [...new Set(Object.values(LIST_ROLES))].sort(),
+  slots: SLOTS.map((s) => s.name).sort(),
+  slotActions: Object.fromEntries(
+    Object.entries(SLOT_ACTIONS)
+      .sort(([a], [b]) => a.localeCompare(b))
+      .map(([slot, actions]) => [slot, [...actions].sort()]),
+  ),
+};
+
+/** Fails when a projected page holds anything outside the contract. */
+function assertInVocabulary(doc) {
+  const blocks = new Set(VOCABULARY.blocks);
+  const inlines = new Set(VOCABULARY.inlines);
+  const walkInline = (n) => {
+    if (!inlines.has(n.t)) throw new DocumentError(`inline "${n.t}" is outside the contract`);
+    for (const c of [...(n.c ?? []), ...(n.definition ?? [])]) walkInline(c);
+  };
+  const walkBlock = (b) => {
+    if (!blocks.has(b.t)) throw new DocumentError(`block "${b.t}" is outside the contract`);
+    // A heading or paragraph holds running text; a quote or section holds blocks.
+    const runsText = b.t === "heading" || b.t === "paragraph";
+    for (const i of b.c ?? []) (runsText ? walkInline : walkBlock)(i);
+    for (const item of b.items ?? []) {
+      if (Array.isArray(item)) item.forEach(walkBlock);
+      else {
+        item.term.forEach(walkInline);
+        item.detail.forEach(walkBlock);
+      }
+    }
+  };
+  doc.blocks.forEach(walkBlock);
+}
+
+/**
+ * Presentational wrappers a screen puts around its content — the age gate's `.body > .gate` —
+ * which stand where a document has its `<article>`.
+ */
+const WRAPPERS = new Set(["body", "gate"]);
+
 // Classes that are presentational only: no meaning survives into the projection.
-const PRESENTATIONAL = new Set(["prose", "ui", "what", "actions", "cancel", "start"]);
+const PRESENTATIONAL = new Set([
+  "prose",
+  "ui",
+  "what",
+  "actions",
+  "cancel",
+  "start",
+  "spaced",
+  "links",
+]);
 
 export class DocumentError extends Error {}
 
@@ -198,7 +287,9 @@ export function pageText(main) {
 /** The projection's text, in reading order: what the native renderer lays out. */
 export function documentText(doc) {
   return blocksText(doc.blocks, (n, inl) => {
-    if (n.t === "term") return n.c.map(inl).join("") + n.definition.map(inl).join("");
+    if (n.t === "term") {
+      return n.c.map(inl).join("") + n.definition.map(inl).join("") + n.more + n.close;
+    }
     if (n.t === "glyph") return "";
     return null;
   });
@@ -254,7 +345,9 @@ function blocksText(blocks, special) {
       case "switch":
         return b.options.map((o) => o.label).join("");
       case "slot":
-        return b.controls.join("");
+        return b.controls.map((c) => c.label).join("");
+      case "logo":
+        return "";
       default:
         throw new DocumentError(`unknown block ${b.t}`);
     }
@@ -338,12 +431,15 @@ function toBlock(el) {
     for (const a of Object.keys(el.attrs)) {
       if (a !== "class") throw new DocumentError(`the ${slot} slot carries ${a}`);
     }
-    const controls = slotControls(el);
-    // The native clear-data control draws one button; a second would be page text it drops.
-    if (slot === "clear-data" && controls.length !== 1) {
-      throw new DocumentError(`the ${slot} slot holds ${controls.length} controls`);
-    }
+    const controls = slotControls(el, slot);
     return { t: "slot", name: slot, controls };
+  }
+  // The drawn wordmark: the native app draws the same generated geometry, named as the page names it.
+  if (el.tag === "svg" && hasClass(el, "logo")) {
+    if (el.attrs.role !== "img" || !el.attrs["aria-label"] || textOf(el).trim()) {
+      throw new DocumentError("a logo that is not a labelled image");
+    }
+    return { t: "logo", label: el.attrs["aria-label"] };
   }
   checkAttrs(el);
   const id = el.attrs.id ? { id: el.attrs.id } : {};
@@ -416,17 +512,28 @@ function toBlock(el) {
 }
 
 /** A slot holds buttons and nothing else; their labels are the native control's. */
-function slotControls(el) {
-  return el.children
+function slotControls(el, slot) {
+  const controls = el.children
     .filter((c) => !isBlank(c))
     .map((b) => {
       if (b.tag !== "button") throw new DocumentError(`<${b.tag ?? "text"}> inside a control slot`);
       if (b.children.some((c) => c.tag)) throw new DocumentError("a slot button holds markup");
       for (const a of Object.keys(b.attrs)) {
-        if (a !== "type" && a !== "class") throw new DocumentError(`a slot button carries ${a}`);
+        if (!["type", "class", "value"].includes(a)) {
+          throw new DocumentError(`a slot button carries ${a}`);
+        }
       }
-      return collapse(textOf(b)).trim();
+      return { label: collapse(textOf(b)).trim(), action: b.attrs.value ?? "" };
     });
+  const want = [...(SLOT_ACTIONS[slot] ?? [])].sort().join(",");
+  const got = controls
+    .map((c) => c.action)
+    .sort()
+    .join(",");
+  if (want !== got) {
+    throw new DocumentError(`the ${slot} slot's actions are [${got}], not [${want}]`);
+  }
+  return controls;
 }
 
 /** The election toggle: a labelled group of links, one marked current. */
@@ -576,13 +683,39 @@ function link(children, i) {
   checkClasses(pop, new Set(["pop"]));
   checkAttrs(dfn);
   checkClasses(dfn, new Set(["dfn"]));
+  const foot = pop.children.find((c) => c.tag && hasClass(c, "foot"));
+  const more = foot?.children.find((c) => c.tag === "a" && hasClass(c, "more"));
+  const close = foot?.children.find((c) => c.tag === "button" && hasClass(c, "x"));
+  if (!more || !close) throw new DocumentError(`term "${textOf(a)}" popover has no controls`);
+  checkAttrs(foot);
+  checkAttrs(more);
+  checkAttrs(close);
+  // The native sheet's "full glossary" follows the term, so the page's own link must go there too.
+  if (more.attrs.href !== href) {
+    throw new DocumentError(`term "${textOf(a)}" popover links somewhere other than the term`);
+  }
+  if (!pop.attrs["aria-label"]) throw new DocumentError(`term "${textOf(a)}" popover has no name`);
   for (const c of pop.children) {
-    if (c !== dfn && !isBlank(c) && !isChrome(c)) {
+    if (c !== dfn && c !== foot && !isBlank(c)) {
+      throw new DocumentError(`term "${textOf(a)}" popover carries undeclared content`);
+    }
+  }
+  for (const c of foot.children) {
+    if (c !== more && c !== close && !isBlank(c)) {
       throw new DocumentError(`term "${textOf(a)}" popover carries undeclared content`);
     }
   }
   return [
-    { t: "term", href, c: inlines(a.children), gap, definition: inlines(dfn.children) },
+    {
+      t: "term",
+      href,
+      c: inlines(a.children),
+      gap,
+      definition: inlines(dfn.children),
+      label: pop.attrs["aria-label"],
+      more: collapse(textOf(more)).trim(),
+      close: collapse(textOf(close)).trim(),
+    },
     j - i,
   ];
 }
@@ -704,23 +837,46 @@ export function projectDocument(html, route) {
   if (mains.length !== 1) throw new DocumentError(`${mains.length} <main> elements`);
   const main = parseMain(mains[0]);
   annotate(main);
-  const content = main.children.filter((c) => !isBlank(c) && !isChrome(c));
+  let content = main.children.filter((c) => !isBlank(c) && !isChrome(c));
+  // A screen's wrappers stand where a document has its <article>: descend to the innermost one.
+  const isWrapper = (el) =>
+    el.tag === "div" &&
+    classes(el).length > 0 &&
+    classes(el).every((c) => WRAPPERS.has(c) || PRESENTATIONAL.has(c));
+  while (content.length === 1 && isWrapper(content[0])) {
+    for (const a of Object.keys(content[0].attrs)) {
+      if (a !== "class" && a !== "role") throw new DocumentError(`a wrapper carries ${a}`);
+    }
+    const inner = content[0].children.filter((c) => !isBlank(c));
+    if (inner.length === 1 && isWrapper(inner[0])) content = inner;
+    else content = [{ ...content[0], tag: "article" }];
+    if (content[0].tag === "article") break;
+  }
   if (content.length !== 1 || content[0].tag !== "article") {
     throw new DocumentError("<main> holds something other than the top bar and one <article>");
   }
   const blocks = normalise(flatten(toBlocks(content[0].children)));
   const h1 = blocks.find((b) => b.t === "heading" && b.level === 1);
-  if (!h1) throw new DocumentError("no <h1>");
+  // A page of states is rendered for projection alone and may have no heading or bar of its own.
+  const isStates = route.startsWith("/states/");
+  if (!h1 && !isStates) throw new DocumentError("no <h1>");
   const crumbs = breadcrumbs(main);
+  const hasBar = main.children.some((c) => c.tag && hasClass(c, "app-top"));
+  const top = crumbs || (isStates && !hasBar) ? undefined : topBar(main);
+  const trail = crumbs
+    ? main.children.find((c) => c.tag === "nav" && hasClass(c, "crumbs")).attrs["aria-label"]
+    : undefined;
   const doc = {
     v: IR_VERSION,
     route,
     // The title heads the top bar, so it is the heading as drawn: nothing only VoiceOver hears.
-    title: drawnText({ blocks: [h1] }),
-    ...(crumbs ? { crumbs } : {}),
+    title: h1 ? drawnText({ blocks: [h1] }) : "",
+    ...(crumbs ? { crumbs, crumbsLabel: trail } : {}),
+    ...(top ? { top } : {}),
     blocks,
   };
   assertConserved(main, doc);
+  assertInVocabulary(doc);
   return {
     ...doc,
     digest: createHash("sha256").update(documentText(doc)).digest("hex"),
@@ -736,6 +892,7 @@ export function projectDocument(html, route) {
 function breadcrumbs(main) {
   const nav = main.children.find((c) => c.tag === "nav" && hasClass(c, "crumbs"));
   if (!nav) return undefined;
+  if (!nav.attrs["aria-label"]) throw new DocumentError("an unlabelled breadcrumb");
   const ol = nav.children.filter((c) => !isBlank(c));
   if (ol.length !== 1 || ol[0].tag !== "ol") throw new DocumentError("breadcrumb is not one list");
   const crumbs = ol[0].children
@@ -753,6 +910,26 @@ function breadcrumbs(main) {
     throw new DocumentError("breadcrumb trail does not end at the current page");
   }
   return crumbs;
+}
+
+/**
+ * A screen's plain top bar (`TopBar.svelte`): its label and its back button's accessible name, which
+ * the native top bar shows. A bar carrying a trailing action is not one this renderer draws.
+ */
+function topBar(main) {
+  const bar = main.children.find((c) => c.tag === "div" && hasClass(c, "app-top"));
+  if (!bar) throw new DocumentError("no top bar");
+  const parts = bar.children.filter((c) => !isBlank(c));
+  const back = parts.find((c) => c.tag === "button" && hasClass(c, "back"));
+  const label = parts.find((c) => c.tag === "span" && hasClass(c, "label"));
+  const right = parts.find((c) => c.tag === "span" && hasClass(c, "right"));
+  if (!label || (right && textOf(right).trim()) || (back && !back.attrs["aria-label"])) {
+    throw new DocumentError("a top bar this renderer does not draw");
+  }
+  return {
+    label: collapse(textOf(label)).trim(),
+    ...(back ? { back: back.attrs["aria-label"] } : {}),
+  };
 }
 
 /** Fails when the projection's text differs from the page's, ignoring only whitespace. */
@@ -784,7 +961,16 @@ export function nativeDataSections(router) {
  * @returns {string[]}
  */
 export function nativeDocumentRoutes(router) {
-  return [...listIn(router, "NATIVE_DOCUMENTS"), ...listIn(router, "CURRENT_ELECTION_DOCUMENTS")];
+  return [
+    ...listIn(router, "NATIVE_DOCUMENTS"),
+    ...listIn(router, "CURRENT_ELECTION_DOCUMENTS"),
+    ...listIn(router, "AGE_GATE_DOCUMENTS"),
+  ];
+}
+
+/** The age gate's two states, which are checked with no declaration made. */
+export function ageGateDocuments(router) {
+  return listIn(router, "AGE_GATE_DOCUMENTS");
 }
 
 /** The documents drawn natively only while the current election is selected. */
@@ -823,6 +1009,19 @@ function main() {
   const build = join(root, "apps/web/build");
   const at = process.argv.indexOf("--out");
   const out = at > 0 ? resolve(process.argv[at + 1]) : join(build, "native-documents");
+  if (process.argv.includes("--write-contract")) {
+    writeFileSync(join(root, CONTRACT), JSON.stringify(VOCABULARY, null, 2) + "\n");
+    console.info(`native documents: recorded the contract in ${CONTRACT}`);
+    return;
+  }
+  const recorded = readFileSync(join(root, CONTRACT), "utf8");
+  if (recorded !== JSON.stringify(VOCABULARY, null, 2) + "\n") {
+    console.error(
+      `::error::native documents: the projection's vocabulary differs from ${CONTRACT} — ` +
+        `record it with --write-contract, then teach the Swift renderer what changed`,
+    );
+    process.exit(1);
+  }
   const router = readFileSync(join(root, "apps/web/src/lib/native-router.svelte.ts"), "utf8");
   const routes = nativeDocumentRoutes(router).map((r) => ({
     route: `/${r}`,

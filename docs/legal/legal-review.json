@@ -271,6 +271,13 @@
       "disposition": "no-review-required",
       "reviewer": "cameron-young",
       "affectedControls": ["control-5", "control-24", "control-28"]
+    },
+    {
+      "date": "2026-09-24",
+      "change": "On iOS, the age-first eligibility gate (ADR 0011, as amended by ADR 0012) is drawn natively from the web's prerendered pages in both of its states (ADR 0019 D4b). The gate's markup and wording move unchanged from apps/web/src/routes/start/+page.svelte into apps/web/src/lib/components/AgeGate.svelte, which /start renders; the explore-only explainer is rendered from the same component at build time into states/start.html, a file that exists only in the iOS build, is never served or precached on the web, and is kept out of the app's universal links. Each answer names its action on the page (adult, minor, continue), the build fails unless the gate's buttons carry exactly those, and the native buttons carry the page's labels and ask the web to perform the named action through the same functions the page calls, so reordering the buttons cannot swap what they do; the web's handling is unchanged: an 18+ answer persists the single eligibility bit, an under-18 answer is held in memory only and clears local quiz and saved-card state, and the answer is never uploaded. The web age-gate e2e suite passes unchanged. The glossary popover's controls and each page's top-bar labels are now taken from the page rather than written natively, and scripts/check-native-content.mjs fails any new hand-written copy on a native screen. No wording is changed, and no legal position, obligation, permitted use, or collection, use, disclosure, retention or overseas-processing practice is altered; no consent or Terms version is affected; no legal review was sought or is required.",
+      "disposition": "no-review-required",
+      "reviewer": "cameron-young",
+      "affectedControls": ["control-5", "control-9", "control-24", "control-28"]
     }
   ],
   "nextMandatoryReviewDate": "2027-07-15",

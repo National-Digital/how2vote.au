@@ -572,6 +572,14 @@
           "owner": "eng-web",
           "status": "passing",
           "enforcedBy": "scripts/check-age-gate.test.mjs"
+        },
+        {
+          "id": "native-age-gate",
+          "type": "ci-job",
+          "owner": "eng-web",
+          "status": "passing",
+          "enforcedBy": "apps/mobile/ios/App/AppUITests/DocumentConservationTests.swift",
+          "note": "ADR 0019 D4b. On iOS the gate is drawn natively from the web's prerendered /start page and a build-time states file holding its explore-only explainer. The simulator test opens it from the landing as a first-time visitor, holds both states' on-screen text to the page, and answers under-18 with the button the page names as the minor answer; the web performs the declaration through the same functions its page calls, and the projection fails unless each answer names its action, so the storage rules asserted by age-gate.spec.ts are the ones applied."
         }
       ],
       "evidence": [

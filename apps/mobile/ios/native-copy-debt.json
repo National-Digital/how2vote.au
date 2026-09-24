@@ -1,0 +1,158 @@
+{
+  "apps/mobile/ios/App/App/Design/Wordmark.swift": [
+    "How2Vote"
+  ],
+  "apps/mobile/ios/App/App/Engine/JSCEngine.swift": [
+    "unknown JavaScript exception",
+    "unknown JavaScript exception"
+  ],
+  "apps/mobile/ios/App/App/Model/AnswerScale.swift": [
+    "Agree",
+    "Agree",
+    "Disagree",
+    "Disagree",
+    "Equal merits",
+    "Equal merits",
+    "Skip — no position on this issue",
+    "Skipped",
+    "Strongly agree",
+    "Strongly agree",
+    "Strongly disagree",
+    "Strongly disagree",
+    "both sides have a point",
+    "★ {}"
+  ],
+  "apps/mobile/ios/App/App/Model/Jurisdictions.swift": [
+    "ACT",
+    "Australian Capital Territory",
+    "NSW",
+    "NT",
+    "New South Wales",
+    "Northern Territory",
+    "QLD",
+    "Queensland",
+    "SA",
+    "South Australia",
+    "TAS",
+    "Tasmania",
+    "VIC",
+    "Victoria",
+    "WA",
+    "Western Australia"
+  ],
+  "apps/mobile/ios/App/App/Shell/MainViewController.swift": [
+    "(function () {\n  var pass = console.info.bind(console);\n  console.info = function () {\n    try {\n      var text = Array.prototype.map.call(arguments, String).join(\" \");\n      if (text.indexOf(\"How2Vote:\") === 0) {\n        window.webkit.messageHandlers.how2voteMarker.postMessage(text);\n      }\n    } catch (e) {\n      /* never let a diagnostic break the page */\n    }\n    return pass.apply(console, arguments);\n  };\n})();"
+  ],
+  "apps/mobile/ios/App/App/Views/BallotView.swift": [
+    "Ballot setup progress",
+    "Choose a different electorate",
+    "Couldn't load the electorate list. Please check your connection and try again.",
+    "Couldn't record your ballot. Please try again.",
+    "Federal electorate in {}",
+    "Go back",
+    "Look up your electorate on the AEC website",
+    "No electorate matches “{}”.",
+    "Not sure?",
+    "Search electorates",
+    "Search {} {} electorates…",
+    "Step",
+    "This is my electorate — start",
+    "Try again",
+    "Where will you vote?",
+    "Your ballot · {} of 3",
+    "Your federal electorate",
+    "— your progress is kept."
+  ],
+  "apps/mobile/ios/App/App/Views/BallotViewModel.swift": [
+    "AU",
+    "Australia"
+  ],
+  "apps/mobile/ios/App/App/Views/DocumentView.swift": [
+    "•"
+  ],
+  "apps/mobile/ios/App/App/Views/ElectorateMapView.swift": [
+    "Map of {} with the {} electorate marked"
+  ],
+  "apps/mobile/ios/App/App/Views/ExternalLinkView.swift": [
+    "↗"
+  ],
+  "apps/mobile/ios/App/App/Views/LandingView.swift": [
+    "Choose an election",
+    "Continue — question {} of {}",
+    "Federal election",
+    "How do your views compare?",
+    "How the matching works",
+    "See how my views compare",
+    "See my comparison",
+    "Start again",
+    "Switch to dark theme",
+    "Switch to light theme",
+    "✓"
+  ],
+  "apps/mobile/ios/App/App/Views/LandingViewModel.swift": [
+    "1 · Answer",
+    "1 · Ballot",
+    "2 · Answer",
+    "2 · Compare",
+    "3 · Compare",
+    "Find your electorate",
+    "Review the record",
+    "See how you compare",
+    "See how you compare",
+    "{} questions, ~5 min",
+    "{} questions, ~5 min"
+  ],
+  "apps/mobile/ios/App/App/Views/QuizChrome.swift": [
+    "Loading",
+    "Question",
+    "Quiz progress",
+    "Your answer",
+    "{} {} of {}"
+  ],
+  "apps/mobile/ios/App/App/Views/QuizView.swift": [
+    "Answer updated: {}. Returning to your answers.",
+    "Answered: {}. Question {} of {}.",
+    "Back to your answers",
+    "How would you vote on this?",
+    "Loading question…",
+    "Parliament voted on this",
+    "Pause",
+    "Previous question",
+    "Previous question",
+    "See the parliamentary votes behind this",
+    "Skipped",
+    "Try again"
+  ],
+  "apps/mobile/ios/App/App/Views/QuizViewModel.swift": [
+    "Couldn't load this election's questions.",
+    "Question {} of {}",
+    "Quiz",
+    "There are no questions to show for this election."
+  ],
+  "apps/mobile/ios/App/App/Views/ReviewView.swift": [
+    "100%",
+    "Back to the questions",
+    "Changes this answer",
+    "Loading your answers…",
+    "Mark \"{}\" as extremely important",
+    "Off",
+    "On",
+    "Quiz complete",
+    "Review your answers",
+    "See how I compare",
+    "Try again",
+    "{} Please check your connection and try again.",
+    "★"
+  ],
+  "apps/mobile/ios/App/App/Views/ReviewViewModel.swift": [
+    "All {} answered.",
+    "Couldn't load your answers.",
+    "Not answered",
+    "There are no questions to show for this election.",
+    "{} of {} answered."
+  ],
+  "apps/mobile/ios/App/App/Views/SiteChromeViews.swift": [
+    "Dismiss",
+    "Update"
+  ]
+}
