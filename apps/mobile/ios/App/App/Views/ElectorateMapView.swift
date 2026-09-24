@@ -57,12 +57,24 @@ struct ElectorateMapView: View {
                 // Caps the height so the confirm button stays above the fold on tall states.
                 .frame(maxHeight: 320)
                 .accessibilityElement()
-                .accessibilityLabel("Map of \(map.state) with the \(electorate) electorate marked")
+                .accessibilityLabel(
+                    "Map of \(Jurisdictions.name(for: map.state)) with the \(electorate) electorate marked"
+                )
+
+                Text(map.attribution)
+                    .font(.caption2.weight(.semibold))
+                    .foregroundStyle(Theme.ink2.resolve(scheme))
+                    .fixedSize(horizontal: false, vertical: true)
 
                 Text(licence)
                     .font(.caption2)
                     .foregroundStyle(Theme.ink2.resolve(scheme))
                     .fixedSize(horizontal: false, vertical: true)
+
+                if let url = URL(string: LegalCopy.mapLicenceURL) {
+                    ExternalLinkView(title: LegalCopy.mapLicenceName, url: url)
+                        .font(.caption2)
+                }
             }
         }
     }

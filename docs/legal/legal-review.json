@@ -250,6 +250,13 @@
       "disposition": "no-review-required",
       "reviewer": "cameron-young",
       "affectedControls": ["control-5", "control-12", "control-24", "control-28"]
+    },
+    {
+      "date": "2026-09-23",
+      "change": "The native iOS screens now carry the chrome the web layout draws on every screen, which the native core had been covering (ADR 0018 D6): all four screens (landing, quiz, ballot and review) show the footer with its s321D electoral authorisation, the copyright and data-licence credit and the footer links, and the stale-data notice, which is announced to VoiceOver. The web's floating feedback button is a Feedback link to the contact page in the native footer. The wording is not authored in Swift: it is handed over with each route from apps/web/src/lib/site-chrome.ts, the same module Footer.svelte now renders from, and the shell declines a route that arrives without the authorisation, so the WebView renders it with its own footer. Three registered notices are added to docs/legal/native-copy.json, each verbatim from its existing web source: the ballot screen's on-device privacy claim, and the AEC licence name and URL beside the map notice. An under-18 explorer's progress is kept in memory for the session and never persisted, as on the web (ADR 0012). scripts/check-native-chrome.mjs fails the build if layout chrome, a native screen, or a map notice paragraph lacks its native counterpart. All other wording is what the web already shows, and no legal position, obligation, permitted use, or collection, use, disclosure, retention or overseas-processing practice is altered; no consent or Terms version is affected; no legal review was sought or is required.",
+      "disposition": "no-review-required",
+      "reviewer": "cameron-young",
+      "affectedControls": ["control-5", "control-15", "control-24", "control-28"]
     }
   ],
   "nextMandatoryReviewDate": "2027-07-15",

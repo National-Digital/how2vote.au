@@ -1,71 +1,38 @@
 <script lang="ts">
   import ExternalLink from "$lib/components/ExternalLink.svelte";
-  import { CURRENT_ELECTION_ID } from "@how2vote/data-schema";
   import StoreBadges from "$lib/components/StoreBadges.svelte";
-  import { AUTHORISATION, DATA_SOURCE, LICENCES, ORG } from "$lib/org";
   import { consent } from "$lib/privacy/consent.svelte";
   import { hasConfigurableConsent } from "$lib/privacy/registry";
   import { saved } from "$lib/saved.svelte";
+  import { AUTHORISATION, footerCredit, footerLinks } from "$lib/site-chrome";
 
-  // Hubs for the current election's data-derived pages — the crawl entry points for the long-tail
-  // electorate / issue / party pages. Present on every screen so the whole tree is reachable and
-  // internally linked from anywhere on the site.
-  const e = CURRENT_ELECTION_ID;
-
-  // One-line footer credit on every screen and print: two parallel copyright notices — the
-  // application (National Digital, AGPL-3.0) and the vote data (They Vote For You, the minimum ODbL
-  // attribution TVFY requires). Both name a holder and link their licence (a licence obligation, not
-  // decoration). The data vintage lives on the card itself (where print integrity needs it).
-
-  // The application credit runs from the project's first commit (2019) to the build year, injected
-  // at build time (__BUILD_YEAR__, see vite.config.ts) so it reflects when the site was last built
-  // — its last change — and never drifts to the visitor's clock. A component-side
-  // `new Date().getFullYear()` would re-run in the browser at render time and always read the
-  // current year. The vote data predates the site, so it carries no range.
-  const currentYear = __BUILD_YEAR__;
+  // The links, credit and authorisation are shared with the iOS native core (site-chrome.ts), so the
+  // two renderings cannot drift. The credit runs to the build year (__BUILD_YEAR__, vite.config.ts),
+  // never the visitor's clock.
+  const links = $derived(footerLinks(saved.hydrated ? saved.count : 0));
+  const credit = footerCredit(__BUILD_YEAR__);
 </script>
 
 <footer class="ui">
   <!-- Navigation first, then the electoral authorisation and copyright fine print below it. -->
   <p class="links">
-    <!-- Grouped by adjacency: understand → browse the data → the org → legal/governance last. -->
-    <a href="/methodology">How it works</a>
-    <a href="/glossary">Glossary</a>
-    <a href="/{e}/issues">Where parties stand</a>
-    <a href="/{e}/parties">Party records</a>
-    <a href="/{e}/electorates">Candidates</a>
-    <a href="/insights">Insights</a>
-    <a href="/research">Research methods</a>
-    <a href="/corrections">Corrections</a>
-    <a href="/about">About</a>
-    <a href="/contact">Contact</a>
-    <a href="/accessibility">Accessibility</a>
-    <a href="/privacy">Privacy policy</a>
-    <!-- Withdrawing consent is as easy as giving it: reopen settings any time. Sits with the privacy
-         policy it belongs to. Shown only when something is actually consent-gated
-         (hasConfigurableConsent) — today nothing is, so the trigger is hidden alongside the banner.
-         The always-available /privacy page documents the posture regardless. -->
-    {#if hasConfigurableConsent}
-      <button type="button" class="cookie-settings" onclick={() => consent.openSettings()}>
-        Privacy settings
-      </button>
-    {/if}
-    <a href="/terms">Terms of use</a>
-    <!-- A personal, device-local shortcut — shown only once the visitor has saved a card. -->
-    {#if saved.hydrated && saved.count > 0}
-      <a href="/saved">Saved cards</a>
-    {/if}
+    {#each links as link (link.href)}
+      <a href={link.href}>{link.label}</a>
+      <!-- Withdrawing consent is as easy as giving it, so the settings sit with the privacy policy.
+           Shown only when something is actually consent-gated (hasConfigurableConsent). -->
+      {#if link.href === "/privacy" && hasConfigurableConsent}
+        <button type="button" class="cookie-settings" onclick={() => consent.openSettings()}>
+          Privacy settings
+        </button>
+      {/if}
+    {/each}
   </p>
   <!-- Store badges (web channel only, hidden until the listings are live — see store-links.ts). -->
   <StoreBadges />
   <p class="credit">
-    ©
-    <ExternalLink href={ORG.website}>{ORG.tradingName}</ExternalLink>
-    2019–{currentYear} (<ExternalLink href={LICENCES.app.url}>{LICENCES.app.shortName}</ExternalLink
-    >) · Vote data ©
-    <ExternalLink href={DATA_SOURCE.url}>{DATA_SOURCE.name}</ExternalLink>
-    ({DATA_SOURCE.publisher}),
-    <ExternalLink href={LICENCES.data.url}>{LICENCES.data.shortName}</ExternalLink>
+    {#each credit as part, i (i)}{#if part.href}<ExternalLink href={part.href}
+          >{part.text}</ExternalLink
+        >{:else}{part.text}{/if}{/each}
   </p>
   <!-- Electoral authorisation for the site and the comparison content National Digital publishes
        (Commonwealth Electoral Act 1918 s 321D). Town + state only, no street address. Shown on every

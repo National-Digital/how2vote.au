@@ -62,8 +62,8 @@ final class QuizViewModel: ObservableObject {
             isEditing: isEditing,
             provenanceStatement: ManifestLoader.load(electionID: electionID)?.provenance?.statement,
             loadQuestions: { try QuestionLoader.load(electionID: electionID, engine: engine) },
-            persist: { try QuizState.save($0, electionID: electionID) },
-            restore: { QuizState.load(electionID: electionID) }
+            persist: { try QuizState.record($0, electionID: electionID) },
+            restore: { QuizState.current(electionID: electionID) }
         )
     }
 

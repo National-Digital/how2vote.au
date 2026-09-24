@@ -1,4 +1,5 @@
 import SwiftUI
+import UIKit
 
 /// The questionnaire, natively.
 ///
@@ -30,6 +31,7 @@ struct QuizView: View {
 
     var body: some View {
         VStack(spacing: 0) {
+            StaleNotice()
             TopBar(
                 label: model.positionLabel,
                 backLabel: model.isEditing ? "Back to your answers" : "Previous question",
@@ -38,11 +40,29 @@ struct QuizView: View {
             )
             QuizProgress(value: model.cursor + 1, total: model.total)
 
-            content
-                .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
+            // Scrolls only where the screen is too short for it — a small phone, large Dynamic Type,
+            // or a stale-data notice above — so no answer is ever out of reach.
+            ScrollView {
+                VStack(spacing: 0) {
+                    content
+                        .frame(maxWidth: .infinity, alignment: .top)
+                        .padding(.top, 12)
+                        .padding(.bottom, 16)
+                    // The whole footer, as on the web's quiz: the authorisation, and the data
+                    // licence credit the questions are built on.
+                    SiteFooter()
+                        .padding(.top, 24)
+                }
                 .padding(.horizontal, Theme.gutter)
-                .padding(.top, 12)
-                .padding(.bottom, 16)
+            }
+            .scrollBounceBehavior(.basedOnSize)
+        }
+        // The web's ← shortcut. Invisible rather than hidden, which would drop the shortcut too.
+        .background {
+            Button("Previous question", action: back)
+                .keyboardShortcut(.leftArrow, modifiers: [])
+                .opacity(0)
+                .accessibilityHidden(true)
         }
         .background(Theme.paper.resolve(scheme))
         .task { await model.load() }
@@ -85,6 +105,7 @@ struct QuizView: View {
                     .font(.title3.weight(.semibold))
                     .foregroundStyle(Theme.ink.resolve(scheme))
                     .fixedSize(horizontal: false, vertical: true)
+                    .accessibilityAddTraits(.isHeader)
                 ExternalLinkView(
                     title: "See the parliamentary votes behind this",
                     url: model.sourceURL(for: question)
@@ -109,9 +130,19 @@ struct QuizView: View {
     private func commit(_ points: Int) {
         guard !model.isAdvancing else { return }
         model.record(points)
+        announce(points)
         // A beat so the selection is visible before the screen changes — skipped under Reduce Motion,
         // where an unrequested delay reads as the app hanging.
         model.advance(after: reduceMotion ? 0 : Theme.confirmDuration, onExit: onExit)
+    }
+
+    /// Tells a VoiceOver user what was recorded and where they are going, as the web's live region does.
+    private func announce(_ points: Int) {
+        let label = points == 0 ? "Skipped" : AnswerScale.label(points: points).lowercased()
+        let message = model.isEditing
+            ? "Answer updated: \(label). Returning to your answers."
+            : "Answered: \(label). Question \(min(model.cursor + 2, model.total)) of \(model.total)."
+        UIAccessibility.post(notification: .announcement, argument: message)
     }
 
     private func back() {

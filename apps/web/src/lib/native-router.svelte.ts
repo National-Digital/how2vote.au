@@ -17,12 +17,17 @@ import { routePath } from "$lib/native-route-path";
 import { afterNavigate } from "$app/navigation";
 import { onDestroy, onMount } from "svelte";
 import { ageGate } from "$lib/age.svelte";
-import { nativeRouterPlugin } from "$lib/channel";
-import { ELECTION_IDS } from "@how2vote/data-schema";
+import { nativeRouterPlugin, storeListingUrl } from "$lib/channel";
+import { CURRENT_ELECTION_ID, ELECTIONS, ELECTION_IDS } from "@how2vote/data-schema";
 import { STATES } from "$lib/data";
 import { isMapAvailable } from "$lib/governance";
 import { backupToNative, restoreFromNative } from "$lib/native-storage";
-import { quiz } from "$lib/quiz.svelte";
+import { now } from "$lib/now.svelte";
+import { quiz, type Persisted } from "$lib/quiz.svelte";
+import { saved } from "$lib/saved.svelte";
+import { AUTHORISATION, FEEDBACK_LINK, footerCredit, footerLinks } from "$lib/site-chrome";
+import { staleDismissal, staleMessage } from "$lib/stale-notice.svelte";
+import { assessStaleness } from "$lib/staleness";
 import { theme } from "$lib/theme.svelte";
 
 /**
@@ -53,6 +58,12 @@ function routeName(path: string): string {
   return path.replace(/^\//, "");
 }
 
+/** The election a landing path names, read from the path rather than the store it updates. */
+function landingElection(path: string): string | undefined {
+  if (path === "/") return CURRENT_ELECTION_ID;
+  return ELECTION_IDS.find((id) => path === `/${id}`);
+}
+
 /**
  * The boundary maps the emergency levers currently allow, as `<election>/<STATE>` ids.
  *
@@ -64,6 +75,37 @@ function routeName(path: string): string {
  */
 function allowedMapIds(electionId: string): string[] {
   return STATES.map((s) => `${electionId}/${s.code}`).filter(isMapAvailable);
+}
+
+/**
+ * The layout chrome a native screen covers and must render itself: the footer's links, credit and
+ * authorisation, and the stale-data notice when it applies. The shell declines a route without it.
+ */
+function siteChrome(): string {
+  now.start();
+  const verdict = assessStaleness(ELECTIONS, now.current);
+  const stale =
+    verdict.level !== "none" && verdict.dataVersion !== staleDismissal.version
+      ? {
+          message: staleMessage(verdict),
+          dataVersion: verdict.dataVersion,
+          prominent: verdict.level === "prominent",
+          updateUrl: storeListingUrl(),
+        }
+      : null;
+  return JSON.stringify({
+    authorisation: AUTHORISATION,
+    credit: footerCredit(__BUILD_YEAR__),
+    links: [FEEDBACK_LINK, ...footerLinks(saved.hydrated ? saved.count : 0)],
+    stale,
+  });
+}
+
+/** An under-18 explorer's in-memory quiz, which is never persisted, or undefined for anyone else. */
+function explorerSession(electionId: string): string | undefined {
+  if (ageGate.confirmed) return undefined;
+  const record = quiz.snapshot(electionId);
+  return record ? JSON.stringify(record) : undefined;
 }
 
 /** Who is rendering the current route. */
@@ -134,6 +176,7 @@ class NativeRoute {
     if (this.#pending === path) return;
     this.#pending = path;
     this.#renderer = "deciding";
+    const id = landingElection(path) ?? electionId;
 
     try {
       // The durable copy is the only thing the native core can read: it holds no localStorage.
@@ -142,7 +185,7 @@ class NativeRoute {
       await backupToNative();
       const { presented } = await router.present({
         route: routeName(path),
-        electionId,
+        electionId: id,
         // From the navigation's own URL, not `location`: a queued sync would otherwise read
         // whatever the address bar happens to hold when it finally runs.
         editing: url.searchParams.has("edit"),
@@ -154,7 +197,10 @@ class NativeRoute {
         // May enter the quiz: an adult, or an under-18 exploring this session. Distinct from
         // `eligible`, which is the declaration that gates persistence and a printable plan.
         canExplore: ageGate.canExplore,
-        allowedMapIds: allowedMapIds(electionId),
+        allowedMapIds: allowedMapIds(id),
+        chrome: siteChrome(),
+        // An explorer's quiz lives only in memory (ADR 0012), so the native core is handed it.
+        session: explorerSession(id),
       });
       // A later navigation may have overtaken this call; its answer, not this one, is current.
       if (this.#pending !== path) return;
@@ -267,11 +313,27 @@ function attach(navigate: (path: string) => void): void {
   if (!router) return;
   attached = true;
 
-  const exit = router.addListener("nativeRouteExit", ({ route }) => {
+  const exit = router.addListener("nativeRouteExit", ({ route, session, electionId }) => {
+    if (session && electionId) {
+      try {
+        if (quiz.adopt(electionId, JSON.parse(session) as Persisted)) {
+          navigate(route);
+          return;
+        }
+      } catch {
+        // An unreadable record falls through to the durable copy rather than stranding the voter.
+      }
+      // As does one for an election this side has not loaded.
+    }
     void restoreFromNative().then(() => {
       quiz.rehydrate();
       navigate(route);
     });
+  });
+
+  const staleDismiss = router.addListener("nativeStaleDismiss", ({ dataVersion }) => {
+    staleDismissal.remember(dataVersion);
+    void backupToNative();
   });
 
   // A native screen asks; this side writes. The theme preference is the WebView's key (ADR 0018 D3),
@@ -289,5 +351,6 @@ function attach(navigate: (path: string) => void): void {
   teardowns.push(() => {
     void Promise.resolve(exit).then((r) => r.remove());
     void Promise.resolve(themeChange).then((r) => r.remove());
+    void Promise.resolve(staleDismiss).then((r) => r.remove());
   });
 }

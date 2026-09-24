@@ -24,6 +24,8 @@ final class LandingViewModel: ObservableObject {
 
     @Published private(set) var elections: [Election] = []
     @Published private(set) var progress: Progress = .fresh
+    /// True once loading has failed to identify this election.
+    @Published private(set) var electionUnknown = false
 
     let electionID: String
 
@@ -56,7 +58,7 @@ final class LandingViewModel: ObservableObject {
                 let payload = try engine.elections()
                 return try JSONDecoder().decode([Election].self, from: Data(payload.utf8))
             },
-            restore: { QuizState.load(electionID: electionID) }
+            restore: { QuizState.current(electionID: electionID) }
         )
     }
 
@@ -90,22 +92,23 @@ final class LandingViewModel: ObservableObject {
         return LegalCopy.landingLedeElection(String(questionCount), String(election.year))
     }
 
-    /// The caveat this election needs, or nil where it needs none.
+    /// The caveat this election needs, or nil where it needs none. An election the engine could not
+    /// classify is shown with the upcoming lede, so it carries the provisional caveat with it.
     var caveat: String? {
-        if isUpcoming { return LegalCopy.landingProvisional }
+        if electionUnknown || isUpcoming { return LegalCopy.landingProvisional }
         if isArchived { return LegalCopy.landingArchived }
         return nil
     }
 
     /// The step rail, which loses its ballot step where there is no ballot to pick.
     var steps: [(name: String, detail: String)] {
-        let compare = isArchived ? "Review the record" : "See how you compare"
         if isElectorateLess {
             return [
                 ("1 · Answer", "\(questionCount) questions, ~5 min"),
-                ("2 · Compare", compare),
+                ("2 · Compare", "See how you compare"),
             ]
         }
+        let compare = isArchived ? "Review the record" : "See how you compare"
         return [
             ("1 · Ballot", "Find your electorate"),
             ("2 · Answer", "\(questionCount) questions, ~5 min"),
@@ -115,6 +118,7 @@ final class LandingViewModel: ObservableObject {
 
     func load() async {
         elections = (try? loadElections()) ?? []
+        electionUnknown = election == nil
         progress = readProgress()
     }
 

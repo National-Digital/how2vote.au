@@ -44,6 +44,12 @@ enum LegalCopy {
     /// One paragraph of the AEC Spatial Data Download derivative-product notice, which the licence requires to be DISPLAYED wherever the boundary data is shown — a bare attribution credit does not satisfy it. Registered against the source record itself, not a component, because that record is where the accepted wording lives and where the web reads it from too (apps/web/src/lib/mapLicence.ts re-exports it).
     static let mapLicencePersonalUse = "You may use how2vote.au to load, display, print and reproduce views obtained from the Data, retaining this notice, for your personal use, or use within your organisation only."
 
+    /// The licence the derivative-product notice is prescribed by, named and linked beside the notice as the web map does.
+    static let mapLicenceName = "AEC Spatial Data Download Data Licence"
+
+    /// The AEC licence page the notice links to.
+    static let mapLicenceURL = "https://www.aec.gov.au/Electorates/gis/"
+
     /// What the tool does, on the first screen. The placeholder is the question count. Registered because it states what the comparison IS — the parties' recorded votes, not an opinion of them.
     static func landingLedeUpcoming(_ v1: String) -> String {
         "Answer " + String(v1) + " real questions the current Parliament has voted on and see how your views compare with the parties' recorded votes."
@@ -68,4 +74,7 @@ enum LegalCopy {
 
     /// A privacy claim: no account, on-device, analytics off unless chosen. Registered so the native surface cannot state a weaker or stronger version of it than the web.
     static let landingTrustNoAccount = "No account, works offline, analytics off by default"
+
+    /// A privacy claim on the state picker: nothing leaves the device unless the voter shares their card.
+    static let ballotAnswersStayOnDevice = "Your answers stay on this device until you choose to share your card."
 }

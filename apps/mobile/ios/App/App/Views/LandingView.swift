@@ -32,19 +32,24 @@ struct LandingView: View {
     }
 
     var body: some View {
-        ScrollView {
-            VStack(alignment: .leading, spacing: 0) {
-                header
-                electionPicker
-                headline
-                lede
-                trust
-                steps
-                callsToAction
+        VStack(spacing: 0) {
+            StaleNotice()
+            ScrollView {
+                VStack(alignment: .leading, spacing: 0) {
+                    header
+                    electionPicker
+                    headline
+                    lede
+                    trust
+                    steps
+                    callsToAction
+                    SiteFooter()
+                        .padding(.top, 32)
+                }
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .padding(.horizontal, Theme.gutter)
+                .padding(.bottom, 24)
             }
-            .frame(maxWidth: .infinity, alignment: .leading)
-            .padding(.horizontal, Theme.gutter)
-            .padding(.bottom, 24)
         }
         .background(Theme.paper.resolve(scheme))
         .task { await model.load() }
@@ -103,6 +108,8 @@ struct LandingView: View {
                     .strokeBorder(Theme.line2.resolve(scheme), lineWidth: 1)
             )
             .clipShape(RoundedRectangle(cornerRadius: Theme.radius))
+            .accessibilityElement(children: .contain)
+            .accessibilityLabel("Choose an election")
         }
         .padding(.top, 12)
     }
@@ -113,6 +120,7 @@ struct LandingView: View {
             .foregroundStyle(Theme.ink.resolve(scheme))
             .fixedSize(horizontal: false, vertical: true)
             .padding(.top, 16)
+            .accessibilityAddTraits(.isHeader)
     }
 
     private var lede: some View {

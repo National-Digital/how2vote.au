@@ -204,7 +204,7 @@ export function verifyThemeContract(web, native) {
  * to persist quiz state without the 18+ declaration, and a native path that skipped that check would
  * be a bypass of the gate, not a second implementation of it.
  *
- * @param {string} web  quiz.svelte.ts
+ * @param {string} web  quiz.svelte.ts and quiz-record.ts, which holds the record's type
  * @param {string} native  QuizState.swift
  * @returns {string[]} problems
  */
@@ -300,7 +300,7 @@ function main() {
 
   errors.push(
     ...verifyQuizContract(
-      read("apps/web/src/lib/quiz.svelte.ts"),
+      read("apps/web/src/lib/quiz.svelte.ts") + "\n" + read("apps/web/src/lib/quiz-record.ts"),
       read("apps/mobile/ios/App/App/State/QuizState.swift"),
     ),
   );

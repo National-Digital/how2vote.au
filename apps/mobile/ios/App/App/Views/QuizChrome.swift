@@ -59,6 +59,12 @@ struct QuizProgress: View {
 
     let value: Int
     let total: Int
+    /// What the bar measures, as the web's progress label names it.
+    var label = "Quiz progress"
+    /// What each step is called in the spoken value.
+    var step = "Question"
+    /// Replaces the spoken value where counting steps would say nothing useful.
+    var spokenValue: String?
 
     private var fraction: Double {
         total > 0 ? min(1, max(0, Double(value) / Double(total))) : 0
@@ -75,8 +81,8 @@ struct QuizProgress: View {
         }
         .frame(height: 3)
         .accessibilityElement()
-        .accessibilityLabel("Quiz progress")
-        .accessibilityValue(total > 0 ? "Question \(value) of \(total)" : "Loading")
+        .accessibilityLabel(label)
+        .accessibilityValue(spokenValue ?? (total > 0 ? "\(step) \(value) of \(total)" : "Loading"))
     }
 }
 
@@ -103,6 +109,13 @@ struct AnswerOptions: View {
                 }
             }
         }
+        .accessibilityElement(children: .contain)
+        .accessibilityLabel("Your answer")
+    }
+
+    /// The web's number keys: the points themselves, and 0 to skip.
+    private func shortcut(_ option: AnswerOption) -> KeyEquivalent {
+        KeyEquivalent(Character(String(option.points)))
     }
 
     private func isOn(_ option: AnswerOption) -> Bool {
@@ -151,6 +164,7 @@ struct AnswerOptions: View {
         // `isSelected` is what VoiceOver and Voice Control both read and act on.
         .accessibilityAddTraits(isOn(option) ? [.isButton, .isSelected] : [.isButton])
         .accessibilityLabel(spoken(option))
+        .keyboardShortcut(shortcut(option), modifiers: [])
         .animation(.easeOut(duration: Theme.confirmDuration), value: current)
     }
 
@@ -169,6 +183,7 @@ struct AnswerOptions: View {
         .buttonStyle(.plain)
         .contentShape(Rectangle())
         .accessibilityAddTraits(isOn(option) ? [.isButton, .isSelected] : [.isButton])
+        .keyboardShortcut(shortcut(option), modifiers: [])
     }
 
     /// The label and its secondary text as one phrase, so a screen reader hears the whole option.

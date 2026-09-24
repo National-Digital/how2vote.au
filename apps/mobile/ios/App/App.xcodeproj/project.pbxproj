@@ -44,6 +44,8 @@
 		4067B29193E978EFB785DEDA /* Wordmark.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27EAD8344E17B0468848DC1A /* Wordmark.swift */; };
 		731C460866AA08E66FDAA8F0 /* BrandMark.swift in Sources */ = {isa = PBXBuildFile; fileRef = 45DEDD2F8ABFD31C51C1E453 /* BrandMark.swift */; };
 		4A29BAFE080F5D70AC855684 /* SVGPath.swift in Sources */ = {isa = PBXBuildFile; fileRef = C8FE2AA385A9FD51D3D11682 /* SVGPath.swift */; };
+		E592D5991770C84F527092FA /* SiteChrome.swift in Sources */ = {isa = PBXBuildFile; fileRef = D88E61B9900C82F91A0FB60E /* SiteChrome.swift */; };
+		96D0CD59F49879B3DF23FA2F /* SiteChromeViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = FACB498CE5717F0350234D64 /* SiteChromeViews.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -86,6 +88,8 @@
 		27EAD8344E17B0468848DC1A /* Wordmark.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = Wordmark.swift; path = Design/Wordmark.swift; sourceTree = "<group>"; };
 		45DEDD2F8ABFD31C51C1E453 /* BrandMark.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = BrandMark.swift; path = Generated/BrandMark.swift; sourceTree = "<group>"; };
 		C8FE2AA385A9FD51D3D11682 /* SVGPath.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = SVGPath.swift; path = Design/SVGPath.swift; sourceTree = "<group>"; };
+		D88E61B9900C82F91A0FB60E /* SiteChrome.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = SiteChrome.swift; path = Model/SiteChrome.swift; sourceTree = "<group>"; };
+		FACB498CE5717F0350234D64 /* SiteChromeViews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = SiteChromeViews.swift; path = Views/SiteChromeViews.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -120,6 +124,8 @@
 		504EC3061FED79650016851F /* App */ = {
 			isa = PBXGroup;
 			children = (
+				FACB498CE5717F0350234D64 /* SiteChromeViews.swift */,
+				D88E61B9900C82F91A0FB60E /* SiteChrome.swift */,
 				C8FE2AA385A9FD51D3D11682 /* SVGPath.swift */,
 				45DEDD2F8ABFD31C51C1E453 /* BrandMark.swift */,
 				27EAD8344E17B0468848DC1A /* Wordmark.swift */,
@@ -242,6 +248,8 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				96D0CD59F49879B3DF23FA2F /* SiteChromeViews.swift in Sources */,
+				E592D5991770C84F527092FA /* SiteChrome.swift in Sources */,
 				4A29BAFE080F5D70AC855684 /* SVGPath.swift in Sources */,
 				731C460866AA08E66FDAA8F0 /* BrandMark.swift in Sources */,
 				4067B29193E978EFB785DEDA /* Wordmark.swift in Sources */,

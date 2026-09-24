@@ -19,6 +19,8 @@ final class BallotViewModel: ObservableObject {
     @Published private(set) var chosenState: String?
     @Published private(set) var chosenElectorate: String?
     @Published private(set) var loadFailed = false
+    /// Set when the ballot could not be recorded, so the screen can say so.
+    @Published private(set) var saveFailed = false
     @Published var filter = ""
 
     private var electorates: [String] = []
@@ -52,14 +54,14 @@ final class BallotViewModel: ObservableObject {
                 return rows.map(\.electorate)
             },
             persistBallot: { state, electorate in
-                var record = QuizState.load(electionID: electionID)
+                var record = QuizState.current(electionID: electionID)
                     ?? QuizState.Persisted(
                         state: nil, electorate: nil, answers: [:], cursor: 0,
                         questionIds: [], updatedAt: 0
                     )
                 record.state = state
                 record.electorate = electorate
-                try QuizState.save(record, electionID: electionID)
+                try QuizState.record(record, electionID: electionID)
             }
         )
     }
@@ -110,8 +112,10 @@ final class BallotViewModel: ObservableObject {
         do {
             try persistBallot(state, electorate)
         } catch {
+            saveFailed = true
             return nil
         }
+        saveFailed = false
         return "/quiz"
     }
 
@@ -120,13 +124,17 @@ final class BallotViewModel: ObservableObject {
         do {
             try persistBallot(Self.nationalBallot.state, Self.nationalBallot.electorate)
         } catch {
+            saveFailed = true
             return nil
         }
+        saveFailed = false
         return "/quiz"
     }
 
     /// Steps back, or reports the web path to leave for when there is nowhere left to step.
     func back() -> String? {
+        // A failure belongs to the step it happened on.
+        saveFailed = false
         switch step {
         case .confirm:
             chosenElectorate = nil

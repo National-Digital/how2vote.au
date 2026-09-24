@@ -30,12 +30,18 @@ struct BallotView: View {
 
     var body: some View {
         VStack(spacing: 0) {
+            StaleNotice()
             TopBar(
                 label: "Your ballot · \(model.stepNumber) of 3",
-                backLabel: "Back",
+                backLabel: "Go back",
                 onBack: { if let path = model.back() { onExit(path) } }
             )
-            QuizProgress(value: model.stepNumber, total: 3)
+            QuizProgress(
+                value: model.stepNumber,
+                total: 3,
+                label: "Ballot setup progress",
+                step: "Step"
+            )
 
             ScrollView {
                 VStack(alignment: .leading, spacing: 0) {
@@ -44,6 +50,17 @@ struct BallotView: View {
                     case .electorate: electoratePicker
                     case .confirm: confirmation
                     }
+
+                    if model.saveFailed {
+                        Text("Couldn't record your ballot. Please try again.")
+                            .font(.footnote)
+                            .foregroundStyle(Theme.ink.resolve(scheme))
+                            .padding(.top, 12)
+                            .accessibilityAddTraits(.updatesFrequently)
+                    }
+
+                    SiteFooter()
+                        .padding(.top, 24)
                 }
                 .frame(maxWidth: .infinity, alignment: .leading)
                 .padding(.horizontal, Theme.gutter)
@@ -64,6 +81,7 @@ struct BallotView: View {
                 .font(.title2.weight(.semibold))
                 .foregroundStyle(Theme.ink.resolve(scheme))
                 .padding(.vertical, 8)
+                .accessibilityAddTraits(.isHeader)
 
             LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 10) {
                 ForEach(Jurisdictions.picker, id: \.code) { jurisdiction in
@@ -100,7 +118,7 @@ struct BallotView: View {
             }
             .padding(.top, 8)
 
-            Text("Your answers stay on this device until you choose to share your card.")
+            Text(LegalCopy.ballotAnswersStayOnDevice)
                 .font(.footnote)
                 .foregroundStyle(Theme.ink2.resolve(scheme))
                 .fixedSize(horizontal: false, vertical: true)
@@ -114,11 +132,23 @@ struct BallotView: View {
                 .font(.title2.weight(.semibold))
                 .foregroundStyle(Theme.ink.resolve(scheme))
                 .padding(.vertical, 8)
+                .accessibilityAddTraits(.isHeader)
 
             if model.loadFailed {
-                Text("Couldn't load the electorate list.")
-                    .font(.footnote)
-                    .foregroundStyle(Theme.ink.resolve(scheme))
+                VStack(alignment: .leading, spacing: 8) {
+                    Text("Couldn't load the electorate list. Please check your connection and try again.")
+                        .font(.footnote)
+                        .foregroundStyle(Theme.ink.resolve(scheme))
+                        .fixedSize(horizontal: false, vertical: true)
+                    if let state = model.chosenState {
+                        Button("Try again") { model.pick(state: state) }
+                            .font(.footnote.weight(.semibold))
+                            .underline()
+                            .buttonStyle(.plain)
+                            .foregroundStyle(Theme.ink.resolve(scheme))
+                            .frame(minHeight: 44)
+                    }
+                }
             } else {
                 TextField(
                     "Search \(model.electorateCount) \(model.chosenState ?? "") electorates…",
@@ -174,16 +204,18 @@ struct BallotView: View {
                         .padding(.top, 12)
                 }
 
-                HStack(spacing: 4) {
+                FlowLayout(spacing: 4, lineSpacing: 0, centred: false) {
                     Text("Not sure?")
-                        .font(.footnote)
                         .foregroundStyle(Theme.ink2.resolve(scheme))
                     ExternalLinkView(
                         title: "Look up your electorate on the AEC website",
                         url: URL(string: "https://check.aec.gov.au/")!
                     )
-                    .font(.footnote)
+                    Text("— your progress is kept.")
+                        .foregroundStyle(Theme.ink2.resolve(scheme))
                 }
+                .font(.footnote)
+                .frame(maxWidth: .infinity, alignment: .leading)
                 .padding(.top, 16)
             }
         }
@@ -196,6 +228,7 @@ struct BallotView: View {
                     .font(.title2.weight(.semibold))
                     .foregroundStyle(Theme.ink.resolve(scheme))
                     .padding(.vertical, 8)
+                    .accessibilityAddTraits(.isHeader)
                 Text("Federal electorate in \(Jurisdictions.name(for: state))")
                     .font(.footnote)
                     .foregroundStyle(Theme.ink2.resolve(scheme))

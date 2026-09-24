@@ -7,15 +7,9 @@ const KEY_PREFIX = "how2vote:quiz:v2:"; // v2: namespaced per election id
 const key = (electionId: string): string => KEY_PREFIX + electionId;
 const MAX_AGE_MS = 30 * 24 * 60 * 60 * 1000; // resume offered for 30 days
 
-type StoredAnswer = { points: AnswerPoints; important: boolean };
-type Persisted = {
-  state: string | null;
-  electorate: string | null;
-  answers: Record<number, StoredAnswer>;
-  cursor: number;
-  questionIds: number[];
-  updatedAt: number;
-};
+import { fieldsOf, recordOf, type Persisted, type StoredAnswer } from "./quiz-record";
+
+export type { Persisted };
 
 /**
  * Client-only quiz state (ballot selection, per-question answers, cursor), persisted to
@@ -191,6 +185,31 @@ class Quiz {
     if (!this.loadedId) return;
     this.load(this.loadedId);
     this.hydrated = true;
+  }
+
+  /**
+   * The in-memory record for `electionId`, or null when another election is loaded.
+   *
+   * An under-18 explorer's quiz is never persisted (ADR 0012), so it exists only here; the iOS native
+   * core is handed this copy with each route and hands its own back on exit.
+   */
+  snapshot(electionId: string): Persisted | null {
+    if (this.loadedId !== electionId) return null;
+    const { state, electorate, answers, cursor, questionIds } = this;
+    return recordOf({ state, electorate, answers, cursor, questionIds }, Date.now());
+  }
+
+  /** Takes the native core's record for an election. False when that election is not loaded. */
+  adopt(electionId: string, record: Persisted): boolean {
+    if (this.loadedId !== electionId) return false;
+    const fields = fieldsOf(record);
+    this.state = fields.state;
+    this.electorate = fields.electorate;
+    this.answers = fields.answers;
+    this.cursor = fields.cursor;
+    this.questionIds = fields.questionIds;
+    this.hydrated = true;
+    return true;
   }
 
   /** Loads persisted state for an election if present and fresh; otherwise resets to defaults. */

@@ -12,7 +12,10 @@ const url = (p) => new URL(p, import.meta.url);
 const WEB = readFileSync(url("../apps/web/src/lib/privacy/local-data.ts"), "utf8");
 const NATIVE = readFileSync(url("../apps/mobile/ios/App/App/State/NativeState.swift"), "utf8");
 const CONFIG = readFileSync(url("../apps/mobile/capacitor.config.ts"), "utf8");
-const WEB_QUIZ = readFileSync(url("../apps/web/src/lib/quiz.svelte.ts"), "utf8");
+const WEB_QUIZ =
+  readFileSync(url("../apps/web/src/lib/quiz.svelte.ts"), "utf8") +
+  "\n" +
+  readFileSync(url("../apps/web/src/lib/quiz-record.ts"), "utf8");
 const NATIVE_QUIZ = readFileSync(url("../apps/mobile/ios/App/App/State/QuizState.swift"), "utf8");
 const LAUNCH = readFileSync(
   url("../apps/mobile/ios/App/App/Shell/MainViewController.swift"),

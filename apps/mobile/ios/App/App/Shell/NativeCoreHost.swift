@@ -38,10 +38,17 @@ final class NativeCoreHost {
     private var engine: JSCEngine?
     private var hosting: UIHostingController<AnyView>?
     /// The route currently on screen, so a repeated request for it is a no-op rather than a rebuild
-    /// that would throw away the voter's place on it. Edit mode is part of the identity: the same
-    /// route entered to change one answer is a different screen from the same route walked in full.
+    /// that would throw away the voter's place on it. Edit mode and the election are part of the
+    /// identity: the landing serves every election, and the toggle between them is the same route.
     private var currentRoute: String?
     private var currentIsEditing = false
+    private var currentElectionID: String?
+    /// The layout chrome for the screen being built, and what its links and notice do.
+    private var chrome: SiteChrome?
+    private var chromeActions = SiteChromeActions()
+    /// The identity of the screen being built. A swap to the same view type would otherwise be an
+    /// in-place update that keeps the previous screen's state — the old election, the old model.
+    private var screenIdentity = ""
 
     /// Asks the web to change the theme. Set by the plugin, because the theme preference is the
     /// WebView's key to write (ADR 0018 D3) and a screen can only request the change.
@@ -63,6 +70,8 @@ final class NativeCoreHost {
         eligible: Bool,
         canExplore: Bool,
         allowedMapIDs: Set<String>,
+        chrome: SiteChrome,
+        onDismissStale: @escaping (String) -> Void,
         from presenter: UIViewController,
         onExit: @escaping (String) -> Void
     ) -> Bool {
@@ -70,12 +79,18 @@ final class NativeCoreHost {
             NSLog("How2Vote: declined \(route) — no election id was passed")
             return false
         }
-        if currentRoute == route, currentIsEditing == isEditing, hosting != nil { return true }
+        if isShowing(route: route, electionID: electionID, isEditing: isEditing) { return true }
 
         guard let engine = loadedEngine() else {
             NSLog("How2Vote: declined \(route) — the engine did not load")
             return false
         }
+        // Set before building, because `themed` reads them; restored if the route is declined, so a
+        // screen still on display keeps the chrome and actions it was built with.
+        let previous = (self.chrome, chromeActions, screenIdentity)
+        self.chrome = chrome
+        chromeActions = SiteChromeActions(exit: onExit, dismissStale: onDismissStale)
+        screenIdentity = "\(route)|\(electionID)|\(isEditing)"
         guard let screen = screen(
             for: route,
             electionID: electionID,
@@ -86,12 +101,14 @@ final class NativeCoreHost {
             engine: engine,
             onExit: onExit
         ) else {
+            (self.chrome, chromeActions, screenIdentity) = previous
             NSLog("How2Vote: declined \(route) — no native screen for it")
             return false
         }
 
         currentRoute = route
         currentIsEditing = isEditing
+        currentElectionID = electionID
         NSLog("How2Vote: presenting \(route)")
 
         if let hosting {
@@ -110,11 +127,18 @@ final class NativeCoreHost {
         return true
     }
 
+    /// True when this exact screen is already on display, so a request for it changes nothing.
+    func isShowing(route: String, electionID: String, isEditing: Bool) -> Bool {
+        currentRoute == route && currentIsEditing == isEditing && currentElectionID == electionID
+            && hosting != nil
+    }
+
     /// Takes the native cover down, revealing the WebView. Called when the web reaches a route the
     /// native core does not serve.
     func dismiss() {
         currentRoute = nil
         currentIsEditing = false
+        currentElectionID = nil
         guard let hosting else { return }
         self.hosting = nil
         hosting.dismiss(animated: false)
@@ -126,8 +150,15 @@ final class NativeCoreHost {
     ///
     /// At the host rather than in each view: a screen that forgot the wrapper would render in the
     /// system appearance and look like the theme had simply not been applied to that one page.
+    /// The layout chrome goes in at the same point, so every screen is handed it without being
+    /// able to forget it.
     private func themed(_ view: some View) -> AnyView {
-        AnyView(ThemedScreen { view })
+        AnyView(
+            ThemedScreen { view }
+                .id(screenIdentity)
+                .environment(\.siteChrome, chrome)
+                .environment(\.siteChromeActions, chromeActions)
+        )
     }
 
     private func screen(

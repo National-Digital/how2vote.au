@@ -24,12 +24,13 @@ struct ReviewView: View {
 
     var body: some View {
         VStack(spacing: 0) {
+            StaleNotice()
             TopBar(
                 label: "Review your answers",
                 backLabel: "Back to the questions",
                 onBack: { onExit("/quiz") }
             )
-            QuizProgress(value: 1, total: 1)
+            QuizProgress(value: 1, total: 1, label: "Quiz complete", spokenValue: "100%")
 
             ScrollView {
                 VStack(alignment: .leading, spacing: 0) {
@@ -38,6 +39,7 @@ struct ReviewView: View {
                         .foregroundStyle(Theme.ink.resolve(scheme))
                         .padding(.top, 8)
                         .padding(.bottom, 4)
+                        .accessibilityAddTraits(.isHeader)
 
                     Text(LegalCopy.importanceWeighting)
                         .font(.footnote)
@@ -46,6 +48,9 @@ struct ReviewView: View {
                         .padding(.bottom, 10)
 
                     content
+
+                    SiteFooter()
+                        .padding(.top, 24)
                 }
                 .frame(maxWidth: .infinity, alignment: .leading)
                 .padding(.horizontal, Theme.gutter)
@@ -74,9 +79,18 @@ struct ReviewView: View {
                 .accessibilityAddTraits(.updatesFrequently)
 
         case let .failed(message):
-            Text(message)
-                .font(.callout)
-                .foregroundStyle(Theme.ink.resolve(scheme))
+            VStack(alignment: .leading, spacing: 8) {
+                Text("\(message) Please check your connection and try again.")
+                    .font(.callout)
+                    .foregroundStyle(Theme.ink.resolve(scheme))
+                    .fixedSize(horizontal: false, vertical: true)
+                Button("Try again") { Task { await model.load() } }
+                    .font(.footnote.weight(.semibold))
+                    .underline()
+                    .buttonStyle(.plain)
+                    .foregroundStyle(Theme.ink.resolve(scheme))
+                    .frame(minHeight: 44)
+            }
 
         case let .ready(rows):
             LazyVStack(spacing: 0) {
@@ -143,7 +157,8 @@ private struct ReviewRow: View {
                         .frame(width: 44, height: 44)
                 }
                 .buttonStyle(.plain)
-                .accessibilityLabel(LegalCopy.importanceMultiplier)
+                .accessibilityLabel("Mark \"\(row.text)\" as extremely important")
+                .accessibilityHint(LegalCopy.importanceMultiplier)
                 .accessibilityValue(row.important ? "On" : "Off")
                 .accessibilityAddTraits(row.important ? [.isButton, .isSelected] : [.isButton])
             } else {

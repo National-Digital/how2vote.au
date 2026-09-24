@@ -71,7 +71,7 @@ jobs:
           FILES=$(gh api "repos/$GITHUB_REPOSITORY/pulls/$PR/files" --paginate --jq '.[].filename')
           echo "$FILES" | sed 's/^/  /'
           # `fastlane/` (repo root) is the F-Droid listing tree.
-          APP='^(apps/(mobile|web)/|packages/|fastlane/|pnpm-lock\.yaml|\.nvmrc|docs/fdroid/|\.github/(workflows/mobile-ci\.yml|actions/(build-web-channel|resolve-store-version)/)|scripts/(check-engine-bundle|check-fdroid-ready|check-ios-sources|check-native-answer-scale|check-native-brand|check-native-jurisdictions|check-native-router|check-native-state-keys|check-native-plugins|check-store-channel|generate-app-version|generate-store-metadata)\.mjs)'
+          APP='^(apps/(mobile|web)/|packages/|fastlane/|docs/legal/native-copy\.json|data/aec-spatial/source-record\.json|pnpm-lock\.yaml|\.nvmrc|docs/fdroid/|\.github/(workflows/mobile-ci\.yml|actions/(build-web-channel|resolve-store-version)/)|scripts/(check-engine-bundle|check-fdroid-ready|check-ios-sources|check-native-answer-scale|check-native-brand|check-native-chrome|check-native-jurisdictions|check-native-router|check-native-state-keys|check-native-plugins|check-store-channel|generate-app-version|generate-store-metadata)\.mjs)'
           # apps/web and packages are deliberately absent here: they are input to the bundle, not to
           # the native build graph.
           NATIVE='^(apps/mobile/|pnpm-lock\.yaml|\.nvmrc|docs/fdroid/|\.github/(workflows/mobile-ci\.yml|actions/(build-web-channel|resolve-store-version)/)|scripts/(check-fdroid-ready|check-native-plugins|generate-app-version|generate-store-metadata)\.mjs)'
@@ -133,6 +133,11 @@ jobs:
       # builds, launches, and shows the web screen it always did.
       - name: The native route handover is wired
         run: node scripts/check-native-router.mjs
+
+      # Every native screen renders the layout chrome it covers — the footer with the s321D
+      # authorisation, and the stale-data notice.
+      - name: The native screens carry the layout chrome
+        run: node scripts/check-native-chrome.mjs
 
       # The logo is baked outlines, not a font, precisely so it renders identically everywhere. A
       # native screen drawing the name as text is a different mark in whatever face the platform
@@ -581,6 +586,19 @@ jobs:
             apps/mobile/ios/Parity/QuizLogic.swift \
             -o "$RUNNER_TEMP/quiz-logic"
           "$RUNNER_TEMP/quiz-logic"
+
+      # The site-chrome handover declines a route that arrives without the s321D authorisation, and
+      # an under-18 explorer's progress is kept for the session without ever being persisted.
+      - name: Site chrome and explorer session logic holds
+        run: |
+          set -euo pipefail
+          swiftc -O \
+            apps/mobile/ios/App/App/Model/SiteChrome.swift \
+            apps/mobile/ios/App/App/State/NativeState.swift \
+            apps/mobile/ios/App/App/State/QuizState.swift \
+            apps/mobile/ios/Parity/ChromeLogic.swift \
+            -o "$RUNNER_TEMP/chrome-logic"
+          "$RUNNER_TEMP/chrome-logic"
 
       # A partial SVG reader fails quietly: a command it skips draws a boundary that is subtly the
       # wrong shape, and the shape is a voter's own electorate shown back to them. Runs the reader
