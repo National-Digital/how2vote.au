@@ -21,7 +21,7 @@ import { existsSync, mkdirSync, readFileSync, readdirSync, statSync, writeFileSy
 import { dirname, join, relative, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
-export const IR_VERSION = 3;
+export const IR_VERSION = 4;
 
 /** Where the contract between the web build and the native skeleton is recorded. */
 export const CONTRACT = "apps/mobile/ios/native-contract.json";
@@ -42,6 +42,8 @@ export const BLOCK_ROLES = {
   services: "inventory",
   none: "empty",
   kicker: "kicker",
+  pick: "picker",
+  stage: "stage",
   "clear-data": "clear-data",
 };
 
@@ -51,10 +53,11 @@ export const INLINE_ROLES = {
   evidence: "evidence",
   lead: "primary",
   meta: "secondary",
+  past: "caveat",
 };
 
 /** List classes that carry meaning: a table of rows, or a dense index of links. */
-export const LIST_ROLES = { rows: "rows", cols: "index" };
+export const LIST_ROLES = { rows: "rows", cols: "index", trust: "claims", steps: "steps" };
 
 /** Subtrees the native screen draws itself, whose text is therefore not part of the document. */
 export const CHROME = [
@@ -76,6 +79,11 @@ export const SLOTS = [
   },
   { name: "age-declare", match: (el) => hasClass(el, "cta") && hasClass(el, "declare") },
   { name: "age-continue", match: (el) => hasClass(el, "cta") && hasClass(el, "explore") },
+  { name: "landing-fresh", match: (el) => hasClass(el, "cta") && hasClass(el, "fresh") },
+  { name: "landing-resume", match: (el) => hasClass(el, "cta") && hasClass(el, "resume") },
+  { name: "landing-complete", match: (el) => hasClass(el, "cta") && hasClass(el, "complete") },
+  { name: "theme-light", match: (el) => hasClass(el, "theme") && hasClass(el, "light") },
+  { name: "theme-dark", match: (el) => hasClass(el, "theme") && hasClass(el, "dark") },
 ];
 
 /**
@@ -87,7 +95,15 @@ export const SLOT_ACTIONS = {
   "clear-data": ["clear"],
   "age-declare": ["adult", "minor"],
   "age-continue": ["continue"],
+  "landing-fresh": ["start"],
+  "landing-resume": ["resume", "start"],
+  "landing-complete": ["card", "start"],
+  "theme-light": ["theme"],
+  "theme-dark": ["theme"],
 };
+
+/** The slots whose controls may include a link to a route, beside their buttons. */
+const SLOT_LINKS = new Set(["landing-fresh"]);
 
 /**
  * Everything a projected page can contain: the contract between the web build and the native
@@ -118,6 +134,7 @@ export const VOCABULARY = {
       .sort(([a], [b]) => a.localeCompare(b))
       .map(([slot, actions]) => [slot, [...actions].sort()]),
   ),
+  slotLinks: [...SLOT_LINKS].sort(),
 };
 
 /** Fails when a projected page holds anything outside the contract. */
@@ -245,6 +262,9 @@ function annotate(node, parentClass = "") {
 const isChrome = (el) => el.tag && CHROME.some((r) => r.match(el));
 const slotName = (el) => el.tag && SLOTS.find((s) => s.match(el))?.name;
 
+/** An icon in a slot's control: drawn by the native control that holds it, with no text to carry. */
+const isIcon = (el) => el.tag === "svg" && el.attrs["aria-hidden"] === "true" && !textOf(el).trim();
+
 /** An `aria-hidden` subtree may only be decoration; real text must not hide from VoiceOver there. */
 function decoration(el) {
   if (el.attrs["aria-hidden"] !== "true") return false;
@@ -276,12 +296,12 @@ function textOf(node) {
  * decorative `aria-hidden` glyphs.
  */
 export function pageText(main) {
-  const walk = (n) => {
+  const walk = (n, inSlot) => {
     if ("text" in n) return n.text;
-    if (isChrome(n) || decoration(n)) return "";
-    return n.children.map(walk).join("");
+    if ((inSlot && isIcon(n)) || isChrome(n) || decoration(n)) return "";
+    return n.children.map((c) => walk(c, inSlot || Boolean(slotName(n)))).join("");
   };
-  return walk(main);
+  return walk(main, false);
 }
 
 /** The projection's text, in reading order: what the native renderer lays out. */
@@ -314,15 +334,19 @@ export function drawnText(doc) {
  * term's definition waits behind the term rather than being read inline.
  */
 export function spokenText(doc) {
-  return blocksText(doc.blocks, (n, inl) => {
-    if (n.t === "link" && n.label) return n.label;
-    if (n.t === "term") return n.c.map(inl).join("");
-    if (n.t === "glyph") return "";
-    return null;
-  });
+  return blocksText(
+    doc.blocks,
+    (n, inl) => {
+      if (n.t === "link" && n.label) return n.label;
+      if (n.t === "term") return n.c.map(inl).join("");
+      if (n.t === "glyph") return "";
+      return null;
+    },
+    true,
+  );
 }
 
-function blocksText(blocks, special) {
+function blocksText(blocks, special, spoken = false) {
   const inl = (n) => {
     const s = special(n, inl);
     if (s !== null) return s;
@@ -345,7 +369,7 @@ function blocksText(blocks, special) {
       case "switch":
         return b.options.map((o) => o.label).join("");
       case "slot":
-        return b.controls.map((c) => c.label).join("");
+        return b.controls.map((c) => (spoken && c.named ? c.label : controlText(c))).join("");
       case "logo":
         return "";
       default:
@@ -372,7 +396,9 @@ const CARRIES_ID = new Set(["h1", "h2", "h3", "p", "section", "div", "dt", "li"]
 
 function checkAttrs(el, extra = []) {
   for (const a of Object.keys(el.attrs)) {
-    if (a === "aria-label" && el.tag === "a") continue;
+    // A link's accessible name travels with it; the election toggle's names its group.
+    const isToggle = el.tag === "div" && hasClass(el, "toggle") && el.attrs.role === "group";
+    if (a === "aria-label" && (el.tag === "a" || isToggle)) continue;
     // A section named by a heading inside it, which the page's text already holds.
     if (a === "aria-labelledby" && el.tag === "section") continue;
     if (extra.includes(a)) continue;
@@ -500,6 +526,9 @@ function toBlock(el) {
       return { t: "quote", c: toBlocks(el.children) };
     case "div":
       if (hasClass(el, "switch")) return electionSwitch(el);
+      if (hasClass(el, "toggle") && el.attrs.role === "group") {
+        return electionSwitch({ ...el, attrs: { class: "switch" }, children: [el] });
+      }
       // A bare wrapper is layout; one that groups content says so with a registered role.
       if (!blockRole(el).role) throw new DocumentError("<div> without a native role");
     // falls through
@@ -511,22 +540,61 @@ function toBlock(el) {
   }
 }
 
-/** A slot holds buttons and nothing else; their labels are the native control's. */
+/**
+ * A slot's controls: buttons, or links to a route, each labelled as the page labels it. A button
+ * names its action (`value`); a link carries its route instead. A button with no text is named by
+ * its accessible name (an icon button), and a value the page marks with `<data value="name">`
+ * becomes `{name}` in the label, with the page's value kept as its sample.
+ */
 function slotControls(el, slot) {
   const controls = el.children
     .filter((c) => !isBlank(c))
     .map((b) => {
-      if (b.tag !== "button") throw new DocumentError(`<${b.tag ?? "text"}> inside a control slot`);
-      if (b.children.some((c) => c.tag)) throw new DocumentError("a slot button holds markup");
+      const isLink =
+        SLOT_LINKS.has(slot) && b.tag === "a" && /^\/(?!\/)[^\\]*$/.test(b.attrs.href ?? "");
+      if (b.tag !== "button" && !isLink) {
+        throw new DocumentError(`<${b.tag ?? "text"}> inside a control slot`);
+      }
+      const allowed = isLink
+        ? ["href", "class"]
+        : ["type", "class", "value", "aria-label", "aria-pressed", "title"];
       for (const a of Object.keys(b.attrs)) {
-        if (!["type", "class", "value"].includes(a)) {
-          throw new DocumentError(`a slot button carries ${a}`);
+        if (!allowed.includes(a)) throw new DocumentError(`a slot control carries ${a}`);
+      }
+      const values = {};
+      let label = "";
+      for (const c of b.children) {
+        if ("text" in c) label += c.text;
+        else if (c.tag === "data" && c.attrs.value && c.children.every((t) => "text" in t)) {
+          values[c.attrs.value] = textOf(c).trim();
+          label += `{${c.attrs.value}}`;
+        } else if (isIcon(c)) {
+          continue;
+        } else {
+          throw new DocumentError("a slot control holds markup");
         }
       }
-      return { label: collapse(textOf(b)).trim(), action: b.attrs.value ?? "" };
+      label = collapse(label).trim();
+      // A name replacing a button's text is heard on the web and not natively.
+      if (label && b.attrs["aria-label"])
+        throw new DocumentError("a slot button carries aria-label");
+      // An icon button is named, not labelled: its name is heard, never drawn as page text.
+      const named = !label && b.tag === "button" && Boolean(b.attrs["aria-label"]);
+      if (named) label = b.attrs["aria-label"];
+      if (!label) throw new DocumentError("a slot control with no label");
+      if (/[{}]/.test(label.replace(/\{[a-z]+\}/g, ""))) {
+        throw new DocumentError("a slot control's label holds a brace");
+      }
+      return {
+        label,
+        ...(isLink ? { href: b.attrs.href } : { action: b.attrs.value ?? "" }),
+        ...(named ? { named: true } : {}),
+        ...(Object.keys(values).length ? { values } : {}),
+      };
     });
   const want = [...(SLOT_ACTIONS[slot] ?? [])].sort().join(",");
   const got = controls
+    .filter((c) => !c.href)
     .map((c) => c.action)
     .sort()
     .join(",");
@@ -535,6 +603,10 @@ function slotControls(el, slot) {
   }
   return controls;
 }
+
+/** A control's label as the page shows it: its values filled with the page's own. */
+export const controlText = (c) =>
+  c.named ? "" : c.label.replace(/\{([a-z]+)\}/g, (_, k) => c.values?.[k] ?? "");
 
 /** The election toggle: a labelled group of links, one marked current. */
 function electionSwitch(el) {
@@ -833,6 +905,8 @@ export function parseMain(markup) {
  * when the projection's text differs from the page's.
  */
 export function projectDocument(html, route) {
+  // A page of states is rendered for projection alone: no heading and no bar of its own.
+  const isStates = route.startsWith("/states/");
   const mains = html.match(/<main[\s>][\s\S]*?<\/main>/g) ?? [];
   if (mains.length !== 1) throw new DocumentError(`${mains.length} <main> elements`);
   const main = parseMain(mains[0]);
@@ -856,13 +930,13 @@ export function projectDocument(html, route) {
     throw new DocumentError("<main> holds something other than the top bar and one <article>");
   }
   const blocks = normalise(flatten(toBlocks(content[0].children)));
+  // A page of states has no heading of its own; every document does.
   const h1 = blocks.find((b) => b.t === "heading" && b.level === 1);
-  // A page of states is rendered for projection alone and may have no heading or bar of its own.
-  const isStates = route.startsWith("/states/");
   if (!h1 && !isStates) throw new DocumentError("no <h1>");
   const crumbs = breadcrumbs(main);
+  const brand = crumbs ? undefined : brandBar(main);
   const hasBar = main.children.some((c) => c.tag && hasClass(c, "app-top"));
-  const top = crumbs || (isStates && !hasBar) ? undefined : topBar(main);
+  const top = crumbs || brand || (isStates && !hasBar) ? undefined : topBar(main);
   const trail = crumbs
     ? main.children.find((c) => c.tag === "nav" && hasClass(c, "crumbs")).attrs["aria-label"]
     : undefined;
@@ -873,6 +947,7 @@ export function projectDocument(html, route) {
     title: h1 ? drawnText({ blocks: [h1] }) : "",
     ...(crumbs ? { crumbs, crumbsLabel: trail } : {}),
     ...(top ? { top } : {}),
+    ...(brand ? { brand } : {}),
     blocks,
   };
   assertConserved(main, doc);
@@ -932,6 +1007,22 @@ function topBar(main) {
   };
 }
 
+/**
+ * The landing's bar: the wordmark and the theme toggle. The toggle's label depends on the theme, so
+ * the native bar takes both from `/states/landing`; this records only that the bar has one.
+ */
+function brandBar(main) {
+  const bar = main.children.find((c) => c.tag === "header" && hasClass(c, "app-top"));
+  if (!bar) return undefined;
+  const parts = bar.children.filter((c) => !isBlank(c));
+  const logo = parts.find((c) => c.tag === "svg" && hasClass(c, "logo"));
+  const toggle = parts.find((c) => c.tag === "button" && hasClass(c, "toggle"));
+  if (parts.length !== 2 || !logo?.attrs["aria-label"] || !toggle) {
+    throw new DocumentError("a brand bar this renderer does not draw");
+  }
+  return { logo: logo.attrs["aria-label"], theme: true };
+}
+
 /** Fails when the projection's text differs from the page's, ignoring only whitespace. */
 export function assertConserved(main, doc) {
   const want = pageText(main).replace(/\s/g, "");
@@ -965,7 +1056,24 @@ export function nativeDocumentRoutes(router) {
     ...listIn(router, "NATIVE_DOCUMENTS"),
     ...listIn(router, "CURRENT_ELECTION_DOCUMENTS"),
     ...listIn(router, "AGE_GATE_DOCUMENTS"),
+    ...listIn(router, "STATE_DOCUMENTS"),
   ];
+}
+
+/**
+ * Each election's landing page, as `landingDocument` in the router names it: `index` for the
+ * current election, which the build prerenders at `/`, else the election's own path.
+ *
+ * @param {string[]} elections  the compiled elections
+ * @param {(page: string) => boolean} exists  whether the build prerendered a page
+ */
+export function landingPages(elections, exists) {
+  return ["index", ...elections.filter((e) => exists(`${e}.html`))];
+}
+
+/** The pages of states: rendered at build time for projection, never served as a page. */
+export function stateDocuments(router) {
+  return listIn(router, "STATE_DOCUMENTS");
 }
 
 /** The age gate's two states, which are checked with no declaration made. */
@@ -1031,6 +1139,9 @@ function main() {
   // offers.
   const sections = nativeDataSections(router);
   const elections = readdirSync(join(root, "data/dist")).filter((f) => existsSync(join(build, f)));
+  for (const name of landingPages(elections, (page) => existsSync(join(build, page)))) {
+    routes.push({ route: `/${name}`, file: join(build, `${name}.html`) });
+  }
   for (const e of elections) {
     for (const section of sections) {
       const index = join(build, e, `${section}.html`);

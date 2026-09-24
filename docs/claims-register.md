@@ -74,7 +74,7 @@ CI guard is `scripts/check-absolute-claims.mjs` (Legal group).
 | `lib/content/PrivacyContent.svelte` | All privacy claims C6–C10, C13; overseas processing; provider inventory (rendered from the service registry so copy cannot disagree with the CSP/consent UI). | Self-substantiating (privacy policy is the source of record); reconciled with ADR 0006; `org.ts` for entity + min-age. |
 | `lib/content/TermsContent.svelte` (meta in `seo.ts`) | "you build your own voting plan, results are historical comparisons only, always check your ballot before voting" (C3, C5). | `/terms`; ADR 0006; governing law `ORG.governingLaw`. |
 | `routes/accessibility/+page.svelte` (meta in `seo.ts`) | "WCAG 2.2 AA target, keyboard and screen-reader support, no drag-and-drop, text alternatives". | `/accessibility`; ADR 0006 (WCAG 2.2 AA / DDA 1992). |
-| `lib/components/Landing.svelte` | `trust` list: "Built from real parliamentary voting records" (C2); "Even-handed — the method is public and deterministic" (C1); "No account, works offline, analytics off by default" (C9, C13). Lede: "Answer N real questions parliament has voted on … how your views compare with the parties' recorded votes" (C2). `isPast` note: "historical comparison, scored on the record as it stood then" (C5). | `/methodology`, `/privacy`, `/about`. |
+| `lib/components/Landing.svelte`, `lib/components/LandingIntro.svelte` | `trust` list (`Landing.svelte`): "Built from real parliamentary voting records" (C2); "Even-handed — the method is public and deterministic" (C1); "No account, works offline, analytics off by default" (C9, C13). Lede (`LandingIntro.svelte`): "Answer N real questions parliament has voted on … how your views compare with the parties' recorded votes" (C2). `isPast` note (`LandingIntro.svelte`): "historical comparison, scored on the record as it stood then" (C5). | `/methodology`, `/privacy`, `/about`. |
 | Footer / authorisation component | Electoral authorisation string (site + comparison content only, not user output). | `org.ts` (`ORG.AUTHORISATION`); ADR 0006 (Commonwealth Electoral Act s 321D; s 351(5) rationale for not authorising user output). |
 
 ### (b) Page metadata — `apps/web/src/lib/seo.ts`
@@ -113,7 +113,7 @@ CI guard is `scripts/check-absolute-claims.mjs` (Legal group).
 
 | Location | Claim(s) | Substantiation |
 |---|---|---|
-| `components/Landing.svelte` | See (a) — trust list, lede, `isPast` note, steps ("Ballot / Answer / Compare"), CTA "See how my views compare" (C1, C2, C5, C9, C13). | `/methodology`, `/privacy`, `/about`. |
+| `components/Landing.svelte`, `components/LandingIntro.svelte`, `components/LandingActions.svelte` | See (a) — trust list (`Landing.svelte`), lede, `isPast` note and steps ("Ballot / Answer / Compare") (`LandingIntro.svelte`), CTA "See how my views compare" (`LandingActions.svelte`) (C1, C2, C5, C9, C13). | `/methodology`, `/privacy`, `/about`. |
 | `/ballot` (meta + page) | "Choose your state and federal electorate … your House and Senate ballot paper." | `seo.ts` `pageMeta["/ballot"]`; `/methodology` step 1. |
 | `/quiz`, `/review` (meta + pages) | "Answer 50 real questions that parliament has voted on … ~5 min" (C2); "Check and change your answers before How2Vote builds your personal voting comparison." | `seo.ts`; `/methodology`. |
 | `/survey` (meta + page) | "An optional research invitation before you build your voting plan … Contributing is your choice and never changes your result." (C10). | `seo.ts` `pageMeta["/survey"]`; `/privacy` §5. |

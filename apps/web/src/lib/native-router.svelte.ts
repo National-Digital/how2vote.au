@@ -81,6 +81,21 @@ export const CURRENT_ELECTION_DOCUMENTS = ["about"] as const;
 export const AGE_GATE_DOCUMENTS = ["start", "states/start"] as const;
 
 /**
+ * Pages of states the build would not otherwise render (ADR 0019 D4b): the native screen they
+ * belong to draws the state that applies from them.
+ */
+export const STATE_DOCUMENTS = ["states/landing"] as const;
+
+/**
+ * The landing's own page for an election: `index` for the current one, else the election's id.
+ * Drawn with `states/landing`, from which the native landing takes the stage, call to action and
+ * theme label that apply.
+ */
+export function landingDocument(electionId: string): string {
+  return electionId === CURRENT_ELECTION_ID ? "index" : electionId;
+}
+
+/**
  * The election data sections the native core draws the same way: each section's index and every
  * page under it, for every election (`/2025/issues`, `/next/parties/greens`, …). Every one is held
  * to its hydrated text by the same spec as the documents.
@@ -287,7 +302,11 @@ class NativeRoute {
         theme: theme.pref,
         // An explorer's quiz lives only in memory (ADR 0012), so the native core is handed it.
         session: explorerSession(id),
-        ...(document === null ? {} : { document, anchor: fragment(url) }),
+        ...(document !== null
+          ? { document, anchor: fragment(url) }
+          : routeName(path, electionId) === "landing"
+            ? { document: landingDocument(id) }
+            : {}),
       });
       // A later navigation may have overtaken this call; its answer, not this one, is current.
       if (this.#pending !== request) return;
@@ -445,8 +464,9 @@ function attach(navigate: (path: string) => void, electionId: () => string): voi
     void backupToNative();
   });
 
-  // A native control was pressed. The native side draws a slot's buttons from the page and never
-  // acts on them itself; this side does what the web page's own control does.
+  // A native control was pressed. The native side draws a slot's buttons from the page and, but for
+  // the landing's (ADR 0019 D4c), never acts on them itself; this side does what the web page's own
+  // control does.
   const slotAction = router.addListener("nativeSlotAction", ({ slot, action }) => {
     performSlotAction(
       slot,

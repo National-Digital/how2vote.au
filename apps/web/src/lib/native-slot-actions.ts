@@ -1,7 +1,9 @@
 /**
  * What a native control does when pressed: exactly what the web page's own control does, through
  * the same functions (ADR 0019 D4). The native screen draws a projected slot's buttons from the
- * page and sends the action each one names; it never acts on them itself.
+ * page and sends the action each one names; it never acts on them itself. The landing's calls to
+ * action are the exception, since on iOS the quiz state they act on is the native core's (ADR 0019
+ * D4c).
  *
  * Keyed by the action the page names on each button (`value`), never by a button's position, so a
  * page that reorders its answers cannot swap what they do.

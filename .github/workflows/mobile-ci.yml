@@ -644,6 +644,7 @@ jobs:
           swiftc -O \
             apps/mobile/ios/App/App/Model/NativeDocument.swift \
             apps/mobile/ios/App/App/Model/DocumentLayout.swift \
+            apps/mobile/ios/App/App/Model/LandingComposition.swift \
             apps/mobile/ios/Parity/DocumentLogic.swift \
             -o "$RUNNER_TEMP/document-logic"
           "$RUNNER_TEMP/document-logic" apps/web/build/native-documents apps/mobile/ios/native-contract.json

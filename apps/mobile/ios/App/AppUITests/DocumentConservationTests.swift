@@ -30,6 +30,13 @@ final class DocumentConservationTests: XCTestCase {
         let spoken: String
     }
 
+    /// Whether a projected page is a landing — reached by launching, not from the footer; each
+    /// election's landing and every state is held to the page by `DocumentLogic`.
+    private static func isLanding(_ url: URL) -> Bool {
+        let json = (try? Data(contentsOf: url)).flatMap { try? JSONSerialization.jsonObject(with: $0) as? [String: Any] }
+        return json?["brand"] != nil
+    }
+
     /// The age gate's two states, reached from the landing rather than the footer.
     private static let gate: Set<String> = ["start"]
 
@@ -39,8 +46,9 @@ final class DocumentConservationTests: XCTestCase {
 
     func testEachDocumentShowsThePagesText() throws {
         let bundle = Bundle(for: Self.self)
-        let documents = (bundle.urls(forResourcesWithExtension: "json", subdirectory: "native-documents") ?? [])
-            .map { $0.deletingPathExtension().lastPathComponent }
+        let files = (bundle.urls(forResourcesWithExtension: "json", subdirectory: "native-documents") ?? [])
+            .filter { !Self.isLanding($0) }
+        let documents = files.map { $0.deletingPathExtension().lastPathComponent }
         XCTAssertFalse(documents.isEmpty, "the test bundle carries no projected documents")
         for name in documents where Self.footerLabels[name] == nil && !Self.gate.contains(name) {
             XCTFail("\(name): no footer link is known to open it")
@@ -194,6 +202,52 @@ final class DocumentConservationTests: XCTestCase {
             swipes += 1
         }
         if element.exists, element.isHittable { element.tap() }
+    }
+
+    /// The landing a first-time visitor opens on: the current election's prerendered landing, which
+    /// the native screen composes with the stage and progress that apply — on the day of the build
+    /// and on a first visit, exactly the page itself.
+    func testTheLandingShowsThePagesText() throws {
+        let bundle = Bundle(for: Self.self)
+        let url = try XCTUnwrap(bundle.url(forResource: "index", withExtension: "json", subdirectory: "native-documents"))
+        let landing = try JSONDecoder().decode(Projected.self, from: Data(contentsOf: url))
+
+        let app = XCUIApplication()
+        app.launch()
+        guard let shown = shownDocument(startingWith: landing.spoken, in: app) else {
+            return XCTFail("index: the landing was not drawn natively")
+        }
+        compare("index", expected: landing.spoken, shown: shown)
+
+        // The brand bar sits outside the document: its theme toggle offers the page's own label for
+        // the scheme on screen, which the simulator starts in light.
+        let states = try json("states/landing")
+        let toggle = try XCTUnwrap(
+            controls(of: "theme-light", in: states).first?.label,
+            "the states page carries no light-theme toggle"
+        )
+        XCTAssertTrue(app.buttons[toggle].exists, "index: the theme toggle does not read \"\(toggle)\"")
+    }
+
+    /// A slot's controls in a projected page, as the page wrote them.
+    private func controls(of slot: String, in page: [String: Any]) -> [(action: String?, label: String)] {
+        var found: [(action: String?, label: String)] = []
+        func walk(_ value: Any) {
+            if let dict = value as? [String: Any] {
+                if dict["t"] as? String == "slot", dict["name"] as? String == slot {
+                    for control in dict["controls"] as? [[String: Any]] ?? [] {
+                        if let label = control["label"] as? String {
+                            found.append((control["action"] as? String, label))
+                        }
+                    }
+                }
+                dict.values.forEach(walk)
+            } else if let list = value as? [Any] {
+                list.forEach(walk)
+            }
+        }
+        walk(page["blocks"] as Any)
+        return found
     }
 
     /// The gate in both states, as a first-time visitor meets it: from the landing's call to action,

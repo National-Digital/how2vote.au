@@ -32,6 +32,20 @@ struct DocumentLayout: Equatable {
 
         /// The drawn text.
         var visible: String { spans.filter { !$0.hidden }.map(\.text).joined() }
+
+        /// The run split after its leading spans that `lead` holds for, and the whitespace after them
+        /// — a step's name before its detail, a claim's tick before its words — so the two can be
+        /// laid out apart as the web lays them out. Nil when there is no such lead.
+        func splitting(after lead: (Span) -> Bool) -> (lead: Run, rest: Run)? {
+            let count = spans.prefix(while: lead).count
+            guard count > 0, count < spans.count else { return nil }
+            var rest = Array(spans.dropFirst(count))
+            if var first = rest.first, first.link == nil, first.term == nil {
+                first.text = String(first.text.drop(while: \.isWhitespace))
+                if first.text.isEmpty { rest.removeFirst() } else { rest[0] = first }
+            }
+            return (Run(spans: Array(spans.prefix(count))), Run(spans: rest))
+        }
     }
 
     struct Link: Equatable {
@@ -84,6 +98,7 @@ struct DocumentLayout: Equatable {
     let crumbs: [NativeDocument.Crumb]?
     let crumbsLabel: String?
     let top: NativeDocument.TopBar?
+    let brand: NativeDocument.Brand?
     private(set) var blocks: [Block] = []
     private(set) var links: [Link] = []
     private(set) var terms: [Term] = []
@@ -93,6 +108,7 @@ struct DocumentLayout: Equatable {
         crumbs = document.crumbs
         crumbsLabel = document.crumbsLabel
         top = document.top
+        brand = document.brand
         var laid: [Block] = []
         for block in document.blocks { laid.append(lay(block)) }
         blocks = laid
@@ -229,28 +245,29 @@ struct DocumentLayout: Equatable {
         spoken(run) != run.visible
     }
 
-    var text: String { blocksText(blocks, text(of:)) }
+    var text: String { blocksText(blocks, text(of:), spoken: false) }
 
-    var spokenText: String { blocksText(blocks, spoken) }
+    var spokenText: String { blocksText(blocks, spoken, spoken: true) }
 
-    /// The text the screen draws: each run's visible spans, glyphs included.
-    var drawnText: String { blocksText(blocks, \.visible) }
+    /// The text the screen draws: each run's visible spans, glyphs included, and no icon's name.
+    var drawnText: String { blocksText(blocks, \.visible, spoken: false) }
 
-    private func blocksText(_ blocks: [Block], _ runText: (Run) -> String) -> String {
+    private func blocksText(_ blocks: [Block], _ runText: (Run) -> String, spoken: Bool) -> String {
         blocks.map { block -> String in
             switch block {
             case let .heading(_, _, run), let .paragraph(_, _, run):
                 return runText(run)
             case let .list(_, _, items):
-                return items.map { blocksText($0, runText) }.joined()
+                return items.map { blocksText($0, runText, spoken: spoken) }.joined()
             case let .definitions(items):
-                return items.map { runText($0.term) + blocksText($0.detail, runText) }.joined()
+                return items.map { runText($0.term) + blocksText($0.detail, runText, spoken: spoken) }.joined()
             case let .quote(content), let .section(_, _, content):
-                return blocksText(content, runText)
+                return blocksText(content, runText, spoken: spoken)
             case let .electionSwitch(_, options):
                 return options.map(\.label).joined()
             case let .slot(_, controls):
-                return controls.map(\.label).joined()
+                // An icon button's name is heard, not drawn.
+                return controls.map { $0.named ? (spoken ? $0.label : "") : $0.text() }.joined()
             case .logo:
                 return ""
             }
@@ -277,7 +294,7 @@ struct DocumentLayout: Equatable {
             if case let .heading(1, _, run) = block { return run.visible }
             return nil
         }.first
-        if heading != document.title {
+        if (heading ?? "") != document.title {
             problems.append("the title is not the page's heading")
         }
         return problems

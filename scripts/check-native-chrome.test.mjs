@@ -40,7 +40,7 @@ describe("verifyNativeChrome", () => {
     );
     expect(hostScreens(COMMITTED.host)).toEqual({
       quiz: "QuizView",
-      landing: "LandingView",
+      landing: "DocumentView",
       ballot: "BallotView",
       review: "ReviewView",
       document: "DocumentView",
@@ -61,9 +61,9 @@ describe("verifyNativeChrome", () => {
   });
 
   it("catches a screen that drops the footer and the authorisation", () => {
-    const landing = views.LandingView.replace("SiteFooter()", "EmptyView()");
-    expect(mutate(withView("LandingView", landing))).toContain(
-      'LandingView (the "landing" screen) does not render SiteFooter()',
+    const landing = views.DocumentView.replace("SiteFooter()", "EmptyView()");
+    expect(mutate(withView("DocumentView", landing))).toContain(
+      'DocumentView (the "landing" screen) does not render SiteFooter()',
     );
   });
 
@@ -111,8 +111,8 @@ describe("verifyNativeChrome", () => {
   });
 
   it("is not satisfied by a token left in a comment", () => {
-    const landing = views.LandingView.replace("SiteFooter()", "// SiteFooter()");
-    expect(mutate(withView("LandingView", landing))).toContain("does not render SiteFooter()");
+    const landing = views.DocumentView.replace("SiteFooter()", "// SiteFooter()");
+    expect(mutate(withView("DocumentView", landing))).toContain("does not render SiteFooter()");
   });
 
   it("catches the plugin presenting without chrome", () => {
@@ -176,8 +176,8 @@ describe("verifyNativeChrome", () => {
   });
 
   it("is not satisfied by a token inside a string", () => {
-    const landing = views.LandingView.replace("SiteFooter()", 'Text("SiteFooter()")');
-    expect(mutate(withView("LandingView", landing))).toContain("does not render SiteFooter()");
+    const landing = views.DocumentView.replace("SiteFooter()", 'Text("SiteFooter()")');
+    expect(mutate(withView("DocumentView", landing))).toContain("does not render SiteFooter()");
   });
 
   it("requires the full footer on the quiz, not the authorisation line alone", () => {

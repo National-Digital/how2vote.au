@@ -50,31 +50,6 @@ enum LegalCopy {
     /// The AEC licence page the notice links to.
     static let mapLicenceURL = "https://www.aec.gov.au/Electorates/gis/"
 
-    /// What the tool does, on the first screen. The placeholder is the question count. Registered because it states what the comparison IS — the parties' recorded votes, not an opinion of them.
-    static func landingLedeUpcoming(_ v1: String) -> String {
-        "Answer " + String(v1) + " real questions the current Parliament has voted on and see how your views compare with the parties' recorded votes."
-    }
-
-    /// The same claim for an election that has a ballot. Placeholders are the question count and the election year.
-    static func landingLedeElection(_ v1: String, _ v2: String) -> String {
-        "Answer " + String(v1) + " real questions parliament has voted on and see how your views compare with the parties' recorded votes, for your " + String(v2) + " ballot — House and Senate."
-    }
-
-    /// Bounds what a provisional comparison is and is not, before a voter starts one. Without it the first screen would imply a comparison against an election that has not been called.
-    static let landingProvisional = "The next federal election hasn't been announced yet, so this is a provisional comparison against the current Parliament — the questions may change, and there are no candidates or printable how-to-vote plan yet."
-
-    /// Marks a past election as historical, so a comparison against it is not mistaken for current advice.
-    static let landingArchived = "This election has already been held — what follows is a historical comparison, scored on the record as it stood then."
-
-    /// A claim about the basis of the comparison, made on the first screen.
-    static let landingTrustRecords = "Built from real parliamentary voting records"
-
-    /// A neutrality claim, and one the methodology page has to keep true.
-    static let landingTrustEvenHanded = "Even-handed — the method is public and deterministic"
-
-    /// A privacy claim: no account, on-device, analytics off unless chosen. Registered so the native surface cannot state a weaker or stronger version of it than the web.
-    static let landingTrustNoAccount = "No account, works offline, analytics off by default"
-
     /// A privacy claim on the state picker: nothing leaves the device unless the voter shares their card.
     static let ballotAnswersStayOnDevice = "Your answers stay on this device until you choose to share your card."
 

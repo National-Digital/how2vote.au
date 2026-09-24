@@ -5,6 +5,7 @@ import { expect, test, type Browser, type Page } from "@playwright/test";
 import {
   ageGateDocuments,
   currentElectionDocuments,
+  landingPages,
   nativeDataSections,
   nativeDocumentRoutes,
 } from "../../../scripts/build-native-documents.mjs";
@@ -113,6 +114,18 @@ async function unstable(browser: Browser, paths: string[]): Promise<string[]> {
 test.describe("native documents", () => {
   test("the router offers at least the legal documents", () => {
     expect(routes).toEqual(expect.arrayContaining(["privacy", "terms"]));
+  });
+
+  // Each election's landing, as the native landing composes it: the prerendered page must hydrate to
+  // its own text, including for a voter whose store names another election.
+  test("each election's landing hydrates to the text it was prerendered with", async ({
+    browser,
+  }) => {
+    const paths = landingPages(elections, (page: string) => existsSync(join(BUILD, page))).map(
+      (name: string) => (name === "index" ? "/" : `/${name}`),
+    );
+    expect(paths).toContain("/");
+    expect(await unstable(browser, paths)).toEqual([]);
   });
 
   // Every data page of every election: several hundred loads, so once, in one project, and only

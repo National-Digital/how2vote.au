@@ -201,16 +201,48 @@ final class NativeCoreHost {
             let model = QuizViewModel.live(electionID: electionID, engine: engine, isEditing: isEditing)
             return themed(QuizView(model: model) { onExit($0.webRoute) })
         case "landing":
-            guard let engine else { return nil }
-            let model = LandingViewModel.live(electionID: electionID, engine: engine)
-            return themed(
-                LandingView(
-                    model: model,
-                    canExplore: canExplore,
-                    onToggleTheme: { NativeCoreHost.themeRequest?() },
-                    onExit: onExit
+            // The election's prerendered landing, with the stage the engine reports and the voter's
+            // progress drawn from the states page (ADR 0019 D4b).
+            guard let document, let engine else { return nil }
+            do {
+                let model = LandingViewModel.live(electionID: electionID, engine: engine)
+                let (landing, _) = try NativeDocument.load(name: document.name)
+                let (states, _) = try NativeDocument.load(name: "states/landing")
+                let composed = try LandingComposition.compose(
+                    landing: landing,
+                    states: states,
+                    electionID: electionID,
+                    phase: model.phase ?? LandingComposition.prerenderedPhase(of: landing, electionID: electionID) ?? "",
+                    progress: model.progress
                 )
-            )
+                let labels = try LandingComposition.themeLabels(in: states)
+                // The landing's buttons act here: the quiz state is the native core's (ADR 0018 D3).
+                let begin = {
+                    QuizState.clear(electionID: electionID)
+                    onExit(canExplore ? "/ballot" : "/start")
+                }
+                // By the action each button names on the page, as the page's own handlers are bound.
+                chromeActions.slotAction = { _, action in
+                    if action == "resume" {
+                        onExit("/quiz")
+                    } else if action == "card" {
+                        onExit("/card")
+                    } else if action == "start" {
+                        begin()
+                    }
+                }
+                return themed(
+                    DocumentView(
+                        layout: DocumentLayout(composed),
+                        anchor: nil,
+                        theme: (labels, { NativeCoreHost.themeRequest?() }),
+                        onExit: onExit
+                    )
+                )
+            } catch {
+                NSLog("How2Vote: declined landing \(document.name) — \(error)")
+                return nil
+            }
         case "ballot":
             guard let engine else { return nil }
             let model = BallotViewModel.live(electionID: electionID, engine: engine)

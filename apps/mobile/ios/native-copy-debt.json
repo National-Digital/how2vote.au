@@ -1,7 +1,4 @@
 {
-  "apps/mobile/ios/App/App/Design/Wordmark.swift": [
-    "How2Vote"
-  ],
   "apps/mobile/ios/App/App/Engine/JSCEngine.swift": [
     "unknown JavaScript exception",
     "unknown JavaScript exception"
@@ -75,32 +72,6 @@
   ],
   "apps/mobile/ios/App/App/Views/ExternalLinkView.swift": [
     "↗"
-  ],
-  "apps/mobile/ios/App/App/Views/LandingView.swift": [
-    "Choose an election",
-    "Continue — question {} of {}",
-    "Federal election",
-    "How do your views compare?",
-    "How the matching works",
-    "See how my views compare",
-    "See my comparison",
-    "Start again",
-    "Switch to dark theme",
-    "Switch to light theme",
-    "✓"
-  ],
-  "apps/mobile/ios/App/App/Views/LandingViewModel.swift": [
-    "1 · Answer",
-    "1 · Ballot",
-    "2 · Answer",
-    "2 · Compare",
-    "3 · Compare",
-    "Find your electorate",
-    "Review the record",
-    "See how you compare",
-    "See how you compare",
-    "{} questions, ~5 min",
-    "{} questions, ~5 min"
   ],
   "apps/mobile/ios/App/App/Views/QuizChrome.swift": [
     "Loading",

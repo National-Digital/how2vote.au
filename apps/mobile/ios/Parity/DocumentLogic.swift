@@ -14,6 +14,7 @@ import Foundation
 ///
 ///     swiftc -O apps/mobile/ios/App/App/Model/NativeDocument.swift \
 ///            apps/mobile/ios/App/App/Model/DocumentLayout.swift \
+///            apps/mobile/ios/App/App/Model/LandingComposition.swift \
 ///            apps/mobile/ios/Parity/DocumentLogic.swift -o "$TMPDIR/document-logic"
 ///     "$TMPDIR/document-logic" apps/web/build/native-documents apps/mobile/ios/native-contract.json
 @main
@@ -39,6 +40,8 @@ enum DocumentLogic {
             }
         }
 
+        failures += composesTheLanding(root)
+
         var ran = 0
         let sample = try? Data(contentsOf: files[0])
         for found in [
@@ -53,6 +56,7 @@ enum DocumentLogic {
             readsLinksAndTermsAsVoiceOverDoes(),
             looksUpOnlyProjectedPageNames(),
             refusesABreadcrumbThatDoesNotEndAtThePage(sample),
+            refusesAControlThatIsNotWhatItSays(try? Data(contentsOf: root.appendingPathComponent("index.json"))),
         ] {
             ran += 1
             failures.append(contentsOf: found)
@@ -74,6 +78,7 @@ enum DocumentLogic {
             let version: Int
             let blocks, inlines, blockRoles, inlineRoles, listRoles, slots: [String]
             let slotActions: [String: [String]]
+            let slotLinks: [String]
         }
         guard let data = try? Data(contentsOf: file),
               let contract = try? JSONDecoder().decode(Contract.self, from: data)
@@ -100,6 +105,7 @@ enum DocumentLogic {
         for slot in NativeDocument.Slot.allCases where contract.slotActions[slot.rawValue] != slot.actions.sorted() {
             failures.append("the \(slot.rawValue) slot's actions differ from the contract's")
         }
+        same("slot allowing links", contract.slotLinks, NativeDocument.Slot.allCases.filter(\.allowsLinks).map(\.rawValue))
         // Listing a kind is not drawing it: each must actually decode, from a node of its own.
         same("block fixture", contract.blocks, Array(blockFixtures.keys))
         same("inline fixture", contract.inlines, Array(inlineFixtures.keys))
@@ -142,6 +148,141 @@ enum DocumentLogic {
         "glyph": #"{"t":"glyph","s":"↗"}"#,
     ]
 
+    /// The native landing composes the prerendered landing with the states page. For every election,
+    /// composing it with the stage it was prerendered at and a first visit's progress must give back
+    /// the prerendered page exactly — which is what proves the states page and the real page agree,
+    /// word for word. Every other stage and progress must compose too.
+    private static func composesTheLanding(_ root: URL) -> [String] {
+        func load(_ name: String) -> NativeDocument? {
+            (try? Data(contentsOf: root.appendingPathComponent("\(name).json")))
+                .flatMap { try? NativeDocument.decodeChecked($0).0 }
+        }
+        guard let states = load("states/landing") else { return ["the landing states page is missing"] }
+        var failures: [String] = []
+        if (try? LandingComposition.themeLabels(in: states)) == nil {
+            failures.append("the states page has no theme labels")
+        }
+        // A landing is a page with the brand bar, whatever its election is called.
+        let files = (try? FileManager.default.contentsOfDirectory(atPath: root.path)) ?? []
+        let names = files.compactMap { file -> String? in
+            guard file.hasSuffix(".json") else { return nil }
+            let name = String(file.dropLast(5))
+            return load(name)?.brand != nil ? name : nil
+        }
+        if !names.contains("index") { failures.append("the current election's landing is missing") }
+        for name in names.sorted() {
+            guard let landing = load(name) else {
+                failures.append("\(name): the landing did not load")
+                continue
+            }
+            let election = name == "index" ? electionOf(landing) : name
+            guard let election, let built = LandingComposition.prerenderedPhase(of: landing, electionID: election) else {
+                failures.append("\(name): the landing names no stage")
+                continue
+            }
+            failures += laysOutClaimsAndSteps(DocumentLayout(landing), name: name)
+            do {
+                let same = try LandingComposition.compose(
+                    landing: landing, states: states, electionID: election, phase: built, progress: .fresh
+                )
+                if DocumentLayout(same).text != DocumentLayout(landing).text {
+                    failures.append("\(name): the states page's \(built) wording differs from the landing's own")
+                }
+                for phase in ["upcoming", "live", "archived"] {
+                    for progress in [LandingComposition.Progress.fresh, .partway(next: 3, total: 29), .complete] {
+                        let composed = try LandingComposition.compose(
+                            landing: landing, states: states, electionID: election, phase: phase, progress: progress
+                        )
+                        failures += laysOutClaimsAndSteps(DocumentLayout(composed), name: "\(name) (\(phase), \(progress))")
+                        // The voter's own numbers, never the states page's samples.
+                        let text = DocumentLayout(composed).text
+                        if case .partway = progress, !text.contains("question 3 of 29") {
+                            failures.append("\(name): the resume call to action does not show the voter's place")
+                        }
+                    }
+                }
+            } catch {
+                failures.append("\(name): \(error)")
+            }
+        }
+        // A states page missing a stage is refused rather than drawn with the wrong one.
+        if let landing = load("index"), let election = electionOf(landing) {
+            let pruned = NativeDocument(
+                route: states.route, title: states.title, crumbs: nil, crumbsLabel: nil,
+                top: states.top, brand: nil,
+                blocks: states.blocks.filter {
+                    if case let .section(.stage, id?, _) = $0 { return !id.hasSuffix("-archived") }
+                    return true
+                },
+                digest: "", spoken: "", drawn: ""
+            )
+            if (try? LandingComposition.compose(
+                landing: landing, states: pruned, electionID: election, phase: "archived", progress: .fresh
+            )) != nil {
+                failures.append("a landing composed from a states page missing its stage")
+            }
+            // Composed as another election's, it is refused rather than given that one's wording.
+            if let other = names.first(where: { $0 != "index" && $0 != election }),
+               (try? LandingComposition.compose(
+                   landing: landing, states: states, electionID: other, phase: "archived", progress: .fresh
+               )) != nil {
+                failures.append("the current election's landing composed as \(other)'s")
+            }
+        }
+        return failures
+    }
+
+    /// The landing's claims and steps are laid out as the web lays them out: each claim's tick set
+    /// apart as its marker, and each step's name on a line above its detail. Both would otherwise run
+    /// together — "✓Built from…", "1 · BallotFind your electorate" — and no text check can see it,
+    /// since each ignores whitespace and markers.
+    private static func laysOutClaimsAndSteps(_ layout: DocumentLayout, name: String) -> [String] {
+        var failures: [String] = []
+        var claims = 0, steps = 0
+        func walk(_ blocks: [DocumentLayout.Block]) {
+            for block in blocks {
+                switch block {
+                case let .list(_, role, items) where role == .claims || role == .steps:
+                    for item in items {
+                        guard case let .paragraph(_, _, run)? = item.first, item.count == 1 else {
+                            failures.append("\(name): a \(role!.rawValue) item is not one paragraph")
+                            continue
+                        }
+                        if role == .claims {
+                            claims += 1
+                            if run.splitting(after: \.decorative)?.lead.visible != "✓" {
+                                failures.append("\(name): a claim has no tick of its own to mark it")
+                            }
+                        } else {
+                            steps += 1
+                            if run.splitting(after: \.strong) == nil {
+                                failures.append("\(name): a step has no name to set above its detail")
+                            }
+                        }
+                    }
+                case let .section(_, _, content), let .quote(content):
+                    walk(content)
+                default:
+                    break
+                }
+            }
+        }
+        walk(layout.blocks)
+        if claims == 0 || steps == 0 { failures.append("\(name): the landing has no claims or no steps") }
+        return failures
+    }
+
+    /// The election a landing page is for, from its stage section's id.
+    private static func electionOf(_ landing: NativeDocument) -> String? {
+        // `lede-<election>-<stage>`: the election is whatever lies between, hyphens and all.
+        for case let .section(.stage, id?, _) in landing.blocks where id.hasPrefix("lede-") {
+            let body = id.dropFirst("lede-".count)
+            guard let cut = body.lastIndex(of: "-") else { return nil }
+            return String(body[..<cut])
+        }
+        return nil
+    }
+
     private static func projected(under root: URL) -> [URL] {
         let walker = FileManager.default.enumerator(at: root, includingPropertiesForKeys: nil)
         return (walker?.allObjects as? [URL] ?? [])
@@ -174,6 +315,37 @@ enum DocumentLogic {
         }
         doc["blocks"] = walk(doc["blocks"] as Any)
         return done ? try? JSONSerialization.data(withJSONObject: doc) : nil
+    }
+
+    /// A slot's link leads to one of the app's routes, and an icon button is a button: a control
+    /// the native screen would open off the app, or draw as a link with no text, is refused.
+    private static func refusesAControlThatIsNotWhatItSays(_ landing: Data?) -> [String] {
+        let isLink: ([String: Any]) -> Bool = { $0["href"] != nil && $0["t"] == nil && $0["current"] == nil }
+        return refusedAtDecode(
+            mutate(landing, where: isLink) { $0["href"] = "//example.org/methodology" },
+            for: "a control link that is not a route",
+            "a slot link off the app's routes was accepted"
+        ) + refusedAtDecode(
+            mutate(landing, where: isLink) { $0["href"] = "/\\example.org" },
+            for: "a control link that is not a route",
+            "a slot link to a backslashed host was accepted"
+        ) + refusedAtDecode(
+            mutate(landing, where: isLink) { $0["named"] = true },
+            for: "a named control that is not a button",
+            "an icon button that is a link was accepted"
+        )
+    }
+
+    /// Refused by the decoder itself, for the reason given — not by a later check that happens to
+    /// catch the same fixture, which would leave the rule under test free to go.
+    private static func refusedAtDecode(_ data: Data?, for reason: String, _ what: String) -> [String] {
+        guard let data else { return ["the fixture for \"\(what)\" could not be built"] }
+        do {
+            _ = try JSONDecoder().decode(NativeDocument.self, from: data)
+            return [what]
+        } catch {
+            return "\(error)".contains(reason) ? [] : ["\(what) — refused for another reason: \(error)"]
+        }
     }
 
     private static func refused(_ data: Data?, _ what: String) -> [String] {
@@ -242,7 +414,7 @@ enum DocumentLogic {
     }
 
     private static let labelled = #"""
-    {"v":3,"route":"/t","title":"T","top":{"label":"T","back":"Back"},"digest":"DIGEST","spoken":"SPOKEN","drawn":"TSee x and division.","blocks":[
+    {"v":4,"route":"/t","title":"T","top":{"label":"T","back":"Back"},"digest":"DIGEST","spoken":"SPOKEN","drawn":"TSee x and division.","blocks":[
       {"t":"heading","level":1,"c":[{"t":"text","s":"T"}]},
       {"t":"paragraph","c":[{"t":"text","s":"See "},
         {"t":"link","href":"https://x.org","external":true,"label":"X on the web (cue)","c":[{"t":"text","s":"x"},{"t":"hidden","c":[{"t":"text","s":"(cue)"}]}]},

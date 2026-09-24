@@ -9,7 +9,7 @@ import Foundation
 /// WebView renders it instead (ADR 0018 D4).
 struct NativeDocument: Equatable {
     /// The projection version this renderer draws.
-    static let version = 3
+    static let version = 4
 
     /// The node kinds this renderer draws, by the names the projection writes. `DocumentLogic`
     /// holds these, and the role and slot cases, to `apps/mobile/ios/native-contract.json`.
@@ -22,8 +22,10 @@ struct NativeDocument: Equatable {
     let crumbs: [Crumb]?
     /// The trail's accessible name.
     let crumbsLabel: String?
-    /// A page's plain top bar; nil on a page with a breadcrumb trail.
+    /// A page's plain top bar; nil on a page with a breadcrumb trail or a brand bar.
     let top: TopBar?
+    /// The landing's bar — the wordmark and the theme toggle; nil on every other page.
+    let brand: Brand?
     let blocks: [Block]
     /// SHA-256 of the document's text, which the layout must reproduce from what it draws.
     let digest: String
@@ -34,16 +36,16 @@ struct NativeDocument: Equatable {
     let drawn: String
 
     enum BlockRole: String, Decodable, CaseIterable {
-        case updated, lede, note, intro, meta, source, evidence, inventory, empty, kicker
+        case updated, lede, note, intro, meta, source, evidence, inventory, empty, kicker, picker, stage
         case clearData = "clear-data"
     }
 
     enum InlineRole: String, Decodable, CaseIterable {
-        case provenance, evidence, primary, secondary
+        case provenance, evidence, primary, secondary, caveat
     }
 
     enum ListRole: String, Decodable, CaseIterable {
-        case rows, index
+        case rows, index, claims, steps
     }
 
     /// A native control that stands in for an interactive part of the page.
@@ -51,14 +53,56 @@ struct NativeDocument: Equatable {
         case clearData = "clear-data"
         case ageDeclare = "age-declare"
         case ageContinue = "age-continue"
+        case landingFresh = "landing-fresh"
+        case landingResume = "landing-resume"
+        case landingComplete = "landing-complete"
+        case themeLight = "theme-light"
+        case themeDark = "theme-dark"
 
-        /// The actions its controls carry — `SLOT_ACTIONS` in `build-native-documents.mjs`.
+        /// The actions its buttons carry — `SLOT_ACTIONS` in `build-native-documents.mjs`. A link
+        /// carries a route instead.
         var actions: [String] {
             switch self {
             case .clearData: return ["clear"]
             case .ageDeclare: return ["adult", "minor"]
             case .ageContinue: return ["continue"]
+            case .landingFresh: return ["start"]
+            case .landingResume: return ["resume", "start"]
+            case .landingComplete: return ["card", "start"]
+            case .themeLight, .themeDark: return ["theme"]
             }
+        }
+
+        /// Whether its controls may include a link to a route beside its buttons.
+        var allowsLinks: Bool { self == .landingFresh }
+    }
+
+    struct Brand: Equatable {
+        /// The wordmark's accessible name.
+        let logo: String
+        let theme: Bool
+    }
+
+    /// One control of a slot, labelled as the page labels it.
+    struct Control: Equatable {
+        /// The label, with each `{name}` standing for a value the page marked.
+        let label: String
+        /// What a button does, as the page names it; nil for a link.
+        let action: String?
+        /// The route a link leads to; nil for a button.
+        let href: String?
+        /// The page's own value for each `{name}`, which a screen may replace with the voter's.
+        let values: [String: String]
+        /// True for an icon button: the label is its accessible name, heard and never drawn.
+        let named: Bool
+
+        /// The label with its values filled — the page's, or those given.
+        func text(_ values: [String: String] = [:]) -> String {
+            var out = label
+            for (name, sample) in self.values {
+                out = out.replacingOccurrences(of: "{\(name)}", with: values[name] ?? sample)
+            }
+            return out
         }
     }
 
@@ -97,12 +141,6 @@ struct NativeDocument: Equatable {
         case slot(Slot, controls: [Control])
         /// The drawn wordmark, by the name the page gives it.
         case logo(label: String)
-    }
-
-    /// One control of a slot: the page's label, and the action the page names on it.
-    struct Control: Equatable {
-        let label: String
-        let action: String
     }
 
     /// A glossary term's popover: its definition, its accessible name and its two controls.
@@ -153,7 +191,7 @@ extension NativeDocument: Decodable {
         let c = try Strict(
             decoder,
             node: "document",
-            fields: ["v", "route", "title", "crumbs", "crumbsLabel", "top", "blocks", "digest", "spoken", "drawn"]
+            fields: ["v", "route", "title", "crumbs", "crumbsLabel", "top", "brand", "blocks", "digest", "spoken", "drawn"]
         )
         let v = try c.decode(Int.self, "v")
         guard v == Self.version else { throw DecodeError.version(v) }
@@ -162,8 +200,12 @@ extension NativeDocument: Decodable {
         crumbs = try c.optional([Crumb].self, "crumbs")
         crumbsLabel = try c.optional(String.self, "crumbsLabel")
         top = try c.optional(TopBar.self, "top")
-        guard (crumbs == nil) != (top == nil), (crumbs == nil) == (crumbsLabel == nil) else {
-            throw DecodeError.invalid("a page needs exactly one of a top bar and a breadcrumb trail")
+        brand = try c.optional(Brand.self, "brand")
+        // Every page has exactly one bar; a page of states may have none of its own.
+        let bars = [crumbs != nil, top != nil, brand != nil].filter { $0 }.count
+        let allowed = route.hasPrefix("/states/") ? 0...1 : 1...1
+        guard allowed.contains(bars), (crumbs == nil) == (crumbsLabel == nil) else {
+            throw DecodeError.invalid("a page needs exactly one of a top bar, a breadcrumb trail and a brand bar")
         }
         if let crumbs {
             guard crumbs.count >= 2, crumbs.last?.href == nil, crumbs.dropLast().allSatisfy({ $0.href?.hasPrefix("/") == true }) else {
@@ -225,9 +267,13 @@ extension NativeDocument.Block: Decodable {
             let c = try Strict(decoder, node: t, fields: ["t", "name", "controls"])
             let controls = try c.decode([NativeDocument.Control].self, "controls")
             let name = try c.decode(NativeDocument.Slot.self, "name")
-            // Each slot's controls are exactly the actions it is drawn for, so a page cannot add a button
-            // the native control would drop, nor swap what one does by moving it.
-            guard controls.map(\.action).sorted() == name.actions.sorted() else {
+            // Each slot's buttons are exactly the actions it is drawn for, and every other control is
+            // a link: a page cannot add a button the native control would drop, nor swap what one
+            // does by moving it.
+            guard controls.compactMap(\.action).sorted() == name.actions.sorted(),
+                  controls.allSatisfy({ ($0.action == nil) != ($0.href == nil) }),
+                  name.allowsLinks || controls.allSatisfy({ $0.href == nil })
+            else {
                 throw NativeDocument.DecodeError.invalid("the \(name.rawValue) slot's actions are not \(name.actions)")
             }
             self = .slot(name, controls: controls)
@@ -294,20 +340,41 @@ extension NativeDocument.Inline: Decodable {
     }
 }
 
-extension NativeDocument.Control: Decodable {
-    init(from decoder: Decoder) throws {
-        let c = try Strict(decoder, node: "control", fields: ["label", "action"])
-        label = try c.decode(String.self, "label")
-        action = try c.decode(String.self, "action")
-    }
-}
-
 extension NativeDocument.Definition: Decodable {
     init(from decoder: Decoder) throws {
         let c = try Strict(decoder, node: "definition", fields: ["term", "id", "detail"])
         term = try c.decode([NativeDocument.Inline].self, "term")
         id = try c.optional(String.self, "id")
         detail = try c.decode([NativeDocument.Block].self, "detail")
+    }
+}
+
+extension NativeDocument.Brand: Decodable {
+    init(from decoder: Decoder) throws {
+        let c = try Strict(decoder, node: "brand bar", fields: ["logo", "theme"])
+        logo = try c.decode(String.self, "logo")
+        theme = try c.decode(Bool.self, "theme")
+    }
+}
+
+extension NativeDocument.Control: Decodable {
+    init(from decoder: Decoder) throws {
+        let c = try Strict(decoder, node: "control", fields: ["label", "action", "href", "values", "named"])
+        label = try c.decode(String.self, "label")
+        action = try c.optional(String.self, "action")
+        href = try c.optional(String.self, "href")
+        values = try c.optional([String: String].self, "values") ?? [:]
+        named = try c.optional(Bool.self, "named") ?? false
+        for name in values.keys where !label.contains("{\(name)}") {
+            throw NativeDocument.DecodeError.invalid("a control value \"\(name)\" its label does not use")
+        }
+        // A link leads to one of the app's own routes; an icon button is a button.
+        if let href, !href.hasPrefix("/") || href.hasPrefix("//") || href.contains("\\") {
+            throw NativeDocument.DecodeError.invalid("a control link that is not a route")
+        }
+        if named, href != nil {
+            throw NativeDocument.DecodeError.invalid("a named control that is not a button")
+        }
     }
 }
 

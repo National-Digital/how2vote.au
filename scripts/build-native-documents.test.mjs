@@ -285,6 +285,42 @@ describe("screens and chrome", () => {
     });
   });
 
+  it("drops a text-less icon only inside a slot's control", () => {
+    const icon = `<svg aria-hidden="true" viewBox="0 0 1 1"><path d="M0"></path></svg>`;
+    const doc = project(
+      `<div class="theme light"><button type="button" value="theme" aria-label="Dark">${icon}</button></div>`,
+    );
+    expect(doc.blocks.at(-1)).toEqual({
+      t: "slot",
+      name: "theme-light",
+      controls: [{ label: "Dark", action: "theme", named: true }],
+    });
+    fails(`<p>Text ${icon} more.</p>`).toThrow("<svg> inside running text");
+    fails(`<div class="note" role="note">${icon}<p>Text.</p></div>`).toThrow(
+      "a decorative glyph holds markup",
+    );
+    fails(
+      `<div class="theme light"><button type="button" value="theme" aria-label="Dark"><svg aria-hidden="true"><text>☾</text></svg></button></div>`,
+    ).toThrow("a slot control holds markup");
+  });
+
+  it("takes a slot's link only to one of the app's routes", () => {
+    const cta = (href) =>
+      `<div class="cta fresh"><button type="button" value="start">Start</button> <a href="${href}">How</a></div>`;
+    expect(project(cta("/methodology")).blocks.at(-1).controls[1]).toEqual({
+      label: "How",
+      href: "/methodology",
+    });
+    fails(cta("//example.org/methodology")).toThrow("<a> inside a control slot");
+    fails(cta("/\\example.org")).toThrow("<a> inside a control slot");
+  });
+
+  it("refuses a link in a slot drawn as buttons alone", () => {
+    fails(
+      `<section class="clear-data"><div class="actions"><a href="/saved">Saved</a> <button type="button" value="clear">Clear</button></div></section>`,
+    ).toThrow("<a> inside a control slot");
+  });
+
   it("refuses a slot whose buttons do not name exactly its actions", () => {
     const gate = (buttons) =>
       projectDocument(

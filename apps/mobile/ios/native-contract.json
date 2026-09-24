@@ -1,5 +1,5 @@
 {
-  "version": 3,
+  "version": 4,
   "blocks": [
     "heading",
     "paragraph",
@@ -33,23 +33,33 @@
     "lede",
     "meta",
     "note",
+    "picker",
     "source",
+    "stage",
     "updated"
   ],
   "inlineRoles": [
+    "caveat",
     "evidence",
     "primary",
     "provenance",
     "secondary"
   ],
   "listRoles": [
+    "claims",
     "index",
-    "rows"
+    "rows",
+    "steps"
   ],
   "slots": [
     "age-continue",
     "age-declare",
-    "clear-data"
+    "clear-data",
+    "landing-complete",
+    "landing-fresh",
+    "landing-resume",
+    "theme-dark",
+    "theme-light"
   ],
   "slotActions": {
     "age-continue": [
@@ -61,6 +71,26 @@
     ],
     "clear-data": [
       "clear"
+    ],
+    "landing-complete": [
+      "card",
+      "start"
+    ],
+    "landing-fresh": [
+      "start"
+    ],
+    "landing-resume": [
+      "resume",
+      "start"
+    ],
+    "theme-dark": [
+      "theme"
+    ],
+    "theme-light": [
+      "theme"
     ]
-  }
+  },
+  "slotLinks": [
+    "landing-fresh"
+  ]
 }

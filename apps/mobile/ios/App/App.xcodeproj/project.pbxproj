@@ -40,7 +40,6 @@
 		67F55FC1DE295BCA8CEE82F4 /* BallotViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2B5A392B30FC2268EE01D60B /* BallotViewModel.swift */; };
 		24E4C96D0DE735EF99993444 /* NativeTheme.swift in Sources */ = {isa = PBXBuildFile; fileRef = C7D6808D025AA120FA530648 /* NativeTheme.swift */; };
 		0790EB1A84CBB60D6B275A0C /* LandingViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 181E3DE7AA165FEACD41F3ED /* LandingViewModel.swift */; };
-		B3608E27DBD78FEAB78C73EC /* LandingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 15F30F77A450E009E19BEED8 /* LandingView.swift */; };
 		4067B29193E978EFB785DEDA /* Wordmark.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27EAD8344E17B0468848DC1A /* Wordmark.swift */; };
 		731C460866AA08E66FDAA8F0 /* BrandMark.swift in Sources */ = {isa = PBXBuildFile; fileRef = 45DEDD2F8ABFD31C51C1E453 /* BrandMark.swift */; };
 		4A29BAFE080F5D70AC855684 /* SVGPath.swift in Sources */ = {isa = PBXBuildFile; fileRef = C8FE2AA385A9FD51D3D11682 /* SVGPath.swift */; };
@@ -51,6 +50,7 @@
 		F94C42C83EF8BF31270BA59A /* DocumentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7959077F9FFB7B59F43F1001 /* DocumentView.swift */; };
 		2311743D63039E370B87C0C2 /* DocumentConservationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1C6F0B05003FBC1A9D4B87D /* DocumentConservationTests.swift */; };
 		27FF1F04447C6F34B26FD8D4 /* native-documents in Resources */ = {isa = PBXBuildFile; fileRef = 18C36407212E5947920BCC94 /* native-documents */; };
+		30BE2661B3C024FF7B26364B /* LandingComposition.swift in Sources */ = {isa = PBXBuildFile; fileRef = D222AF26B7CBDE43060CC05E /* LandingComposition.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -99,7 +99,6 @@
 		2B5A392B30FC2268EE01D60B /* BallotViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = BallotViewModel.swift; path = Views/BallotViewModel.swift; sourceTree = "<group>"; };
 		C7D6808D025AA120FA530648 /* NativeTheme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = NativeTheme.swift; path = State/NativeTheme.swift; sourceTree = "<group>"; };
 		181E3DE7AA165FEACD41F3ED /* LandingViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = LandingViewModel.swift; path = Views/LandingViewModel.swift; sourceTree = "<group>"; };
-		15F30F77A450E009E19BEED8 /* LandingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = LandingView.swift; path = Views/LandingView.swift; sourceTree = "<group>"; };
 		27EAD8344E17B0468848DC1A /* Wordmark.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = Wordmark.swift; path = Design/Wordmark.swift; sourceTree = "<group>"; };
 		45DEDD2F8ABFD31C51C1E453 /* BrandMark.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = BrandMark.swift; path = Generated/BrandMark.swift; sourceTree = "<group>"; };
 		C8FE2AA385A9FD51D3D11682 /* SVGPath.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = SVGPath.swift; path = Design/SVGPath.swift; sourceTree = "<group>"; };
@@ -111,6 +110,7 @@
 		0E11D99F4FCA0A0DF914A07B /* AppUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = AppUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		A1C6F0B05003FBC1A9D4B87D /* DocumentConservationTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DocumentConservationTests.swift; sourceTree = "<group>"; };
 		18C36407212E5947920BCC94 /* native-documents */ = {isa = PBXFileReference; lastKnownFileType = folder; name = "native-documents"; path = "App/public/native-documents"; sourceTree = SOURCE_ROOT; };
+		D222AF26B7CBDE43060CC05E /* LandingComposition.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = LandingComposition.swift; path = Model/LandingComposition.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -154,6 +154,7 @@
 		504EC3061FED79650016851F /* App */ = {
 			isa = PBXGroup;
 			children = (
+				D222AF26B7CBDE43060CC05E /* LandingComposition.swift */,
 				7959077F9FFB7B59F43F1001 /* DocumentView.swift */,
 				8F1B23DBB854035555DD06F4 /* NativeDocument.swift */,
 				4D1621075D62B083058BAE23 /* DocumentLayout.swift */,
@@ -162,7 +163,6 @@
 				C8FE2AA385A9FD51D3D11682 /* SVGPath.swift */,
 				45DEDD2F8ABFD31C51C1E453 /* BrandMark.swift */,
 				27EAD8344E17B0468848DC1A /* Wordmark.swift */,
-				15F30F77A450E009E19BEED8 /* LandingView.swift */,
 				181E3DE7AA165FEACD41F3ED /* LandingViewModel.swift */,
 				C7D6808D025AA120FA530648 /* NativeTheme.swift */,
 				2B5A392B30FC2268EE01D60B /* BallotViewModel.swift */,
@@ -321,6 +321,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				30BE2661B3C024FF7B26364B /* LandingComposition.swift in Sources */,
 				F94C42C83EF8BF31270BA59A /* DocumentView.swift in Sources */,
 				25BE5DCCAE813E940E60511F /* NativeDocument.swift in Sources */,
 				9C54DCC78C332EF3FC55FE98 /* DocumentLayout.swift in Sources */,
@@ -329,7 +330,6 @@
 				4A29BAFE080F5D70AC855684 /* SVGPath.swift in Sources */,
 				731C460866AA08E66FDAA8F0 /* BrandMark.swift in Sources */,
 				4067B29193E978EFB785DEDA /* Wordmark.swift in Sources */,
-				B3608E27DBD78FEAB78C73EC /* LandingView.swift in Sources */,
 				0790EB1A84CBB60D6B275A0C /* LandingViewModel.swift in Sources */,
 				24E4C96D0DE735EF99993444 /* NativeTheme.swift in Sources */,
 				67F55FC1DE295BCA8CEE82F4 /* BallotViewModel.swift in Sources */,

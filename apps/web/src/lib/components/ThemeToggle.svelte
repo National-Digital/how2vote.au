@@ -4,12 +4,15 @@
   // An icon toggle: a sun when the resolved theme is light, a moon when it is dark — the glyph shows
   // the *current* mode. It stays accessible because the button keeps a text label (aria-label) and
   // announces its state via aria-pressed, so screen readers get everything the icon conveys.
-  const isDark = $derived(theme.resolved() === "dark");
+  // `dark` fixes the state described, for `/states/landing`, which prerenders both labels.
+  let { dark }: { dark?: boolean } = $props();
+  const isDark = $derived(dark ?? theme.resolved() === "dark");
 </script>
 
 <button
   type="button"
   class="ui toggle"
+  value="theme"
   onclick={() => theme.toggle()}
   aria-label={isDark ? "Switch to light theme" : "Switch to dark theme"}
   aria-pressed={isDark}

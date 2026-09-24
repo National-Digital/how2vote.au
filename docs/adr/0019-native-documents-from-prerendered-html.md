@@ -85,6 +85,19 @@ Pressing one asks the web to do what the page's own control does (`nativeSlotAct
 same functions the page calls. The action is named, never positional, so a page that reorders its
 buttons cannot swap what they do.
 
+**D4c — The landing is composed from the web's pages.** Each election's landing is prerendered in
+a first visit's state, at the stage the election had on the day of the build. The stage can change
+while an app version is in use, and a returning voter has a quiz to resume or a comparison to
+see. So `/states/landing.html` holds every stage's lede and steps for every election, each call to
+action (the question numbers marked with `<data>`), and both theme labels. It is rendered at build
+time from the landing's own components, as a states file (D4b): not a page, no client code, and
+only in the iOS build. The native landing
+replaces those parts of the page with the ones for the stage the engine reports and the voter's
+progress. `DocumentLogic` requires that composing each landing with the stage it was prerendered
+at, and a first visit's progress, gives back the page exactly. That proves the two pages agree
+word for word. The landing's buttons act natively, because on iOS the quiz state is the native
+core's (ADR 0018 D3).
+
 **D6 — The iOS app is a skeleton, and it has a contract with the web build.** The goal is that no
 iOS screen shows hand-written copy. Every word comes from the web build: projected pages, the
 chrome handed over with each route, and the datasets. Two checks hold this in place as the web
@@ -123,7 +136,7 @@ where the checks above already live.
   - offline;
   - saved;
   - the card.
-- The landing, quiz, ballot and review screens still hold the hand-written copy the record lists,
+- The quiz, ballot and review screens still hold the hand-written copy the record lists,
   and the registered notices in `docs/legal/native-copy.json` are still typed copies checked
   against the web source rather than read from the build. Both are the next moves.
 - Existing installs keep their data. The `how2vote:` keys and the native-core ownership marker are

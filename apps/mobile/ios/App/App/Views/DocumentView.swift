@@ -14,6 +14,8 @@ struct DocumentView: View {
     let layout: DocumentLayout
     /// The fragment the voter followed a link to, scrolled into view on arrival.
     let anchor: String?
+    /// The brand bar's theme toggle: its name in each theme, from the page, and what it asks for.
+    var theme: (labels: LandingComposition.ThemeLabels, toggle: () -> Void)?
     let onExit: (String) -> Void
 
     @State private var scrollTarget: String?
@@ -29,6 +31,8 @@ struct DocumentView: View {
                 Breadcrumbs(crumbs: crumbs, label: layout.crumbsLabel ?? "", onExit: onExit)
             } else if let top = layout.top {
                 ProjectedTopBar(top: top) { onExit("/") }
+            } else if let brand = layout.brand {
+                BrandBar(brand: brand, theme: theme)
             }
             ScrollViewReader { proxy in
                 ScrollView {
@@ -224,9 +228,12 @@ private struct DocumentBlock: View {
         case let .slot(slot, controls):
             switch slot {
             case .clearData:
-                ClearDataControl(label: controls[0].label)
-            case .ageDeclare, .ageContinue:
-                SlotButtons(slot: slot, controls: controls)
+                ClearDataControl(label: controls.first { $0.action == "clear" }?.text() ?? "")
+            case .ageDeclare, .ageContinue, .landingFresh, .landingResume, .landingComplete:
+                SlotButtons(slot: slot, controls: controls, onExit: onExit)
+            case .themeLight, .themeDark:
+                // The brand bar draws the theme toggle; these carry only its names.
+                EmptyView()
             }
         case let .logo(label):
             Wordmark(height: UIFontMetrics(forTextStyle: .body).scaledValue(for: 20), color: Theme.ink.resolve(scheme), label: label)
@@ -247,14 +254,14 @@ private struct DocumentBlock: View {
         case .lede, .intro: return .title3
         case .updated, .note, .meta, .source, .evidence: return .footnote
         case .kicker: return .caption2.weight(.semibold)
-        case .inventory, .empty, .clearData, nil: return .body
+        case .inventory, .empty, .clearData, .picker, .stage, nil: return .body
         }
     }
 
     private static func isQuiet(_ role: NativeDocument.BlockRole?) -> Bool {
         switch role {
         case .updated, .meta, .source, .evidence, .empty, .kicker: return true
-        case .lede, .intro, .note, .inventory, .clearData, nil: return false
+        case .lede, .intro, .note, .inventory, .clearData, .picker, .stage, nil: return false
         }
     }
 }
@@ -269,6 +276,31 @@ private struct DocumentList: View {
     let onExit: (String) -> Void
 
     var body: some View {
+        if role == .steps {
+            // The landing's step rail: columns under a rule, as `.steps` lays them out.
+            HStack(alignment: .top, spacing: 16) {
+                ForEach(Array(items.enumerated()), id: \.offset) { _, item in
+                    VStack(alignment: .leading, spacing: 2) {
+                        Rectangle().fill(Theme.ink.resolve(scheme)).frame(height: 1).padding(.bottom, 4)
+                        // The step's name on a line of its own above its detail, as `.steps b` is.
+                        if case let .paragraph(_, _, run)? = item.first, item.count == 1,
+                           let (name, detail) = run.splitting(after: \.strong) {
+                            RunText(run: name, layout: layout).font(.caption.weight(.semibold))
+                            RunText(run: detail, layout: layout).font(.caption)
+                        } else {
+                            DocumentBlocks(blocks: item, layout: layout, onExit: onExit)
+                                .font(.caption)
+                        }
+                    }
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                }
+            }
+        } else {
+            list
+        }
+    }
+
+    private var list: some View {
         VStack(alignment: .leading, spacing: role == .index ? 4 : 8) {
             ForEach(Array(items.enumerated()), id: \.offset) { index, item in
                 if role == .rows {
@@ -278,19 +310,37 @@ private struct DocumentList: View {
                     }
                 } else if role == .index {
                     DocumentBlocks(blocks: item, layout: layout, onExit: onExit)
+                } else if role == .claims, case let .paragraph(_, _, run)? = item.first, item.count == 1,
+                          let (tick, claim) = run.splitting(after: \.decorative) {
+                    // The page's own tick is the marker, set apart from the claim as `.tick` is.
+                    HStack(alignment: .firstTextBaseline, spacing: 10) {
+                        ListMarker(text: tick.visible)
+                        RunText(run: claim, layout: layout)
+                    }
                 } else {
                     HStack(alignment: .firstTextBaseline, spacing: 8) {
-                        Text(ordered ? "\(index + 1)." : "•")
-                            .foregroundStyle(Theme.ink2.resolve(scheme))
-                            .accessibilityHidden(true)
-                            // UI tests see elements VoiceOver skips; this marks the one drawn
-                            // glyph a document screen adds, so the on-screen check can skip it too.
-                            .accessibilityIdentifier(DocumentURL.decoration)
+                        ListMarker(text: ordered ? "\(index + 1)." : "•")
                         DocumentBlocks(blocks: item, layout: layout, onExit: onExit)
                     }
                 }
             }
         }
+    }
+}
+
+/// A list item's marker: drawn, never heard.
+private struct ListMarker: View {
+    @Environment(\.colorScheme) private var scheme
+
+    let text: String
+
+    var body: some View {
+        Text(text)
+            .foregroundStyle(Theme.ink2.resolve(scheme))
+            .accessibilityHidden(true)
+            // UI tests see elements VoiceOver skips; this marks the one drawn glyph a document screen
+            // adds, so the on-screen check can skip it too.
+            .accessibilityIdentifier(DocumentURL.decoration)
     }
 }
 
@@ -561,20 +611,31 @@ private struct SlotButtons: View {
 
     let slot: NativeDocument.Slot
     let controls: [NativeDocument.Control]
+    let onExit: (String) -> Void
 
     @State private var pressed = false
 
     private func press(_ control: NativeDocument.Control) {
-        guard !pressed else { return }
+        guard !pressed, let action = control.action else { return }
         pressed = true
-        actions.slotAction(slot, control.action)
+        actions.slotAction(slot, action)
     }
 
     var body: some View {
         VStack(spacing: 10) {
             ForEach(Array(controls.enumerated()), id: \.offset) { index, control in
-                let label = control.label
-                if index == 0 {
+                let label = control.text()
+                if let href = control.href {
+                    // A link on the page: it goes where the page's link goes.
+                    Button(label) { onExit(href) }
+                        .font(.footnote)
+                        .underline()
+                        .foregroundStyle(Theme.ink2.resolve(scheme))
+                        .frame(minHeight: 44)
+                        // Announced as the page's link is, not as a button.
+                        .accessibilityRemoveTraits(.isButton)
+                        .accessibilityAddTraits(.isLink)
+                } else if index == 0 {
                     Button(label) { press(control) }
                         .buttonStyle(PrimaryButton())
                 } else {
@@ -593,3 +654,32 @@ private struct SlotButtons: View {
         .disabled(pressed)
     }
 }
+
+/// The landing's bar, as its `<header>` draws it: the wordmark and the theme toggle.
+private struct BrandBar: View {
+    @Environment(\.colorScheme) private var scheme
+
+    let brand: NativeDocument.Brand
+    let theme: (labels: LandingComposition.ThemeLabels, toggle: () -> Void)?
+
+    var body: some View {
+        HStack {
+            Wordmark(height: UIFontMetrics(forTextStyle: .body).scaledValue(for: 20), color: Theme.ink.resolve(scheme), label: brand.logo)
+            Spacer()
+            if brand.theme, let theme {
+                Button(action: theme.toggle) {
+                    Image(systemName: scheme == .dark ? "moon" : "sun.max")
+                        .frame(width: 44, height: 44)
+                }
+                .buttonStyle(.plain)
+                .foregroundStyle(Theme.ink2.resolve(scheme))
+                .accessibilityLabel(scheme == .dark ? theme.labels.dark : theme.labels.light)
+                // The web's toggle announces its state (`aria-pressed`): pressed while dark.
+                .accessibilityAddTraits(scheme == .dark ? .isSelected : [])
+            }
+        }
+        .padding(.horizontal, Theme.gutter)
+        .padding(.top, 8)
+    }
+}
+
