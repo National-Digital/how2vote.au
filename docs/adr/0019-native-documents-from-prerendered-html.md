@@ -116,6 +116,14 @@ sits beside it in `$lib/ballot-copy.app.ts`, so it never ships in the web page's
 one national ballot and an https lookup worded as its piece; `check-native-jurisdictions.mjs` holds
 the listed states to `STATES`. A file that fails declines the picker for the WebView's.
 
+**D4f — The review's wording is the web's review page.** The review keeps its native layout and
+draws every word from `states/review.html`, which renders `$lib/review-copy.ts` as the review page
+reads it, beside `$lib/review-copy.app.ts`, and each answer's short label as `answerLabel` gives it.
+`AnswerScale.swift` keeps only the rule for which answers may carry the ×10 star, so the review
+cannot read an answer back as one the voter did not give. `DocumentLogic` requires every piece
+with the values the screen fills, and labels for exactly the answers the quiz page records, worded
+as the quiz words them. The importance note and the star's hint remain `LegalCopy`.
+
 **D6 — The iOS app is a skeleton, and it has a contract with the web build.** The goal is that no
 iOS screen shows hand-written copy. Every word comes from the web build: projected pages, the
 chrome handed over with each route, and the datasets. Two checks hold this in place as the web

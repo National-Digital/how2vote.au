@@ -43,6 +43,7 @@ enum DocumentLogic {
         failures += composesTheLanding(root)
         failures += readsTheQuizWording(root)
         failures += readsTheBallotWording(root)
+        failures += readsTheReviewWording(root)
 
         var ran = 0
         let sample = try? Data(contentsOf: files[0])
@@ -350,6 +351,96 @@ enum DocumentLogic {
         ]
         for (what, mutated) in refused where (try? BallotWording(mutated)) != nil {
             failures.append("a ballot wording \(what) was accepted")
+        }
+        return failures
+    }
+
+    /// The review reads each answer back by the web's own label, for every answer the quiz records,
+    /// and a page that loses a piece, or names an answer twice or not by its points, is refused.
+    private static func readsTheReviewWording(_ root: URL) -> [String] {
+        guard let data = try? Data(contentsOf: root.appendingPathComponent("states/review.json")),
+              let (page, _) = try? NativeDocument.decodeChecked(data)
+        else { return ["the review states page is missing or does not lay out"] }
+        var failures: [String] = []
+        do {
+            let wording = try ReviewWording(page)
+            if let quizData = try? Data(contentsOf: root.appendingPathComponent("states/quiz.json")),
+               let (quizPage, _) = try? NativeDocument.decodeChecked(quizData),
+               let quiz = try? QuizWording(quizPage) {
+                let recorded = Set(quiz.answers.map(\.points))
+                if Set(wording.answers.keys) != recorded {
+                    failures.append("the review labels answers \(wording.answers.keys.sorted()), the quiz records \(recorded.sorted())")
+                }
+                // Each answer is read back as the quiz words it, apart from a skip, which the review
+                // names as the fact rather than the option.
+                for answer in quiz.answers where answer.points != 0
+                    && wording.label(points: answer.points) != answer.label {
+                    failures.append("the review reads \(answer.points) as \(wording.label(points: answer.points)), the quiz as \(answer.label)")
+                }
+            } else {
+                failures.append("the quiz wording could not be read to hold the review's labels to")
+            }
+            if wording.label(points: nil) != wording.text(.unanswered) {
+                failures.append("an unanswered question is not read as unanswered")
+            }
+            if wording.label(points: 9) != wording.label(points: 0) {
+                failures.append("an answer the scale does not define is not read as a skip")
+            }
+            let all = wording.headline(answered: 3, total: 3), some = wording.headline(answered: 1, total: 3)
+            if all != wording.text(.all, ["total": "3"]) || some != wording.text(.some, ["recorded": "1", "total": "3"])
+                || all == some {
+                failures.append("the review heading does not report how many are answered: \(all) / \(some)")
+            }
+            if wording.text(.retry).isEmpty || !wording.failed.contains(wording.text(.retry)) {
+                failures.append("the review's load failure does not carry its retry: \(wording.failed)")
+            }
+            if wording.label(points: 0).isEmpty || wording.label(points: 0) == wording.text(.unanswered) {
+                failures.append("a skip is not read back as the page's skip")
+            }
+            if wording.headline(answered: 0, total: 0) != wording.text(.all, ["total": "0"]) {
+                failures.append("the review heading does not follow the web's rule for an empty set")
+            }
+            if !wording.text(.star, ["question": "Q"]).contains("Q") {
+                failures.append("the star's label does not name its question")
+            }
+        } catch {
+            failures.append("the review wording: \(error)")
+        }
+
+        func edited(_ edit: (NativeDocument.Block) -> NativeDocument.Block?) -> NativeDocument {
+            NativeDocument(
+                route: page.route, title: page.title, crumbs: nil, crumbsLabel: nil, top: page.top, brand: nil,
+                blocks: page.blocks.compactMap(edit), digest: "", spoken: "", drawn: ""
+            )
+        }
+        func answers(_ entries: [(String, String)]) -> (NativeDocument.Block) -> NativeDocument.Block? {
+            { block in
+                guard case .section(.template, "review-answers", _) = block else { return block }
+                return .section(role: .template, id: "review-answers", content: [.definitions(entries.map {
+                    NativeDocument.Definition(
+                        term: [.text($0.0)], id: nil,
+                        detail: [.paragraph(role: nil, id: nil, content: [.text($0.1)])]
+                    )
+                })])
+            }
+        }
+        let refused: [(String, NativeDocument)] = [
+            ("missing a piece", edited {
+                if case .section(.template, "review-compare", _) = $0 { return nil }
+                return $0
+            }),
+            ("dropping the question from the star", edited {
+                guard case .section(.template, "review-star", _) = $0 else { return $0 }
+                return .section(role: .template, id: "review-star", content: [
+                    .paragraph(role: nil, id: nil, content: [.text("Mark as extremely important")]),
+                ])
+            }),
+            ("naming an answer twice", edited(answers([("0", "Skipped"), ("5", "Agree"), ("5", "Strongly agree")]))),
+            ("naming an answer by other than its points", edited(answers([("0", "Skipped"), ("five", "Strongly agree")]))),
+            ("naming no skip", edited(answers([("5", "Strongly agree")]))),
+        ]
+        for (what, mutated) in refused where (try? ReviewWording(mutated)) != nil {
+            failures.append("a review wording \(what) was accepted")
         }
         return failures
     }

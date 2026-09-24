@@ -53,6 +53,7 @@
 		4FE245B8CB4ABE49B5A82760 /* QuizWording.swift in Sources */ = {isa = PBXBuildFile; fileRef = A43A9CEB26358530EA37C6CC /* QuizWording.swift */; };
 		29EC6470D46C3523C3B08D67 /* BallotWording.swift in Sources */ = {isa = PBXBuildFile; fileRef = 664CA162BC2F3ED51FEDEB99 /* BallotWording.swift */; };
 		145E52A14B840A1B24C60489 /* StatesPage.swift in Sources */ = {isa = PBXBuildFile; fileRef = AD043BA6C9571B9D9D9803D9 /* StatesPage.swift */; };
+		29C913E0CF8894C3543AFE41 /* ReviewWording.swift in Sources */ = {isa = PBXBuildFile; fileRef = D252D28F1D08DDFF7432B5A9 /* ReviewWording.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -115,6 +116,7 @@
 		A43A9CEB26358530EA37C6CC /* QuizWording.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = QuizWording.swift; path = Model/QuizWording.swift; sourceTree = "<group>"; };
 		664CA162BC2F3ED51FEDEB99 /* BallotWording.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = BallotWording.swift; path = Model/BallotWording.swift; sourceTree = "<group>"; };
 		AD043BA6C9571B9D9D9803D9 /* StatesPage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = StatesPage.swift; path = Model/StatesPage.swift; sourceTree = "<group>"; };
+		D252D28F1D08DDFF7432B5A9 /* ReviewWording.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = ReviewWording.swift; path = Model/ReviewWording.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -158,6 +160,7 @@
 		504EC3061FED79650016851F /* App */ = {
 			isa = PBXGroup;
 			children = (
+				D252D28F1D08DDFF7432B5A9 /* ReviewWording.swift */,
 				AD043BA6C9571B9D9D9803D9 /* StatesPage.swift */,
 				664CA162BC2F3ED51FEDEB99 /* BallotWording.swift */,
 				A43A9CEB26358530EA37C6CC /* QuizWording.swift */,
@@ -327,6 +330,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				29C913E0CF8894C3543AFE41 /* ReviewWording.swift in Sources */,
 				145E52A14B840A1B24C60489 /* StatesPage.swift in Sources */,
 				29EC6470D46C3523C3B08D67 /* BallotWording.swift in Sources */,
 				4FE245B8CB4ABE49B5A82760 /* QuizWording.swift in Sources */,

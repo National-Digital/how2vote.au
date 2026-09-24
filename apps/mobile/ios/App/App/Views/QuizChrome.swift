@@ -62,10 +62,8 @@ struct QuizProgress: View {
     let total: Int
     /// What the bar measures, as the web's progress label names it.
     let label: String
-    /// What each step is called in the spoken value.
-    var step: String?
-    /// Replaces the spoken value where counting steps would say nothing useful.
-    var spokenValue: String?
+    /// The position as the screen words it, which VoiceOver reads as the bar's value.
+    let spokenValue: String
 
     private var fraction: Double {
         total > 0 ? min(1, max(0, Double(value) / Double(total))) : 0
@@ -83,7 +81,7 @@ struct QuizProgress: View {
         .frame(height: 3)
         .accessibilityElement()
         .accessibilityLabel(label)
-        .accessibilityValue(spokenValue ?? (total > 0 ? "\(step ?? "") \(value) of \(total)" : "Loading"))
+        .accessibilityValue(spokenValue)
     }
 }
 

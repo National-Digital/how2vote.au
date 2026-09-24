@@ -86,8 +86,8 @@ describe("verifyNativeChrome", () => {
 
   it("catches a screen that bypasses themed()", () => {
     const host = COMMITTED.host.replace(
-      "return themed(ReviewView(model: model, canVote: eligible, onExit: onExit))",
-      "return AnyView(ReviewView(model: model, canVote: eligible, onExit: onExit))",
+      "return themed(ReviewView(model: model, wording: wording, canVote: eligible, onExit: onExit))",
+      "return AnyView(ReviewView(model: model, wording: wording, canVote: eligible, onExit: onExit))",
     );
     expect(mutate({ host })).toContain('the "review" screen is not built through themed');
   });

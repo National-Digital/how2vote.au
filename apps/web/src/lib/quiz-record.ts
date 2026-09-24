@@ -36,3 +36,16 @@ export function fieldsOf(record: Partial<Persisted>): QuizFields {
     questionIds: record.questionIds ?? [],
   };
 }
+
+/**
+ * How many questions have a recorded decision (an explicit skip counts). Only the given questions
+ * count: an answer left from a question since withdrawn is kept but not counted, or the count could
+ * exceed the total. With no questions known yet, every answer counts.
+ */
+export function recordedCount(
+  answers: Record<number, StoredAnswer>,
+  questionIds: number[],
+): number {
+  if (questionIds.length === 0) return Object.keys(answers).length;
+  return questionIds.filter((id) => id in answers).length;
+}

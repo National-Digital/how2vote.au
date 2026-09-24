@@ -15,11 +15,12 @@
  *      points as its `value`. So the web page must bind every button's `value` to its option's
  *      points, and `AnswerScale.swift` must not restate the options, which would be a second binding
  *      free to drift from the first.
- *   2. **The short labels.** `answerLabel` supplies the review screen and the VoiceOver
- *      announcements. A label that disagrees with the option it names misreports the answer back to
- *      the voter, which on a screen reader is the only reading they get.
- *   3. **The star.** `important` prefixes the same mark on both sides, so the review screen and its
- *      announcement mean the same thing.
+ *   2. **The short labels.** `answerLabel` supplies the review screen's reading of each answer,
+ *      and the native review reads the same labels from the web's own review page (ADR 0019 D4b).
+ *      So the web must name every answer it scores, and `AnswerScale.swift` must not restate the
+ *      labels or their star: a second copy that drifted would read an answer back to the voter as
+ *      one they did not give, which on a screen reader is the only reading they get.
+ *   3. **The star.** Only answers at the two ends of the scale may carry the ×10 lever.
  *
  * Both sides are plain literals, so agreement is checkable without running either.
  */
@@ -159,15 +160,10 @@ export function verifyAnswerScale(web, native, webQuiz = "", answerOptions = "")
   }
 
   if (Object.keys(a.labels).length === 0) errors.push("the web declares no answerLabel map");
-  if (Object.keys(b.labels).length === 0) errors.push("AnswerScale.swift declares no label map");
-  for (const points of new Set([...Object.keys(a.labels), ...Object.keys(b.labels)])) {
-    if (a.labels[points] !== b.labels[points]) {
-      errors.push(
-        `the short label for ${points} differs — web ${JSON.stringify(a.labels[points])}, ` +
-          `native ${JSON.stringify(b.labels[points])}. The review screen and VoiceOver would ` +
-          `report an answer the voter did not give`,
-      );
-    }
+  if (Object.keys(b.labels).length > 0 || b.star !== null) {
+    errors.push(
+      "AnswerScale.swift restates the short labels — the review reads them from the web's page",
+    );
   }
 
   // Each option must be named the same way where it is read back, or the quiz and the review screen
@@ -176,13 +172,6 @@ export function verifyAnswerScale(web, native, webQuiz = "", answerOptions = "")
     if (o.kind === "answer" && a.labels[String(o.points)] === undefined) {
       errors.push(`the web scores ${o.points} but answerLabel has no name for it`);
     }
-  }
-
-  if (a.star === null || b.star === null || a.star !== b.star) {
-    errors.push(
-      `the "extremely important" mark differs — web ${JSON.stringify(a.star)}, ` +
-        `native ${JSON.stringify(b.star)}`,
-    );
   }
 
   // The ×10 lever weights only the two ends of the scale. A star allowed onto a middling answer

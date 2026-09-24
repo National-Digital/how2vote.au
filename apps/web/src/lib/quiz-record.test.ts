@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { fieldsOf, recordOf, type QuizFields } from "./quiz-record";
+import { fieldsOf, recordedCount, recordOf, type QuizFields } from "./quiz-record";
 
 const quiz: QuizFields = {
   state: "ACT",
@@ -37,5 +37,22 @@ describe("the explorer record exchanged with the native core", () => {
       cursor: 0,
       questionIds: [],
     });
+  });
+});
+
+describe("the count of answered questions", () => {
+  const answers = {
+    1: { points: 5 as const, important: false },
+    2: { points: 0 as const, important: false },
+    9: { points: 5 as const, important: false },
+  };
+
+  it("counts only answers to the current questions, so it never exceeds the total", () => {
+    expect(recordedCount(answers, [1, 2, 3])).toBe(2);
+    expect(recordedCount(answers, [1, 2])).toBe(2);
+  });
+
+  it("counts every answer while the questions are not yet known", () => {
+    expect(recordedCount(answers, [])).toBe(3);
   });
 });

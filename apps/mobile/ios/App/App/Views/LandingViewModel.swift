@@ -37,7 +37,10 @@ struct LandingViewModel {
     /// A voter with a ballot and some answers is part-way or finished; anyone else is on a first visit.
     static func progress(stored: QuizState.Persisted?, questionCount: Int) -> LandingComposition.Progress {
         guard let stored, stored.state != nil, stored.electorate != nil else { return .fresh }
-        let answered = stored.answers.count
+        // As the web counts: only answers to the recorded questions, once they are known.
+        let answered = stored.questionIds.isEmpty
+            ? stored.answers.count
+            : stored.questionIds.filter { stored.answers[String($0)] != nil }.count
         guard answered > 0 else { return .fresh }
         let total = stored.questionIds.isEmpty ? questionCount : stored.questionIds.count
         return answered >= total && total > 0 ? .complete : .partway(next: answered + 1, total: total)

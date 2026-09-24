@@ -196,7 +196,7 @@
           "owner": "eng-web",
           "status": "passing",
           "enforcedBy": "scripts/check-native-jurisdictions.mjs",
-          "note": "ADR 0018 D1. The native ballot picker offers the same states and territories, in the same order, as apps/web/src/lib/data.ts. The codes are not labels: each is matched against the compiled dataset to build that state's electorate list, so a code differing by a character returns an empty list and the picker appears broken for everyone who lives there, and a missing entry is a whole state with no way to reach the questionnaire on one channel only."
+          "note": "ADR 0018 D1, ADR 0019 D4e. The native ballot picker holds no list of its own: it reads the states and territories from the web's states/ballot page, which renders them from apps/web/src/lib/data.ts. This holds that projected page to STATES entry by entry, in the picker's order (alphabetical by code), and fails closed if either side is empty. The codes are not labels: each is matched against the compiled dataset to build that state's electorate list, so a code differing by a character returns an empty list and the picker appears broken for everyone who lives there, and a missing entry is a whole state with no way to reach the questionnaire on one channel only."
         },
         {
           "id": "native-jurisdictions-guard",
@@ -211,7 +211,7 @@
           "owner": "eng-web",
           "status": "passing",
           "enforcedBy": "scripts/check-native-answer-scale.mjs",
-          "note": "ADR 0018 D2. Each answer carries the points that reach the scoring engine, so the label-to-points binding is the meaning of a tap. This asserts the options, their order, their points, their labels and secondary text, the answerLabel map and the importance mark agree between apps/web/src/lib/answers.ts and AnswerScale.swift. A drifted native scale reads correctly and scores without error while recording the opposite of what the voter chose — and so misstates a party's alignment with that voter."
+          "note": "ADR 0018 D2, ADR 0019 D4d and D4f. Each answer carries the points that reach the scoring engine, so the label-to-points binding is the meaning of a tap. That binding now exists once, on the web: the native quiz reads the options, their order, labels, secondary text and points from the web's states/quiz page, where each answer button names its points as its value, and the native review reads each answer's short label from the web's states/review page. This fails if AnswerOptions.svelte stops naming each answer's points as its value, if AnswerScale.swift restates the options, the short labels or the importance mark, or if the answers the ×10 importance lever may attach to differ from the web's rule in quiz.svelte.ts; DocumentLogic separately requires both pages to name every answer from 0 to 5 once. A drifted native scale would read correctly and score without error while recording the opposite of what the voter chose — and so misstate a party's alignment with that voter."
         },
         {
           "id": "native-answer-scale-guard",
@@ -406,7 +406,7 @@
           "owner": "eng-web",
           "status": "passing",
           "enforcedBy": "scripts/check-native-jurisdictions.mjs",
-          "note": "ADR 0018 D1. The native ballot picker offers the same states and territories, in the same order, as apps/web/src/lib/data.ts. The codes are not labels: each is matched against the compiled dataset to build that state's electorate list, so a code differing by a character returns an empty list and the picker appears broken for everyone who lives there, and a missing entry is a whole state with no way to reach the questionnaire on one channel only."
+          "note": "ADR 0018 D1, ADR 0019 D4e. The native ballot picker holds no list of its own: it reads the states and territories from the web's states/ballot page, which renders them from apps/web/src/lib/data.ts. This holds that projected page to STATES entry by entry, in the picker's order (alphabetical by code), and fails closed if either side is empty. The codes are not labels: each is matched against the compiled dataset to build that state's electorate list, so a code differing by a character returns an empty list and the picker appears broken for everyone who lives there, and a missing entry is a whole state with no way to reach the questionnaire on one channel only."
         },
         {
           "id": "native-jurisdictions-guard",
@@ -421,7 +421,7 @@
           "owner": "eng-web",
           "status": "passing",
           "enforcedBy": "scripts/check-native-answer-scale.mjs",
-          "note": "ADR 0018 D2. Each answer carries the points that reach the scoring engine, so the label-to-points binding is the meaning of a tap. This asserts the options, their order, their points, their labels and secondary text, the answerLabel map and the importance mark agree between apps/web/src/lib/answers.ts and AnswerScale.swift. A drifted native scale reads correctly and scores without error while recording the opposite of what the voter chose — and so misstates a party's alignment with that voter."
+          "note": "ADR 0018 D2, ADR 0019 D4d and D4f. Each answer carries the points that reach the scoring engine, so the label-to-points binding is the meaning of a tap. That binding now exists once, on the web: the native quiz reads the options, their order, labels, secondary text and points from the web's states/quiz page, where each answer button names its points as its value, and the native review reads each answer's short label from the web's states/review page. This fails if AnswerOptions.svelte stops naming each answer's points as its value, if AnswerScale.swift restates the options, the short labels or the importance mark, or if the answers the ×10 importance lever may attach to differ from the web's rule in quiz.svelte.ts; DocumentLogic separately requires both pages to name every answer from 0 to 5 once. A drifted native scale would read correctly and score without error while recording the opposite of what the voter chose — and so misstate a party's alignment with that voter."
         },
         {
           "id": "native-answer-scale-guard",

@@ -9,6 +9,8 @@ struct ReviewView: View {
     @Environment(\.colorScheme) private var scheme
 
     @StateObject private var model: ReviewViewModel
+    /// Every word the screen shows or speaks, as the web's review page words it.
+    private let wording: ReviewWording
 
     /// Where the voter is going: a web path the router moves to.
     private let onExit: (String) -> Void
@@ -16,8 +18,9 @@ struct ReviewView: View {
     /// comparison and is never offered the research survey (ADR 0008/0012).
     private let canVote: Bool
 
-    init(model: ReviewViewModel, canVote: Bool, onExit: @escaping (String) -> Void) {
+    init(model: ReviewViewModel, wording: ReviewWording, canVote: Bool, onExit: @escaping (String) -> Void) {
         _model = StateObject(wrappedValue: model)
+        self.wording = wording
         self.canVote = canVote
         self.onExit = onExit
     }
@@ -26,15 +29,16 @@ struct ReviewView: View {
         VStack(spacing: 0) {
             StaleNotice()
             TopBar(
-                label: "Review your answers",
-                backLabel: "Back to the questions",
+                label: wording.text(.title),
+                backLabel: wording.text(.back),
                 onBack: { onExit("/quiz") }
             )
-            QuizProgress(value: 1, total: 1, label: "Quiz complete", spokenValue: "100%")
+            // Spoken as the web's bar is: a percentage, which is complete here.
+            QuizProgress(value: 1, total: 1, label: wording.text(.progress), spokenValue: 1.0.formatted(.percent))
 
             ScrollView {
                 VStack(alignment: .leading, spacing: 0) {
-                    Text(model.headline)
+                    Text(wording.headline(answered: model.answered, total: model.total))
                         .font(.title3.weight(.semibold))
                         .foregroundStyle(Theme.ink.resolve(scheme))
                         .padding(.top, 8)
@@ -59,7 +63,7 @@ struct ReviewView: View {
 
             // One label, two destinations: the optional research survey is 18+ only (ADR 0008/0012),
             // so an under-18 explorer goes straight to their comparison and is never offered it.
-            Button("See how I compare") {
+            Button(wording.text(.compare)) {
                 onExit(canVote ? "/survey" : "/card")
             }
             .buttonStyle(PrimaryButton())
@@ -68,34 +72,43 @@ struct ReviewView: View {
         }
         .background(Theme.paper.resolve(scheme))
         .task { await model.load() }
+        // Spoken when it happens, as the web's `role="alert"` makes it.
+        .onChange(of: model.phase) { _, phase in
+            if phase == .failed(.unloaded) { AccessibilityNotification.Announcement(wording.failed).post() }
+        }
     }
 
     @ViewBuilder private var content: some View {
         switch model.phase {
         case .loading:
-            Text("Loading your answers…")
+            Text(wording.text(.loading))
                 .font(.footnote)
                 .foregroundStyle(Theme.ink2.resolve(scheme))
                 .accessibilityAddTraits(.updatesFrequently)
 
-        case let .failed(message):
-            VStack(alignment: .leading, spacing: 8) {
-                Text("\(message) Please check your connection and try again.")
-                    .font(.callout)
+        case .failed(.unloaded):
+            // The whole sentence retries, as its link does on the web.
+            Button { Task { await model.load() } } label: {
+                Text(wording.failed)
+                    .font(.footnote)
                     .foregroundStyle(Theme.ink.resolve(scheme))
+                    .multilineTextAlignment(.leading)
                     .fixedSize(horizontal: false, vertical: true)
-                Button("Try again") { Task { await model.load() } }
-                    .font(.footnote.weight(.semibold))
-                    .underline()
-                    .buttonStyle(.plain)
-                    .foregroundStyle(Theme.ink.resolve(scheme))
-                    .frame(minHeight: 44)
+                    .frame(minHeight: 44, alignment: .leading)
+                    .contentShape(Rectangle())
             }
+            .buttonStyle(.plain)
+
+        case .failed(.empty):
+            Text(wording.text(.empty))
+                .font(.footnote)
+                .foregroundStyle(Theme.ink2.resolve(scheme))
+                .fixedSize(horizontal: false, vertical: true)
 
         case let .ready(rows):
             LazyVStack(spacing: 0) {
                 ForEach(rows) { row in
-                    ReviewRow(row: row, onEdit: edit, onStar: model.toggleImportance)
+                    ReviewRow(row: row, wording: wording, onEdit: edit, onStar: model.toggleImportance)
                     Divider().overlay(Theme.line.resolve(scheme))
                 }
             }
@@ -114,6 +127,7 @@ private struct ReviewRow: View {
     @Environment(\.colorScheme) private var scheme
 
     let row: ReviewViewModel.Row
+    let wording: ReviewWording
     let onEdit: (ReviewViewModel.Row) -> Void
     let onStar: (Int) -> Void
 
@@ -132,7 +146,7 @@ private struct ReviewRow: View {
                             .font(.subheadline)
                             .foregroundStyle(Theme.ink.resolve(scheme))
                             .fixedSize(horizontal: false, vertical: true)
-                        Text(row.answerLabel)
+                        Text(wording.label(points: row.points))
                             .font(.caption)
                             .foregroundStyle(Theme.ink2.resolve(scheme))
                             .opacity(row.points == nil || row.points == 0 ? 0.7 : 1)
@@ -140,27 +154,34 @@ private struct ReviewRow: View {
                 }
                 .frame(maxWidth: .infinity, alignment: .leading)
                 .padding(.vertical, 12)
+                // The whole row takes the tap: a plain button is otherwise hit only where it draws.
+                .contentShape(Rectangle())
             }
             .buttonStyle(.plain)
-            .accessibilityHint("Changes this answer")
+            .accessibilityHint(wording.text(.edit))
 
             if row.allowsImportance {
                 Button {
                     onStar(row.id)
                 } label: {
-                    Text("★")
+                    Text(wording.text(.glyph))
                         .font(.body)
                         .foregroundStyle(
                             row.important ? Theme.ink.resolve(scheme) : Theme.ink2.resolve(scheme)
                         )
                         .opacity(row.important ? 1 : 0.45)
                         .frame(width: 44, height: 44)
+                        .contentShape(Rectangle())
                 }
                 .buttonStyle(.plain)
-                .accessibilityLabel("Mark \"\(row.text)\" as extremely important")
-                .accessibilityHint(LegalCopy.importanceMultiplier)
-                .accessibilityValue(row.important ? "On" : "Off")
-                .accessibilityAddTraits(row.important ? [.isButton, .isSelected] : [.isButton])
+                // A toggle, as the web's `aria-pressed` makes it: read as a switch, on or off in the
+                // system's words, and set by the same action as the tap.
+                .accessibilityRepresentation {
+                    Toggle(isOn: Binding(get: { row.important }, set: { _ in onStar(row.id) })) {
+                        Text(wording.text(.star, ["question": row.text]))
+                    }
+                    .accessibilityHint(LegalCopy.importanceMultiplier)
+                }
             } else {
                 // Keeps every row's text on the same left edge whether or not it can be starred.
                 Color.clear.frame(width: 44, height: 44)

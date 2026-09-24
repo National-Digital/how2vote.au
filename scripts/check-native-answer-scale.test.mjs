@@ -88,10 +88,14 @@ describe("webScale", () => {
 });
 
 describe("nativeScale", () => {
-  it("reads the committed source, which restates no options", () => {
-    const scale = nativeScale(NATIVE);
-    expect(scale.options).toEqual([]);
-    expect(Object.keys(scale.labels)).toHaveLength(6);
+  it("reads the committed source, which restates no options and no labels", () => {
+    expect(nativeScale(NATIVE)).toEqual({ options: [], labels: {}, star: null });
+  });
+
+  it("reads a restatement", () => {
+    const scale = nativeScale(swift({ options: SCALE, labels: LABELS }));
+    expect(scale.options).toHaveLength(3);
+    expect(scale.labels).toEqual(LABELS);
     expect(scale.star).toBe("★");
   });
 });
@@ -126,13 +130,13 @@ describe("verifyAnswerScale", () => {
       "value={String(opt.points)}",
       "value={String(6 - opt.points)}",
     );
-    expect(
-      verify(ts({ options: SCALE, labels: LABELS }), swift({ labels: LABELS }), rebound).join(" "),
-    ).toContain("does not name each answer's points");
+    expect(verify(ts({ options: SCALE, labels: LABELS }), "", rebound).join(" ")).toContain(
+      "does not name each answer's points",
+    );
     const skip = ANSWER_OPTIONS.replace('value="0"', 'value="5"');
-    expect(
-      verify(ts({ options: SCALE, labels: LABELS }), swift({ labels: LABELS }), skip).join(" "),
-    ).toContain("does not name each answer's points");
+    expect(verify(ts({ options: SCALE, labels: LABELS }), "", skip).join(" ")).toContain(
+      "does not name each answer's points",
+    );
   });
 
   it("fails a native restatement of the options, a second binding free to drift", () => {
@@ -143,26 +147,20 @@ describe("verifyAnswerScale", () => {
     expect(errors.join(" ")).toContain("AnswerScale.swift restates the options");
   });
 
-  it("catches a short label that would misreport an answer to VoiceOver", () => {
-    const errors = verify(
-      ts({ options: SCALE, labels: LABELS }),
-      swift({ labels: { ...LABELS, 3: "Mixed views" } }),
+  it("fails a native restatement of the short labels, or of their star", () => {
+    const web = ts({ options: SCALE, labels: LABELS });
+    expect(verify(web, swift({ labels: { 3: "Mixed views" } })).join(" ")).toContain(
+      "restates the short labels",
     );
-    expect(errors.join(" ")).toContain("the short label for 3 differs");
+    expect(verify(web, '        return important ? "★ \\(text)" : text\n').join(" ")).toContain(
+      "restates the short labels",
+    );
   });
 
   it("catches a scored option that answerLabel cannot name", () => {
     const unnamed = { 0: "Skipped", 5: "Strongly agree" };
-    const errors = verify(ts({ options: SCALE, labels: unnamed }), swift({ labels: unnamed }));
+    const errors = verify(ts({ options: SCALE, labels: unnamed }), "");
     expect(errors.join(" ")).toContain("the web scores 3 but answerLabel has no name for it");
-  });
-
-  it("catches a drifted importance mark", () => {
-    const errors = verify(
-      ts({ options: SCALE, labels: LABELS }),
-      swift({ labels: LABELS, star: "*" }),
-    );
-    expect(errors.join(" ")).toContain("mark differs");
   });
 });
 

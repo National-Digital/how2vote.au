@@ -7,7 +7,13 @@ const KEY_PREFIX = "how2vote:quiz:v2:"; // v2: namespaced per election id
 const key = (electionId: string): string => KEY_PREFIX + electionId;
 const MAX_AGE_MS = 30 * 24 * 60 * 60 * 1000; // resume offered for 30 days
 
-import { fieldsOf, recordOf, type Persisted, type StoredAnswer } from "./quiz-record";
+import {
+  fieldsOf,
+  recordedCount,
+  recordOf,
+  type Persisted,
+  type StoredAnswer,
+} from "./quiz-record";
 
 export type { Persisted };
 
@@ -40,9 +46,9 @@ class Quiz {
   /** The election id the active fields currently belong to (null until first sync). */
   private loadedId: string | null = null;
 
-  /** Number of questions with a recorded decision (an explicit skip counts). */
+  /** Number of questions with a recorded decision; see {@link recordedCount}. */
   get recorded(): number {
-    return Object.keys(this.answers).length;
+    return recordedCount(this.answers, this.questionIds);
   }
 
   get total(): number {

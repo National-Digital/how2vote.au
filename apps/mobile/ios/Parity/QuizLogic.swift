@@ -48,6 +48,7 @@ enum QuizLogic {
             await starsAnExtremeAnswer(),
             await opensTheQuizOnTheQuestionBeingChanged(),
             await reportsHowManyAreAnswered(),
+            await countsTheRecordWhenTheQuestionsDoNotLoad(),
             await keepsTheAnswersWhenTheBallotIsSet(),
             await recordsTheSentinelWhereThereIsNoBallot(),
             await stepsBackThroughThePickerBeforeLeaving(),
@@ -301,8 +302,35 @@ enum QuizLogic {
         let subject = review(set: questionSet(count: 3), store: store)
         await subject.load()
 
-        guard subject.headline == "1 of 3 answered." else {
-            return ["the review heading reads \(subject.headline) for one of three answers"]
+        guard subject.answered == 1, subject.total == 3 else {
+            return ["the review counts \(subject.answered) of \(subject.total) answered for one of three"]
+        }
+        return []
+    }
+
+    /// Before the questions load, or when they cannot, the heading counts the stored record, as the
+    /// web's does.
+    @MainActor private static func countsTheRecordWhenTheQuestionsDoNotLoad() async -> [String] {
+        struct Unloaded: Error {}
+        let store = Store()
+        var stored = record(cursor: 0, answers: [
+            "1": QuizState.StoredAnswer(points: 5, important: false),
+            "2": QuizState.StoredAnswer(points: 0, important: false),
+            // Left over from a question since withdrawn: not one of the three.
+            "9": QuizState.StoredAnswer(points: 5, important: false),
+        ])
+        stored.questionIds = [1, 2, 3]
+        store.stored = stored
+        let subject = ReviewViewModel(
+            loadQuestions: { throw Unloaded() },
+            persist: { try store.persist($0) },
+            restore: { store.restore() }
+        )
+        let before = (subject.answered, subject.total)
+        await subject.load()
+
+        guard before == (2, 3), subject.answered == 2, subject.total == 3, subject.phase == .failed(.unloaded) else {
+            return ["the review counts \(subject.answered) of \(subject.total) from a record of 2 of 3, and one withdrawn, it could not load"]
         }
         return []
     }

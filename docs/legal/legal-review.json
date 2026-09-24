@@ -285,6 +285,13 @@
       "disposition": "no-review-required",
       "reviewer": "cameron-young",
       "affectedControls": ["control-5", "control-12", "control-24", "control-28"]
+    },
+    {
+      "date": "2026-09-25",
+      "change": "On iOS, the review screen is drawn natively from the web's review page (ADR 0019 D4f): its wording, and each answer's short label, are read from states/review.html, rendered from apps/web/src/lib/review-copy.ts and answerLabel, rather than written natively, and AnswerScale.swift keeps only the rule for which answers may carry the ×10 star. The review heading and the landing's progress now count only answers to the current questions, on the web and natively, so an answer left from a question since withdrawn can no longer make the count exceed the total; scoring is unchanged. The notes of the native-jurisdictions and native-answer-scale controls in control-register.json are corrected to describe what those guards now check, since the ballot picker and the quiz read their states and answer scale from the web's pages (ADR 0019 D4d, D4e). No wording is changed, and no legal position, obligation, permitted use, or collection, use, disclosure, retention or overseas-processing practice is altered; no consent or Terms version is affected; no legal review was sought or is required.",
+      "disposition": "no-review-required",
+      "reviewer": "cameron-young",
+      "affectedControls": ["control-4", "control-5", "control-6"]
     }
   ],
   "nextMandatoryReviewDate": "2027-07-15",

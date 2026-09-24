@@ -111,6 +111,47 @@ final class DocumentConservationTests: XCTestCase {
         try follow(firstLinkUnder: "/2025/electorates/", in: "2025/electorates", app: app)
     }
 
+    /// Begins the 2025 election's quiz, an election with a ballot: 2025 chosen from the electorates
+    /// index, then its landing through the trail's first crumb and its call to action, answering the
+    /// gate 18+ if an earlier test has not already.
+    private func beginThe2025Quiz(in app: XCUIApplication) throws {
+        try openAndCompare("next/electorates", from: "Candidates", in: app)
+        let election = try XCTUnwrap(firstLink(under: "/2025/electorates", in: try json("next/electorates")))
+        tapUntilShown(app.buttons[election.label].firstMatch, in: app)
+        XCTAssertNotNil(shownDocument(startingWith: try projected("2025/electorates").spoken, in: app), "2025/electorates: not drawn natively")
+        let crumb = app.buttons["2025"].firstMatch
+        var swipes = 0
+        while !(crumb.exists && crumb.isHittable), swipes < 60 {
+            app.swipeDown(velocity: .fast)
+            swipes += 1
+        }
+        crumb.tap()
+        let begin = try XCTUnwrap(controls(of: "landing-fresh", in: try json("2025")).first { $0.action == "start" }?.label)
+        XCTAssertTrue(app.buttons[begin].waitForExistence(timeout: 30), "the 2025 landing never appeared")
+        app.buttons[begin].tap()
+        let adult = try XCTUnwrap(controls(of: "age-declare", in: try json("start")).first { $0.action == "adult" }?.label)
+        if app.buttons[adult].waitForExistence(timeout: 10) { app.buttons[adult].tap() }
+    }
+
+    /// A states page's piece, as the page words it: its text, and each value in it filled.
+    private func piece(_ id: String, of page: [String: Any], _ values: [String: String] = [:]) throws -> String {
+        let blocks = page["blocks"] as? [[String: Any]] ?? []
+        let section = try XCTUnwrap(blocks.first { $0["id"] as? String == id }, "the page has no \(id)")
+        let paragraph = try XCTUnwrap((section["c"] as? [[String: Any]])?.first)
+        return try (paragraph["c"] as? [[String: Any]] ?? []).map { part in
+            guard part["t"] as? String == "value" else { return part["s"] as? String ?? "" }
+            return try XCTUnwrap(values[part["name"] as? String ?? ""], "\(id) names a value the test does not fill")
+        }.joined()
+    }
+
+    /// Labels that begin and end as a piece split at its one value does. `BEGINSWITH` and `ENDSWITH`
+    /// never match an empty string, so an empty side is left out.
+    private func framed(_ sides: [String]) -> NSPredicate {
+        let tests = zip(["label BEGINSWITH %@", "label ENDSWITH %@"], sides).filter { !$0.1.isEmpty }
+        guard !tests.isEmpty else { return NSPredicate(value: true) }
+        return NSPredicate(format: tests.map(\.0).joined(separator: " AND "), argumentArray: tests.map(\.1))
+    }
+
     /// Switches the electorates index back to the current election, which makes it the chosen one.
     private func chooseTheCurrentElection(in app: XCUIApplication) throws {
         XCTAssertTrue(open("Candidates", in: app), "the footer link \"Candidates\" could not be reached")
@@ -257,7 +298,7 @@ final class DocumentConservationTests: XCTestCase {
     ///
     /// Named to run after the gate and landing tests: it declares the visitor 18+ and records an
     /// answer, both of which persist, so it expects a simulator the run starts clean, as CI's is.
-    /// Only the ballot test runs after it.
+    /// Only the ballot and review tests run after it.
     func testTheQuizShowsTheWebsWordingAndKeepsTheTappedAnswer() throws {
         let quiz = try json("states/quiz")
         var templates: [String: String] = [:]
@@ -340,7 +381,7 @@ final class DocumentConservationTests: XCTestCase {
     /// The ballot, as a voter sets it for an election that has one: every word it shows is the
     /// ballot page's, the states offered are the page's in its order, and a state picked leads to
     /// its electorates and a confirmation worded as the page words it. Named to run after the quiz,
-    /// which needs the gate unanswered: the 18+ answer given here is kept.
+    /// which needs the gate unanswered: the 18+ answer given here is kept. The review test follows.
     func testTheVoterPicksABallotInTheWebsWords() throws {
         let ballot = try json("states/ballot")
         let blocks = ballot["blocks"] as? [[String: Any]] ?? []
@@ -351,14 +392,8 @@ final class DocumentConservationTests: XCTestCase {
             }
             return (value as? [Any] ?? []).map(text).joined()
         }
-        /// A piece as the page words it, with its values filled.
         func piece(_ id: String, _ values: [String: String] = [:]) throws -> String {
-            let section = try XCTUnwrap(blocks.first { $0["id"] as? String == "ballot-\(id)" }, "the ballot page has no \(id)")
-            let paragraph = try XCTUnwrap((section["c"] as? [[String: Any]])?.first)
-            return try (paragraph["c"] as? [[String: Any]] ?? []).map { part in
-                guard part["t"] as? String == "value" else { return part["s"] as? String ?? "" }
-                return try XCTUnwrap(values[part["name"] as? String ?? ""], "ballot: \(id) names a value the test does not fill")
-            }.joined()
+            try self.piece("ballot-\(id)", of: ballot, values)
         }
         let section = try XCTUnwrap(blocks.first { $0["id"] as? String == "ballot-states" })
         let list = try XCTUnwrap((section["c"] as? [[String: Any]])?.first?["items"] as? [[String: Any]])
@@ -368,27 +403,9 @@ final class DocumentConservationTests: XCTestCase {
         let app = XCUIApplication()
         app.launch()
         addTeardownBlock { [self] in XCTAssertNoThrow(try chooseTheCurrentElection(in: app)) }
-
-        // An election with a ballot: 2025, chosen from the electorates index, then its landing
-        // through the trail's first crumb.
-        try openAndCompare("next/electorates", from: "Candidates", in: app)
-        let election = try XCTUnwrap(firstLink(under: "/2025/electorates", in: try json("next/electorates")))
-        tapUntilShown(app.buttons[election.label].firstMatch, in: app)
-        XCTAssertNotNil(shownDocument(startingWith: try projected("2025/electorates").spoken, in: app), "2025/electorates: not drawn natively")
-        let crumb = app.buttons["2025"].firstMatch
-        var swipes = 0
-        while !(crumb.exists && crumb.isHittable), swipes < 60 {
-            app.swipeDown(velocity: .fast)
-            swipes += 1
-        }
-        crumb.tap()
-        let begin = try XCTUnwrap(controls(of: "landing-fresh", in: try json("2025")).first { $0.action == "start" }?.label)
-        XCTAssertTrue(app.buttons[begin].waitForExistence(timeout: 30), "the 2025 landing never appeared")
-        app.buttons[begin].tap()
-        let adult = try XCTUnwrap(controls(of: "age-declare", in: try json("start")).first { $0.action == "adult" }?.label)
+        try beginThe2025Quiz(in: app)
         let pick = try piece("pick")
         let heading = app.staticTexts[pick]
-        if app.buttons[adult].waitForExistence(timeout: 10) { app.buttons[adult].tap() }
 
         // Step 1: the page's question, position and back, and its states.
         XCTAssertTrue(heading.waitForExistence(timeout: 30), "ballot: \"\(pick)\" is not on screen")
@@ -424,6 +441,98 @@ final class DocumentConservationTests: XCTestCase {
         XCTAssertTrue(app.buttons[try piece("different")].exists, "ballot: the way back is not the page's")
         app.buttons["top-back"].tap()
         XCTAssertTrue(app.staticTexts[try piece("electorate")].waitForExistence(timeout: 10), "ballot: back did not return to the electorates")
+    }
+
+    /// The review, as a voter reaches it at the end of the 2025 quiz: every word it shows is the
+    /// review page's, each answer is read back by the page's label for it, and the star marks only
+    /// a strong answer and shows when it is on. Named to run after the ballot test, whose flow it
+    /// follows to the quiz.
+    func testTheVoterReviewsTheirAnswersInTheWebsWords() throws {
+        let review = try json("states/review")
+        let ballot = try json("states/ballot")
+        let quiz = try json("states/quiz")
+        func piece(_ id: String, _ values: [String: String] = [:]) throws -> String {
+            try self.piece("review-\(id)", of: review, values)
+        }
+        let answers = controls(of: "quiz-answer", in: quiz)
+        let agree = try XCTUnwrap(answers.first { $0.action == "5" }, "the quiz page records no 5")
+        let skip = try XCTUnwrap(answers.first { $0.action == "0" }, "the quiz page offers no skip")
+        let list = try XCTUnwrap(
+            ((review["blocks"] as? [[String: Any]])?.first { $0["id"] as? String == "review-answers" }?["c"]
+                as? [[String: Any]])?.first?["items"] as? [[String: Any]]
+        )
+        func label(_ points: String) throws -> String {
+            let item = try XCTUnwrap(list.first { (($0["term"] as? [[String: Any]])?.first?["s"] as? String) == points })
+            let detail = try XCTUnwrap((item["detail"] as? [[String: Any]])?.first?["c"] as? [[String: Any]])
+            return detail.compactMap { $0["s"] as? String }.joined()
+        }
+
+        let app = XCUIApplication()
+        app.launch()
+        addTeardownBlock { [self] in XCTAssertNoThrow(try chooseTheCurrentElection(in: app)) }
+        try beginThe2025Quiz(in: app)
+
+        // The ballot, set to the first state's first electorate.
+        let name = try firstStateName(in: ballot)
+        let state = app.buttons.matching(NSPredicate(format: "label ENDSWITH %@", name)).firstMatch
+        XCTAssertTrue(state.waitForExistence(timeout: 30), "review: the ballot never appeared")
+        state.tap()
+        let row = app.buttons.matching(NSPredicate(format: "label ENDSWITH %@", ", \(name)")).firstMatch
+        XCTAssertTrue(row.waitForExistence(timeout: 10), "review: no electorate is offered")
+        row.tap()
+        let start = app.buttons[try self.piece("ballot-start", of: ballot)]
+        XCTAssertTrue(start.waitForExistence(timeout: 10), "review: the ballot has no way to start")
+        start.tap()
+
+        // The quiz: a strong answer to the first question, and every other one skipped.
+        let titleText = try piece("title")
+        let title = app.staticTexts[titleText]
+        let strong = app.buttons.matching(NSPredicate(format: "label BEGINSWITH %@", agree.label)).firstMatch
+        XCTAssertTrue(strong.waitForExistence(timeout: 30), "review: the quiz never appeared")
+        // The number of questions, as the quiz's own "n of total" reads it on the first.
+        let position = try self.piece("quiz-position", of: quiz, ["n": "1", "total": "\u{0}"]).components(separatedBy: "\u{0}")
+        let first = app.staticTexts.matching(self.framed(position)).firstMatch
+        XCTAssertTrue(first.waitForExistence(timeout: 5), "review: the quiz does not read its first question's position")
+        let total = String(first.label.dropFirst(position[0].count).dropLast(position[1].count))
+        strong.tap()
+        let skipping = app.buttons.matching(NSPredicate(format: "label BEGINSWITH %@", skip.label)).firstMatch
+        var tries = 0
+        while !title.waitForExistence(timeout: 2), tries < 80 {
+            if skipping.exists { skipping.tap() }
+            tries += 1
+        }
+
+        // The review, worded as the page words it.
+        XCTAssertTrue(title.exists, "review: \"\(titleText)\" is not on screen")
+        XCTAssertEqual(app.buttons["top-back"].label, try piece("back"), "review: the back button is not the page's")
+        let all = try piece("all", ["total": total])
+        XCTAssertTrue(app.staticTexts[all].exists, "review: the heading does not read \"\(all)\"")
+        // Each row is one button, read as its number, its question and then its answer.
+        func answered(_ points: String) throws -> XCUIElement {
+            app.buttons.matching(NSPredicate(format: "label ENDSWITH %@", ", \(try label(points))")).firstMatch
+        }
+        XCTAssertTrue(try answered("5").exists, "review: the strong answer is not read by the page's label")
+        XCTAssertTrue(try answered("0").exists, "review: a skipped answer is not read by the page's label")
+        XCTAssertTrue(app.buttons[try piece("compare")].exists, "review: the way on is not the page's")
+
+        // One star, for the one strong answer, named for its question; tapping it turns it on.
+        let mark = try piece("star", ["question": "\u{0}"]).components(separatedBy: "\u{0}")
+        // Read as a switch, as a system toggle is: its value is its state.
+        let stars = app.switches.matching(self.framed(mark))
+        XCTAssertEqual(stars.count, 1, "review: a star is offered on other than the one strong answer")
+        let star = stars.firstMatch
+        XCTAssertEqual(star.value as? String, "0", "review: the star is on before it is tapped")
+        star.tap()
+        let on = XCTNSPredicateExpectation(predicate: NSPredicate(format: "value == '1'"), object: star)
+        XCTAssertEqual(XCTWaiter.wait(for: [on], timeout: 5), .completed, "review: the star did not turn on")
+    }
+
+    /// The name of the first state the ballot page offers.
+    private func firstStateName(in ballot: [String: Any]) throws -> String {
+        let section = try XCTUnwrap((ballot["blocks"] as? [[String: Any]])?.first { $0["id"] as? String == "ballot-states" })
+        let items = try XCTUnwrap((section["c"] as? [[String: Any]])?.first?["items"] as? [[String: Any]])
+        let detail = try XCTUnwrap((items.first?["detail"] as? [[String: Any]])?.first?["c"] as? [[String: Any]])
+        return detail.compactMap { $0["s"] as? String }.joined()
     }
 
     /// The gate in both states, as a first-time visitor meets it: from the landing's call to action,

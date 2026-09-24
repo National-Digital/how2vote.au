@@ -3,15 +3,6 @@
     "unknown JavaScript exception",
     "unknown JavaScript exception"
   ],
-  "apps/mobile/ios/App/App/Model/AnswerScale.swift": [
-    "Agree",
-    "Disagree",
-    "Equal merits",
-    "Skipped",
-    "Strongly agree",
-    "Strongly disagree",
-    "★ {}"
-  ],
   "apps/mobile/ios/App/App/Shell/MainViewController.swift": [
     "(function () {\n  var pass = console.info.bind(console);\n  console.info = function () {\n    try {\n      var text = Array.prototype.map.call(arguments, String).join(\" \");\n      if (text.indexOf(\"How2Vote:\") === 0) {\n        window.webkit.messageHandlers.how2voteMarker.postMessage(text);\n      }\n    } catch (e) {\n      /* never let a diagnostic break the page */\n    }\n    return pass.apply(console, arguments);\n  };\n})();"
   ],
@@ -20,32 +11,6 @@
   ],
   "apps/mobile/ios/App/App/Views/ExternalLinkView.swift": [
     "↗"
-  ],
-  "apps/mobile/ios/App/App/Views/QuizChrome.swift": [
-    "Loading",
-    "{} {} of {}"
-  ],
-  "apps/mobile/ios/App/App/Views/ReviewView.swift": [
-    "100%",
-    "Back to the questions",
-    "Changes this answer",
-    "Loading your answers…",
-    "Mark \"{}\" as extremely important",
-    "Off",
-    "On",
-    "Quiz complete",
-    "Review your answers",
-    "See how I compare",
-    "Try again",
-    "{} Please check your connection and try again.",
-    "★"
-  ],
-  "apps/mobile/ios/App/App/Views/ReviewViewModel.swift": [
-    "All {} answered.",
-    "Couldn't load your answers.",
-    "Not answered",
-    "There are no questions to show for this election.",
-    "{} of {} answered."
   ],
   "apps/mobile/ios/App/App/Views/SiteChromeViews.swift": [
     "Dismiss",

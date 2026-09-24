@@ -275,8 +275,17 @@ final class NativeCoreHost {
             }
         case "review":
             guard let engine else { return nil }
-            let model = ReviewViewModel.live(electionID: electionID, engine: engine)
-            return themed(ReviewView(model: model, canVote: eligible, onExit: onExit))
+            // Its wording is the web's review page; one that is missing or incomplete declines the
+            // route, and the WebView draws the review instead.
+            do {
+                let (page, _) = try NativeDocument.load(name: "states/review")
+                let wording = try ReviewWording(page)
+                let model = ReviewViewModel.live(electionID: electionID, engine: engine)
+                return themed(ReviewView(model: model, wording: wording, canVote: eligible, onExit: onExit))
+            } catch {
+                NSLog("How2Vote: declined review — \(error)")
+                return nil
+            }
         case "document":
             // A page the web prerendered, drawn from its projection. One that is missing, does not
             // decode, or lays out to other text than the page's is declined, and the WebView shows it.
