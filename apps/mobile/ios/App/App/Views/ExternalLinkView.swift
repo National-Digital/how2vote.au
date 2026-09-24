@@ -54,7 +54,7 @@ struct ExternalLinkView: View {
 /// the app, where an in-app browser keeps them in it and keeps the cue honest. It also matches what
 /// the WebView channel does through Capacitor's Browser plugin, so a link behaves the same way
 /// whichever half of the app it was tapped in.
-private struct SafariView: UIViewControllerRepresentable {
+struct SafariView: UIViewControllerRepresentable {
     let url: URL
 
     func makeUIViewController(context: Context) -> SFSafariViewController {

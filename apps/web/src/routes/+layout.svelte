@@ -14,7 +14,7 @@
   import { ageGate } from "$lib/age.svelte";
   import { DIST_CHANNEL, isNativeShell, nativeAppPlugin } from "$lib/channel";
   import { backupToNative, restoreFromNative } from "$lib/native-storage";
-  import { wireNativeRouter } from "$lib/native-router.svelte";
+  import { syncNativeTheme, wireNativeRouter } from "$lib/native-router.svelte";
   import { election } from "$lib/election.svelte";
   import { SITE_URL } from "$lib/seo";
   import { quiz } from "$lib/quiz.svelte";
@@ -139,6 +139,8 @@
     if (isNativeShell) {
       void restoreFromNative().then(() => {
         theme.hydrate();
+        // The restored theme may differ from the one the first native screen was handed.
+        syncNativeTheme();
         saved.hydrate();
         ageGate.hydrate();
         consent.hydrate();

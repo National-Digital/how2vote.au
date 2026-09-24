@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "updated": "2026-09-23",
+  "updated": "2026-09-24",
   "note": "Required user-facing notices that the native iOS core renders inline, and which therefore cannot be held in the web sources the path-scoped compliance guards read (ADR 0018 D9). Each entry names the web source that must carry the SAME wording: scripts/check-native-copy.mjs asserts the text is present there verbatim (whitespace- and markup-normalised) and that apps/mobile/ios/App/App/Generated/LegalCopy.swift is the exact rendering of this file. Web-side rewording therefore fails the build until this register and the generated Swift are updated together, so the two channels cannot state different things. Copy that is modal- or print-shaped is NOT registered here: it stays in the WebView islands (D8) where it needs no second rendering.",
   "generated": "apps/mobile/ios/App/App/Generated/LegalCopy.swift",
   "entries": [
@@ -179,6 +179,38 @@
       "webSource": "apps/web/src/routes/ballot/+page.svelte",
       "backingControls": ["control-24", "control-28"],
       "note": "A privacy claim on the state picker: nothing leaves the device unless the voter shares their card."
+    },
+    {
+      "id": "clear-data-confirm",
+      "swiftName": "clearDataConfirm",
+      "text": "Permanently clear everything on this device?",
+      "webSource": "apps/web/src/lib/components/ClearMyData.svelte",
+      "backingControls": ["control-24", "control-28"],
+      "note": "The privacy policy's clear-all control, drawn natively on the iOS document screen; the clearing itself stays the web's."
+    },
+    {
+      "id": "clear-data-yes",
+      "swiftName": "clearDataYes",
+      "text": "Yes, clear everything",
+      "webSource": "apps/web/src/lib/components/ClearMyData.svelte",
+      "backingControls": ["control-24", "control-28"],
+      "note": "The privacy policy's clear-all control, drawn natively on the iOS document screen; the clearing itself stays the web's."
+    },
+    {
+      "id": "clear-data-clearing",
+      "swiftName": "clearDataClearing",
+      "text": "Clearing…",
+      "webSource": "apps/web/src/lib/components/ClearMyData.svelte",
+      "backingControls": ["control-24", "control-28"],
+      "note": "The privacy policy's clear-all control, drawn natively on the iOS document screen; the clearing itself stays the web's."
+    },
+    {
+      "id": "clear-data-cancel",
+      "swiftName": "clearDataCancel",
+      "text": "Cancel",
+      "webSource": "apps/web/src/lib/components/ClearMyData.svelte",
+      "backingControls": ["control-24", "control-28"],
+      "note": "The privacy policy's clear-all control, drawn natively on the iOS document screen; the clearing itself stays the web's."
     }
   ]
 }

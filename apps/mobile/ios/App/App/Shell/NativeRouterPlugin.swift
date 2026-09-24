@@ -38,6 +38,10 @@ public class NativeRouterPlugin: CAPPlugin, CAPBridgedPlugin {
     /// the WebView's key to write, for the same reason as the theme.
     private static let staleDismissEvent = "nativeStaleDismiss"
 
+    /// Emitted when the voter confirms "clear all my data" on a native document. The web clears:
+    /// it owns the keys, and its routine already clears the durable copy the native core reads.
+    private static let clearDataEvent = "nativeClearData"
+
     @objc func present(_ call: CAPPluginCall) {
         guard let route = call.getString("route") else {
             call.reject("present requires a route")
@@ -60,6 +64,13 @@ public class NativeRouterPlugin: CAPPlugin, CAPBridgedPlugin {
         let chrome = SiteChrome.decode(call.getString("chrome"))
         // An explorer's in-memory quiz (ADR 0012), which the WebView never persists.
         let session = call.getString("session")
+        // The theme the WebView holds now. Handed over with every route, so a native screen follows
+        // a change made anywhere — including the reset a data wipe makes.
+        let theme = call.getString("theme")
+        // The page to draw, for the document route.
+        let document = call.getString("document").map {
+            DocumentRequest(name: $0, anchor: call.getString("anchor").flatMap { $0.isEmpty ? nil : $0 })
+        }
 
         DispatchQueue.main.async { [weak self] in
             guard let self, let controller = self.bridge?.viewController else {
@@ -80,12 +91,17 @@ public class NativeRouterPlugin: CAPPlugin, CAPBridgedPlugin {
             // The web's copy is current at a handover, not at a repeat of the screen already showing,
             // where the native record may be newer.
             let repeated = NativeCoreHost.shared.isShowing(
-                route: route, electionID: electionID, isEditing: editing
+                route: route, electionID: electionID, isEditing: editing, document: document
             )
             QuizState.acceptHandover(
                 session: session, electionID: electionID, eligible: eligible, repeated: repeated
             )
             NativeCoreHost.themeRequest = { [weak self] in self?.requestThemeChange() }
+            if let theme { NativeTheme.shared.accept(theme) }
+            // Claimed again at every handover, which always follows a data wipe's reload: the wipe
+            // clears every `how2vote:` key, the ownership marker included, and without it every
+            // native write is refused until the app next launches.
+            NativeState.claimOwnership()
 
             let presented = NativeCoreHost.shared.present(
                 route: route,
@@ -94,9 +110,14 @@ public class NativeRouterPlugin: CAPPlugin, CAPBridgedPlugin {
                 eligible: eligible,
                 canExplore: canExplore,
                 allowedMapIDs: allowedMapIDs,
+                document: document,
                 chrome: chrome,
                 onDismissStale: { [weak self] version in
                     self?.notifyListeners(Self.staleDismissEvent, data: ["dataVersion": version])
+                },
+                onClearData: { [weak self] in
+                    QuizState.sessionRecords.removeAll()
+                    self?.notifyListeners(Self.clearDataEvent, data: [:])
                 },
                 from: controller
             ) { [weak self] path in

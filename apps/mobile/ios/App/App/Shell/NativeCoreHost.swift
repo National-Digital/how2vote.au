@@ -16,6 +16,14 @@ private struct ThemedScreen<Content: View>: View {
     }
 }
 
+/// A document the web asks the native core to draw: its route name, and the fragment it was opened at.
+struct DocumentRequest: Equatable {
+    let name: String
+    let anchor: String?
+
+    var identity: String { "\(name)#\(anchor ?? "")" }
+}
+
 /// Presents the native core's screens over the WebView.
 ///
 /// A full-screen presentation rather than a re-rooted window. Capacitor's bridge controller stays
@@ -43,6 +51,8 @@ final class NativeCoreHost {
     private var currentRoute: String?
     private var currentIsEditing = false
     private var currentElectionID: String?
+    /// The document on screen, for the document route, including the fragment it was opened at.
+    private var currentDocument: String?
     /// The layout chrome for the screen being built, and what its links and notice do.
     private var chrome: SiteChrome?
     private var chromeActions = SiteChromeActions()
@@ -70,8 +80,10 @@ final class NativeCoreHost {
         eligible: Bool,
         canExplore: Bool,
         allowedMapIDs: Set<String>,
+        document: DocumentRequest? = nil,
         chrome: SiteChrome,
         onDismissStale: @escaping (String) -> Void,
+        onClearData: @escaping () -> Void,
         from presenter: UIViewController,
         onExit: @escaping (String) -> Void
     ) -> Bool {
@@ -79,9 +91,13 @@ final class NativeCoreHost {
             NSLog("How2Vote: declined \(route) — no election id was passed")
             return false
         }
-        if isShowing(route: route, electionID: electionID, isEditing: isEditing) { return true }
+        if isShowing(route: route, electionID: electionID, isEditing: isEditing, document: document) {
+            return true
+        }
 
-        guard let engine = loadedEngine() else {
+        // A document is drawn from its projection alone, so it needs no engine.
+        let engine = loadedEngine()
+        guard engine != nil || route == "document" else {
             NSLog("How2Vote: declined \(route) — the engine did not load")
             return false
         }
@@ -89,12 +105,13 @@ final class NativeCoreHost {
         // screen still on display keeps the chrome and actions it was built with.
         let previous = (self.chrome, chromeActions, screenIdentity)
         self.chrome = chrome
-        chromeActions = SiteChromeActions(exit: onExit, dismissStale: onDismissStale)
-        screenIdentity = "\(route)|\(electionID)|\(isEditing)"
+        chromeActions = SiteChromeActions(exit: onExit, dismissStale: onDismissStale, clearData: onClearData)
+        screenIdentity = "\(route)|\(electionID)|\(isEditing)|\(document?.identity ?? "")"
         guard let screen = screen(
             for: route,
             electionID: electionID,
             isEditing: isEditing,
+            document: document,
             eligible: eligible,
             canExplore: canExplore,
             allowedMapIDs: allowedMapIDs,
@@ -109,7 +126,8 @@ final class NativeCoreHost {
         currentRoute = route
         currentIsEditing = isEditing
         currentElectionID = electionID
-        NSLog("How2Vote: presenting \(route)")
+        currentDocument = document?.identity
+        NSLog("How2Vote: presenting \(route)\(document.map { " \($0.name)" } ?? "")")
 
         if let hosting {
             hosting.rootView = screen
@@ -128,9 +146,9 @@ final class NativeCoreHost {
     }
 
     /// True when this exact screen is already on display, so a request for it changes nothing.
-    func isShowing(route: String, electionID: String, isEditing: Bool) -> Bool {
+    func isShowing(route: String, electionID: String, isEditing: Bool, document: DocumentRequest? = nil) -> Bool {
         currentRoute == route && currentIsEditing == isEditing && currentElectionID == electionID
-            && hosting != nil
+            && currentDocument == document?.identity && hosting != nil
     }
 
     /// Takes the native cover down, revealing the WebView. Called when the web reaches a route the
@@ -139,6 +157,7 @@ final class NativeCoreHost {
         currentRoute = nil
         currentIsEditing = false
         currentElectionID = nil
+        currentDocument = nil
         guard let hosting else { return }
         self.hosting = nil
         hosting.dismiss(animated: false)
@@ -165,10 +184,11 @@ final class NativeCoreHost {
         for route: String,
         electionID: String,
         isEditing: Bool,
+        document: DocumentRequest?,
         eligible: Bool,
         canExplore: Bool,
         allowedMapIDs: Set<String>,
-        engine: JSCEngine,
+        engine: JSCEngine?,
         onExit: @escaping (String) -> Void
     ) -> AnyView? {
         // A screen reports a WEB PATH when the voter leaves it, never the next native screen. The web
@@ -177,9 +197,11 @@ final class NativeCoreHost {
         // next route is also native, this cover has to stay up for the swap.
         switch route {
         case "quiz":
+            guard let engine else { return nil }
             let model = QuizViewModel.live(electionID: electionID, engine: engine, isEditing: isEditing)
             return themed(QuizView(model: model) { onExit($0.webRoute) })
         case "landing":
+            guard let engine else { return nil }
             let model = LandingViewModel.live(electionID: electionID, engine: engine)
             return themed(
                 LandingView(
@@ -190,6 +212,7 @@ final class NativeCoreHost {
                 )
             )
         case "ballot":
+            guard let engine else { return nil }
             let model = BallotViewModel.live(electionID: electionID, engine: engine)
             return themed(
                 BallotView(
@@ -200,8 +223,20 @@ final class NativeCoreHost {
                 )
             )
         case "review":
+            guard let engine else { return nil }
             let model = ReviewViewModel.live(electionID: electionID, engine: engine)
             return themed(ReviewView(model: model, canVote: eligible, onExit: onExit))
+        case "document":
+            // A page the web prerendered, drawn from its projection. One that is missing, does not
+            // decode, or lays out to other text than the page's is declined, and the WebView shows it.
+            guard let document else { return nil }
+            do {
+                let (_, layout) = try NativeDocument.load(name: document.name)
+                return themed(DocumentView(layout: layout, anchor: document.anchor, onExit: onExit))
+            } catch {
+                NSLog("How2Vote: declined document \(document.name) — \(error)")
+                return nil
+            }
         default:
             return nil
         }

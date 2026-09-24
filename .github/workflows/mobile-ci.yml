@@ -71,10 +71,11 @@ jobs:
           FILES=$(gh api "repos/$GITHUB_REPOSITORY/pulls/$PR/files" --paginate --jq '.[].filename')
           echo "$FILES" | sed 's/^/  /'
           # `fastlane/` (repo root) is the F-Droid listing tree.
-          APP='^(apps/(mobile|web)/|packages/|fastlane/|docs/legal/native-copy\.json|data/aec-spatial/source-record\.json|pnpm-lock\.yaml|\.nvmrc|docs/fdroid/|\.github/(workflows/mobile-ci\.yml|actions/(build-web-channel|resolve-store-version)/)|scripts/(check-engine-bundle|check-fdroid-ready|check-ios-sources|check-native-answer-scale|check-native-brand|check-native-chrome|check-native-jurisdictions|check-native-router|check-native-state-keys|check-native-plugins|check-store-channel|generate-app-version|generate-store-metadata)\.mjs)'
-          # apps/web and packages are deliberately absent here: they are input to the bundle, not to
-          # the native build graph.
-          NATIVE='^(apps/mobile/|pnpm-lock\.yaml|\.nvmrc|docs/fdroid/|\.github/(workflows/mobile-ci\.yml|actions/(build-web-channel|resolve-store-version)/)|scripts/(check-fdroid-ready|check-native-plugins|generate-app-version|generate-store-metadata)\.mjs)'
+          APP='^(apps/(mobile|web)/|packages/|fastlane/|docs/research/|docs/legal/native-copy\.json|data/aec-spatial/source-record\.json|pnpm-lock\.yaml|\.nvmrc|docs/fdroid/|\.github/(workflows/mobile-ci\.yml|actions/(build-web-channel|resolve-store-version)/)|scripts/(check-engine-bundle|check-fdroid-ready|check-ios-sources|check-native-answer-scale|check-native-brand|check-native-chrome|check-native-jurisdictions|check-native-router|check-native-state-keys|check-native-plugins|check-store-channel|generate-app-version|generate-store-metadata|build-native-documents)\.mjs)'
+          # apps/web/src is in: the web's pages are what the native documents are drawn from, so a
+          # change to any of them has to be laid out and checked on screen before it ships to iOS.
+          # packages stay out: they are input to the bundle, not to the native build graph.
+          NATIVE='^(apps/mobile/|apps/web/src/|docs/research/|pnpm-lock\.yaml|\.nvmrc|docs/fdroid/|\.github/(workflows/mobile-ci\.yml|actions/(build-web-channel|resolve-store-version)/)|scripts/(check-fdroid-ready|check-native-plugins|generate-app-version|generate-store-metadata|build-native-documents)\.mjs)'
           if echo "$FILES" | grep -qE "$APP"; then echo "app=true" >> "$GITHUB_OUTPUT"; else echo "app=false" >> "$GITHUB_OUTPUT"; fi
           # A draft still gets the cheap tier; the builds wait until it is marked ready (which
           # re-triggers this) or are dispatched by hand, so macOS capacity is not spent on
@@ -214,6 +215,20 @@ jobs:
           [ "$missing" = "0" ] || exit 1
           echo "✓ $(ls -d data/dist/*/ | wc -l) dataset(s) and manifest(s) present in the ios web output"
 
+      # The document screens load these by name; a document the router offers and the output lacks
+      # would be declined on every device, silently.
+      - name: Projected documents ride the iOS web output
+        run: |
+          missing=0
+          for name in $(node -e 'import("./scripts/build-native-documents.mjs").then(m => console.log(m.nativeDocumentRoutes(require("fs").readFileSync("apps/web/src/lib/native-router.svelte.ts", "utf8")).join(" ")))'); do
+            if [ ! -f "apps/web/build/native-documents/$name.json" ]; then
+              echo "::error::native-documents/$name.json missing from apps/web/build — the native document screen would decline it"
+              missing=1
+            fi
+          done
+          [ "$missing" = "0" ] || exit 1
+          echo "✓ $(ls apps/web/build/native-documents | wc -l) projected document(s) present in the ios web output"
+
       - name: Unit tests (channel + share URL invariants included)
         run: pnpm --filter @how2vote/web test
 
@@ -258,6 +273,10 @@ jobs:
       # prove. Without this job the native branch would only ever have been exercised locally.
       - name: Outbound link behaviour
         run: pnpm --filter @how2vote/web exec playwright test native-browser
+
+      # iOS draws the documents from their prerendered HTML, so each must hydrate to the same text.
+      - name: Native documents hydrate to their prerendered text
+        run: pnpm --filter @how2vote/web exec playwright test native-documents
 
   fastlane-toolchain:
     name: fastlane toolchain (Ruby 4)
@@ -525,7 +544,7 @@ jobs:
     runs-on: macos-15
     # Tighter than the Android job on purpose: macOS concurrency is capped at 5 across the whole
     # account, so a hung job here costs a slot that ios-release.yml may need.
-    timeout-minutes: 35
+    timeout-minutes: 45
     outputs:
       artifact-url: ${{ steps.app-upload.outputs.artifact-url }}
     steps:
@@ -599,6 +618,21 @@ jobs:
             apps/mobile/ios/Parity/ChromeLogic.swift \
             -o "$RUNNER_TEMP/chrome-logic"
           "$RUNNER_TEMP/chrome-logic"
+
+      # Every prerendered page — the documents the app ships and every election data page — decoded
+      # and laid out by the SHIPPING model, which must reproduce the projection's text digest and the
+      # text VoiceOver reads. The data pages are not shipped yet; laying them out here keeps the
+      # renderer honest about the whole vocabulary before they are.
+      - name: Documents lay out with their text intact
+        run: |
+          set -euo pipefail
+          node scripts/build-native-documents.mjs --all --out "$RUNNER_TEMP/native-documents"
+          swiftc -O \
+            apps/mobile/ios/App/App/Model/NativeDocument.swift \
+            apps/mobile/ios/App/App/Model/DocumentLayout.swift \
+            apps/mobile/ios/Parity/DocumentLogic.swift \
+            -o "$RUNNER_TEMP/document-logic"
+          "$RUNNER_TEMP/document-logic" "$RUNNER_TEMP/native-documents"
 
       # A partial SVG reader fails quietly: a command it skips draws a boundary that is subtly the
       # wrong shape, and the shape is a voter's own electorate shown back to them. Runs the reader
@@ -697,6 +731,7 @@ jobs:
                 console.log(phones[phones.length-1].udid);
               })')
           echo "simulator: $DEVICE"
+          echo "DEVICE=$DEVICE" >> "$GITHUB_ENV"
 
           xcrun simctl boot "$DEVICE" || true
           xcrun simctl bootstatus "$DEVICE" -b
@@ -760,6 +795,31 @@ jobs:
             fi
           done
           echo "✓ app launched, and the native core is serving the landing"
+
+      # The layout proves it holds the page's text; this proves the SCREEN does. Opens each native
+      # document from the footer and compares the accessibility tree VoiceOver reads with the text
+      # the projection recorded. See AppUITests/DocumentConservationTests.swift.
+      - name: Native documents show the page's text on screen
+        working-directory: apps/mobile/ios/App
+        run: |
+          set -euo pipefail
+          xcodebuild test \
+            -project App.xcodeproj \
+            -scheme App \
+            -configuration Release \
+            -destination "id=$DEVICE" \
+            -derivedDataPath "$RUNNER_TEMP/dd" \
+            -resultBundlePath "$RUNNER_TEMP/documents.xcresult" \
+            CODE_SIGNING_ALLOWED=NO CODE_SIGN_IDENTITY=""
+
+      - name: Attach the document test results to this run
+        if: failure()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
+        with:
+          name: how2vote-ios-documents-pr${{ github.event.pull_request.number || 0 }}-${{ github.run_number }}
+          path: ${{ runner.temp }}/documents.xcresult
+          if-no-files-found: ignore
+          retention-days: 7
 
       - name: Attach the launch screenshot to this run
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7

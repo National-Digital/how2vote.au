@@ -77,4 +77,16 @@ enum LegalCopy {
 
     /// A privacy claim on the state picker: nothing leaves the device unless the voter shares their card.
     static let ballotAnswersStayOnDevice = "Your answers stay on this device until you choose to share your card."
+
+    /// The privacy policy's clear-all control, drawn natively on the iOS document screen; the clearing itself stays the web's.
+    static let clearDataConfirm = "Permanently clear everything on this device?"
+
+    /// The privacy policy's clear-all control, drawn natively on the iOS document screen; the clearing itself stays the web's.
+    static let clearDataYes = "Yes, clear everything"
+
+    /// The privacy policy's clear-all control, drawn natively on the iOS document screen; the clearing itself stays the web's.
+    static let clearDataClearing = "Clearing…"
+
+    /// The privacy policy's clear-all control, drawn natively on the iOS document screen; the clearing itself stays the web's.
+    static let clearDataCancel = "Cancel"
 }

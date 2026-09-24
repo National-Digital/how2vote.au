@@ -1,0 +1,465 @@
+import SwiftUI
+import UIKit
+
+/// A document page — the privacy policy, the terms, the method — drawn from the web's own
+/// prerendered output.
+///
+/// Draws a `DocumentLayout` and nothing else: every word comes from the projection, which
+/// `DocumentLayout.verify` has already held to the page's text. The screen adds only the chrome the
+/// projection leaves to it — the top bar, the stale notice and the footer — and the native
+/// counterpart of each control slot.
+struct DocumentView: View {
+    @Environment(\.colorScheme) private var scheme
+
+    let layout: DocumentLayout
+    /// The fragment the voter followed a link to, scrolled into view on arrival.
+    let anchor: String?
+    let onExit: (String) -> Void
+
+    @State private var scrollTarget: String?
+    @State private var term: TermSelection?
+    @State private var browsing: BrowsedPage?
+    /// A page opened from inside a definition, shown once the definition's sheet is down.
+    @State private var browsingAfterTerm: BrowsedPage?
+
+    var body: some View {
+        VStack(spacing: 0) {
+            StaleNotice()
+            TopBar(label: layout.title, backLabel: "Back to start", onBack: { onExit("/") })
+            ScrollViewReader { proxy in
+                ScrollView {
+                    VStack(alignment: .leading, spacing: 0) {
+                        DocumentBlocks(blocks: layout.blocks, layout: layout, onExit: onExit)
+                            .accessibilityElement(children: .contain)
+                            .accessibilityIdentifier("native-document")
+                        SiteFooter()
+                            .padding(.top, 40)
+                    }
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .padding(.horizontal, Theme.gutter)
+                    .padding(.bottom, 24)
+                }
+                .onAppear {
+                    guard let anchor else { return }
+                    DispatchQueue.main.async { proxy.scrollTo(anchor, anchor: .top) }
+                }
+                .onChange(of: scrollTarget) { _, target in
+                    guard let target else { return }
+                    withAnimation { proxy.scrollTo(target, anchor: .top) }
+                    scrollTarget = nil
+                }
+            }
+        }
+        .background(Theme.paper.resolve(scheme))
+        .foregroundStyle(Theme.ink.resolve(scheme))
+        .tint(Theme.ink.resolve(scheme))
+        .environment(\.openURL, OpenURLAction { url in follow(url) })
+        .sheet(item: $term, onDismiss: {
+            browsing = browsingAfterTerm
+            browsingAfterTerm = nil
+        }) { selection in
+            // A sheet does not inherit the environment it is attached outside, so a link inside a
+            // definition is followed here too.
+            TermSheet(term: layout.terms[selection.index], layout: layout) { href in
+                term = nil
+                onExit(href)
+            }
+            .environment(\.openURL, OpenURLAction { url in follow(url) })
+        }
+        .sheet(item: $browsing) { page in
+            SafariView(url: page.url).ignoresSafeArea()
+        }
+    }
+
+    /// Follows a link drawn in running text. Internal routes go back to the web, which stays the
+    /// router (ADR 0018 D4a); a fragment on this page scrolls to it.
+    private func follow(_ url: URL) -> OpenURLAction.Result {
+        switch DocumentURL(url) {
+        case let .link(index):
+            guard layout.links.indices.contains(index) else { return .discarded }
+            let link = layout.links[index]
+            // A link followed from inside a definition closes it first.
+            let inTerm = term != nil
+            term = nil
+            if link.href.hasPrefix("#") {
+                scrollTarget = String(link.href.dropFirst())
+            } else if !link.external {
+                onExit(link.href)
+            } else if let target = URL(string: link.href), ["http", "https"].contains(target.scheme) {
+                if inTerm {
+                    browsingAfterTerm = BrowsedPage(url: target)
+                } else {
+                    browsing = BrowsedPage(url: target)
+                }
+            } else if let target = URL(string: link.href), ["mailto", "tel"].contains(target.scheme) {
+                // mailto: and tel: belong to the system; no other scheme is handed on.
+                UIApplication.shared.open(target)
+            }
+            return .handled
+        case let .term(index):
+            guard layout.terms.indices.contains(index) else { return .discarded }
+            term = TermSelection(index: index)
+            return .handled
+        case nil:
+            return .discarded
+        }
+    }
+}
+
+private struct TermSelection: Identifiable {
+    let index: Int
+    var id: Int { index }
+}
+
+private struct BrowsedPage: Identifiable {
+    let url: URL
+    var id: String { url.absoluteString }
+}
+
+/// The links a run carries, addressed by their index in the layout rather than by their target, so
+/// following one is always a decision made here and never a URL the system opens on its own.
+enum DocumentURL: Equatable {
+    case link(Int)
+    case term(Int)
+
+    static let scheme = "x-how2vote-document"
+    /// The identifier of a drawn glyph that is not the page's text.
+    static let decoration = "document-decoration"
+
+    init?(_ url: URL) {
+        guard url.scheme == Self.scheme, let host = url.host, let index = Int(url.lastPathComponent) else {
+            return nil
+        }
+        switch host {
+        case "link": self = .link(index)
+        case "term": self = .term(index)
+        default: return nil
+        }
+    }
+
+    var url: URL {
+        switch self {
+        case let .link(i): return URL(string: "\(Self.scheme)://link/\(i)")!
+        case let .term(i): return URL(string: "\(Self.scheme)://term/\(i)")!
+        }
+    }
+}
+
+/// A sequence of laid-out blocks.
+private struct DocumentBlocks: View {
+    let blocks: [DocumentLayout.Block]
+    let layout: DocumentLayout
+    let onExit: (String) -> Void
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 14) {
+            ForEach(Array(blocks.enumerated()), id: \.offset) { _, block in
+                DocumentBlock(block: block, layout: layout, onExit: onExit)
+            }
+        }
+    }
+}
+
+private struct DocumentBlock: View {
+    @Environment(\.colorScheme) private var scheme
+
+    let block: DocumentLayout.Block
+    let layout: DocumentLayout
+    let onExit: (String) -> Void
+
+    var body: some View {
+        switch block {
+        case let .heading(level, id, run):
+            RunText(run: run, layout: layout)
+                .font(Self.headingFont(level))
+                .padding(.top, level == 1 ? 8 : 14)
+                .accessibilityAddTraits(.isHeader)
+                .anchor(id)
+        case let .paragraph(role, id, run):
+            RunText(run: run, layout: layout)
+                .font(Self.paragraphFont(role))
+                .italic(role == .empty)
+                .foregroundStyle(Self.isQuiet(role) ? Theme.ink2.resolve(scheme) : Theme.ink.resolve(scheme))
+                .anchor(id)
+        case let .list(ordered, role, items):
+            DocumentList(ordered: ordered, role: role, items: items, layout: layout, onExit: onExit)
+        case let .definitions(items):
+            VStack(alignment: .leading, spacing: 16) {
+                ForEach(Array(items.enumerated()), id: \.offset) { _, item in
+                    VStack(alignment: .leading, spacing: 6) {
+                        RunText(run: item.term, layout: layout)
+                            .font(.headline)
+                        DocumentBlocks(blocks: item.detail, layout: layout, onExit: onExit)
+                    }
+                    .anchor(item.id)
+                }
+            }
+        case let .quote(content):
+            HStack(alignment: .top, spacing: 12) {
+                Rectangle().fill(Theme.line2.resolve(scheme)).frame(width: 2)
+                DocumentBlocks(blocks: content, layout: layout, onExit: onExit)
+            }
+        case let .section(role, id, content):
+            if role == .clearData {
+                DocumentBlocks(blocks: content, layout: layout, onExit: onExit)
+                    .padding(16)
+                    .background(Theme.raise.resolve(scheme))
+                    .overlay(
+                        RoundedRectangle(cornerRadius: Theme.radius)
+                            .strokeBorder(Theme.line2.resolve(scheme), lineWidth: 1)
+                    )
+                    .anchor(id)
+            } else {
+                DocumentBlocks(blocks: content, layout: layout, onExit: onExit)
+                    .anchor(id)
+            }
+        case let .electionSwitch(label, options):
+            ElectionSwitch(label: label, options: options, onExit: onExit)
+        case let .slot(slot, controls):
+            switch slot {
+            case .clearData:
+                ClearDataControl(label: controls[0])
+            }
+        }
+    }
+
+    private static func headingFont(_ level: Int) -> Font {
+        switch level {
+        case 1: return .largeTitle.weight(.semibold)
+        case 2: return .title2.weight(.semibold)
+        default: return .headline
+        }
+    }
+
+    private static func paragraphFont(_ role: NativeDocument.BlockRole?) -> Font {
+        switch role {
+        case .lede, .intro: return .title3
+        case .updated, .note, .meta, .source, .evidence: return .footnote
+        case .inventory, .empty, .clearData, nil: return .body
+        }
+    }
+
+    private static func isQuiet(_ role: NativeDocument.BlockRole?) -> Bool {
+        switch role {
+        case .updated, .meta, .source, .evidence, .empty: return true
+        case .lede, .intro, .note, .inventory, .clearData, nil: return false
+        }
+    }
+}
+
+private struct DocumentList: View {
+    @Environment(\.colorScheme) private var scheme
+
+    let ordered: Bool
+    let role: NativeDocument.ListRole?
+    let items: [[DocumentLayout.Block]]
+    let layout: DocumentLayout
+    let onExit: (String) -> Void
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: role == .index ? 4 : 8) {
+            ForEach(Array(items.enumerated()), id: \.offset) { index, item in
+                if role == .rows {
+                    VStack(alignment: .leading, spacing: 0) {
+                        if index > 0 { Rectangle().fill(Theme.line.resolve(scheme)).frame(height: 1).padding(.bottom, 8) }
+                        DocumentBlocks(blocks: item, layout: layout, onExit: onExit)
+                    }
+                } else if role == .index {
+                    DocumentBlocks(blocks: item, layout: layout, onExit: onExit)
+                } else {
+                    HStack(alignment: .firstTextBaseline, spacing: 8) {
+                        Text(ordered ? "\(index + 1)." : "•")
+                            .foregroundStyle(Theme.ink2.resolve(scheme))
+                            .accessibilityHidden(true)
+                            // UI tests see elements VoiceOver skips; this marks the one drawn
+                            // glyph a document screen adds, so the on-screen check can skip it too.
+                            .accessibilityIdentifier(DocumentURL.decoration)
+                        DocumentBlocks(blocks: item, layout: layout, onExit: onExit)
+                    }
+                }
+            }
+        }
+    }
+}
+
+/// One run of text, drawn span by span. Hidden spans are not drawn; when VoiceOver should hear
+/// something other than what is drawn, it is given the run's spoken text.
+private struct RunText: View {
+    @Environment(\.colorScheme) private var scheme
+    @Environment(\.openURL) private var openURL
+
+    let run: DocumentLayout.Run
+    let layout: DocumentLayout
+
+    var body: some View {
+        let text = Text(attributed)
+            .fixedSize(horizontal: false, vertical: true)
+            .frame(maxWidth: .infinity, alignment: .leading)
+        if layout.needsSpokenLabel(run) {
+            text.accessibilityLabel(layout.spoken(run))
+                // The spoken label replaces the inline links and terms, so each is offered as an
+                // action instead — a glossary term as much as a link.
+                .accessibilityActions {
+                    ForEach(Array(linkIndices.enumerated()), id: \.offset) { _, index in
+                        Button(layout.links[index].label ?? plainText(of: index)) {
+                            openURL(DocumentURL.link(index).url)
+                        }
+                    }
+                    ForEach(Array(termIndices.enumerated()), id: \.offset) { _, index in
+                        Button(layout.terms[index].text) {
+                            openURL(DocumentURL.term(index).url)
+                        }
+                    }
+                }
+        } else {
+            text
+        }
+    }
+
+    private var linkIndices: [Int] {
+        var seen: [Int] = []
+        for span in run.spans { if let l = span.link, !seen.contains(l) { seen.append(l) } }
+        return seen
+    }
+
+    private var termIndices: [Int] {
+        var seen: [Int] = []
+        for span in run.spans { if let t = span.term, !seen.contains(t) { seen.append(t) } }
+        return seen
+    }
+
+    private func plainText(of link: Int) -> String {
+        // What VoiceOver hears of the link: its hidden text, and not the glyph drawn beside it.
+        run.spans.filter { $0.link == link && !$0.decorative }.map(\.text).joined()
+    }
+
+    private var attributed: AttributedString {
+        var out = AttributedString()
+        for span in run.spans where !span.hidden {
+            var piece = AttributedString(span.text)
+            var intent: InlinePresentationIntent = []
+            if span.strong { intent.insert(.stronglyEmphasized) }
+            if span.emphasis { intent.insert(.emphasized) }
+            if span.code { intent.insert(.code) }
+            if !intent.isEmpty { piece.inlinePresentationIntent = intent }
+            if span.muted { piece.foregroundColor = Theme.ink2.resolve(scheme) }
+            if let l = span.link {
+                piece.link = DocumentURL.link(l).url
+                piece.underlineStyle = Text.LineStyle(pattern: .solid)
+                if layout.links[l].primary { piece.inlinePresentationIntent = intent.union(.stronglyEmphasized) }
+            } else if let t = span.term {
+                piece.link = DocumentURL.term(t).url
+                piece.underlineStyle = Text.LineStyle(pattern: .dot)
+            }
+            out += piece
+        }
+        return out
+    }
+}
+
+/// A glossary term's definition, opened from the term — the web's popover.
+private struct TermSheet: View {
+    @Environment(\.colorScheme) private var scheme
+    @Environment(\.dismiss) private var dismiss
+
+    let term: DocumentLayout.Term
+    let layout: DocumentLayout
+    let onGlossary: (String) -> Void
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 16) {
+            RunText(run: term.definition, layout: layout)
+                .font(.body)
+            HStack(spacing: 20) {
+                Button("Full glossary") { onGlossary(term.href) }
+                    .underline()
+                Spacer()
+                Button("Close") { dismiss() }
+            }
+            .font(.subheadline)
+            .frame(minHeight: 44)
+        }
+        .padding(Theme.gutter)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .foregroundStyle(Theme.ink.resolve(scheme))
+        .background(Theme.raise.resolve(scheme))
+        .presentationDetents([.medium])
+    }
+}
+
+private struct ElectionSwitch: View {
+    @Environment(\.colorScheme) private var scheme
+
+    let label: String
+    let options: [NativeDocument.SwitchOption]
+    let onExit: (String) -> Void
+
+    var body: some View {
+        HStack(spacing: 0) {
+            ForEach(Array(options.enumerated()), id: \.offset) { _, option in
+                Button { onExit(option.href) } label: {
+                    Text(option.label)
+                        .font(.subheadline.weight(option.current ? .semibold : .regular))
+                        .frame(maxWidth: .infinity, minHeight: 44)
+                        .background(option.current ? Theme.ink.resolve(scheme) : Color.clear)
+                        .foregroundStyle(option.current ? Theme.onFill.resolve(scheme) : Theme.ink.resolve(scheme))
+                }
+                .buttonStyle(.plain)
+                .accessibilityAddTraits(option.current ? [.isButton, .isSelected] : [.isButton])
+            }
+        }
+        .overlay(
+            RoundedRectangle(cornerRadius: Theme.radius)
+                .strokeBorder(Theme.line2.resolve(scheme), lineWidth: 1)
+        )
+        .clipShape(RoundedRectangle(cornerRadius: Theme.radius))
+        .accessibilityElement(children: .contain)
+        .accessibilityLabel(label)
+    }
+}
+
+/// The privacy policy's "clear all my data" control — `ClearMyData.svelte`'s buttons.
+///
+/// The clearing is the web's: it owns the keys (ADR 0018 D3) and already clears the durable copy the
+/// native core reads, so this asks for it rather than doing it a second way.
+private struct ClearDataControl: View {
+    @Environment(\.colorScheme) private var scheme
+    @Environment(\.siteChromeActions) private var actions
+
+    /// The resting button's label, from the page.
+    let label: String
+
+    @State private var confirming = false
+    @State private var clearing = false
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            if confirming {
+                Text(LegalCopy.clearDataConfirm)
+                    .font(.subheadline.weight(.semibold))
+                Button(clearing ? LegalCopy.clearDataClearing : LegalCopy.clearDataYes) {
+                    clearing = true
+                    actions.clearData()
+                }
+                .buttonStyle(PrimaryButton())
+                .disabled(clearing)
+                Button(LegalCopy.clearDataCancel) { confirming = false }
+                    .underline()
+                    .frame(minHeight: 44)
+                    .disabled(clearing)
+            } else {
+                Button(label) { confirming = true }
+                    .underline()
+                    .frame(minHeight: 44)
+            }
+        }
+        .foregroundStyle(Theme.ink.resolve(scheme))
+    }
+}
+
+private extension View {
+    /// Marks the view as a fragment a link can scroll to, when the page gives it an id.
+    @ViewBuilder func anchor(_ id: String?) -> some View {
+        if let id { self.id(id) } else { self }
+    }
+}

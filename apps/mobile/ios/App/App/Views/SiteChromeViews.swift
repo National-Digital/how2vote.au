@@ -7,6 +7,8 @@ struct SiteChromeActions {
     var exit: (String) -> Void = { _ in }
     /// Records that the voter dismissed the stale-data notice for this dataVersion.
     var dismissStale: (String) -> Void = { _ in }
+    /// Asks the web to clear everything this app stores on the device.
+    var clearData: () -> Void = {}
 }
 
 private struct SiteChromeKey: EnvironmentKey {

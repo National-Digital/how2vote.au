@@ -188,6 +188,9 @@ type NativeRouterPlugin = {
     allowedMapIds?: string[];
     chrome?: string;
     session?: string;
+    document?: string;
+    anchor?: string;
+    theme?: string;
   }): Promise<{ presented: boolean }>;
   dismiss(): Promise<void>;
   themeChanged(options: { theme: string }): Promise<void>;
@@ -201,6 +204,10 @@ type NativeRouterPlugin = {
   ): Promise<{ remove: () => Promise<void> }> | { remove: () => void };
   addListener(
     event: "nativeThemeRequest",
+    handler: () => void,
+  ): Promise<{ remove: () => Promise<void> }> | { remove: () => void };
+  addListener(
+    event: "nativeClearData",
     handler: () => void,
   ): Promise<{ remove: () => Promise<void> }> | { remove: () => void };
 };

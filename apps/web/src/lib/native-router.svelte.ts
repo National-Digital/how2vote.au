@@ -22,6 +22,7 @@ import { CURRENT_ELECTION_ID, ELECTIONS, ELECTION_IDS } from "@how2vote/data-sch
 import { STATES } from "$lib/data";
 import { isMapAvailable } from "$lib/governance";
 import { backupToNative, restoreFromNative } from "$lib/native-storage";
+import { clearLocalDeviceData } from "$lib/privacy/local-data";
 import { now } from "$lib/now.svelte";
 import { quiz, type Persisted } from "$lib/quiz.svelte";
 import { saved } from "$lib/saved.svelte";
@@ -29,6 +30,22 @@ import { AUTHORISATION, FEEDBACK_LINK, footerCredit, footerLinks } from "$lib/si
 import { staleDismissal, staleMessage } from "$lib/stale-notice.svelte";
 import { assessStaleness } from "$lib/staleness";
 import { theme } from "$lib/theme.svelte";
+
+/**
+ * The prerendered documents the native core draws from their projection
+ * (`scripts/build-native-documents.mjs`). Each one's hydrated text must equal its prerendered text,
+ * which `e2e/native-documents.spec.ts` holds it to; a page whose text depends on the voter's state
+ * does not belong here.
+ */
+export const NATIVE_DOCUMENTS = [
+  "accessibility",
+  "corrections",
+  "glossary",
+  "methodology",
+  "privacy",
+  "research",
+  "terms",
+] as const;
 
 /**
  * The routes the native core can serve, by path.
@@ -45,16 +62,21 @@ const NATIVE_ROUTES = new Set([
   // The landing renders for a past election too (`/2019`, `/2022`), and the election toggle moves
   // between them. Without these the toggle would drop out of the native surface mid-tap.
   ...ELECTION_IDS.map((id) => `/${id}`),
+  ...NATIVE_DOCUMENTS.map((name) => `/${name}`),
 ]);
+
+const DOCUMENT_PATHS = new Set<string>(NATIVE_DOCUMENTS.map((name) => `/${name}`));
 
 /**
  * The shell's name for a path.
  *
  * The landing serves several paths — `/` and one per election — and they are one screen, told which
- * election to show through `electionId`. Everything else is its path without the slash.
+ * election to show through `electionId`. The documents are one screen too, told which page to
+ * draw through `document`. Everything else is its path without the slash.
  */
 function routeName(path: string): string {
   if (path === "/" || ELECTION_IDS.some((id) => path === `/${id}`)) return "landing";
+  if (DOCUMENT_PATHS.has(path)) return "document";
   return path.replace(/^\//, "");
 }
 
@@ -106,6 +128,19 @@ function explorerSession(electionId: string): string | undefined {
   if (ageGate.confirmed) return undefined;
   const record = quiz.snapshot(electionId);
   return record ? JSON.stringify(record) : undefined;
+}
+
+/**
+ * The fragment a navigation names, decoded. A malformed escape (`#%E0`) is kept as written rather
+ * than thrown: a throw here would read as "no native core" for the rest of the session.
+ */
+function fragment(url: URL): string {
+  const raw = url.hash.slice(1);
+  try {
+    return decodeURIComponent(raw);
+  } catch {
+    return raw;
+  }
 }
 
 /** Who is rendering the current route. */
@@ -173,8 +208,10 @@ class NativeRoute {
       return;
     }
 
-    if (this.#pending === path) return;
-    this.#pending = path;
+    // A document opened at a fragment is a different request from the same document at the top.
+    const request = path + url.hash;
+    if (this.#pending === request) return;
+    this.#pending = request;
     this.#renderer = "deciding";
     const id = landingElection(path) ?? electionId;
 
@@ -199,18 +236,20 @@ class NativeRoute {
         canExplore: ageGate.canExplore,
         allowedMapIds: allowedMapIds(id),
         chrome: siteChrome(),
+        theme: theme.pref,
         // An explorer's quiz lives only in memory (ADR 0012), so the native core is handed it.
         session: explorerSession(id),
+        ...(DOCUMENT_PATHS.has(path) ? { document: path.slice(1), anchor: fragment(url) } : {}),
       });
       // A later navigation may have overtaken this call; its answer, not this one, is current.
-      if (this.#pending !== path) return;
+      if (this.#pending !== request) return;
       this.#covered = presented;
       this.#renderer = presented ? "native" : "web";
     } catch {
       // A rejected bridge call must not strand the voter on a page that will not render. It also
       // answers the only question that matters about this platform, so it is not asked again.
       this.#absent = true;
-      if (this.#pending === path) this.#renderer = "web";
+      if (this.#pending === request) this.#renderer = "web";
     }
   }
 }
@@ -272,6 +311,16 @@ export function wireNativeRouter(electionId: () => string, navigate: (path: stri
   onDestroy(() => {
     for (const teardown of teardowns.splice(0)) teardown();
   });
+}
+
+/**
+ * Tells the native core the theme this side now holds. For a change the native side did not ask
+ * for — the restore at launch, which can bring back a theme WebKit's storage had lost.
+ */
+export function syncNativeTheme(): void {
+  void nativeRouterPlugin()
+    ?.themeChanged({ theme: theme.pref })
+    .catch(() => undefined);
 }
 
 /** Teardowns for whatever `attach` registered, released by the layout's own destruction. */
@@ -348,7 +397,14 @@ function attach(navigate: (path: string) => void): void {
     void backupToNative();
   });
 
+  // The native control asks; this side clears, with the same routine and the same clean reload the
+  // web control uses — which also clears the durable copy the native core reads.
+  const clearData = router.addListener("nativeClearData", () => {
+    void clearLocalDeviceData().then(() => window.location.assign("/"));
+  });
+
   teardowns.push(() => {
+    void Promise.resolve(clearData).then((r) => r.remove());
     void Promise.resolve(exit).then((r) => r.remove());
     void Promise.resolve(themeChange).then((r) => r.remove());
     void Promise.resolve(staleDismiss).then((r) => r.remove());

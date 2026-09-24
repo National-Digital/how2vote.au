@@ -25,3 +25,4 @@ design built on them, then the product-level decisions.
 | [0016](0016-deliberate-freeze-and-longevity.md) | Deliberate freeze posture and a longevity re-review | Accepted |
 | [0017](0017-self-hosted-proof-of-work-challenge.md) | Self-hosted proof-of-work challenge and forms relay | Accepted |
 | [0018](0018-native-ios-core.md) | Native iOS core for the answer-to-card path | Accepted (planned) |
+| [0019](0019-native-documents-from-prerendered-html.md) | Native iOS documents drawn from the prerendered HTML | Proposed |

@@ -43,6 +43,7 @@ describe("verifyNativeChrome", () => {
       landing: "LandingView",
       ballot: "BallotView",
       review: "ReviewView",
+      document: "DocumentView",
     });
   });
 
