@@ -25,6 +25,8 @@ struct DocumentLayout: Equatable {
         var link: Int?
         /// Index into `terms`.
         var term: Int?
+        /// The name of the value this span holds the page's sample of, which a screen may fill.
+        var value: String?
     }
 
     struct Run: Equatable {
@@ -132,7 +134,7 @@ struct DocumentLayout: Equatable {
             return .section(role: role, id: id, content: content.map { lay($0) })
         case let .electionSwitch(label, options):
             return .electionSwitch(label: label, options: options)
-        case let .slot(slot, controls):
+        case let .slot(slot, _, controls):
             return .slot(slot, controls: controls)
         case let .logo(label):
             return .logo(label: label)
@@ -171,6 +173,10 @@ struct DocumentLayout: Equatable {
                 s.text = glyph
                 s.decorative = true
                 run.spans.append(s)
+            case let .value(name, sample):
+                s.text = sample
+                s.value = name
+                run.spans.append(s)
             case let .aside(_, content):
                 s.muted = true
                 append(content, style: s, to: &run)
@@ -197,7 +203,7 @@ struct DocumentLayout: Equatable {
     private static func plain(_ inlines: [NativeDocument.Inline]) -> String {
         inlines.map { inline -> String in
             switch inline {
-            case let .text(text): return text
+            case let .text(text), let .value(_, text): return text
             case .lineBreak: return "\n"
             case .hidden, .glyph: return ""
             case let .strong(c), let .emphasis(c), let .code(c), let .aside(_, c),
@@ -267,7 +273,7 @@ struct DocumentLayout: Equatable {
                 return options.map(\.label).joined()
             case let .slot(_, controls):
                 // An icon button's name is heard, not drawn.
-                return controls.map { $0.named ? (spoken ? $0.label : "") : $0.text() }.joined()
+                return controls.map { ($0.named ? (spoken ? $0.label : "") : $0.text()) + ($0.sub ?? "") }.joined()
             case .logo:
                 return ""
             }

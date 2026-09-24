@@ -14,7 +14,7 @@ struct NativeDocument: Equatable {
     /// The node kinds this renderer draws, by the names the projection writes. `DocumentLogic`
     /// holds these, and the role and slot cases, to `apps/mobile/ios/native-contract.json`.
     static let blockKinds = ["heading", "paragraph", "list", "definitions", "quote", "section", "switch", "slot", "logo"]
-    static let inlineKinds = ["text", "break", "strong", "em", "code", "link", "term", "hidden", "aside", "glyph"]
+    static let inlineKinds = ["text", "break", "strong", "em", "code", "link", "term", "hidden", "aside", "glyph", "value"]
 
     let route: String
     let title: String
@@ -37,6 +37,8 @@ struct NativeDocument: Equatable {
 
     enum BlockRole: String, Decodable, CaseIterable {
         case updated, lede, note, intro, meta, source, evidence, inventory, empty, kicker, picker, stage
+        /// A piece of a native screen's wording, named by its id, with its values marked.
+        case template
         case clearData = "clear-data"
     }
 
@@ -58,6 +60,7 @@ struct NativeDocument: Equatable {
         case landingComplete = "landing-complete"
         case themeLight = "theme-light"
         case themeDark = "theme-dark"
+        case quizAnswer = "quiz-answer"
 
         /// The actions its buttons carry — `SLOT_ACTIONS` in `build-native-documents.mjs`. A link
         /// carries a route instead.
@@ -70,6 +73,7 @@ struct NativeDocument: Equatable {
             case .landingResume: return ["resume", "start"]
             case .landingComplete: return ["card", "start"]
             case .themeLight, .themeDark: return ["theme"]
+            case .quizAnswer: return ["5", "4", "3", "2", "1", "0"]
             }
         }
 
@@ -95,6 +99,8 @@ struct NativeDocument: Equatable {
         let values: [String: String]
         /// True for an icon button: the label is its accessible name, heard and never drawn.
         let named: Bool
+        /// A line drawn beneath the label, where the page has one.
+        let sub: String?
 
         /// The label with its values filled — the page's, or those given.
         func text(_ values: [String: String] = [:]) -> String {
@@ -138,7 +144,8 @@ struct NativeDocument: Equatable {
         case quote([Block])
         case section(role: BlockRole?, id: String?, content: [Block])
         case electionSwitch(label: String, options: [SwitchOption])
-        case slot(Slot, controls: [Control])
+        /// A slot's controls, and the group's accessible name where the page names it as a group.
+        case slot(Slot, label: String?, controls: [Control])
         /// The drawn wordmark, by the name the page gives it.
         case logo(label: String)
     }
@@ -163,6 +170,8 @@ struct NativeDocument: Equatable {
         case hidden([Inline])
         /// Drawn, never heard: the web's ↗ beside an external link.
         case glyph(String)
+        /// A value a screen fills in, with the page's own value as its sample.
+        case value(name: String, sample: String)
         case aside(role: InlineRole, content: [Inline])
     }
 
@@ -264,7 +273,7 @@ extension NativeDocument.Block: Decodable {
             }
             self = .electionSwitch(label: try c.decode(String.self, "label"), options: options)
         case "slot":
-            let c = try Strict(decoder, node: t, fields: ["t", "name", "controls"])
+            let c = try Strict(decoder, node: t, fields: ["t", "name", "label", "controls"])
             let controls = try c.decode([NativeDocument.Control].self, "controls")
             let name = try c.decode(NativeDocument.Slot.self, "name")
             // Each slot's buttons are exactly the actions it is drawn for, and every other control is
@@ -276,7 +285,7 @@ extension NativeDocument.Block: Decodable {
             else {
                 throw NativeDocument.DecodeError.invalid("the \(name.rawValue) slot's actions are not \(name.actions)")
             }
-            self = .slot(name, controls: controls)
+            self = .slot(name, label: try c.optional(String.self, "label"), controls: controls)
         case "logo":
             let c = try Strict(decoder, node: t, fields: ["t", "label"])
             self = .logo(label: try c.decode(String.self, "label"))
@@ -301,6 +310,9 @@ extension NativeDocument.Inline: Decodable {
         case "glyph":
             let c = try Strict(decoder, node: t, fields: ["t", "s"])
             self = .glyph(try c.decode(String.self, "s"))
+        case "value":
+            let c = try Strict(decoder, node: t, fields: ["t", "name", "s"])
+            self = .value(name: try c.decode(String.self, "name"), sample: try c.decode(String.self, "s"))
         case "strong", "em", "code", "hidden":
             let c = try Strict(decoder, node: t, fields: ["t", "c"])
             let content = try c.decode(Inlines.self, "c")
@@ -359,12 +371,13 @@ extension NativeDocument.Brand: Decodable {
 
 extension NativeDocument.Control: Decodable {
     init(from decoder: Decoder) throws {
-        let c = try Strict(decoder, node: "control", fields: ["label", "action", "href", "values", "named"])
+        let c = try Strict(decoder, node: "control", fields: ["label", "action", "href", "values", "named", "sub"])
         label = try c.decode(String.self, "label")
         action = try c.optional(String.self, "action")
         href = try c.optional(String.self, "href")
         values = try c.optional([String: String].self, "values") ?? [:]
         named = try c.optional(Bool.self, "named") ?? false
+        sub = try c.optional(String.self, "sub")
         for name in values.keys where !label.contains("{\(name)}") {
             throw NativeDocument.DecodeError.invalid("a control value \"\(name)\" its label does not use")
         }

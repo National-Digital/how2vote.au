@@ -66,11 +66,11 @@ enum LandingComposition {
                 let wanted = "\(part)-\(electionID)-\(phase)"
                 guard let state = stateSections[wanted] else { throw Failure.missing("section \(wanted)") }
                 return state
-            case .slot(.landingFresh, _):
-                guard case let .slot(slot, controls)? = stateSlots[progress.slot] else {
+            case .slot(.landingFresh, _, _):
+                guard case let .slot(slot, label, controls)? = stateSlots[progress.slot] else {
                     throw Failure.missing("call to action \(progress.slot.rawValue)")
                 }
-                return .slot(slot, controls: try fill(controls, with: progress.values))
+                return .slot(slot, label: label, controls: try fill(controls, with: progress.values))
             case let .section(role, id, content):
                 return .section(role: role, id: id, content: try content.map(replace))
             default:
@@ -106,15 +106,16 @@ enum LandingComposition {
                 action: control.action,
                 href: control.href,
                 values: values.filter { control.values.keys.contains($0.key) },
-                named: control.named
+                named: control.named,
+                sub: control.sub
             )
         }
     }
 
     static func themeLabels(in states: NativeDocument) throws -> ThemeLabels {
         let found = slots(in: states.blocks)
-        guard case let .slot(_, light)? = found[.themeLight], let lightLabel = light.first?.label,
-              case let .slot(_, dark)? = found[.themeDark], let darkLabel = dark.first?.label
+        guard case let .slot(_, _, light)? = found[.themeLight], let lightLabel = light.first?.label,
+              case let .slot(_, _, dark)? = found[.themeDark], let darkLabel = dark.first?.label
         else { throw Failure.missing("theme labels") }
         return ThemeLabels(light: lightLabel, dark: darkLabel)
     }
@@ -139,7 +140,7 @@ enum LandingComposition {
     private static func slots(in blocks: [NativeDocument.Block]) -> [NativeDocument.Slot: NativeDocument.Block] {
         var out: [NativeDocument.Slot: NativeDocument.Block] = [:]
         for block in blocks {
-            if case let .slot(slot, _) = block { out[slot] = block }
+            if case let .slot(slot, _, _) = block { out[slot] = block }
         }
         return out
     }

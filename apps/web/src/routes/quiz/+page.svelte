@@ -15,6 +15,7 @@
   import { election } from "$lib/election.svelte";
   import { quiz } from "$lib/quiz.svelte";
   import { nativeRoute } from "$lib/native-router.svelte";
+  import { QUIZ_COPY, SPOKEN_ANSWERS, fill, parts } from "$lib/quiz-copy";
 
   let announce = $state("");
   let advancing = $state(false);
@@ -83,13 +84,10 @@
   function commit(points: AnswerPoints): void {
     if (!question || advancing) return;
     quiz.record(question.id, points);
-    const label =
-      points === 0
-        ? "Skipped"
-        : ["", "strongly disagree", "disagree", "equal merits", "agree", "strongly agree"][points];
+    const answer = SPOKEN_ANSWERS[points];
     announce = editing
-      ? `Answer updated: ${label}. Returning to your answers.`
-      : `Answered: ${label}. Question ${Math.min(index + 2, total)} of ${total}.`;
+      ? fill(QUIZ_COPY.updated, { answer })
+      : fill(QUIZ_COPY.answered, { answer, n: Math.min(index + 2, total), total });
     advancing = true;
     const delay = reduceMotion() ? 0 : 160;
     window.setTimeout(() => {
@@ -126,46 +124,52 @@
   );
 </script>
 
-<Meta title={total > 0 ? `Question ${index + 1} of ${total} — How2Vote` : "Quiz — How2Vote"} />
+<Meta
+  title={total > 0
+    ? `${fill(QUIZ_COPY.position, { n: index + 1, total })} — How2Vote`
+    : "Quiz — How2Vote"}
+/>
 <svelte:window {onkeydown} />
 
 <TopBar
-  label={`Question ${index + 1} of ${total}`}
+  label={fill(QUIZ_COPY.position, { n: index + 1, total })}
   onback={back}
-  backLabel={editing ? "Back to your answers" : "Previous question"}
+  backLabel={editing ? QUIZ_COPY.backToAnswers : QUIZ_COPY.previous}
 >
   {#snippet right()}
-    <a class="pause ui" href="/">Pause</a>
+    <a class="pause ui" href="/">{QUIZ_COPY.pause}</a>
   {/snippet}
 </TopBar>
-<Progress value={index + 1} max={total} label="Quiz progress" />
+<Progress value={index + 1} max={total} label={QUIZ_COPY.progress} />
 
 <div class="body" aria-live="off">
   {#if !nativeRoute.isWeb}
-    <p class="kicker ui" role="status">Loading question…</p>
+    <p class="kicker ui" role="status">{QUIZ_COPY.loading}</p>
   {:else if question}
     <div class="intro">
       {#if index === 0}
         <ProvenanceNotice electionId={election.id} />
       {/if}
-      <p class="kicker ui">Parliament voted on this</p>
+      <p class="kicker ui">{QUIZ_COPY.voted}</p>
       <h1 class="q">{question.text}</h1>
       <ExternalLink href={policyUrl} class="src ui">
-        See the parliamentary votes behind this
+        {QUIZ_COPY.source}
       </ExternalLink>
     </div>
 
     <div class="stack">
-      <p class="kicker ui">How would you vote on this?</p>
+      <p class="kicker ui">{QUIZ_COPY.ask}</p>
       <AnswerOptions {current} onanswer={(p) => commit(p)} onskip={() => commit(0)} />
     </div>
   {:else if loadError}
     <p class="kicker ui" role="alert">
-      Couldn't load the questions. Please check your connection and
-      <a href="/quiz" onclick={() => location.reload()}>try again</a>.
+      {#each parts(QUIZ_COPY.failed) as part, i (i)}{#if "text" in part}{part.text}{:else}<a
+            href="/quiz"
+            onclick={() => location.reload()}>{QUIZ_COPY.retry}</a
+          >{/if}{/each}
     </p>
   {:else}
-    <p class="kicker ui" role="status">Loading question…</p>
+    <p class="kicker ui" role="status">{QUIZ_COPY.loading}</p>
   {/if}
 </div>
 

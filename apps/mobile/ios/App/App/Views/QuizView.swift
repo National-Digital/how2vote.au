@@ -21,11 +21,14 @@ struct QuizView: View {
 
     @StateObject private var model: QuizViewModel
 
+    /// Every word the screen shows or speaks, from the web's quiz page.
+    private let wording: QuizWording
     /// The screen to show when the voter leaves the quiz, forwards or backwards.
     private let onExit: (QuizExit) -> Void
 
-    init(model: QuizViewModel, onExit: @escaping (QuizExit) -> Void) {
+    init(model: QuizViewModel, wording: QuizWording, onExit: @escaping (QuizExit) -> Void) {
         _model = StateObject(wrappedValue: model)
+        self.wording = wording
         self.onExit = onExit
     }
 
@@ -33,12 +36,17 @@ struct QuizView: View {
         VStack(spacing: 0) {
             StaleNotice()
             TopBar(
-                label: model.positionLabel,
-                backLabel: model.isEditing ? "Back to your answers" : "Previous question",
+                label: wording.position(model.cursor + 1, of: model.total),
+                backLabel: wording.text(model.isEditing ? .backToAnswers : .previous),
                 onBack: back,
-                trailing: ("Pause", { onExit(.pause) })
+                trailing: (wording.text(.pause), { onExit(.pause) })
             )
-            QuizProgress(value: model.cursor + 1, total: model.total)
+            QuizProgress(
+                value: model.cursor + 1,
+                total: model.total,
+                label: wording.text(.progress),
+                spokenValue: wording.position(model.cursor + 1, of: model.total)
+            )
 
             // Scrolls only where the screen is too short for it — a small phone, large Dynamic Type,
             // or a stale-data notice above — so no answer is ever out of reach.
@@ -59,7 +67,7 @@ struct QuizView: View {
         }
         // The web's ← shortcut. Invisible rather than hidden, which would drop the shortcut too.
         .background {
-            Button("Previous question", action: back)
+            Button(wording.text(.previous), action: back)
                 .keyboardShortcut(.leftArrow, modifiers: [])
                 .opacity(0)
                 .accessibilityHidden(true)
@@ -71,20 +79,19 @@ struct QuizView: View {
     @ViewBuilder private var content: some View {
         switch model.phase {
         case .loading:
-            Text("Loading question…")
+            Text(wording.text(.loading))
                 .kicker(Theme.ink2.resolve(scheme))
                 .accessibilityAddTraits(.updatesFrequently)
 
-        case let .failed(message):
-            VStack(alignment: .leading, spacing: 12) {
-                Text(message)
-                    .font(.callout)
-                    .foregroundStyle(Theme.ink.resolve(scheme))
-                Button("Try again") { Task { await model.load() } }
-                    .font(.footnote.weight(.semibold))
-                    .underline()
-                    .frame(minHeight: 44)
+        case .failed:
+            // The web's sentence, whose "try again" is its link: here the sentence is the button.
+            Button { Task { await model.load() } } label: {
+                Text(wording.failed)
+                    .kicker(Theme.ink2.resolve(scheme))
+                    .multilineTextAlignment(.leading)
+                    .frame(maxWidth: .infinity, minHeight: 44, alignment: .leading)
             }
+            .buttonStyle(.plain)
 
         case let .ready(question):
             questionBody(question)
@@ -97,7 +104,7 @@ struct QuizView: View {
                 if model.cursor == 0, let provenance = model.provenance {
                     ProvenanceNotice(statement: provenance)
                 }
-                Text("Parliament voted on this")
+                Text(wording.text(.voted))
                     .kicker(Theme.ink2.resolve(scheme))
                     .padding(.top, 6)
                     .padding(.bottom, 8)
@@ -107,7 +114,7 @@ struct QuizView: View {
                     .fixedSize(horizontal: false, vertical: true)
                     .accessibilityAddTraits(.isHeader)
                 ExternalLinkView(
-                    title: "See the parliamentary votes behind this",
+                    title: wording.text(.source),
                     url: model.sourceURL(for: question)
                 )
                 .font(.caption)
@@ -117,12 +124,17 @@ struct QuizView: View {
             // a fixed height: at large Dynamic Type sizes the block has to be allowed to grow.
             .frame(minHeight: 210, alignment: .top)
 
-            Text("How would you vote on this?")
+            Text(wording.text(.ask))
                 .kicker(Theme.ink2.resolve(scheme))
                 .padding(.top, 10)
                 .padding(.bottom, 8)
 
-            AnswerOptions(current: model.currentPoints, onAnswer: commit)
+            AnswerOptions(
+                options: wording.answers,
+                label: wording.answersLabel,
+                current: model.currentPoints,
+                onAnswer: commit
+            )
         }
         .frame(maxWidth: .infinity, alignment: .leading)
     }
@@ -138,10 +150,14 @@ struct QuizView: View {
 
     /// Tells a VoiceOver user what was recorded and where they are going, as the web's live region does.
     private func announce(_ points: Int) {
-        let label = points == 0 ? "Skipped" : AnswerScale.label(points: points).lowercased()
+        let answer = wording.spoken(points)
         let message = model.isEditing
-            ? "Answer updated: \(label). Returning to your answers."
-            : "Answered: \(label). Question \(min(model.cursor + 2, model.total)) of \(model.total)."
+            ? wording.text(.updated, ["answer": answer])
+            : wording.text(.answered, [
+                "answer": answer,
+                "n": String(min(model.cursor + 2, model.total)),
+                "total": String(model.total),
+            ])
         UIAccessibility.post(notification: .announcement, argument: message)
     }
 

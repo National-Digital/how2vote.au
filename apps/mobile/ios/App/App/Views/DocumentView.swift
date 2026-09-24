@@ -234,6 +234,9 @@ private struct DocumentBlock: View {
             case .themeLight, .themeDark:
                 // The brand bar draws the theme toggle; these carry only its names.
                 EmptyView()
+            case .quizAnswer:
+                // The quiz draws its answers itself, from its wording.
+                EmptyView()
             }
         case let .logo(label):
             Wordmark(height: UIFontMetrics(forTextStyle: .body).scaledValue(for: 20), color: Theme.ink.resolve(scheme), label: label)
@@ -254,14 +257,14 @@ private struct DocumentBlock: View {
         case .lede, .intro: return .title3
         case .updated, .note, .meta, .source, .evidence: return .footnote
         case .kicker: return .caption2.weight(.semibold)
-        case .inventory, .empty, .clearData, .picker, .stage, nil: return .body
+        case .inventory, .empty, .clearData, .picker, .stage, .template, nil: return .body
         }
     }
 
     private static func isQuiet(_ role: NativeDocument.BlockRole?) -> Bool {
         switch role {
         case .updated, .meta, .source, .evidence, .empty, .kicker: return true
-        case .lede, .intro, .note, .inventory, .clearData, .picker, .stage, nil: return false
+        case .lede, .intro, .note, .inventory, .clearData, .picker, .stage, .template, nil: return false
         }
     }
 }

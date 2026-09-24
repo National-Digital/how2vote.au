@@ -51,6 +51,7 @@
 		2311743D63039E370B87C0C2 /* DocumentConservationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1C6F0B05003FBC1A9D4B87D /* DocumentConservationTests.swift */; };
 		27FF1F04447C6F34B26FD8D4 /* native-documents in Resources */ = {isa = PBXBuildFile; fileRef = 18C36407212E5947920BCC94 /* native-documents */; };
 		30BE2661B3C024FF7B26364B /* LandingComposition.swift in Sources */ = {isa = PBXBuildFile; fileRef = D222AF26B7CBDE43060CC05E /* LandingComposition.swift */; };
+		4FE245B8CB4ABE49B5A82760 /* QuizWording.swift in Sources */ = {isa = PBXBuildFile; fileRef = A43A9CEB26358530EA37C6CC /* QuizWording.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -111,6 +112,7 @@
 		A1C6F0B05003FBC1A9D4B87D /* DocumentConservationTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DocumentConservationTests.swift; sourceTree = "<group>"; };
 		18C36407212E5947920BCC94 /* native-documents */ = {isa = PBXFileReference; lastKnownFileType = folder; name = "native-documents"; path = "App/public/native-documents"; sourceTree = SOURCE_ROOT; };
 		D222AF26B7CBDE43060CC05E /* LandingComposition.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = LandingComposition.swift; path = Model/LandingComposition.swift; sourceTree = "<group>"; };
+		A43A9CEB26358530EA37C6CC /* QuizWording.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = QuizWording.swift; path = Model/QuizWording.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -154,6 +156,7 @@
 		504EC3061FED79650016851F /* App */ = {
 			isa = PBXGroup;
 			children = (
+				A43A9CEB26358530EA37C6CC /* QuizWording.swift */,
 				D222AF26B7CBDE43060CC05E /* LandingComposition.swift */,
 				7959077F9FFB7B59F43F1001 /* DocumentView.swift */,
 				8F1B23DBB854035555DD06F4 /* NativeDocument.swift */,
@@ -321,6 +324,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				4FE245B8CB4ABE49B5A82760 /* QuizWording.swift in Sources */,
 				30BE2661B3C024FF7B26364B /* LandingComposition.swift in Sources */,
 				F94C42C83EF8BF31270BA59A /* DocumentView.swift in Sources */,
 				25BE5DCCAE813E940E60511F /* NativeDocument.swift in Sources */,

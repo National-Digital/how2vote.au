@@ -21,7 +21,8 @@
     "term",
     "hidden",
     "aside",
-    "glyph"
+    "glyph",
+    "value"
   ],
   "blockRoles": [
     "clear-data",
@@ -36,6 +37,7 @@
     "picker",
     "source",
     "stage",
+    "template",
     "updated"
   ],
   "inlineRoles": [
@@ -58,6 +60,7 @@
     "landing-complete",
     "landing-fresh",
     "landing-resume",
+    "quiz-answer",
     "theme-dark",
     "theme-light"
   ],
@@ -82,6 +85,14 @@
     "landing-resume": [
       "resume",
       "start"
+    ],
+    "quiz-answer": [
+      "0",
+      "1",
+      "2",
+      "3",
+      "4",
+      "5"
     ],
     "theme-dark": [
       "theme"

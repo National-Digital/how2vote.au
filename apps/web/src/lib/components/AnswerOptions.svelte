@@ -1,6 +1,7 @@
 <script lang="ts">
   import type { AnswerPoints } from "@how2vote/engine";
   import { OPTIONS } from "$lib/answers";
+  import { QUIZ_COPY } from "$lib/quiz-copy";
 
   let {
     current,
@@ -18,12 +19,14 @@
   const isSkipOn = $derived(current !== undefined && current.points === 0);
 </script>
 
-<div class="opts" role="group" aria-label="Your answer">
+<!-- Each answer names the points it records (`value`), which the iOS app reads from the page. -->
+<div class="opts" role="group" aria-label={QUIZ_COPY.answers}>
   {#each OPTIONS as opt (opt.kind + (opt.kind !== "skip" ? opt.points : ""))}
     {#if opt.kind === "skip"}
       <button
         type="button"
         class="skip"
+        value="0"
         class:on={isSkipOn}
         aria-pressed={isSkipOn}
         onclick={onskip}>{opt.label}</button
@@ -32,6 +35,7 @@
       <button
         type="button"
         class="opt"
+        value={String(opt.points)}
         class:on={isOn(opt.points)}
         aria-pressed={isOn(opt.points)}
         onclick={() => onanswer(opt.points)}

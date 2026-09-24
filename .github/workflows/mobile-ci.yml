@@ -75,7 +75,7 @@ jobs:
           # apps/web/src is in: the web's pages are what the native documents are drawn from, so a
           # change to any of them has to be laid out and checked on screen before it ships to iOS.
           # packages stay out: they are input to the bundle, not to the native build graph.
-          NATIVE='^(apps/mobile/|apps/web/src/|docs/research/|pnpm-lock\.yaml|\.nvmrc|docs/fdroid/|\.github/(workflows/mobile-ci\.yml|actions/(build-web-channel|resolve-store-version)/)|scripts/(check-fdroid-ready|check-native-plugins|generate-app-version|generate-store-metadata|build-native-documents)\.mjs)'
+          NATIVE='^(apps/mobile/|apps/web/src/|docs/research/|pnpm-lock\.yaml|\.nvmrc|docs/fdroid/|\.github/(workflows/mobile-ci\.yml|actions/(build-web-channel|resolve-store-version)/)|scripts/(check-fdroid-ready|check-native-plugins|generate-app-version|generate-store-metadata|build-native-documents|check-native-answer-scale)\.mjs)'
           if echo "$FILES" | grep -qE "$APP"; then echo "app=true" >> "$GITHUB_OUTPUT"; else echo "app=false" >> "$GITHUB_OUTPUT"; fi
           # A draft still gets the cheap tier; the builds wait until it is marked ready (which
           # re-triggers this) or are dispatched by hand, so macOS capacity is not spent on
@@ -645,6 +645,7 @@ jobs:
             apps/mobile/ios/App/App/Model/NativeDocument.swift \
             apps/mobile/ios/App/App/Model/DocumentLayout.swift \
             apps/mobile/ios/App/App/Model/LandingComposition.swift \
+            apps/mobile/ios/App/App/Model/QuizWording.swift \
             apps/mobile/ios/Parity/DocumentLogic.swift \
             -o "$RUNNER_TEMP/document-logic"
           "$RUNNER_TEMP/document-logic" apps/web/build/native-documents apps/mobile/ios/native-contract.json

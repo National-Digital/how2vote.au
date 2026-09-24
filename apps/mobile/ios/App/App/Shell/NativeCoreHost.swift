@@ -198,8 +198,17 @@ final class NativeCoreHost {
         switch route {
         case "quiz":
             guard let engine else { return nil }
-            let model = QuizViewModel.live(electionID: electionID, engine: engine, isEditing: isEditing)
-            return themed(QuizView(model: model) { onExit($0.webRoute) })
+            // Its wording is the web's quiz page; one that is missing or incomplete declines the
+            // route, and the WebView draws the quiz instead.
+            do {
+                let (page, _) = try NativeDocument.load(name: "states/quiz")
+                let wording = try QuizWording(page)
+                let model = QuizViewModel.live(electionID: electionID, engine: engine, isEditing: isEditing)
+                return themed(QuizView(model: model, wording: wording) { onExit($0.webRoute) })
+            } catch {
+                NSLog("How2Vote: declined quiz — \(error)")
+                return nil
+            }
         case "landing":
             // The election's prerendered landing, with the stage the engine reports and the voter's
             // progress drawn from the states page (ADR 0019 D4b).

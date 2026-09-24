@@ -250,6 +250,92 @@ final class DocumentConservationTests: XCTestCase {
         return found
     }
 
+    /// The quiz, as a first-time visitor reaches it for the current election: the landing's call to
+    /// action, the gate's 18+ answer, and — the election being provisional — no ballot to set. Every
+    /// word it shows is the quiz page's, and the answer tapped is the one kept when the voter comes
+    /// back to it. That the answer records the points the page names is `DocumentLogic`'s to hold.
+    ///
+    /// Named to run last: it declares the visitor 18+ and records an answer, both of which persist,
+    /// so it expects a simulator the run starts clean, as CI's is.
+    func testTheQuizShowsTheWebsWordingAndKeepsTheTappedAnswer() throws {
+        let quiz = try json("states/quiz")
+        var templates: [String: String] = [:]
+        func text(_ value: Any) -> String {
+            if let dict = value as? [String: Any] {
+                if let s = dict["s"] as? String { return s }
+                return (dict["c"] as? [Any] ?? []).map(text).joined()
+            }
+            return (value as? [Any] ?? []).map(text).joined()
+        }
+        for block in quiz["blocks"] as? [[String: Any]] ?? [] {
+            if block["role"] as? String == "template", let id = block["id"] as? String {
+                templates[id] = text(block["c"] as Any)
+            }
+        }
+        /// The position as the page words it, filled up to its total, which the test does not know.
+        func position(_ n: Int) throws -> String {
+            let blocks = quiz["blocks"] as? [[String: Any]] ?? []
+            let section = try XCTUnwrap(blocks.first { $0["id"] as? String == "quiz-position" })
+            let paragraph = try XCTUnwrap((section["c"] as? [[String: Any]])?.first)
+            var out = ""
+            for part in paragraph["c"] as? [[String: Any]] ?? [] {
+                if part["t"] as? String == "value" {
+                    if part["name"] as? String != "n" { break }
+                    out += String(n)
+                } else {
+                    out += part["s"] as? String ?? ""
+                }
+            }
+            return out
+        }
+        let answers = controls(of: "quiz-answer", in: quiz)
+        let agree = try XCTUnwrap(answers.first { $0.action == "5" }, "the quiz page records no 5")
+
+        let app = XCUIApplication()
+        app.launch()
+        let begin = try XCTUnwrap(
+            controls(of: "landing-fresh", in: try json("index")).first { $0.action == "start" }?.label
+        )
+        XCTAssertTrue(app.buttons[begin].waitForExistence(timeout: 30), "the native landing never appeared")
+        app.buttons[begin].tap()
+        let adult = try XCTUnwrap(controls(of: "age-declare", in: try json("start")).first { $0.action == "adult" }?.label)
+        XCTAssertTrue(app.buttons[adult].waitForExistence(timeout: 20), "the native age gate never appeared")
+        app.buttons[adult].tap()
+
+        // The quiz's own wording, as the page writes it, on screen.
+        for id in ["quiz-voted", "quiz-ask"] {
+            let words = try XCTUnwrap(templates[id], "the quiz page has no \(id)")
+            // The kicker style draws these in capitals, so they are matched without regard to case.
+            let shown = app.staticTexts.matching(NSPredicate(format: "label ==[c] %@", words)).firstMatch
+            XCTAssertTrue(shown.waitForExistence(timeout: 30), "quiz: \"\(words)\" is not on screen")
+        }
+        XCTAssertTrue(app.buttons[try XCTUnwrap(templates["quiz-pause"])].exists, "quiz: the pause is not the page's")
+        for answer in answers {
+            let row = app.buttons.matching(NSPredicate(format: "label BEGINSWITH %@", answer.label)).firstMatch
+            XCTAssertTrue(row.exists, "quiz: the answer \"\(answer.label)\" is not on screen")
+        }
+
+        // Answer with the page's 5, which moves to question 2; step back to question 1, and the answer
+        // shown as chosen is the one tapped.
+        func at(_ n: Int) throws -> XCUIElement {
+            app.staticTexts.matching(NSPredicate(format: "label BEGINSWITH %@", try position(n))).firstMatch
+        }
+        XCTAssertTrue(try at(1).exists, "quiz: not on the first question")
+        let row = app.buttons.matching(NSPredicate(format: "label BEGINSWITH %@", agree.label)).firstMatch
+        row.tap()
+        XCTAssertTrue(try at(2).waitForExistence(timeout: 10), "quiz: answering did not move to the next question")
+        // The bar's back button, by its identifier: the ← shortcut behind the screen shares its label.
+        let back = app.buttons["top-back"]
+        XCTAssertEqual(back.label, try XCTUnwrap(templates["quiz-previous"]), "quiz: the back button is not the page's")
+        back.tap()
+        XCTAssertTrue(try at(1).waitForExistence(timeout: 10), "quiz: stepping back did not return to the question")
+        XCTAssertTrue(row.isSelected, "quiz: \"\(agree.label)\" was tapped but is not the recorded answer")
+        for other in answers where other.action != "5" {
+            let otherRow = app.buttons.matching(NSPredicate(format: "label BEGINSWITH %@", other.label)).firstMatch
+            XCTAssertFalse(otherRow.isSelected, "quiz: \"\(other.label)\" shows as chosen after tapping \"\(agree.label)\"")
+        }
+    }
+
     /// The gate in both states, as a first-time visitor meets it: from the landing's call to action,
     /// then answering "under 18" with the button the page labels. Both states must read exactly as
     /// the page does.

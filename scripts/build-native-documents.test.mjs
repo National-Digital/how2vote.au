@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   DocumentError,
+  answerScaleErrors,
   CONTRACT,
   VOCABULARY,
   assertConserved,
@@ -313,6 +314,86 @@ describe("screens and chrome", () => {
     });
     fails(cta("//example.org/methodology")).toThrow("<a> inside a control slot");
     fails(cta("/\\example.org")).toThrow("<a> inside a control slot");
+  });
+
+  it("projects a template's values, with the page's own as samples", () => {
+    const doc = project(
+      `<section class="template" id="quiz-position"><p>Question <data value="n">1</data> of <data value="total">29</data></p></section>`,
+    );
+    expect(doc.blocks.at(-1)).toEqual({
+      t: "section",
+      role: "template",
+      id: "quiz-position",
+      c: [
+        {
+          t: "paragraph",
+          c: [
+            { t: "text", s: "Question " },
+            { t: "value", name: "n", s: "1" },
+            { t: "text", s: " of " },
+            { t: "value", name: "total", s: "29" },
+          ],
+        },
+      ],
+    });
+    expect(doc.drawn).toBe("TitleQuestion 1 of 29");
+    fails(`<p><data value="n" class="x">1</data></p>`).toThrow("not a named, plain sample");
+    fails(`<p><data value="N">1</data></p>`).toThrow("not a named, plain sample");
+    fails(`<p><data value="n"><b>1</b></data></p>`).toThrow("not a named, plain sample");
+  });
+
+  it("projects the answer scale with each answer's points, line and group name", () => {
+    const answers = (group = 'role="group" aria-label="Your answer"', extra = "") =>
+      `<div class="opts" ${group}>` +
+      `<button type="button" class="opt" value="5" aria-pressed="false">Strongly agree</button>` +
+      `<button type="button" class="opt" value="4">Agree</button>` +
+      `<button type="button" class="opt" value="3">Equal merits<small>both sides have a point</small></button>` +
+      `<button type="button" class="opt" value="2">Disagree</button>` +
+      `<button type="button" class="opt" value="1">Strongly disagree</button>` +
+      `<button type="button" class="skip" value="0">Skip</button>${extra}</div>`;
+    const slot = project(answers()).blocks.at(-1);
+    expect(slot.label).toBe("Your answer");
+    expect(slot.controls[2]).toEqual({
+      label: "Equal merits",
+      action: "3",
+      sub: "both sides have a point",
+    });
+    expect(slot.controls.map((c) => c.action)).toEqual(["5", "4", "3", "2", "1", "0"]);
+    fails(answers('role="group"')).toThrow("a group with no name");
+    fails(
+      answers(
+        'role="group" aria-label="Your answer"',
+        `<button type="button" value="6">Extra</button>`,
+      ),
+    ).toThrow("slot's actions are");
+  });
+
+  it("holds the quiz page's answers to the web's own scale, label to points", () => {
+    const answers = readFileSync(
+      new URL("../apps/web/src/lib/answers.ts", import.meta.url),
+      "utf8",
+    );
+    const doc = (controls) => ({ blocks: [{ t: "slot", name: "quiz-answer", controls }] });
+    const scale = [
+      { label: "Strongly agree", action: "5" },
+      { label: "Agree", action: "4" },
+      { label: "Equal merits", action: "3", sub: "both sides have a point" },
+      { label: "Disagree", action: "2" },
+      { label: "Strongly disagree", action: "1" },
+      { label: "Skip — no position on this issue", action: "0" },
+    ];
+    expect(answerScaleErrors(doc(scale), answers)).toEqual([]);
+    const swapped = scale.map((c) =>
+      c.action === "5" ? { ...c, action: "1" } : c.action === "1" ? { ...c, action: "5" } : c,
+    );
+    expect(answerScaleErrors(doc(swapped), answers).join(" ")).toContain(
+      'answer 1 is "Strongly agree" recording 1',
+    );
+    expect(answerScaleErrors(doc(scale.slice(1)), answers).join(" ")).toContain("offers 5 answers");
+    expect(answerScaleErrors({ blocks: [] }, answers)).toEqual([
+      "the quiz page has no answer scale",
+    ]);
+    expect(answerScaleErrors(doc(scale), "")).toEqual(["the web's answer scale could not be read"]);
   });
 
   it("refuses a link in a slot drawn as buttons alone", () => {

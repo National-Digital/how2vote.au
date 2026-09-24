@@ -10,8 +10,11 @@
  *
  * Three things therefore have to agree, and this checks all three:
  *
- *   1. **The options, in order.** Same kinds, same points, same labels, same secondary text. Order
- *      matters because the scale is presented as a ranked column and read top-to-bottom.
+ *   1. **The options.** The native quiz reads them — order, labels, secondary text and the points
+ *      each records — from the web's own quiz page (ADR 0019 D4b), where each answer button names its
+ *      points as its `value`. So the web page must bind every button's `value` to its option's
+ *      points, and `AnswerScale.swift` must not restate the options, which would be a second binding
+ *      free to drift from the first.
  *   2. **The short labels.** `answerLabel` supplies the review screen and the VoiceOver
  *      announcements. A label that disagrees with the option it names misreports the answer back to
  *      the voter, which on a screen reader is the only reading they get.
@@ -90,8 +93,6 @@ export function nativeScale(source) {
   };
 }
 
-const describe = (o) => `${o.kind}/${o.points} "${o.label}"${o.sub === null ? "" : ` (${o.sub})`}`;
-
 /**
  * The answers the ×10 importance lever may attach to.
  *
@@ -117,34 +118,44 @@ export function nativeImportancePoints(source) {
 }
 
 /**
+ * Whether the web's answer buttons each name the points they record, as the iOS quiz reads them:
+ * an answer by its option's own `points`, a skip as `0`.
+ *
+ * @param {string} source  apps/web/src/lib/components/AnswerOptions.svelte
+ */
+export function answerBindings(source) {
+  return {
+    answer: /class="opt"\s+value=\{String\(opt\.points\)\}/.test(source),
+    skip: /class="skip"\s+value="0"/.test(source),
+  };
+}
+
+/**
  * @param {string} web  apps/web/src/lib/answers.ts
  * @param {string} native  AnswerScale.swift
  * @param {string} webQuiz  apps/web/src/lib/quiz.svelte.ts
+ * @param {string} answerOptions  apps/web/src/lib/components/AnswerOptions.svelte
  * @returns {string[]}
  */
-export function verifyAnswerScale(web, native, webQuiz = "") {
+export function verifyAnswerScale(web, native, webQuiz = "", answerOptions = "") {
   const errors = [];
   const a = webScale(web ?? "");
   const b = nativeScale(native ?? "");
 
   // Fail closed: an unreadable side would otherwise agree with anything.
   if (a.options.length === 0) errors.push("the web declares no OPTIONS (fail closed)");
-  if (b.options.length === 0) errors.push("AnswerScale.swift declares no options (fail closed)");
-
-  if (a.options.length !== b.options.length && a.options.length > 0 && b.options.length > 0) {
+  if (b.options.length > 0) {
     errors.push(
-      `the scale has ${a.options.length} options on the web and ${b.options.length} natively`,
+      "AnswerScale.swift restates the options — the quiz reads them, and the points each records, " +
+        "from the web's page",
     );
   }
-
-  for (let i = 0; i < Math.min(a.options.length, b.options.length); i += 1) {
-    const [x, y] = [a.options[i], b.options[i]];
-    if (x.kind !== y.kind || x.points !== y.points || x.label !== y.label || x.sub !== y.sub) {
-      errors.push(
-        `option ${i + 1} differs — web ${describe(x)}, native ${describe(y)}. A tap would be ` +
-          `scored as something other than what it reads as`,
-      );
-    }
+  const bound = answerBindings(answerOptions ?? "");
+  if (!bound.answer || !bound.skip) {
+    errors.push(
+      "AnswerOptions.svelte does not name each answer's points as its `value` — the iOS quiz " +
+        "records what the page names, so an answer would be scored as something other than it reads",
+    );
   }
 
   if (Object.keys(a.labels).length === 0) errors.push("the web declares no answerLabel map");
@@ -209,13 +220,14 @@ function main() {
     read("apps/web/src/lib/answers.ts"),
     read("apps/mobile/ios/App/App/Model/AnswerScale.swift"),
     read("apps/web/src/lib/quiz.svelte.ts"),
+    read("apps/web/src/lib/components/AnswerOptions.svelte"),
   );
 
   if (errors.length > 0) {
     for (const e of errors) console.error(`::error::answer scale: ${e}`);
     process.exit(1);
   }
-  console.info("answer scale OK — the native quiz offers the web's options, points and labels");
+  console.info("answer scale OK — the native quiz records the points the web's page names");
 }
 
 if (process.argv[1] && fileURLToPath(import.meta.url) === process.argv[1]) main();

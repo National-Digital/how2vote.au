@@ -5,18 +5,11 @@
   ],
   "apps/mobile/ios/App/App/Model/AnswerScale.swift": [
     "Agree",
-    "Agree",
-    "Disagree",
     "Disagree",
     "Equal merits",
-    "Equal merits",
-    "Skip — no position on this issue",
     "Skipped",
     "Strongly agree",
-    "Strongly agree",
     "Strongly disagree",
-    "Strongly disagree",
-    "both sides have a point",
     "★ {}"
   ],
   "apps/mobile/ios/App/App/Model/Jurisdictions.swift": [
@@ -75,30 +68,7 @@
   ],
   "apps/mobile/ios/App/App/Views/QuizChrome.swift": [
     "Loading",
-    "Question",
-    "Quiz progress",
-    "Your answer",
     "{} {} of {}"
-  ],
-  "apps/mobile/ios/App/App/Views/QuizView.swift": [
-    "Answer updated: {}. Returning to your answers.",
-    "Answered: {}. Question {} of {}.",
-    "Back to your answers",
-    "How would you vote on this?",
-    "Loading question…",
-    "Parliament voted on this",
-    "Pause",
-    "Previous question",
-    "Previous question",
-    "See the parliamentary votes behind this",
-    "Skipped",
-    "Try again"
-  ],
-  "apps/mobile/ios/App/App/Views/QuizViewModel.swift": [
-    "Couldn't load this election's questions.",
-    "Question {} of {}",
-    "Quiz",
-    "There are no questions to show for this election."
   ],
   "apps/mobile/ios/App/App/Views/ReviewView.swift": [
     "100%",

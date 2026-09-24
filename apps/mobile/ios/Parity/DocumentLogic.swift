@@ -41,6 +41,7 @@ enum DocumentLogic {
         }
 
         failures += composesTheLanding(root)
+        failures += readsTheQuizWording(root)
 
         var ran = 0
         let sample = try? Data(contentsOf: files[0])
@@ -146,6 +147,7 @@ enum DocumentLogic {
         "hidden": #"{"t":"hidden","c":[\#(text)]}"#,
         "aside": #"{"t":"aside","role":"provenance","c":[\#(text)]}"#,
         "glyph": #"{"t":"glyph","s":"↗"}"#,
+        "value": #"{"t":"value","name":"n","s":"1"}"#,
     ]
 
     /// The native landing composes the prerendered landing with the states page. For every election,
@@ -228,6 +230,55 @@ enum DocumentLogic {
                )) != nil {
                 failures.append("the current election's landing composed as \(other)'s")
             }
+        }
+        return failures
+    }
+
+    /// The quiz draws every word from the web's quiz page. It must yield the whole wording — each
+    /// piece with the values the screen fills, and the answer scale recording each of 0 to 5 once —
+    /// and a page missing a piece must be refused rather than drawn with a gap.
+    private static func readsTheQuizWording(_ root: URL) -> [String] {
+        guard let data = try? Data(contentsOf: root.appendingPathComponent("states/quiz.json")),
+              let (page, _) = try? NativeDocument.decodeChecked(data)
+        else { return ["the quiz states page is missing or does not lay out"] }
+        var failures: [String] = []
+        do {
+            let wording = try QuizWording(page)
+            let points = wording.answers.map(\.points)
+            if points.sorted() != [0, 1, 2, 3, 4, 5] {
+                failures.append("the quiz's answers record \(points), not each of 0 to 5 once")
+            }
+            // Each answer records exactly what the page's own button names, under the page's label:
+            // the projection holds the page to the web's scale, and this holds the native answers to
+            // the page.
+            var controls: [NativeDocument.Control] = []
+            func walk(_ blocks: [NativeDocument.Block]) {
+                for block in blocks {
+                    if case let .slot(.quizAnswer, _, found) = block { controls = found }
+                    if case let .section(_, _, content) = block { walk(content) }
+                }
+            }
+            walk(page.blocks)
+            let expected = controls.map { QuizWording.Answer(points: Int($0.action ?? "") ?? -1, label: $0.text(), sub: $0.sub) }
+            if wording.answers != expected {
+                failures.append("the quiz records answers other than the page names: \(wording.answers.map { "\($0.label)=\($0.points)" })")
+            }
+            if !wording.position(3, of: 29).contains("3") || !wording.position(3, of: 29).contains("29") {
+                failures.append("the quiz's position does not show the voter's place")
+            }
+        } catch {
+            failures.append("the quiz wording: \(error)")
+        }
+        let pruned = NativeDocument(
+            route: page.route, title: page.title, crumbs: nil, crumbsLabel: nil, top: page.top, brand: nil,
+            blocks: page.blocks.filter {
+                if case let .section(.template, id?, _) = $0 { return id != "quiz-pause" }
+                return true
+            },
+            digest: "", spoken: "", drawn: ""
+        )
+        if (try? QuizWording(pruned)) != nil {
+            failures.append("a quiz wording missing a piece was accepted")
         }
         return failures
     }

@@ -98,6 +98,15 @@ at, and a first visit's progress, gives back the page exactly. That proves the t
 word for word. The landing's buttons act natively, because on iOS the quiz state is the native
 core's (ADR 0018 D3).
 
+**D4d — The quiz's wording is the web's quiz page.** The quiz keeps its native layout and draws
+every word from `states/quiz.html`: each piece of the quiz page's wording once, as a template with
+its values marked by `<data>`, and the answer scale as the page renders it. The page and that file
+read the same registry, `$lib/quiz-copy.ts`. Each answer button names the points it records as its
+`value`, and the native quiz records what the page names, so the scale's label-to-points binding
+exists once, on the web. `DocumentLogic` requires the file to yield every piece with the values the
+screen fills and each answer from 0 to 5 once; a file missing a piece declines the quiz for the
+WebView's.
+
 **D6 — The iOS app is a skeleton, and it has a contract with the web build.** The goal is that no
 iOS screen shows hand-written copy. Every word comes from the web build: projected pages, the
 chrome handed over with each route, and the datasets. Two checks hold this in place as the web

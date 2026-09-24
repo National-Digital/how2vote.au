@@ -22,6 +22,7 @@ struct TopBar: View {
                     .frame(minWidth: 44, minHeight: 44, alignment: .leading)
             }
             .accessibilityLabel(backLabel)
+            .accessibilityIdentifier("top-back")
 
             Spacer(minLength: 0)
 
@@ -60,9 +61,9 @@ struct QuizProgress: View {
     let value: Int
     let total: Int
     /// What the bar measures, as the web's progress label names it.
-    var label = "Quiz progress"
+    let label: String
     /// What each step is called in the spoken value.
-    var step = "Question"
+    var step: String?
     /// Replaces the spoken value where counting steps would say nothing useful.
     var spokenValue: String?
 
@@ -82,47 +83,49 @@ struct QuizProgress: View {
         .frame(height: 3)
         .accessibilityElement()
         .accessibilityLabel(label)
-        .accessibilityValue(spokenValue ?? (total > 0 ? "\(step) \(value) of \(total)" : "Loading"))
+        .accessibilityValue(spokenValue ?? (total > 0 ? "\(step ?? "") \(value) of \(total)" : "Loading"))
     }
 }
 
 /// The answer scale as a column of controls.
 ///
-/// Mirrors `apps/web/src/lib/components/AnswerOptions.svelte`. The options, their order and their
-/// points come from ``AnswerScale``, which `scripts/check-native-answer-scale.mjs` holds to the
-/// web's — nothing here restates them.
+/// Mirrors `apps/web/src/lib/components/AnswerOptions.svelte`. The options, their order, their
+/// labels and the points each records are the page's own, read by ``QuizWording`` — nothing here
+/// restates them.
 struct AnswerOptions: View {
     @Environment(\.colorScheme) private var scheme
 
+    let options: [QuizWording.Answer]
+    /// The group's accessible name, as the page names it.
+    let label: String
     /// The current answer's points, or `nil` when the question is unanswered.
     let current: Int?
     let onAnswer: (Int) -> Void
 
     var body: some View {
         VStack(spacing: 7) {
-            ForEach(Array(AnswerScale.options.enumerated()), id: \.offset) { _, option in
-                switch option.kind {
-                case .answer:
-                    answerRow(option)
-                case .skip:
+            ForEach(Array(options.enumerated()), id: \.offset) { _, option in
+                if option.isSkip {
                     skipRow(option)
+                } else {
+                    answerRow(option)
                 }
             }
         }
         .accessibilityElement(children: .contain)
-        .accessibilityLabel("Your answer")
+        .accessibilityLabel(label)
     }
 
     /// The web's number keys: the points themselves, and 0 to skip.
-    private func shortcut(_ option: AnswerOption) -> KeyEquivalent {
+    private func shortcut(_ option: QuizWording.Answer) -> KeyEquivalent {
         KeyEquivalent(Character(String(option.points)))
     }
 
-    private func isOn(_ option: AnswerOption) -> Bool {
+    private func isOn(_ option: QuizWording.Answer) -> Bool {
         current == option.points
     }
 
-    private func answerRow(_ option: AnswerOption) -> some View {
+    private func answerRow(_ option: QuizWording.Answer) -> some View {
         Button {
             onAnswer(option.points)
         } label: {
@@ -163,12 +166,11 @@ struct AnswerOptions: View {
         // A toggle, not a link: the selected answer has to be perceivable without colour, and
         // `isSelected` is what VoiceOver and Voice Control both read and act on.
         .accessibilityAddTraits(isOn(option) ? [.isButton, .isSelected] : [.isButton])
-        .accessibilityLabel(spoken(option))
         .keyboardShortcut(shortcut(option), modifiers: [])
         .animation(.easeOut(duration: Theme.confirmDuration), value: current)
     }
 
-    private func skipRow(_ option: AnswerOption) -> some View {
+    private func skipRow(_ option: QuizWording.Answer) -> some View {
         Button {
             onAnswer(option.points)
         } label: {
@@ -184,11 +186,5 @@ struct AnswerOptions: View {
         .contentShape(Rectangle())
         .accessibilityAddTraits(isOn(option) ? [.isButton, .isSelected] : [.isButton])
         .keyboardShortcut(shortcut(option), modifiers: [])
-    }
-
-    /// The label and its secondary text as one phrase, so a screen reader hears the whole option.
-    private func spoken(_ option: AnswerOption) -> String {
-        guard let sub = option.sub else { return option.label }
-        return "\(option.label), \(sub)"
     }
 }

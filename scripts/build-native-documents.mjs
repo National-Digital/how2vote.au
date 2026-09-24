@@ -20,6 +20,7 @@ import { createHash } from "node:crypto";
 import { existsSync, mkdirSync, readFileSync, readdirSync, statSync, writeFileSync } from "node:fs";
 import { dirname, join, relative, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
+import { webScale } from "./check-native-answer-scale.mjs";
 
 export const IR_VERSION = 4;
 
@@ -44,6 +45,7 @@ export const BLOCK_ROLES = {
   kicker: "kicker",
   pick: "picker",
   stage: "stage",
+  template: "template",
   "clear-data": "clear-data",
 };
 
@@ -84,6 +86,7 @@ export const SLOTS = [
   { name: "landing-complete", match: (el) => hasClass(el, "cta") && hasClass(el, "complete") },
   { name: "theme-light", match: (el) => hasClass(el, "theme") && hasClass(el, "light") },
   { name: "theme-dark", match: (el) => hasClass(el, "theme") && hasClass(el, "dark") },
+  { name: "quiz-answer", match: (el) => hasClass(el, "opts") && el.attrs.role === "group" },
 ];
 
 /**
@@ -100,7 +103,12 @@ export const SLOT_ACTIONS = {
   "landing-complete": ["card", "start"],
   "theme-light": ["theme"],
   "theme-dark": ["theme"],
+  // The points each answer records: the web's own binding, read from the page.
+  "quiz-answer": ["5", "4", "3", "2", "1", "0"],
 };
+
+/** The slots that are a named group, whose name travels with the slot as its `label`. */
+const SLOT_GROUPS = new Set(["quiz-answer"]);
 
 /** The slots whose controls may include a link to a route, beside their buttons. */
 const SLOT_LINKS = new Set(["landing-fresh"]);
@@ -124,7 +132,19 @@ export const VOCABULARY = {
     "slot",
     "logo",
   ],
-  inlines: ["text", "break", "strong", "em", "code", "link", "term", "hidden", "aside", "glyph"],
+  inlines: [
+    "text",
+    "break",
+    "strong",
+    "em",
+    "code",
+    "link",
+    "term",
+    "hidden",
+    "aside",
+    "glyph",
+    "value",
+  ],
   blockRoles: [...new Set(Object.values(BLOCK_ROLES))].sort(),
   inlineRoles: [...new Set(Object.values(INLINE_ROLES))].sort(),
   listRoles: [...new Set(Object.values(LIST_ROLES))].sort(),
@@ -350,7 +370,7 @@ function blocksText(blocks, special, spoken = false) {
   const inl = (n) => {
     const s = special(n, inl);
     if (s !== null) return s;
-    if (n.t === "text") return n.s;
+    if (n.t === "text" || n.t === "value") return n.s;
     if (n.t === "break") return "\n";
     return n.c.map(inl).join("");
   };
@@ -453,12 +473,20 @@ function toBlock(el) {
   if (decoration(el)) return null;
   const slot = slotName(el);
   if (slot) {
-    // The slot's element and its buttons are held to what they may carry, like every other.
+    // The slot's element and its buttons are held to what they may carry, like every other. A
+    // group's name is carried with it, as VoiceOver hears it on the web.
+    const group = SLOT_GROUPS.has(slot);
     for (const a of Object.keys(el.attrs)) {
-      if (a !== "class") throw new DocumentError(`the ${slot} slot carries ${a}`);
+      if (a !== "class" && !(group && (a === "role" || a === "aria-label"))) {
+        throw new DocumentError(`the ${slot} slot carries ${a}`);
+      }
+    }
+    if (group && !el.attrs["aria-label"]?.trim()) {
+      throw new DocumentError(`the ${slot} slot is a group with no name`);
     }
     const controls = slotControls(el, slot);
-    return { t: "slot", name: slot, controls };
+    const label = group ? { label: collapse(el.attrs["aria-label"]).trim() } : {};
+    return { t: "slot", name: slot, ...label, controls };
   }
   // The drawn wordmark: the native app draws the same generated geometry, named as the page names it.
   if (el.tag === "svg" && hasClass(el, "logo")) {
@@ -563,9 +591,16 @@ function slotControls(el, slot) {
       }
       const values = {};
       let label = "";
+      let sub = null;
       for (const c of b.children) {
         if ("text" in c) label += c.text;
-        else if (c.tag === "data" && c.attrs.value && c.children.every((t) => "text" in t)) {
+        else if (c.tag === "small" && sub === null && c.children.every((t) => "text" in t)) {
+          // A line beneath the label, drawn as the page draws it.
+          checkAttrs(c);
+          checkClasses(c, new Set());
+          sub = collapse(textOf(c)).trim();
+          if (!sub) throw new DocumentError("a slot control's small line is empty");
+        } else if (c.tag === "data" && c.attrs.value && c.children.every((t) => "text" in t)) {
           values[c.attrs.value] = textOf(c).trim();
           label += `{${c.attrs.value}}`;
         } else if (isIcon(c)) {
@@ -590,6 +625,7 @@ function slotControls(el, slot) {
         ...(isLink ? { href: b.attrs.href } : { action: b.attrs.value ?? "" }),
         ...(named ? { named: true } : {}),
         ...(Object.keys(values).length ? { values } : {}),
+        ...(sub ? { sub } : {}),
       };
     });
   const want = [...(SLOT_ACTIONS[slot] ?? [])].sort().join(",");
@@ -606,7 +642,7 @@ function slotControls(el, slot) {
 
 /** A control's label as the page shows it: its values filled with the page's own. */
 export const controlText = (c) =>
-  c.named ? "" : c.label.replace(/\{([a-z]+)\}/g, (_, k) => c.values?.[k] ?? "");
+  (c.named ? "" : c.label.replace(/\{([a-z]+)\}/g, (_, k) => c.values?.[k] ?? "")) + (c.sub ?? "");
 
 /** The election toggle: a labelled group of links, one marked current. */
 function electionSwitch(el) {
@@ -645,7 +681,7 @@ function electionSwitch(el) {
   return { t: "switch", label: group.attrs["aria-label"], options };
 }
 
-const INLINE = new Set(["strong", "b", "em", "i", "code", "a", "span", "br"]);
+const INLINE = new Set(["strong", "b", "em", "i", "code", "a", "span", "br", "data"]);
 
 function inlines(children) {
   const out = [];
@@ -683,6 +719,14 @@ function toInline(children, i) {
       },
       0,
     ];
+  }
+  // A value a screen fills in: the page's own value stands as its sample.
+  if (n.tag === "data") {
+    const plain = n.children.every((c) => "text" in c) && Object.keys(n.attrs).length === 1;
+    if (!/^[a-z]+$/.test(n.attrs.value ?? "") || !plain) {
+      throw new DocumentError("a <data> value that is not a named, plain sample");
+    }
+    return [{ t: "value", name: n.attrs.value, s: textOf(n) }, 0];
   }
   checkAttrs(n);
   switch (n.tag) {
@@ -808,7 +852,7 @@ function normalise(blocks) {
     const walk = (list) => {
       const out = [];
       for (const n of list) {
-        if (n.t === "text") {
+        if (n.t === "text" || n.t === "value") {
           out.push(n);
           texts.push(n);
         } else if (n.t === "break") {
@@ -898,6 +942,48 @@ function flatten(node) {
 /** Parses one `<main>` element's markup. */
 export function parseMain(markup) {
   return find(parseHtml(markup), (n) => n.tag === "main");
+}
+
+/**
+ * The quiz page's answers against the web's own scale (`OPTIONS` in `answers.ts`): each label,
+ * line and the points it records, in order. The native quiz records what the page names, so this is
+ * what makes a tap on "Strongly agree" score as the scale says it does.
+ *
+ * @param {object} doc  the projected `states/quiz`
+ * @param {string} answers  apps/web/src/lib/answers.ts
+ * @returns {string[]}
+ */
+export function answerScaleErrors(doc, answers) {
+  const scale = webScale(answers ?? "");
+  if (scale.options.length === 0) return ["the web's answer scale could not be read"];
+  let slot = null;
+  const walk = (blocks) => {
+    for (const b of blocks) {
+      if (b.t === "slot" && b.name === "quiz-answer") slot = b;
+      else if (b.t === "section") walk(b.c);
+    }
+  };
+  walk(doc.blocks);
+  if (!slot) return ["the quiz page has no answer scale"];
+  const want = scale.options.map((o) => ({
+    label: o.label,
+    action: String(o.kind === "skip" ? 0 : o.points),
+    sub: o.sub ?? undefined,
+  }));
+  const got = slot.controls.map((c) => ({ label: c.label, action: c.action, sub: c.sub }));
+  if (want.length !== got.length) {
+    return [`the quiz page offers ${got.length} answers, and the scale ${want.length}`];
+  }
+  return want.flatMap((w, i) => {
+    const g = got[i];
+    return w.label === g.label && w.action === g.action && w.sub === g.sub
+      ? []
+      : [
+          `the quiz page's answer ${i + 1} is "${g.label}"${g.sub ? ` (${g.sub})` : ""} recording ` +
+            `${g.action}, where the scale has "${w.label}"${w.sub ? ` (${w.sub})` : ""} recording ` +
+            `${w.action}`,
+        ];
+  });
 }
 
 /**
@@ -1160,6 +1246,11 @@ function main() {
   for (const { route, file } of routes) {
     try {
       const doc = projectDocument(readFileSync(file, "utf8"), route);
+      if (route === "/states/quiz") {
+        const answers = readFileSync(join(root, "apps/web/src/lib/answers.ts"), "utf8");
+        const errors = answerScaleErrors(doc, answers);
+        if (errors.length > 0) throw new DocumentError(errors.join("; "));
+      }
       const dest = join(out, `${route}.json`);
       mkdirSync(dirname(dest), { recursive: true });
       writeFileSync(dest, JSON.stringify(doc) + "\n");

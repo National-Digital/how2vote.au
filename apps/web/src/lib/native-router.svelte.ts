@@ -84,7 +84,7 @@ export const AGE_GATE_DOCUMENTS = ["start", "states/start"] as const;
  * Pages of states the build would not otherwise render (ADR 0019 D4b): the native screen they
  * belong to draws the state that applies from them.
  */
-export const STATE_DOCUMENTS = ["states/landing"] as const;
+export const STATE_DOCUMENTS = ["states/landing", "states/quiz"] as const;
 
 /**
  * The landing's own page for an election: `index` for the current one, else the election's id.
