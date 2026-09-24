@@ -32,12 +32,16 @@
   "insightsWarnings": [
     {
       "id": "sample-size-withholding",
-      "page": "apps/web/src/routes/insights/+page.svelte",
+      "page": "apps/web/src/lib/components/InsightsLead.svelte",
+      "renderedBy": "apps/web/src/routes/insights/+page.svelte",
+      "via": "<InsightsLead",
       "text": "A figure is shown only when its group is large enough that a single response cannot be singled out"
     },
     {
       "id": "non-representative",
-      "page": "apps/web/src/routes/insights/+page.svelte",
+      "page": "apps/web/src/lib/insights-copy.ts",
+      "renderedBy": "apps/web/src/routes/insights/+page.svelte",
+      "via": "INSIGHTS_COPY.footnote",
       "text": "it is not a representative poll"
     }
   ],

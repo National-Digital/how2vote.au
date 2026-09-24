@@ -139,10 +139,15 @@ export function verifyNativeChrome(raw) {
       push(`the "${route}" screen is not built through themed(…), so it receives no site chrome`);
       continue;
     }
-    const source = input?.views?.[view] ?? "";
+    let source = input?.views?.[view] ?? "";
     if (!source) {
       push(`could not read ${view}.swift for the "${route}" screen (fail closed)`);
       continue;
+    }
+    // A screen drawn as a document — its own figures beneath the page's text — carries what the
+    // document screen carries, so it is held to that screen's source.
+    if (view !== "DocumentView" && /\bDocumentView\(/.test(source)) {
+      source = input?.views?.DocumentView ?? "";
     }
     if (!/\bStaleNotice\(\)/.test(source)) {
       push(`${view} (the "${route}" screen) does not render StaleNotice()`);

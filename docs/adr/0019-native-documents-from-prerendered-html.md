@@ -152,6 +152,17 @@ anti-spam check included, and answers with the page's outcome (sent, offline or 
 plugin's `answer`. Any other answer reads as a failure, so a message the web did not say it sent is
 never shown as sent, and the fields stay filled until it is.
 
+**D4i — Insights draws the web's figures, and works none out.** Every figure the Insights page
+shows is derived by `$lib/insights.ts`, which the page renders from. With the route, the web hands
+the app what `insightsModel` derives from the published stats files: every election it offers, each
+one's cohorts, views, regions and shares, the election it opens on, and the election-day windows.
+While the page is closed for election day, the web reads no stats file and hands over none. The app
+chooses which figures to show, as the page's buttons do, and draws them in the words of
+`states/insights.html`, which renders `$lib/insights-copy.ts` and the page's lead. It closes in the
+windows the web names (ADR 0014), and when a close it was handed ends, it asks the web to offer the
+route again. `insights-model.json` is the model for a fixed input: the web's test holds it to
+`insightsModel`, and `DocumentLogic` holds the app's decoder to it.
+
 **D6 — The iOS app is a skeleton, and it has a contract with the web build.** The goal is that no
 iOS screen shows hand-written copy. Every word comes from the web build: projected pages, the
 chrome handed over with each route, and the datasets. Two checks hold this in place as the web

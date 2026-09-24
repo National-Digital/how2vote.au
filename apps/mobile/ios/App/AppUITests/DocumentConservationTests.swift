@@ -628,6 +628,50 @@ final class DocumentConservationTests: XCTestCase {
         XCTAssertTrue(send.isEnabled, "contact: the form will not send with every field filled")
     }
 
+    /// Insights, from the footer, as the build ships it — no election's figures published yet: the
+    /// page's title and lead, the current election's "newly open" note, and another election's "not
+    /// enough yet" once its button is pressed, each in the page's words.
+    func testTheInsightsAreInTheWebsWords() throws {
+        let wording = try json("states/insights")
+        func sides(_ id: String) throws -> [String] {
+            let blocks = wording["blocks"] as? [[String: Any]] ?? []
+            let section = try XCTUnwrap(blocks.first { $0["id"] as? String == id }, "the page has no \(id)")
+            let paragraph = try XCTUnwrap((section["c"] as? [[String: Any]])?.first)
+            let parts = paragraph["c"] as? [[String: Any]] ?? []
+            let at = parts.firstIndex { $0["t"] as? String == "value" } ?? parts.count
+            let text = { (slice: ArraySlice<[String: Any]>) in slice.compactMap { $0["s"] as? String }.joined() }
+            return [text(parts[..<at]), text(parts[parts.index(after: min(at, parts.count - 1))...])]
+        }
+        let title = try projected("states/insights").title
+        let top = try XCTUnwrap((wording["top"] as? [String: Any])?["label"] as? String)
+        let lead = try sides("insights-lead")
+        let empty = try piece("insights-empty", of: wording)
+        let other = try XCTUnwrap(
+            firstLink(under: "/2025/electorates", in: try json("next/electorates")),
+            "the electorates index names no 2025 election"
+        )
+
+        let app = XCUIApplication()
+        app.launch()
+        XCTAssertTrue(app.buttons[top].waitForExistence(timeout: 30), "insights: the native landing never appeared")
+        XCTAssertTrue(open(top, in: app), "insights: the footer link \"\(top)\" could not be reached")
+
+        XCTAssertTrue(app.staticTexts[title].waitForExistence(timeout: 20), "insights: not drawn natively, or its title is not the page's")
+        // The lead runs on into its links, so it is matched by how it begins.
+        XCTAssertTrue(app.staticTexts.matching(framed([lead[0], ""])).firstMatch.exists, "insights: the lead is not the page's")
+        XCTAssertTrue(
+            app.staticTexts.matching(framed(try sides("insights-upcoming"))).firstMatch.exists,
+            "insights: the current election is not shown as newly open, in the page's words"
+        )
+        let pill = app.buttons[other.label].firstMatch
+        XCTAssertTrue(pill.exists, "insights: the elections are not offered as the page offers them")
+        pill.tap()
+        XCTAssertTrue(
+            app.staticTexts.matching(NSPredicate(format: "label == %@", empty)).firstMatch.waitForExistence(timeout: 5),
+            "insights: another election's figures are not withheld in the page's words"
+        )
+    }
+
     /// The saved cards, reached from the privacy policy's link to them, in the web's words: with none
     /// saved, the page's empty state, its call to build a comparison, and the clear-all-data section
     /// the page ends with. Named to run after the quiz, which declares the visitor 18+: the screen is

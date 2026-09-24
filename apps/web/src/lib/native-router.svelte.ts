@@ -29,6 +29,7 @@ import { now } from "$lib/now.svelte";
 import { quiz, type Persisted } from "$lib/quiz.svelte";
 import { saved } from "$lib/saved.svelte";
 import { savedRows } from "$lib/saved-rows";
+import { readInsights } from "$lib/insights";
 import { AUTHORISATION, FEEDBACK_LINK, footerCredit, footerLinks } from "$lib/site-chrome";
 import { LINK_CUE } from "$lib/external-link-copy";
 import { STALE_ACTIONS, staleDismissal, staleMessage } from "$lib/stale-notice.svelte";
@@ -65,6 +66,7 @@ const NATIVE_ROUTES = new Set([
   "/review",
   "/saved",
   "/contact",
+  "/insights",
   // The landing renders for a past election too (`/2019`, `/2022`), and the election toggle moves
   // between them. Without these the toggle would drop out of the native surface mid-tap.
   ...ELECTION_IDS.map((id) => `/${id}`),
@@ -98,6 +100,7 @@ export const STATE_DOCUMENTS = [
   "states/saved",
   "states/contact",
   "states/contact-form",
+  "states/insights",
 ] as const;
 
 /**
@@ -198,12 +201,23 @@ function siteChrome(): string {
   });
 }
 
+/** Reads a published stats file as the Insights page does, or null for one it cannot. */
+async function statsFile(name: string): Promise<unknown> {
+  try {
+    const res = await fetch(`/stats/${name}.json`, { cache: "no-cache" });
+    return res.ok ? await res.json() : null;
+  } catch {
+    return null;
+  }
+}
+
 /**
  * What a screen draws that is the web's to hold, handed over with the route: the saved cards, as the
- * saved page lists them. Undefined for a screen with none, and null for one whose data the web has
- * not read yet, which the native core cannot draw.
+ * saved page lists them, and the Insights page's figures. Undefined for a screen with none, and null
+ * for one whose data the web has not read yet, which the native core cannot draw.
  */
-function screenData(route: string): string | null | undefined {
+async function screenData(route: string): Promise<string | null | undefined> {
+  if (route === "insights") return JSON.stringify(await readInsights(statsFile));
   if (route !== "saved") return undefined;
   if (!saved.hydrated) return null;
   return JSON.stringify(savedRows(saved.items));
@@ -246,6 +260,8 @@ class NativeRoute {
   #renderer = $state<Renderer>("web");
   /** Guards against a second handover for a navigation already in flight. */
   #pending: string | null = null;
+  /** Counts navigations, so one still reading its screen's data can tell a later one began. */
+  #navigations = 0;
   /**
    * Set once the shell has proved it is not there.
    *
@@ -292,11 +308,15 @@ class NativeRoute {
     const path = routePath(url);
     const document = documentName(path, electionId);
     const route = document !== null ? "document" : routeName(path, electionId);
-    const data = screenData(route);
+    const navigation = ++this.#navigations;
+    const candidate = NATIVE_ROUTES.has(path) || document !== null;
+    // Read before the route is offered. Only the Insights page's data is read asynchronously, and
+    // that page writes nothing, so it may render while its figures are read.
+    const data = candidate ? await screenData(route) : undefined;
+    // A later navigation is being handled; this one's answer is no longer wanted.
+    if (navigation !== this.#navigations) return;
     const offered =
-      (NATIVE_ROUTES.has(path) || document !== null) &&
-      data !== null &&
-      (ageGate.canVote || !ADULT_ONLY_NATIVE_ROUTES.has(path));
+      candidate && data !== null && (ageGate.canVote || !ADULT_ONLY_NATIVE_ROUTES.has(path));
     if (!offered) {
       this.#renderer = "web";
       this.#pending = null;

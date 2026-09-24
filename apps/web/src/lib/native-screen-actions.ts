@@ -10,7 +10,12 @@ import { submitContact } from "$lib/forms";
 import { saved } from "$lib/saved.svelte";
 
 /** The actions the web performs for a native screen, by the name the native side sends. */
-export const SCREEN_ACTIONS = ["saved:remove", "saved:clear", "contact:send"] as const;
+export const SCREEN_ACTIONS = [
+  "saved:remove",
+  "saved:clear",
+  "contact:send",
+  "insights:refresh",
+] as const;
 
 /** A contact message as the native form hands it over: the page's three fields. */
 function contactFields(value: string | undefined): {
@@ -57,6 +62,11 @@ export function performScreenAction(
       return true;
     case "saved:clear":
       saved.clear();
+      resync();
+      return true;
+    case "insights:refresh":
+      // The election-day close has ended on the screen's clock: offered again, the route carries
+      // the figures the page would now read.
       resync();
       return true;
     default:

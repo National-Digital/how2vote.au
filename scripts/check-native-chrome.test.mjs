@@ -48,6 +48,7 @@ describe("verifyNativeChrome", () => {
       document: "DocumentView",
       saved: "SavedView",
       contact: "DocumentView",
+      insights: "InsightsView",
     });
   });
 
@@ -312,6 +313,13 @@ describe("verifyNativeChrome", () => {
         ),
       }),
     ).toContain("does not link the licence");
+  });
+
+  it("holds a screen drawn as a document to the document screen's chrome", () => {
+    const bare = COMMITTED.views.DocumentView.replace("StaleNotice()", "");
+    expect(
+      verifyNativeChrome({ ...COMMITTED, ...withView("DocumentView", bare) }).join(" "),
+    ).toContain('InsightsView (the "insights" screen) does not render StaleNotice()');
   });
 
   it("reads a case that names several routes", () => {

@@ -17,6 +17,8 @@ const CONSENT_SRC = read("apps/web/src/lib/research/consent.ts");
 const STATS_SRC = read("packages/data-pipeline/src/stats.ts");
 const PAGE_PATHS = [
   "apps/web/src/routes/insights/+page.svelte",
+  "apps/web/src/lib/components/InsightsLead.svelte",
+  "apps/web/src/lib/insights-copy.ts",
   "apps/web/src/lib/content/PrivacyContent.svelte",
   "apps/web/src/routes/survey/+page.svelte",
   "apps/web/src/lib/content/TermsContent.svelte",
@@ -224,5 +226,26 @@ describe("helpers", () => {
   it("parseIsoDate accepts ISO dates and rejects junk", () => {
     expect(parseIsoDate("2026-07-16")).toBeTypeOf("number");
     expect(parseIsoDate("nope")).toBeNull();
+  });
+});
+
+describe("verdict — wording held outside the page", () => {
+  it("fails when the page no longer renders the component or copy holding a warning", () => {
+    const pages = {
+      ...PAGES,
+      "apps/web/src/routes/insights/+page.svelte": PAGES[
+        "apps/web/src/routes/insights/+page.svelte"
+      ].replace("INSIGHTS_COPY.footnote", "INSIGHTS_COPY.empty"),
+    };
+    const res = verdict({ ...baseInput(), pages });
+    expect(hasError(res, "does not render INSIGHTS_COPY.footnote")).toBe(true);
+  });
+
+  it("requires the page and the token together", () => {
+    const register = clone(REGISTER);
+    delete register.insightsWarnings[0].via;
+    expect(
+      hasError(verdict({ ...baseInput(), register }), "renderedBy and via must be given together"),
+    ).toBe(true);
   });
 });

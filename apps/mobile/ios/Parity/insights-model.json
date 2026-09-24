@@ -1,0 +1,115 @@
+{
+  "windows": [
+    [
+      1746194400000,
+      1746266400000
+    ]
+  ],
+  "closed": false,
+  "failed": false,
+  "initial": "2025",
+  "elections": [
+    {
+      "id": "next",
+      "pill": "Next",
+      "label": "Next Federal Election",
+      "published": false,
+      "upcoming": true,
+      "provenance": null,
+      "stats": null
+    },
+    {
+      "id": "2025",
+      "pill": "2025",
+      "label": "2025 Federal Election",
+      "published": true,
+      "upcoming": false,
+      "provenance": "Positions as recorded at the 2025 election.",
+      "stats": {
+        "label": "2025 Federal Election",
+        "updated": "15 July 2026",
+        "minCell": 12,
+        "published": true,
+        "cohorts": [
+          {
+            "key": "campaign",
+            "label": "During the campaign",
+            "disclosure": "Collected between the declaration of nominations and polling day.",
+            "total": "1,234",
+            "published": true,
+            "parties": [
+              {
+                "id": "age",
+                "title": "Top party match by age",
+                "geos": [
+                  {
+                    "code": null,
+                    "national": true,
+                    "label": "Australia-wide",
+                    "buckets": [
+                      {
+                        "key": "18-34",
+                        "label": "18–34",
+                        "shown": 3,
+                        "shownText": "3",
+                        "cells": [
+                          {
+                            "label": "ALP",
+                            "pct": 67
+                          },
+                          {
+                            "label": "LNP",
+                            "pct": 33
+                          }
+                        ]
+                      }
+                    ]
+                  },
+                  {
+                    "code": "NSW",
+                    "national": false,
+                    "label": "NSW",
+                    "buckets": [
+                      {
+                        "key": "18-34",
+                        "label": "18–34",
+                        "shown": 3,
+                        "shownText": "3",
+                        "cells": [
+                          {
+                            "label": "ALP",
+                            "pct": 100
+                          }
+                        ]
+                      }
+                    ]
+                  }
+                ]
+              }
+            ],
+            "propositions": [
+              {
+                "id": "p1",
+                "title": "Raise the pension",
+                "agree": 63,
+                "neutral": 13,
+                "disagree": 25,
+                "shown": 8,
+                "shownText": "8"
+              }
+            ]
+          },
+          {
+            "key": "historical",
+            "label": "Since the election",
+            "disclosure": "",
+            "total": "0",
+            "published": false,
+            "parties": [],
+            "propositions": []
+          }
+        ]
+      }
+    }
+  ]
+}

@@ -356,6 +356,25 @@ final class NativeCoreHost {
                 NSLog("How2Vote: declined contact — \(error)")
                 return nil
             }
+        case "insights":
+            // The figures are the web's, derived by the page's own functions and handed over with the
+            // route; the screen's words are the web's Insights page. Either missing declines the
+            // route, and the WebView shows the page.
+            do {
+                let wording = try InsightsWording(NativeDocument.load(name: "states/insights").0)
+                let figures = try InsightsData.decode(data)
+                return themed(
+                    InsightsView(
+                        wording: wording,
+                        data: figures,
+                        onRefresh: { onScreenAction(.insightsRefresh, nil, nil) },
+                        onExit: onExit
+                    )
+                )
+            } catch {
+                NSLog("How2Vote: declined insights — \(error)")
+                return nil
+            }
         default:
             return nil
         }
@@ -364,7 +383,7 @@ final class NativeCoreHost {
     /// Whether a route's screen runs the engine. A page drawn from its projection, and a list the web
     /// hands over, need none.
     private static func needsEngine(_ route: String) -> Bool {
-        !["document", "saved", "contact"].contains(route)
+        !["document", "saved", "contact", "insights"].contains(route)
     }
 
     private func loadedEngine() -> JSCEngine? {

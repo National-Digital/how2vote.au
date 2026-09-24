@@ -27,10 +27,9 @@ export default tseslint.config(
       "**/test-results/**",
       // svelte-eslint-parser cannot parse the `{@html `…<script>…</script>`}` JSON-LD injection
       // pattern (inline </script> inside a template literal confuses its script-block split). These
-      // three files use exactly that pattern; every other .svelte file is linted.
+      // two files use exactly that pattern; every other .svelte file is linted.
       "apps/web/src/lib/components/JsonLd.svelte",
       "apps/web/src/lib/components/StructuredData.svelte",
-      "apps/web/src/routes/insights/+page.svelte",
     ],
   },
   js.configs.recommended,

@@ -228,6 +228,7 @@ enum ScreenAction: String, CaseIterable {
     case savedRemove = "saved:remove"
     case savedClear = "saved:clear"
     case contactSend = "contact:send"
+    case insightsRefresh = "insights:refresh"
 
     /// The screen that asks.
     var screen: String { String(rawValue.prefix { $0 != ":" }) }

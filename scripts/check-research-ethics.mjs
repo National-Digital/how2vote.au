@@ -429,6 +429,18 @@ export function verdict(input = {}) {
         `${label}: text not found on ${rec.page} (register/page drift): "${normalisePageText(rec.text)}"`,
       );
     }
+    // Wording held in a component or copy module is shown only where a page renders it: the
+    // statement names that page and the token by which the page renders the wording.
+    if (rec.renderedBy !== undefined || rec.via !== undefined) {
+      const route = pages[rec.renderedBy];
+      if (!isNonEmptyString(rec.renderedBy) || !isNonEmptyString(rec.via)) {
+        push(`${label}: renderedBy and via must be given together`);
+      } else if (typeof route !== "string" || !route) {
+        push(`${label}: page "${rec.renderedBy}" not available`);
+      } else if (!route.includes(rec.via)) {
+        push(`${label}: ${rec.renderedBy} does not render ${rec.via}, which holds the text`);
+      }
+    }
   };
 
   const warnings = Array.isArray(register.insightsWarnings) ? register.insightsWarnings : null;
@@ -484,6 +496,8 @@ function safeRead(relPath) {
 // quietest possible way for a disclosure requirement to stop being enforced.
 const PAGE_PATHS = [
   "apps/web/src/routes/insights/+page.svelte",
+  "apps/web/src/lib/components/InsightsLead.svelte",
+  "apps/web/src/lib/insights-copy.ts",
   "apps/web/src/lib/content/PrivacyContent.svelte",
   "apps/web/src/routes/survey/+page.svelte",
   "apps/web/src/lib/content/TermsContent.svelte",

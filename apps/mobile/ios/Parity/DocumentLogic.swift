@@ -47,6 +47,7 @@ enum DocumentLogic {
         failures += readsTheClearDataWording(root)
         failures += readsTheSavedWording(root)
         failures += readsTheContactWording(root)
+        failures += readsTheInsights(root)
 
         var ran = 0
         let sample = try? Data(contentsOf: files[0])
@@ -579,6 +580,96 @@ enum DocumentLogic {
             failures.append("a filled message is not handed to the web")
         }
         return failures
+    }
+
+    /// The Insights page's wording is the web's: every piece worded, the lead naming its group size
+    /// once, and the head reading as the page does, without its lead while closed. The figures the web
+    /// hands over (`insights-model.json`, which the web's own test holds to `insightsModel`) decode,
+    /// and figures the screen could only draw wrongly are refused.
+    private static func readsTheInsights(_ root: URL) -> [String] {
+        guard let data = try? Data(contentsOf: root.appendingPathComponent("states/insights.json")),
+              let (page, _) = try? NativeDocument.decodeChecked(data)
+        else { return ["the insights states page is missing or does not lay out"] }
+        var failures: [String] = []
+        do {
+            let wording = try InsightsWording(page)
+            let texts = InsightsWording.Piece.allCases.map { wording.text($0) }
+            if texts.contains(where: \.isEmpty) {
+                failures.append("an insights piece is empty: \(texts)")
+            }
+            let open = wording.head(closed: false, minimum: "12")
+            let closed = wording.head(closed: true, minimum: "12")
+            let text = { (layout: DocumentLayout) in layout.blocks.map(Self.visible).joined() }
+            if !text(open).contains("at least 12 responses") || text(open).contains("at least \(wording.defaultMinimum) responses") {
+                failures.append("the insights lead does not name the group size it is given")
+            }
+            if text(closed) != page.title || open.top != page.top {
+                failures.append("the closed insights page does not read as its title alone, under the page's bar")
+            }
+            if wording.defaultMinimum != "10" {
+                failures.append("the insights lead's own group size is \(wording.defaultMinimum), not the page's 10")
+            }
+        } catch {
+            failures.append("the insights wording: \(error)")
+        }
+        func without(_ id: String) -> NativeDocument {
+            NativeDocument(
+                route: page.route, title: page.title, crumbs: nil, crumbsLabel: nil, top: page.top, brand: nil,
+                blocks: page.blocks.filter {
+                    if case .section(.template, id, _) = $0 { return false }
+                    return true
+                },
+                digest: "", spoken: "", drawn: ""
+            )
+        }
+        for id in ["insights-footnote", "insights-lead", "insights-closed"] where (try? InsightsWording(without(id))) != nil {
+            failures.append("an insights wording missing \(id) was accepted")
+        }
+
+        let fixture = URL(fileURLWithPath: "apps/mobile/ios/Parity/insights-model.json")
+        guard let model = try? String(contentsOf: fixture, encoding: .utf8) else {
+            return failures + ["the insights figures fixture is missing"]
+        }
+        do {
+            let figures = try InsightsData.decode(model)
+            if figures.elections?.first(where: { $0.id == figures.initial })?.stats?.published != true {
+                failures.append("the insights fixture does not open on published figures")
+            }
+            let windows = figures.windows
+            if let window = windows.first {
+                let inside = Date(timeIntervalSince1970: window[0] / 1000)
+                let after = Date(timeIntervalSince1970: window[1] / 1000)
+                if !figures.isClosed(at: inside) || figures.isClosed(at: after) {
+                    failures.append("the election-day window does not hold from its start until, not at, its end")
+                }
+            } else {
+                failures.append("the insights fixture names no election-day window")
+            }
+        } catch {
+            failures.append("the insights figures the web hands over do not decode: \(error)")
+        }
+        for (what, mutated) in [
+            ("a share over 100 per cent", model.replacingOccurrences(of: "\"pct\": 67", with: "\"pct\": 167")),
+            ("a window ending before it starts", model.replacingOccurrences(of: "1746194400000", with: "1746366400000")),
+            ("an opening election it does not offer", model.replacingOccurrences(of: "\"initial\": \"2025\"", with: "\"initial\": \"1901\"")),
+            ("figures with no reason for none", #"{"windows":[],"closed":false,"failed":false,"initial":"next","elections":null}"#),
+        ] where (try? InsightsData.decode(mutated)) != nil {
+            failures.append("insights figures with \(what) were accepted")
+        }
+        if (try? InsightsData.decode(nil)) != nil {
+            failures.append("an insights screen with no figures handed over was accepted")
+        }
+        return failures
+    }
+
+    /// A laid-out block's drawn text.
+    private static func visible(_ block: DocumentLayout.Block) -> String {
+        switch block {
+        case let .heading(_, _, run), let .paragraph(_, _, run): return run.visible
+        case let .section(_, _, content), let .quote(content): return content.map(visible).joined()
+        case let .list(_, _, items): return items.flatMap { $0.map(visible) }.joined()
+        default: return ""
+        }
     }
 
     /// The review reads each answer back by the web's own label, for every answer the quiz records,

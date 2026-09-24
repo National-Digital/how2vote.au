@@ -58,6 +58,11 @@ describe("performScreenAction", () => {
     expect(forms.submitContact).not.toHaveBeenCalled();
   });
 
+  it("offers the Insights screen again when it asks, so it carries the figures now open", () => {
+    expect(performScreenAction("insights", "refresh", undefined, resync)).toBe(true);
+    expect(resync).toHaveBeenCalledOnce();
+  });
+
   it("does nothing for an action it does not know", () => {
     for (const [screen, action] of [
       ["saved", "wipe"],
