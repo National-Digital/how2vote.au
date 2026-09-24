@@ -10,7 +10,7 @@ struct ReviewWording: Equatable {
     /// the values each is filled with.
     enum Piece: String, CaseIterable {
         case title, back, progress, all, some, loading, failed, retry, unanswered, star, glyph
-        case compare, edit, empty
+        case compare, edit, empty, importance, multiplier
 
         var values: Set<String> {
             switch self {

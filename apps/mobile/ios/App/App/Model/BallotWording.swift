@@ -11,7 +11,7 @@ struct BallotWording: Equatable {
     /// the values each is filled with.
     enum Piece: String, CaseIterable {
         case position, back, progress, pick, electorate, failed, retry, search, searchLabel
-        case none, unsure, lookup, located, start, different, map, unsaved
+        case none, unsure, lookup, located, start, different, map, unsaved, device
 
         var values: Set<String> {
             switch self {

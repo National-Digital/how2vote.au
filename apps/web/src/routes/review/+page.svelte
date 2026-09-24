@@ -72,10 +72,7 @@
       total: quiz.total,
     })}
   </h1>
-  <p class="note ui">
-    Tap a question to change your answer. Star (★) the issues that matter most — only your strongest
-    answers can count ten times as much.
-  </p>
+  <p class="note ui">{REVIEW_COPY.importance}</p>
 
   {#if !nativeRoute.isWeb || (!loadError && questions.length === 0)}
     <p class="note ui" role="status">{REVIEW_COPY.loading}</p>
@@ -104,7 +101,7 @@
             class:on={a.important}
             aria-pressed={a.important}
             aria-label={fill(REVIEW_COPY.star, { question: q.text })}
-            title="Extremely important (×10)"
+            title={REVIEW_COPY.multiplier}
             onclick={() => quiz.toggleImportant(q.id)}>{REVIEW_COPY.glyph}</button
           >
         {:else}

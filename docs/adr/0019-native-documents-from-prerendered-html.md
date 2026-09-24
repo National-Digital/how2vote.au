@@ -122,7 +122,10 @@ reads it, beside `$lib/review-copy.app.ts`, and each answer's short label as `an
 `AnswerScale.swift` keeps only the rule for which answers may carry the ×10 star, so the review
 cannot read an answer back as one the voter did not give. `DocumentLogic` requires every piece
 with the values the screen fills, and labels for exactly the answers the quiz page records, worded
-as the quiz words them. The importance note and the star's hint remain `LegalCopy`.
+as the quiz words them. The importance note and the star's hint are pieces of that page too, as the
+ballot picker's on-device note is of `states/ballot.html`. They stay registered in
+`docs/legal/native-copy.json`, marked `drawnFrom` their page: not generated into Swift, but still held
+verbatim to their web source, so rewording one still changes the register.
 
 **D6 — The iOS app is a skeleton, and it has a contract with the web build.** The goal is that no
 iOS screen shows hand-written copy. Every word comes from the web build: projected pages, the
@@ -164,8 +167,10 @@ where the checks above already live.
   - the card.
 - The hand-written copy record is empty: no native screen holds copy of its own. The stale-data
   notice's controls arrive with the chrome, and the list disc and the external-link arrow are drawn
-  as symbols, as the web's stylesheet draws its disc. The registered notices in
-  `docs/legal/native-copy.json` are still typed copies checked against the web source rather than
-  read from the build, and are the next move.
+  as symbols, as the web's stylesheet draws its disc. The notices in `docs/legal/native-copy.json`
+  that are not yet `drawnFrom` a page (the clear-data confirmation, the external-link cue and the map
+  licence) are typed copies checked against the web source rather than read from the build, and are
+  the next move. The card's notices stay registered as a lock on the card's wording, though no
+  native screen draws them.
 - Existing installs keep their data. The `how2vote:` keys and the native-core ownership marker are
   not changed by any of this.

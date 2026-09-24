@@ -121,7 +121,7 @@ struct BallotView: View {
             }
             .padding(.top, 8)
 
-            Text(LegalCopy.ballotAnswersStayOnDevice)
+            Text(wording.text(.device))
                 .font(.footnote)
                 .foregroundStyle(Theme.ink2.resolve(scheme))
                 .fixedSize(horizontal: false, vertical: true)

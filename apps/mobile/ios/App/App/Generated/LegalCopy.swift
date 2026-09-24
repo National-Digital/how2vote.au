@@ -26,12 +26,6 @@ enum LegalCopy {
     /// Announced as part of a link's accessible name before it is followed (WCAG 3.2.5), so a screen-reader user is not dropped into an unexplained context. The wording is channel-specific: the shells open an in-app browser rather than a new tab, and link-conventions.test.ts already holds the web to this on its side.
     static let externalLinkCue = "opens in an in-app browser"
 
-    /// States how the ×10 importance lever works and, in the same breath, its limit — that it attaches only to the strongest answers. A native review screen that described the weighting differently would be a second, unreviewed account of the matching method.
-    static let importanceWeighting = "Tap a question to change your answer. Star (★) the issues that matter most — only your strongest answers can count ten times as much."
-
-    /// The star control's own label, naming the multiplier the scoring model applies.
-    static let importanceMultiplier = "Extremely important (×10)"
-
     /// One paragraph of the AEC Spatial Data Download derivative-product notice, which the licence requires to be DISPLAYED wherever the boundary data is shown — a bare attribution credit does not satisfy it. Registered against the source record itself, not a component, because that record is where the accepted wording lives and where the web reads it from too (apps/web/src/lib/mapLicence.ts re-exports it).
     static let mapLicenceIncorporates = "This product (how2vote.au) incorporates data that is: © Commonwealth of Australia (Australian Electoral Commission) 2026"
 
@@ -49,9 +43,6 @@ enum LegalCopy {
 
     /// The AEC licence page the notice links to.
     static let mapLicenceURL = "https://www.aec.gov.au/Electorates/gis/"
-
-    /// A privacy claim on the state picker: nothing leaves the device unless the voter shares their card.
-    static let ballotAnswersStayOnDevice = "Your answers stay on this device until you choose to share your card."
 
     /// The privacy policy's clear-all control, drawn natively on the iOS document screen; the clearing itself stays the web's.
     static let clearDataConfirm = "Permanently clear everything on this device?"

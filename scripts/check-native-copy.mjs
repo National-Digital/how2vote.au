@@ -22,6 +22,10 @@
  * band) is deliberately absent: it renders in the WebView islands of D8, where the web source IS the
  * rendering and no second copy exists to govern.
  *
+ * An entry the native core draws from a projected states page (`drawnFrom`, ADR 0019 D4b) is not
+ * generated, since no native copy of it exists, but stays registered: its wording is still held
+ * verbatim to its web source, so rewording it still changes this register.
+ *
  * Usage: `node scripts/check-native-copy.mjs` to verify, `--write` to regenerate the Swift.
  */
 import { readFileSync, writeFileSync, mkdirSync } from "node:fs";
@@ -127,7 +131,8 @@ export function renderSwift(registry) {
     "",
     "enum LegalCopy {",
   ];
-  for (const [i, e] of entries.entries()) {
+  // An entry drawn from a projected page has no native copy to generate.
+  for (const [i, e] of entries.filter((entry) => !entry?.drawnFrom).entries()) {
     if (i > 0) lines.push("");
     // Collapsed to one line: a note carrying a newline would put bare prose on the next line of
     // the generated file, outside any comment, and the file would not compile.
@@ -245,6 +250,11 @@ export function verifyNativeCopy(input) {
       push(
         `${at}: text contains a control character or line break — notices must be a single line`,
       );
+    }
+
+    // Where the native core draws it instead: a projected states page, named as the router names it.
+    if (e.drawnFrom !== undefined && !/^states\/[a-z-]+$/.test(String(e.drawnFrom))) {
+      push(`${at}: drawnFrom "${e.drawnFrom}" is not a states page (states/<name>)`);
     }
 
     if (seenIds.has(e.id)) push(`${at}: duplicate id`);

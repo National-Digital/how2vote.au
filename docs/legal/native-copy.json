@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
-  "updated": "2026-09-24",
-  "note": "Required user-facing notices that the native iOS core renders inline, and which therefore cannot be held in the web sources the path-scoped compliance guards read (ADR 0018 D9). Each entry names the web source that must carry the SAME wording: scripts/check-native-copy.mjs asserts the text is present there verbatim (whitespace- and markup-normalised) and that apps/mobile/ios/App/App/Generated/LegalCopy.swift is the exact rendering of this file. Web-side rewording therefore fails the build until this register and the generated Swift are updated together, so the two channels cannot state different things. Copy that is modal- or print-shaped is NOT registered here: it stays in the WebView islands (D8) where it needs no second rendering.",
+  "updated": "2026-09-25",
+  "note": "Required user-facing notices that the native iOS core renders inline, and which therefore cannot be held in the web sources the path-scoped compliance guards read (ADR 0018 D9). Each entry names the web source that must carry the SAME wording: scripts/check-native-copy.mjs asserts the text is present there verbatim (whitespace- and markup-normalised) and that apps/mobile/ios/App/App/Generated/LegalCopy.swift is the exact rendering of this file. Web-side rewording therefore fails the build until this register and the generated Swift are updated together, so the two channels cannot state different things. Copy that is modal- or print-shaped is NOT registered here: it stays in the WebView islands (D8) where it needs no second rendering. An entry with drawnFrom is drawn natively from that projected states page (ADR 0019 D4b) rather than from the generated Swift, so it is not generated; it stays registered so its wording remains held verbatim to its web source, and rewording it still requires this register, and so a legal-review record, to change.",
   "generated": "apps/mobile/ios/App/App/Generated/LegalCopy.swift",
   "entries": [
     {
@@ -56,17 +56,19 @@
       "id": "importance-weighting",
       "swiftName": "importanceWeighting",
       "text": "Tap a question to change your answer. Star (★) the issues that matter most — only your strongest answers can count ten times as much.",
-      "webSource": "apps/web/src/routes/review/+page.svelte",
+      "webSource": "apps/web/src/lib/review-copy.ts",
       "backingControls": ["control-5"],
-      "note": "States how the ×10 importance lever works and, in the same breath, its limit — that it attaches only to the strongest answers. A native review screen that described the weighting differently would be a second, unreviewed account of the matching method."
+      "note": "States how the ×10 importance lever works and, in the same breath, its limit — that it attaches only to the strongest answers. A native review screen that described the weighting differently would be a second, unreviewed account of the matching method.",
+      "drawnFrom": "states/review"
     },
     {
       "id": "importance-multiplier",
       "swiftName": "importanceMultiplier",
       "text": "Extremely important (×10)",
-      "webSource": "apps/web/src/routes/review/+page.svelte",
+      "webSource": "apps/web/src/lib/review-copy.ts",
       "backingControls": ["control-5"],
-      "note": "The star control's own label, naming the multiplier the scoring model applies."
+      "note": "The star control's own label, naming the multiplier the scoring model applies.",
+      "drawnFrom": "states/review"
     },
     {
       "id": "map-licence-1",
@@ -120,9 +122,10 @@
       "id": "ballot-answers-stay-on-device",
       "swiftName": "ballotAnswersStayOnDevice",
       "text": "Your answers stay on this device until you choose to share your card.",
-      "webSource": "apps/web/src/routes/ballot/+page.svelte",
+      "webSource": "apps/web/src/lib/ballot-copy.ts",
       "backingControls": ["control-24", "control-28"],
-      "note": "A privacy claim on the state picker: nothing leaves the device unless the voter shares their card."
+      "note": "A privacy claim on the state picker: nothing leaves the device unless the voter shares their card.",
+      "drawnFrom": "states/ballot"
     },
     {
       "id": "clear-data-confirm",

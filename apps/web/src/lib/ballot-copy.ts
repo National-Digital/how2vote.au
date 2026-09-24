@@ -24,6 +24,7 @@ export const BALLOT_COPY = {
   start: "This is my electorate — start",
   different: "Choose a different electorate",
   map: "Map of {state} with the {electorate} electorate marked",
+  device: "Your answers stay on this device until you choose to share your card.",
 } as const;
 
 /** Where a voter who does not know their electorate can look it up. */

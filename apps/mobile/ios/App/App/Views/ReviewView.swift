@@ -45,7 +45,7 @@ struct ReviewView: View {
                         .padding(.bottom, 4)
                         .accessibilityAddTraits(.isHeader)
 
-                    Text(LegalCopy.importanceWeighting)
+                    Text(wording.text(.importance))
                         .font(.footnote)
                         .foregroundStyle(Theme.ink2.resolve(scheme))
                         .fixedSize(horizontal: false, vertical: true)
@@ -180,7 +180,7 @@ private struct ReviewRow: View {
                     Toggle(isOn: Binding(get: { row.important }, set: { _ in onStar(row.id) })) {
                         Text(wording.text(.star, ["question": row.text]))
                     }
-                    .accessibilityHint(LegalCopy.importanceMultiplier)
+                    .accessibilityHint(wording.text(.multiplier))
                 }
             } else {
                 // Keeps every row's text on the same left edge whether or not it can be starred.

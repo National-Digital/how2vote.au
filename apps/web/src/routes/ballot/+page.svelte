@@ -109,7 +109,7 @@
         </button>
       {/each}
     </div>
-    <p class="note ui">Your answers stay on this device until you choose to share your card.</p>
+    <p class="note ui">{BALLOT_COPY.device}</p>
   {:else if step === 2 && loadError}
     <h1>{BALLOT_COPY.electorate}</h1>
     <p class="note ui" role="alert">

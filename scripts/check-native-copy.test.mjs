@@ -55,7 +55,34 @@ describe("normaliseCopy", () => {
   });
 });
 
+describe("an entry drawn from a projected page", () => {
+  it("is still held verbatim to its web source", () => {
+    const drawn = entry({ drawnFrom: "states/review" });
+    expect(check({ entries: [drawn] }).ok).toBe(true);
+    expect(check({ entries: [drawn], webSources: { "web.svelte": "<p>Reworded.</p>" } }).ok).toBe(
+      false,
+    );
+  });
+
+  it("names a states page", () => {
+    expect(check({ entries: [entry({ drawnFrom: "review" })] }).errors.join(" ")).toContain(
+      "is not a states page",
+    );
+  });
+});
+
 describe("renderSwift", () => {
+  it("generates nothing for an entry drawn from a projected page", () => {
+    const swift = renderSwift({
+      entries: [
+        entry({ swiftName: "drawn", drawnFrom: "states/review" }),
+        entry({ swiftName: "kept" }),
+      ],
+    });
+    expect(swift).not.toContain("drawn");
+    expect(swift).toContain("static let kept");
+  });
+
   it("emits a compilable constant per entry", () => {
     const swift = renderSwift({ entries: [entry({ swiftName: "noRecommendation" })] });
     expect(swift).toContain("enum LegalCopy {");
