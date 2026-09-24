@@ -172,6 +172,7 @@ private struct DocumentBlocks: View {
 
 private struct DocumentBlock: View {
     @Environment(\.colorScheme) private var scheme
+    @Environment(\.clearDataWording) private var clearData
 
     let block: DocumentLayout.Block
     let layout: DocumentLayout
@@ -228,7 +229,9 @@ private struct DocumentBlock: View {
         case let .slot(slot, controls):
             switch slot {
             case .clearData:
-                ClearDataControl(label: controls.first { $0.action == "clear" }?.text() ?? "")
+                if let wording = clearData {
+                    ClearDataControl(label: controls.first { $0.action == "clear" }?.text() ?? "", wording: wording)
+                }
             case .ageDeclare, .ageContinue, .landingFresh, .landingResume, .landingComplete:
                 SlotButtons(slot: slot, controls: controls, onExit: onExit)
             case .themeLight, .themeDark:
@@ -521,6 +524,8 @@ private struct ClearDataControl: View {
 
     /// The resting button's label, from the page.
     let label: String
+    /// The confirmation's wording, from `states/clear-data`.
+    let wording: ClearDataWording
 
     @State private var confirming = false
     @State private var clearing = false
@@ -528,15 +533,15 @@ private struct ClearDataControl: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 10) {
             if confirming {
-                Text(LegalCopy.clearDataConfirm)
+                Text(wording.text(.ask))
                     .font(.subheadline.weight(.semibold))
-                Button(clearing ? LegalCopy.clearDataClearing : LegalCopy.clearDataYes) {
+                Button(wording.text(clearing ? .clearing : .confirm)) {
                     clearing = true
                     actions.slotAction(.clearData, "clear")
                 }
                 .buttonStyle(PrimaryButton())
                 .disabled(clearing)
-                Button(LegalCopy.clearDataCancel) { confirming = false }
+                Button(wording.text(.cancel)) { confirming = false }
                     .underline()
                     .frame(minHeight: 44)
                     .disabled(clearing)
@@ -712,3 +717,14 @@ private struct BrandBar: View {
     }
 }
 
+private struct ClearDataWordingKey: EnvironmentKey {
+    static let defaultValue: ClearDataWording? = nil
+}
+
+extension EnvironmentValues {
+    /// The clear-data confirmation's wording, handed to a page that holds the control.
+    var clearDataWording: ClearDataWording? {
+        get { self[ClearDataWordingKey.self] }
+        set { self[ClearDataWordingKey.self] = newValue }
+    }
+}

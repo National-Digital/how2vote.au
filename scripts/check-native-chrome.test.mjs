@@ -143,6 +143,9 @@ describe("verifyNativeChrome", () => {
     expect(
       mutate({ router: COMMITTED.router.replace("update: STALE_ACTIONS.update,", "") }),
     ).toContain("omits the stale notice's update label");
+    expect(mutate({ router: COMMITTED.router.replace("linkCue: LINK_CUE.app,", "") })).toContain(
+      "omits the external-link cue",
+    );
   });
 
   it("catches the web's stale notice worded other than by the labels the native one is handed", () => {

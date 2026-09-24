@@ -291,8 +291,15 @@ final class NativeCoreHost {
             // decode, or lays out to other text than the page's is declined, and the WebView shows it.
             guard let document else { return nil }
             do {
-                let (_, layout) = try NativeDocument.load(name: document.name)
-                return themed(DocumentView(layout: layout, anchor: document.anchor, onExit: onExit))
+                let (page, layout) = try NativeDocument.load(name: document.name)
+                // A page holding the clear-data control is drawn with its confirmation's wording.
+                let clearData = ClearDataWording.isNeeded(by: page)
+                    ? try ClearDataWording(NativeDocument.load(name: "states/clear-data").0)
+                    : nil
+                return themed(
+                    DocumentView(layout: layout, anchor: document.anchor, onExit: onExit)
+                        .environment(\.clearDataWording, clearData)
+                )
             } catch {
                 NSLog("How2Vote: declined document \(document.name) — \(error)")
                 return nil

@@ -8,6 +8,7 @@
    * Two-step confirm (mirrors the /saved "Clear all" pattern): the destructive action is never one
    * click away, and the button is inert while the wipe runs so it can't fire twice.
    */
+  import { CLEAR_DATA_COPY } from "$lib/clear-data-copy";
   import { clearLocalDeviceData } from "$lib/privacy/local-data";
 
   let confirming = $state(false);
@@ -45,12 +46,12 @@
 
   <div class="actions">
     {#if confirming}
-      <span class="ask">Permanently clear everything on this device?</span>
+      <span class="ask">{CLEAR_DATA_COPY.ask}</span>
       <button type="button" class="danger" disabled={clearing} onclick={clearEverything}>
-        {clearing ? "Clearing…" : "Yes, clear everything"}
+        {clearing ? CLEAR_DATA_COPY.clearing : CLEAR_DATA_COPY.confirm}
       </button>
       <button type="button" class="cancel" disabled={clearing} onclick={() => (confirming = false)}>
-        Cancel
+        {CLEAR_DATA_COPY.cancel}
       </button>
     {:else}
       <button type="button" class="cancel start" value="clear" onclick={() => (confirming = true)}>

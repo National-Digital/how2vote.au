@@ -16,6 +16,7 @@
   // so a link cannot quietly go back to being unannounced.
   import type { Snippet } from "svelte";
   import { inAppBrowserFor, isNativeShell } from "$lib/channel";
+  import { LINK_CUE } from "$lib/external-link-copy";
   import { ORG } from "$lib/org";
 
   let {
@@ -57,9 +58,7 @@
   // disclosure about that reader. `strict-origin` sends the origin, never the page, and is needed
   // because the sitewide `Referrer-Policy: no-referrer` otherwise makes `rel` moot.
   const toPublisher = $derived(hostOf(href) === PUBLISHER_HOST);
-  const cue = $derived(
-    offOrigin && isNativeShell ? "opens in an in-app browser" : "opens in a new tab",
-  );
+  const cue = $derived(offOrigin && isNativeShell ? LINK_CUE.app : LINK_CUE.web);
   const relValue = $derived(
     ["noopener", ...(toPublisher ? [] : ["noreferrer"]), ...rel.split(/\s+/).filter(Boolean)].join(
       " ",

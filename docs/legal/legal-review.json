@@ -299,6 +299,13 @@
       "disposition": "no-review-required",
       "reviewer": "cameron-young",
       "affectedControls": ["control-5", "control-24", "control-28"]
+    },
+    {
+      "date": "2026-09-25",
+      "change": "On iOS, the privacy policy's clear-data confirmation (the question, the confirm and cancel buttons, and the label shown while clearing) and the cue appended to every external link's accessible name are no longer drawn from the generated LegalCopy.swift. The confirmation's wording moves unchanged from apps/web/src/lib/components/ClearMyData.svelte into $lib/clear-data-copy.ts, which the control renders, and is rendered at build time into states/clear-data.html, a file that exists only in the iOS build; the native privacy page is declined for the WebView's if that file is missing or incomplete. The link cues move unchanged from ExternalLink.svelte into $lib/external-link-copy.ts, which ExternalLink renders, and the app's cue is handed to the native core with the site chrome, which the native core declines a route without. All five stay registered in docs/legal/native-copy.json, naming those modules as their web source and marked drawnFrom states/clear-data or site-chrome, so each is still held verbatim to the web and rewording any of them still requires this register to change; the checker now also requires every drawnFrom to name a page the native router offers or the site chrome, and, once the iOS build exists, requires each notice drawn from a states page to be drawn by the section of that projected page it names exactly as registered, with nothing added. The note of control-26's native-copy test in control-register.json is corrected to name the cue's new web source. The clearing itself, and every store it clears, are unchanged. No wording is changed, and no legal position, obligation, permitted use, or collection, use, disclosure, retention or overseas-processing practice is altered; no consent or Terms version is affected; no legal review was sought or is required.",
+      "disposition": "no-review-required",
+      "reviewer": "cameron-young",
+      "affectedControls": ["control-24", "control-26", "control-28"]
     }
   ],
   "nextMandatoryReviewDate": "2027-07-15",

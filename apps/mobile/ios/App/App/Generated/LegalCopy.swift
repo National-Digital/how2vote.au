@@ -23,9 +23,6 @@ enum LegalCopy {
     /// The plan foot's user-authorship statement, which carries the s321D authoriser model (ADR 0010).
     static let userAuthoredOrder = "You chose every number — How2Vote does not recommend a candidate or a preference order."
 
-    /// Announced as part of a link's accessible name before it is followed (WCAG 3.2.5), so a screen-reader user is not dropped into an unexplained context. The wording is channel-specific: the shells open an in-app browser rather than a new tab, and link-conventions.test.ts already holds the web to this on its side.
-    static let externalLinkCue = "opens in an in-app browser"
-
     /// One paragraph of the AEC Spatial Data Download derivative-product notice, which the licence requires to be DISPLAYED wherever the boundary data is shown — a bare attribution credit does not satisfy it. Registered against the source record itself, not a component, because that record is where the accepted wording lives and where the web reads it from too (apps/web/src/lib/mapLicence.ts re-exports it).
     static let mapLicenceIncorporates = "This product (how2vote.au) incorporates data that is: © Commonwealth of Australia (Australian Electoral Commission) 2026"
 
@@ -43,16 +40,4 @@ enum LegalCopy {
 
     /// The AEC licence page the notice links to.
     static let mapLicenceURL = "https://www.aec.gov.au/Electorates/gis/"
-
-    /// The privacy policy's clear-all control, drawn natively on the iOS document screen; the clearing itself stays the web's.
-    static let clearDataConfirm = "Permanently clear everything on this device?"
-
-    /// The privacy policy's clear-all control, drawn natively on the iOS document screen; the clearing itself stays the web's.
-    static let clearDataYes = "Yes, clear everything"
-
-    /// The privacy policy's clear-all control, drawn natively on the iOS document screen; the clearing itself stays the web's.
-    static let clearDataClearing = "Clearing…"
-
-    /// The privacy policy's clear-all control, drawn natively on the iOS document screen; the clearing itself stays the web's.
-    static let clearDataCancel = "Cancel"
 }

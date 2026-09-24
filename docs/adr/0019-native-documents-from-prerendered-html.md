@@ -64,8 +64,9 @@ draw text verbatim.
 
 **D4 — Controls are slots, and the web still does the work.** An interactive part of a page, such
 as privacy's "clear all my data", is a declared slot. Its labels are projected with the page. Its
-confirmation wording is registered in `docs/legal/native-copy.json`. The action itself is a
-request to the web, which owns the keys (ADR 0018 D3).
+confirmation's wording is rendered from `$lib/clear-data-copy.ts`, which the control itself renders,
+into `states/clear-data.html` (D4b), and a page holding the control is declined without it. The
+action itself is a request to the web, which owns the keys (ADR 0018 D3).
 
 **D4a — Election data pages are documents too.** Each election's `issues`, `parties`,
 `electorates` and `senate` pages are projected and drawn the same way. The router offers them by
@@ -167,10 +168,10 @@ where the checks above already live.
   - the card.
 - The hand-written copy record is empty: no native screen holds copy of its own. The stale-data
   notice's controls arrive with the chrome, and the list disc and the external-link arrow are drawn
-  as symbols, as the web's stylesheet draws its disc. The notices in `docs/legal/native-copy.json`
-  that are not yet `drawnFrom` a page (the clear-data confirmation, the external-link cue and the map
-  licence) are typed copies checked against the web source rather than read from the build, and are
-  the next move. The card's notices stay registered as a lock on the card's wording, though no
+  as symbols, as the web's stylesheet draws its disc. External links append the web's app cue
+  (`$lib/external-link-copy.ts`), handed over with the site chrome. The map licence is the one set of
+  notices in `docs/legal/native-copy.json` still drawn from a typed copy checked against its source
+  rather than from the build, and is the next move. The card's notices stay registered as a lock on the card's wording, though no
   native screen draws them.
 - Existing installs keep their data. The `how2vote:` keys and the native-core ownership marker are
   not changed by any of this.

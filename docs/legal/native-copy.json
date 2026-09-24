@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "updated": "2026-09-25",
-  "note": "Required user-facing notices that the native iOS core renders inline, and which therefore cannot be held in the web sources the path-scoped compliance guards read (ADR 0018 D9). Each entry names the web source that must carry the SAME wording: scripts/check-native-copy.mjs asserts the text is present there verbatim (whitespace- and markup-normalised) and that apps/mobile/ios/App/App/Generated/LegalCopy.swift is the exact rendering of this file. Web-side rewording therefore fails the build until this register and the generated Swift are updated together, so the two channels cannot state different things. Copy that is modal- or print-shaped is NOT registered here: it stays in the WebView islands (D8) where it needs no second rendering. An entry with drawnFrom is drawn natively from that projected states page (ADR 0019 D4b) rather than from the generated Swift, so it is not generated; it stays registered so its wording remains held verbatim to its web source, and rewording it still requires this register, and so a legal-review record, to change.",
+  "note": "Required user-facing notices that the native iOS core renders inline, and which therefore cannot be held in the web sources the path-scoped compliance guards read (ADR 0018 D9). Each entry names the web source that must carry the SAME wording: scripts/check-native-copy.mjs asserts the text is present there verbatim (whitespace- and markup-normalised) and that apps/mobile/ios/App/App/Generated/LegalCopy.swift is the exact rendering of this file. Web-side rewording therefore fails the build until this register and the generated Swift are updated together, so the two channels cannot state different things. Copy that is modal- or print-shaped is NOT registered here: it stays in the WebView islands (D8) where it needs no second rendering. An entry with drawnFrom is drawn natively from that projected states page (ADR 0019 D4b), or from the site chrome handed over with each route, rather than from the generated Swift, so it is not generated; it stays registered so its wording remains held verbatim to its web source, and rewording it still requires this register, and so a legal-review record, to change. An entry drawn from a states page names the section of it that draws the notice; once the iOS build exists, that section must draw exactly the registered text (or, for a destination, link to it).",
   "generated": "apps/mobile/ios/App/App/Generated/LegalCopy.swift",
   "entries": [
     {
@@ -48,9 +48,10 @@
       "id": "external-link-cue",
       "swiftName": "externalLinkCue",
       "text": "opens in an in-app browser",
-      "webSource": "apps/web/src/lib/components/ExternalLink.svelte",
+      "webSource": "apps/web/src/lib/external-link-copy.ts",
       "backingControls": ["control-26"],
-      "note": "Announced as part of a link's accessible name before it is followed (WCAG 3.2.5), so a screen-reader user is not dropped into an unexplained context. The wording is channel-specific: the shells open an in-app browser rather than a new tab, and link-conventions.test.ts already holds the web to this on its side."
+      "note": "Announced as part of a link's accessible name before it is followed (WCAG 3.2.5), so a screen-reader user is not dropped into an unexplained context. The wording is channel-specific: the shells open an in-app browser rather than a new tab, and link-conventions.test.ts already holds the web to this on its side.",
+      "drawnFrom": "site-chrome"
     },
     {
       "id": "importance-weighting",
@@ -59,7 +60,8 @@
       "webSource": "apps/web/src/lib/review-copy.ts",
       "backingControls": ["control-5"],
       "note": "States how the ×10 importance lever works and, in the same breath, its limit — that it attaches only to the strongest answers. A native review screen that described the weighting differently would be a second, unreviewed account of the matching method.",
-      "drawnFrom": "states/review"
+      "drawnFrom": "states/review",
+      "section": "review-importance"
     },
     {
       "id": "importance-multiplier",
@@ -68,7 +70,8 @@
       "webSource": "apps/web/src/lib/review-copy.ts",
       "backingControls": ["control-5"],
       "note": "The star control's own label, naming the multiplier the scoring model applies.",
-      "drawnFrom": "states/review"
+      "drawnFrom": "states/review",
+      "section": "review-multiplier"
     },
     {
       "id": "map-licence-1",
@@ -125,39 +128,48 @@
       "webSource": "apps/web/src/lib/ballot-copy.ts",
       "backingControls": ["control-24", "control-28"],
       "note": "A privacy claim on the state picker: nothing leaves the device unless the voter shares their card.",
-      "drawnFrom": "states/ballot"
+      "drawnFrom": "states/ballot",
+      "section": "ballot-device"
     },
     {
       "id": "clear-data-confirm",
       "swiftName": "clearDataConfirm",
       "text": "Permanently clear everything on this device?",
-      "webSource": "apps/web/src/lib/components/ClearMyData.svelte",
+      "webSource": "apps/web/src/lib/clear-data-copy.ts",
       "backingControls": ["control-24", "control-28"],
-      "note": "The privacy policy's clear-all control, drawn natively on the iOS document screen; the clearing itself stays the web's."
+      "note": "The privacy policy's clear-all control, drawn natively on the iOS document screen; the clearing itself stays the web's.",
+      "drawnFrom": "states/clear-data",
+      "section": "clear-ask"
     },
     {
       "id": "clear-data-yes",
       "swiftName": "clearDataYes",
       "text": "Yes, clear everything",
-      "webSource": "apps/web/src/lib/components/ClearMyData.svelte",
+      "webSource": "apps/web/src/lib/clear-data-copy.ts",
       "backingControls": ["control-24", "control-28"],
-      "note": "The privacy policy's clear-all control, drawn natively on the iOS document screen; the clearing itself stays the web's."
+      "note": "The privacy policy's clear-all control, drawn natively on the iOS document screen; the clearing itself stays the web's.",
+      "drawnFrom": "states/clear-data",
+      "section": "clear-confirm"
     },
     {
       "id": "clear-data-clearing",
       "swiftName": "clearDataClearing",
       "text": "Clearing…",
-      "webSource": "apps/web/src/lib/components/ClearMyData.svelte",
+      "webSource": "apps/web/src/lib/clear-data-copy.ts",
       "backingControls": ["control-24", "control-28"],
-      "note": "The privacy policy's clear-all control, drawn natively on the iOS document screen; the clearing itself stays the web's."
+      "note": "The privacy policy's clear-all control, drawn natively on the iOS document screen; the clearing itself stays the web's.",
+      "drawnFrom": "states/clear-data",
+      "section": "clear-clearing"
     },
     {
       "id": "clear-data-cancel",
       "swiftName": "clearDataCancel",
       "text": "Cancel",
-      "webSource": "apps/web/src/lib/components/ClearMyData.svelte",
+      "webSource": "apps/web/src/lib/clear-data-copy.ts",
       "backingControls": ["control-24", "control-28"],
-      "note": "The privacy policy's clear-all control, drawn natively on the iOS document screen; the clearing itself stays the web's."
+      "note": "The privacy policy's clear-all control, drawn natively on the iOS document screen; the clearing itself stays the web's.",
+      "drawnFrom": "states/clear-data",
+      "section": "clear-cancel"
     }
   ]
 }

@@ -1269,7 +1269,7 @@
           "owner": "eng-web",
           "status": "passing",
           "enforcedBy": "scripts/check-native-copy.mjs",
-          "note": "ADR 0018 D9. Registers the external-link cue the native core announces before a link is followed (WCAG 3.2.5) and holds it to the wording in apps/web/src/lib/components/ExternalLink.svelte, so the two channels cannot describe the same behaviour differently. The web side is separately held by link-conventions.test.ts."
+          "note": "ADR 0018 D9. Registers the external-link cue the native core announces before a link is followed (WCAG 3.2.5) and holds it to the wording in apps/web/src/lib/external-link-copy.ts, which ExternalLink.svelte renders and the site chrome hands to the native core, so the two channels cannot describe the same behaviour differently. The web side is separately held by link-conventions.test.ts."
         },
         {
           "id": "native-copy-guard",

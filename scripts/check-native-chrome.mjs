@@ -215,8 +215,13 @@ export function verifyNativeChrome(raw) {
     }
   }
 
-  // The native notice decodes both labels as required, so one missing declines every route.
   const chrome = /function siteChrome\(\)[\s\S]*?\n}\n/.exec(router)?.[0] ?? "";
+  // The native links append the app's cue, so the chrome must hand over the one the web uses.
+  if (!/\blinkCue: LINK_CUE\.app\b/.test(chrome)) {
+    push("the chrome handed to the native core omits the external-link cue (LINK_CUE.app)");
+  }
+
+  // The native notice decodes both labels as required, so one missing declines every route.
   for (const label of ["update", "dismiss"]) {
     if (!new RegExp(`\\b${label}: STALE_ACTIONS\\.${label}\\b`).test(chrome)) {
       push(`the chrome handed to the native core omits the stale notice's ${label} label`);

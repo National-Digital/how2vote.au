@@ -535,6 +535,31 @@ final class DocumentConservationTests: XCTestCase {
         return detail.compactMap { $0["s"] as? String }.joined()
     }
 
+    /// The privacy policy's clear-data control asks for confirmation in the web's words. Cancelled,
+    /// so nothing is cleared.
+    func testTheClearDataConfirmationIsInTheWebsWords() throws {
+        let wording = try json("states/clear-data")
+        func piece(_ id: String) throws -> String { try self.piece("clear-\(id)", of: wording) }
+        let clear = try XCTUnwrap(
+            controls(of: "clear-data", in: try json("privacy")).first { $0.action == "clear" }?.label,
+            "clear data: the privacy page has no clear control"
+        )
+
+        let app = XCUIApplication()
+        app.launch()
+        let privacy = try XCTUnwrap(Self.footerLabels["privacy"])
+        XCTAssertTrue(app.buttons[privacy].waitForExistence(timeout: 30), "clear data: the native landing never appeared")
+        XCTAssertTrue(open(privacy, in: app), "clear data: the privacy policy could not be reached")
+
+        tapUntilShown(app.buttons[clear], in: app)
+        XCTAssertTrue(app.staticTexts[try piece("ask")].waitForExistence(timeout: 5), "clear data: the question is not the page's")
+        XCTAssertTrue(app.buttons[try piece("confirm")].exists, "clear data: the confirmation is not the page's")
+        let cancel = app.buttons[try piece("cancel")]
+        XCTAssertTrue(cancel.exists, "clear data: the way back is not the page's")
+        cancel.tap()
+        XCTAssertTrue(app.buttons[clear].waitForExistence(timeout: 5), "clear data: cancelling did not return to the control")
+    }
+
     /// The gate in both states, as a first-time visitor meets it: from the landing's call to action,
     /// then answering "under 18" with the button the page labels. Both states must read exactly as
     /// the page does.

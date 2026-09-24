@@ -71,7 +71,7 @@ jobs:
           FILES=$(gh api "repos/$GITHUB_REPOSITORY/pulls/$PR/files" --paginate --jq '.[].filename')
           echo "$FILES" | sed 's/^/  /'
           # `fastlane/` (repo root) is the F-Droid listing tree.
-          APP='^(apps/(mobile|web)/|packages/|fastlane/|docs/research/|docs/legal/native-copy\.json|data/aec-spatial/source-record\.json|pnpm-lock\.yaml|\.nvmrc|docs/fdroid/|\.github/(workflows/mobile-ci\.yml|actions/(build-web-channel|resolve-store-version)/)|scripts/(check-engine-bundle|check-fdroid-ready|check-ios-sources|check-native-answer-scale|check-native-brand|check-native-chrome|check-native-jurisdictions|check-native-router|check-native-state-keys|check-native-plugins|check-store-channel|generate-app-version|generate-store-metadata|build-native-documents|check-native-content)\.mjs|scripts/fixtures/native-content/)'
+          APP='^(apps/(mobile|web)/|packages/|fastlane/|docs/research/|docs/legal/native-copy\.json|data/aec-spatial/source-record\.json|pnpm-lock\.yaml|\.nvmrc|docs/fdroid/|\.github/(workflows/mobile-ci\.yml|actions/(build-web-channel|resolve-store-version)/)|scripts/(check-engine-bundle|check-fdroid-ready|check-native-copy|check-ios-sources|check-native-answer-scale|check-native-brand|check-native-chrome|check-native-jurisdictions|check-native-router|check-native-state-keys|check-native-plugins|check-store-channel|generate-app-version|generate-store-metadata|build-native-documents|check-native-content)\.mjs|scripts/fixtures/native-content/)'
           # apps/web/src is in: the web's pages are what the native documents are drawn from, so a
           # change to any of them has to be laid out and checked on screen before it ships to iOS.
           # packages stay out: they are input to the bundle, not to the native build graph.
@@ -237,6 +237,11 @@ jobs:
           done
           [ "$missing" = "0" ] || exit 1
           echo "✓ $(ls apps/web/build/native-documents | wc -l) projected document(s) present in the ios web output"
+
+      # A registered notice the app draws from a projected page must be drawn by the section it names
+      # exactly as registered, so a states component that rewords it, or adds to it, fails here.
+      - name: Registered notices are on the pages the app draws them from
+        run: node scripts/check-native-copy.mjs --projected apps/web/build/native-documents
 
       # Each code is matched against the compiled dataset to build that state's electorate list, so a
       # code that differs by a character does not look wrong — it returns an empty list and the
@@ -649,6 +654,7 @@ jobs:
             apps/mobile/ios/App/App/Model/QuizWording.swift \
             apps/mobile/ios/App/App/Model/BallotWording.swift \
             apps/mobile/ios/App/App/Model/ReviewWording.swift \
+            apps/mobile/ios/App/App/Model/ClearDataWording.swift \
             apps/mobile/ios/Parity/DocumentLogic.swift \
             -o "$RUNNER_TEMP/document-logic"
           "$RUNNER_TEMP/document-logic" apps/web/build/native-documents apps/mobile/ios/native-contract.json

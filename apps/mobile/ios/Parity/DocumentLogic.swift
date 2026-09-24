@@ -44,6 +44,7 @@ enum DocumentLogic {
         failures += readsTheQuizWording(root)
         failures += readsTheBallotWording(root)
         failures += readsTheReviewWording(root)
+        failures += readsTheClearDataWording(root)
 
         var ran = 0
         let sample = try? Data(contentsOf: files[0])
@@ -351,6 +352,44 @@ enum DocumentLogic {
         ]
         for (what, mutated) in refused where (try? BallotWording(mutated)) != nil {
             failures.append("a ballot wording \(what) was accepted")
+        }
+        return failures
+    }
+
+    /// The clear-data control's confirmation is the web's: every piece, each distinct, and the privacy
+    /// page that holds the control is recognised as needing it. A page missing a piece is refused.
+    private static func readsTheClearDataWording(_ root: URL) -> [String] {
+        guard let data = try? Data(contentsOf: root.appendingPathComponent("states/clear-data.json")),
+              let (page, _) = try? NativeDocument.decodeChecked(data)
+        else { return ["the clear-data states page is missing or does not lay out"] }
+        var failures: [String] = []
+        do {
+            let wording = try ClearDataWording(page)
+            let texts = ClearDataWording.Piece.allCases.map(wording.text)
+            if texts.contains(where: \.isEmpty) || Set(texts).count != texts.count {
+                failures.append("the clear-data confirmation's pieces are not each worded and distinct: \(texts)")
+            }
+        } catch {
+            failures.append("the clear-data wording: \(error)")
+        }
+        if let privacy = try? Data(contentsOf: root.appendingPathComponent("privacy.json")),
+           let (policy, _) = try? NativeDocument.decodeChecked(privacy) {
+            if !ClearDataWording.isNeeded(by: policy) {
+                failures.append("the privacy page's clear-data control is not recognised, so it would be drawn without its confirmation")
+            }
+        } else {
+            failures.append("the privacy page could not be read to find its clear-data control")
+        }
+        let missing = NativeDocument(
+            route: page.route, title: page.title, crumbs: nil, crumbsLabel: nil, top: page.top, brand: nil,
+            blocks: page.blocks.filter {
+                if case .section(.template, "clear-cancel", _) = $0 { return false }
+                return true
+            },
+            digest: "", spoken: "", drawn: ""
+        )
+        if (try? ClearDataWording(missing)) != nil {
+            failures.append("a clear-data wording missing a piece was accepted")
         }
         return failures
     }

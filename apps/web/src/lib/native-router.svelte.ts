@@ -28,6 +28,7 @@ import { now } from "$lib/now.svelte";
 import { quiz, type Persisted } from "$lib/quiz.svelte";
 import { saved } from "$lib/saved.svelte";
 import { AUTHORISATION, FEEDBACK_LINK, footerCredit, footerLinks } from "$lib/site-chrome";
+import { LINK_CUE } from "$lib/external-link-copy";
 import { STALE_ACTIONS, staleDismissal, staleMessage } from "$lib/stale-notice.svelte";
 import { assessStaleness } from "$lib/staleness";
 import { theme } from "$lib/theme.svelte";
@@ -89,6 +90,7 @@ export const STATE_DOCUMENTS = [
   "states/quiz",
   "states/ballot",
   "states/review",
+  "states/clear-data",
 ] as const;
 
 /**
@@ -187,6 +189,7 @@ function siteChrome(): string {
     authorisation: AUTHORISATION,
     credit: footerCredit(__BUILD_YEAR__),
     links: [FEEDBACK_LINK, ...footerLinks(saved.hydrated ? saved.count : 0)],
+    linkCue: LINK_CUE.app,
     stale,
   });
 }

@@ -51,6 +51,7 @@ enum ChromeLogic {
         {"authorisation":"\(authorisation)",
          "credit":[{"text":"© "},{"text":"Org","href":"https://example.org"}],
          "links":[{"label":"Feedback","href":"/contact"},{"label":"Privacy policy","href":"/privacy"}],
+         "linkCue":"opens in an in-app browser",
          "stale":{"message":"Old data.","dataVersion":"2025-01-01","prominent":true,"updateUrl":null,
                   "update":"Update","dismiss":"Dismiss"}}
         """
@@ -79,7 +80,8 @@ enum ChromeLogic {
 
     private static func decodesTheWebsHandover() -> [String] {
         guard let chrome = SiteChrome.decode(handover()) else { return ["the web's handover did not decode"] }
-        guard chrome.links.first?.href == "/contact", chrome.credit.count == 2 else {
+        guard chrome.links.first?.href == "/contact", chrome.credit.count == 2,
+              chrome.linkCue == "opens in an in-app browser" else {
             return ["the handover decoded without its links or credit"]
         }
         guard chrome.stale?.prominent == true, chrome.stale?.updateUrl == nil,
@@ -102,17 +104,22 @@ enum ChromeLogic {
     private static func declinesAMalformedOrPartialHandover() -> [String] {
         var failures: [String] = []
         if SiteChrome.decode("{") != nil { failures.append("malformed JSON was accepted") }
-        let noLinks = #"{"authorisation":"A","credit":[{"text":"c"}],"links":[],"stale":null}"#
+        let noLinks = #"{"authorisation":"A","credit":[{"text":"c"}],"links":[],"linkCue":"c","stale":null}"#
         if SiteChrome.decode(noLinks) != nil { failures.append("a handover with no links was accepted") }
-        let external = #"{"authorisation":"A","credit":[{"text":"c"}],"links":[{"label":"x","href":"https://x"}]}"#
+        let external = #"{"authorisation":"A","credit":[{"text":"c"}],"links":[{"label":"x","href":"https://x"}],"linkCue":"c"}"#
         if SiteChrome.decode(external) != nil {
             failures.append("a footer link that is not a web route was accepted")
         }
+        // An external link's cue is the web's; a handover without it cannot announce one.
+        let uncued = #"{"authorisation":"A","credit":[{"text":"c"}],"links":[{"label":"x","href":"/x"}],"linkCue":" "}"#
+        if SiteChrome.decode(uncued) != nil { failures.append("a handover with a blank link cue was accepted") }
+        let noCue = #"{"authorisation":"A","credit":[{"text":"c"}],"links":[{"label":"x","href":"/x"}]}"#
+        if SiteChrome.decode(noCue) != nil { failures.append("a handover without a link cue was accepted") }
         // The notice's controls are worded by the web; a notice without them cannot be drawn.
-        let unlabelled = #"{"authorisation":"A","credit":[{"text":"c"}],"links":[{"label":"x","href":"/x"}],"#
+        let unlabelled = #"{"authorisation":"A","credit":[{"text":"c"}],"links":[{"label":"x","href":"/x"}],"linkCue":"c","#
             + #""stale":{"message":"m","dataVersion":"v","prominent":false,"update":"u","dismiss":" "}}"#
         if SiteChrome.decode(unlabelled) != nil { failures.append("a stale notice with a blank control was accepted") }
-        let unworded = #"{"authorisation":"A","credit":[{"text":"c"}],"links":[{"label":"x","href":"/x"}],"#
+        let unworded = #"{"authorisation":"A","credit":[{"text":"c"}],"links":[{"label":"x","href":"/x"}],"linkCue":"c","#
             + #""stale":{"message":"m","dataVersion":"v","prominent":false}}"#
         if SiteChrome.decode(unworded) != nil { failures.append("a stale notice without its controls was accepted") }
         return failures

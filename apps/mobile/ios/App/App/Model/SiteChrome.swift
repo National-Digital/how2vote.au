@@ -33,6 +33,8 @@ struct SiteChrome: Decodable, Equatable {
     let authorisation: String
     let credit: [CreditPart]
     let links: [Link]
+    /// What an external link says it does before it is followed, appended to its accessible name.
+    let linkCue: String
     let stale: Stale?
 
     /// Decodes the handover, or nil when it is missing or incomplete.
@@ -45,6 +47,7 @@ struct SiteChrome: Decodable, Equatable {
               !isBlank(chrome.authorisation),
               !chrome.credit.isEmpty,
               !chrome.links.isEmpty,
+              !isBlank(chrome.linkCue),
               chrome.links.allSatisfy({ $0.href.hasPrefix("/") }),
               chrome.stale.map({ !isBlank($0.update) && !isBlank($0.dismiss) }) ?? true
         else { return nil }
