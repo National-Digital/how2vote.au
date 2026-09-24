@@ -35,7 +35,6 @@
 		A813F92A1BB031B4D096D427 /* ReviewViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = F64064806740E5409AC86F15 /* ReviewViewModel.swift */; };
 		F9C6FA1E5FB1E6178E8C3419 /* StateMap.swift in Sources */ = {isa = PBXBuildFile; fileRef = B90CFE1E57D2D6702A7254FB /* StateMap.swift */; };
 		06EA1DE69BE90A3C58F0A746 /* ElectorateMapView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C9B2724BD5A852AB15A54C4C /* ElectorateMapView.swift */; };
-		250029D177A746577AA21512 /* Jurisdictions.swift in Sources */ = {isa = PBXBuildFile; fileRef = EE4972CAFE59C015E964765B /* Jurisdictions.swift */; };
 		D9BD0B5D8815A8A3F9CFAC23 /* BallotView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9BF7AA423FEA0662055E78FB /* BallotView.swift */; };
 		67F55FC1DE295BCA8CEE82F4 /* BallotViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2B5A392B30FC2268EE01D60B /* BallotViewModel.swift */; };
 		24E4C96D0DE735EF99993444 /* NativeTheme.swift in Sources */ = {isa = PBXBuildFile; fileRef = C7D6808D025AA120FA530648 /* NativeTheme.swift */; };
@@ -52,6 +51,8 @@
 		27FF1F04447C6F34B26FD8D4 /* native-documents in Resources */ = {isa = PBXBuildFile; fileRef = 18C36407212E5947920BCC94 /* native-documents */; };
 		30BE2661B3C024FF7B26364B /* LandingComposition.swift in Sources */ = {isa = PBXBuildFile; fileRef = D222AF26B7CBDE43060CC05E /* LandingComposition.swift */; };
 		4FE245B8CB4ABE49B5A82760 /* QuizWording.swift in Sources */ = {isa = PBXBuildFile; fileRef = A43A9CEB26358530EA37C6CC /* QuizWording.swift */; };
+		29EC6470D46C3523C3B08D67 /* BallotWording.swift in Sources */ = {isa = PBXBuildFile; fileRef = 664CA162BC2F3ED51FEDEB99 /* BallotWording.swift */; };
+		145E52A14B840A1B24C60489 /* StatesPage.swift in Sources */ = {isa = PBXBuildFile; fileRef = AD043BA6C9571B9D9D9803D9 /* StatesPage.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -95,7 +96,6 @@
 		F64064806740E5409AC86F15 /* ReviewViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = ReviewViewModel.swift; path = Views/ReviewViewModel.swift; sourceTree = "<group>"; };
 		B90CFE1E57D2D6702A7254FB /* StateMap.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = StateMap.swift; path = Model/StateMap.swift; sourceTree = "<group>"; };
 		C9B2724BD5A852AB15A54C4C /* ElectorateMapView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = ElectorateMapView.swift; path = Views/ElectorateMapView.swift; sourceTree = "<group>"; };
-		EE4972CAFE59C015E964765B /* Jurisdictions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = Jurisdictions.swift; path = Model/Jurisdictions.swift; sourceTree = "<group>"; };
 		9BF7AA423FEA0662055E78FB /* BallotView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = BallotView.swift; path = Views/BallotView.swift; sourceTree = "<group>"; };
 		2B5A392B30FC2268EE01D60B /* BallotViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = BallotViewModel.swift; path = Views/BallotViewModel.swift; sourceTree = "<group>"; };
 		C7D6808D025AA120FA530648 /* NativeTheme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = NativeTheme.swift; path = State/NativeTheme.swift; sourceTree = "<group>"; };
@@ -113,6 +113,8 @@
 		18C36407212E5947920BCC94 /* native-documents */ = {isa = PBXFileReference; lastKnownFileType = folder; name = "native-documents"; path = "App/public/native-documents"; sourceTree = SOURCE_ROOT; };
 		D222AF26B7CBDE43060CC05E /* LandingComposition.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = LandingComposition.swift; path = Model/LandingComposition.swift; sourceTree = "<group>"; };
 		A43A9CEB26358530EA37C6CC /* QuizWording.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = QuizWording.swift; path = Model/QuizWording.swift; sourceTree = "<group>"; };
+		664CA162BC2F3ED51FEDEB99 /* BallotWording.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = BallotWording.swift; path = Model/BallotWording.swift; sourceTree = "<group>"; };
+		AD043BA6C9571B9D9D9803D9 /* StatesPage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = StatesPage.swift; path = Model/StatesPage.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -156,6 +158,8 @@
 		504EC3061FED79650016851F /* App */ = {
 			isa = PBXGroup;
 			children = (
+				AD043BA6C9571B9D9D9803D9 /* StatesPage.swift */,
+				664CA162BC2F3ED51FEDEB99 /* BallotWording.swift */,
 				A43A9CEB26358530EA37C6CC /* QuizWording.swift */,
 				D222AF26B7CBDE43060CC05E /* LandingComposition.swift */,
 				7959077F9FFB7B59F43F1001 /* DocumentView.swift */,
@@ -170,7 +174,6 @@
 				C7D6808D025AA120FA530648 /* NativeTheme.swift */,
 				2B5A392B30FC2268EE01D60B /* BallotViewModel.swift */,
 				9BF7AA423FEA0662055E78FB /* BallotView.swift */,
-				EE4972CAFE59C015E964765B /* Jurisdictions.swift */,
 				C9B2724BD5A852AB15A54C4C /* ElectorateMapView.swift */,
 				B90CFE1E57D2D6702A7254FB /* StateMap.swift */,
 				F64064806740E5409AC86F15 /* ReviewViewModel.swift */,
@@ -324,6 +327,8 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				145E52A14B840A1B24C60489 /* StatesPage.swift in Sources */,
+				29EC6470D46C3523C3B08D67 /* BallotWording.swift in Sources */,
 				4FE245B8CB4ABE49B5A82760 /* QuizWording.swift in Sources */,
 				30BE2661B3C024FF7B26364B /* LandingComposition.swift in Sources */,
 				F94C42C83EF8BF31270BA59A /* DocumentView.swift in Sources */,
@@ -338,7 +343,6 @@
 				24E4C96D0DE735EF99993444 /* NativeTheme.swift in Sources */,
 				67F55FC1DE295BCA8CEE82F4 /* BallotViewModel.swift in Sources */,
 				D9BD0B5D8815A8A3F9CFAC23 /* BallotView.swift in Sources */,
-				250029D177A746577AA21512 /* Jurisdictions.swift in Sources */,
 				06EA1DE69BE90A3C58F0A746 /* ElectorateMapView.swift in Sources */,
 				F9C6FA1E5FB1E6178E8C3419 /* StateMap.swift in Sources */,
 				A813F92A1BB031B4D096D427 /* ReviewViewModel.swift in Sources */,

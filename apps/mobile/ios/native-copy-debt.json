@@ -12,56 +12,11 @@
     "Strongly disagree",
     "★ {}"
   ],
-  "apps/mobile/ios/App/App/Model/Jurisdictions.swift": [
-    "ACT",
-    "Australian Capital Territory",
-    "NSW",
-    "NT",
-    "New South Wales",
-    "Northern Territory",
-    "QLD",
-    "Queensland",
-    "SA",
-    "South Australia",
-    "TAS",
-    "Tasmania",
-    "VIC",
-    "Victoria",
-    "WA",
-    "Western Australia"
-  ],
   "apps/mobile/ios/App/App/Shell/MainViewController.swift": [
     "(function () {\n  var pass = console.info.bind(console);\n  console.info = function () {\n    try {\n      var text = Array.prototype.map.call(arguments, String).join(\" \");\n      if (text.indexOf(\"How2Vote:\") === 0) {\n        window.webkit.messageHandlers.how2voteMarker.postMessage(text);\n      }\n    } catch (e) {\n      /* never let a diagnostic break the page */\n    }\n    return pass.apply(console, arguments);\n  };\n})();"
   ],
-  "apps/mobile/ios/App/App/Views/BallotView.swift": [
-    "Ballot setup progress",
-    "Choose a different electorate",
-    "Couldn't load the electorate list. Please check your connection and try again.",
-    "Couldn't record your ballot. Please try again.",
-    "Federal electorate in {}",
-    "Go back",
-    "Look up your electorate on the AEC website",
-    "No electorate matches “{}”.",
-    "Not sure?",
-    "Search electorates",
-    "Search {} {} electorates…",
-    "Step",
-    "This is my electorate — start",
-    "Try again",
-    "Where will you vote?",
-    "Your ballot · {} of 3",
-    "Your federal electorate",
-    "— your progress is kept."
-  ],
-  "apps/mobile/ios/App/App/Views/BallotViewModel.swift": [
-    "AU",
-    "Australia"
-  ],
   "apps/mobile/ios/App/App/Views/DocumentView.swift": [
     "•"
-  ],
-  "apps/mobile/ios/App/App/Views/ElectorateMapView.swift": [
-    "Map of {} with the {} electorate marked"
   ],
   "apps/mobile/ios/App/App/Views/ExternalLinkView.swift": [
     "↗"

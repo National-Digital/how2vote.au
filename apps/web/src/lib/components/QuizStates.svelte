@@ -6,7 +6,8 @@
    * `routes/states/quiz.html`. It never reaches a browser as a page.
    */
   import AnswerOptions from "$lib/components/AnswerOptions.svelte";
-  import { QUIZ_COPY, SPOKEN_ANSWERS, parts } from "$lib/quiz-copy";
+  import { QUIZ_COPY, SPOKEN_ANSWERS } from "$lib/quiz-copy";
+  import { parts } from "$lib/template";
 
   const SAMPLES: Record<string, string> = {
     n: "1",

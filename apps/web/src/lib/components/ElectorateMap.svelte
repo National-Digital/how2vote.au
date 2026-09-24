@@ -3,6 +3,8 @@
   import { loadStateMap, type StateMap } from "$lib/maps";
   import { MAP_LICENCE_NAME, MAP_LICENCE_NOTICE, MAP_LICENCE_URL } from "$lib/mapLicence";
   import { stateName } from "$lib/data";
+  import { BALLOT_COPY } from "$lib/ballot-copy";
+  import { fill } from "$lib/template";
   import { isMapAvailable } from "$lib/governance";
 
   let {
@@ -85,7 +87,7 @@
       <svg
         viewBox={`0 0 ${W} ${H}`}
         role="img"
-        aria-label={`Map of ${stateName(stateCode)} with the ${electorate} electorate marked`}
+        aria-label={fill(BALLOT_COPY.map, { state: stateName(stateCode), electorate })}
       >
         {#if bigChosen}
           <defs>

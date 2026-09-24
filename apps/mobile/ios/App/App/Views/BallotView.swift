@@ -2,7 +2,8 @@ import SwiftUI
 
 /// Where you vote: state, then electorate, then a confirmation with the boundary drawn.
 ///
-/// Mirrors `apps/web/src/routes/ballot/+page.svelte`. The electorate list and its order come from
+/// Mirrors `apps/web/src/routes/ballot/+page.svelte`, in the web's words: every piece of wording,
+/// the states offered and their order are ``BallotWording``'s, read from the page. The electorate list and its order come from
 /// the shared engine, not from Swift — `localeCompare` and `String.compare` need not agree at the
 /// edges, and a picker that ordered names differently from the web would be a channel difference
 /// with nothing behind it.
@@ -11,6 +12,7 @@ struct BallotView: View {
 
     @StateObject private var model: BallotViewModel
 
+    private let wording: BallotWording
     private let electionID: String
     /// Map ids the emergency levers allow, resolved by the WebView and handed over (ADR 0018 D10a).
     private let allowedMapIDs: Set<String>
@@ -18,11 +20,13 @@ struct BallotView: View {
 
     init(
         model: BallotViewModel,
+        wording: BallotWording,
         electionID: String,
         allowedMapIDs: Set<String>,
         onExit: @escaping (String) -> Void
     ) {
         _model = StateObject(wrappedValue: model)
+        self.wording = wording
         self.electionID = electionID
         self.allowedMapIDs = allowedMapIDs
         self.onExit = onExit
@@ -32,15 +36,15 @@ struct BallotView: View {
         VStack(spacing: 0) {
             StaleNotice()
             TopBar(
-                label: "Your ballot · \(model.stepNumber) of 3",
-                backLabel: "Go back",
+                label: wording.position(model.stepNumber, of: 3),
+                backLabel: wording.text(.back),
                 onBack: { if let path = model.back() { onExit(path) } }
             )
             QuizProgress(
                 value: model.stepNumber,
                 total: 3,
-                label: "Ballot setup progress",
-                step: "Step"
+                label: wording.text(.progress),
+                spokenValue: wording.position(model.stepNumber, of: 3)
             )
 
             ScrollView {
@@ -52,7 +56,7 @@ struct BallotView: View {
                     }
 
                     if model.saveFailed {
-                        Text("Couldn't record your ballot. Please try again.")
+                        Text(wording.text(.unsaved))
                             .font(.footnote)
                             .foregroundStyle(Theme.ink.resolve(scheme))
                             .padding(.top, 12)
@@ -77,14 +81,14 @@ struct BallotView: View {
 
     private var statePicker: some View {
         VStack(alignment: .leading, spacing: 0) {
-            Text("Where will you vote?")
+            Text(wording.text(.pick))
                 .font(.title2.weight(.semibold))
                 .foregroundStyle(Theme.ink.resolve(scheme))
                 .padding(.vertical, 8)
                 .accessibilityAddTraits(.isHeader)
 
             LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 10) {
-                ForEach(Jurisdictions.picker, id: \.code) { jurisdiction in
+                ForEach(wording.states, id: \.code) { jurisdiction in
                     Button {
                         model.pick(state: jurisdiction.code)
                     } label: {
@@ -112,7 +116,6 @@ struct BallotView: View {
                     // One element reading the jurisdiction's name. Left to its children, VoiceOver
                     // announces the code and then the name, and reads an initialism like "ACT" as
                     // a word.
-                    .accessibilityElement(children: .ignore)
                     .accessibilityLabel(jurisdiction.name)
                 }
             }
@@ -128,30 +131,28 @@ struct BallotView: View {
 
     private var electoratePicker: some View {
         VStack(alignment: .leading, spacing: 0) {
-            Text("Your federal electorate")
+            Text(wording.text(.electorate))
                 .font(.title2.weight(.semibold))
                 .foregroundStyle(Theme.ink.resolve(scheme))
                 .padding(.vertical, 8)
                 .accessibilityAddTraits(.isHeader)
 
             if model.loadFailed {
-                VStack(alignment: .leading, spacing: 8) {
-                    Text("Couldn't load the electorate list. Please check your connection and try again.")
+                // The web's sentence, whose "try again" retries: one control, read as the page reads.
+                Button {
+                    if let state = model.chosenState { model.pick(state: state) }
+                } label: {
+                    Text(wording.failed)
                         .font(.footnote)
                         .foregroundStyle(Theme.ink.resolve(scheme))
+                        .multilineTextAlignment(.leading)
                         .fixedSize(horizontal: false, vertical: true)
-                    if let state = model.chosenState {
-                        Button("Try again") { model.pick(state: state) }
-                            .font(.footnote.weight(.semibold))
-                            .underline()
-                            .buttonStyle(.plain)
-                            .foregroundStyle(Theme.ink.resolve(scheme))
-                            .frame(minHeight: 44)
-                    }
+                        .frame(minHeight: 44, alignment: .leading)
                 }
+                .buttonStyle(.plain)
             } else {
                 TextField(
-                    "Search \(model.electorateCount) \(model.chosenState ?? "") electorates…",
+                    wording.text(.search, ["count": String(model.electorateCount), "code": model.chosenState ?? ""]),
                     text: $model.filter
                 )
                 .textFieldStyle(.plain)
@@ -165,7 +166,7 @@ struct BallotView: View {
                     RoundedRectangle(cornerRadius: Theme.radius)
                         .strokeBorder(Theme.line.resolve(scheme), lineWidth: 1)
                 )
-                .accessibilityLabel("Search electorates")
+                .accessibilityLabel(wording.text(.searchLabel))
 
                 LazyVStack(spacing: 0) {
                     ForEach(model.visibleElectorates, id: \.self) { name in
@@ -181,15 +182,17 @@ struct BallotView: View {
                                     .foregroundStyle(Theme.ink2.resolve(scheme))
                             }
                             .frame(maxWidth: .infinity, minHeight: 48, alignment: .leading)
+                            // The whole row takes the tap, not only its words: a plain button is
+                            // otherwise hit only where it draws, and the gap between the two is empty.
+                            .contentShape(Rectangle())
                         }
                         .buttonStyle(.plain)
                         .foregroundStyle(Theme.ink.resolve(scheme))
                         // The row shows the electorate beside the state it is in; read as one
                         // phrase it is the answer to "which electorate is this", rather than two
                         // announcements a voter has to join up.
-                        .accessibilityElement(children: .ignore)
                         .accessibilityLabel(
-                            model.chosenState.map { "\(name), \(Jurisdictions.name(for: $0))" }
+                            model.chosenState.map { "\(name), \(wording.name(for: $0))" }
                                 ?? name
                         )
                         Divider().overlay(Theme.line.resolve(scheme))
@@ -198,20 +201,18 @@ struct BallotView: View {
                 .padding(.top, 8)
 
                 if model.visibleElectorates.isEmpty {
-                    Text("No electorate matches “\(model.filter)”.")
+                    Text(wording.text(.none, ["filter": model.filter]))
                         .font(.footnote)
                         .foregroundStyle(Theme.ink2.resolve(scheme))
                         .padding(.top, 12)
                 }
 
                 FlowLayout(spacing: 4, lineSpacing: 0, centred: false) {
-                    Text("Not sure?")
+                    let unsure = wording.around(.unsure)
+                    Text(unsure.before.trimmingCharacters(in: .whitespaces))
                         .foregroundStyle(Theme.ink2.resolve(scheme))
-                    ExternalLinkView(
-                        title: "Look up your electorate on the AEC website",
-                        url: URL(string: "https://check.aec.gov.au/")!
-                    )
-                    Text("— your progress is kept.")
+                    ExternalLinkView(title: wording.text(.lookup), url: wording.lookupURL)
+                    Text(unsure.after.trimmingCharacters(in: .whitespaces))
                         .foregroundStyle(Theme.ink2.resolve(scheme))
                 }
                 .font(.footnote)
@@ -229,7 +230,7 @@ struct BallotView: View {
                     .foregroundStyle(Theme.ink.resolve(scheme))
                     .padding(.vertical, 8)
                     .accessibilityAddTraits(.isHeader)
-                Text("Federal electorate in \(Jurisdictions.name(for: state))")
+                Text(wording.text(.located, ["state": wording.name(for: state)]))
                     .font(.footnote)
                     .foregroundStyle(Theme.ink2.resolve(scheme))
                     .padding(.bottom, 12)
@@ -239,16 +240,20 @@ struct BallotView: View {
                     stateCode: state,
                     allowedMapIDs: allowedMapIDs
                 ) {
-                    ElectorateMapView(map: map, electorate: electorate)
+                    ElectorateMapView(
+                        map: map,
+                        electorate: electorate,
+                        label: wording.text(.map, ["state": wording.name(for: state), "electorate": electorate])
+                    )
                         .padding(.bottom, 16)
                 }
 
-                Button("This is my electorate — start") {
+                Button(wording.text(.start)) {
                     if let path = model.confirm() { onExit(path) }
                 }
                 .buttonStyle(PrimaryButton())
 
-                Button("Choose a different electorate") {
+                Button(wording.text(.different)) {
                     _ = model.back()
                 }
                 .font(.footnote)

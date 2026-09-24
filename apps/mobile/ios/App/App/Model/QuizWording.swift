@@ -33,19 +33,7 @@ struct QuizWording: Equatable {
         var isSkip: Bool { points == 0 }
     }
 
-    enum Part: Equatable {
-        case text(String)
-        case value(String)
-    }
-
-    enum Failure: Error, CustomStringConvertible {
-        case missing(String)
-        var description: String {
-            switch self {
-            case let .missing(what): return "the quiz wording has no \(what)"
-            }
-        }
-    }
+    typealias Part = StatesPage.Part
 
     let answers: [Answer]
     /// The answer group's accessible name, as the page names the group.
@@ -54,61 +42,39 @@ struct QuizWording: Equatable {
     private let spoken: [Int: String]
 
     init(_ page: NativeDocument) throws {
-        var found: [String: [NativeDocument.Inline]] = [:]
+        let states = StatesPage(page)
         var answers: (label: String, controls: [NativeDocument.Control])?
         func walk(_ blocks: [NativeDocument.Block]) {
             for block in blocks {
                 switch block {
-                case let .section(.template, id?, content):
-                    if content.count == 1, case let .paragraph(_, _, inlines) = content[0] {
-                        found[id] = inlines
-                    }
-                case let .section(_, _, content):
-                    walk(content)
-                case let .slot(.quizAnswer, label?, controls):
-                    answers = (label, controls)
-                default:
-                    break
+                case .section(.template, _, _): break
+                case let .section(_, _, content): walk(content)
+                case let .slot(.quizAnswer, label?, controls): answers = (label, controls)
+                default: break
                 }
             }
         }
         walk(page.blocks)
 
-        func parts(_ id: String) throws -> [Part] {
-            guard let inlines = found[id] else { throw Failure.missing("section \(id)") }
-            return try inlines.map { inline in
-                switch inline {
-                case let .text(text): return .text(text)
-                case let .value(name, _): return .value(name)
-                default: throw Failure.missing("plain wording in \(id)")
-                }
-            }
-        }
         var pieces: [Piece: [Part]] = [:]
         for piece in Piece.allCases {
-            let found = try parts("quiz-\(piece.rawValue)")
-            let named = Set(found.compactMap { part -> String? in
-                if case let .value(name) = part { return name }
-                return nil
-            })
-            guard named == piece.values else { throw Failure.missing("\(piece.rawValue) with values \(piece.values.sorted())") }
-            pieces[piece] = found
+            pieces[piece] = try states.parts("quiz-\(piece.rawValue)", values: piece.values)
         }
         var spoken: [Int: String] = [:]
         for points in 0...5 {
-            let found = try parts("quiz-spoken-\(points)")
+            let found = try states.parts("quiz-spoken-\(points)", values: [])
             guard case let .text(text)? = found.first, found.count == 1 else {
-                throw Failure.missing("answer spoken for \(points)")
+                throw states.missing("answer spoken for \(points)")
             }
             spoken[points] = text
         }
 
-        guard let answers else { throw Failure.missing("answer scale") }
+        guard let answers else { throw states.missing("answer scale") }
         // The points are the page's own, read from each answer's `value`: the web's binding of
         // label to points, never a native restatement of it.
         self.answers = try answers.controls.map { control in
             guard let action = control.action, let points = Int(action), (0...5).contains(points) else {
-                throw Failure.missing("points for \(control.label)")
+                throw states.missing("points for \(control.label)")
             }
             return Answer(points: points, label: control.text(), sub: control.sub)
         }
@@ -120,12 +86,7 @@ struct QuizWording: Equatable {
     /// A piece of the wording, with its values filled. A piece's values are checked when the page is
     /// read, so every value it names is one of those given.
     func text(_ piece: Piece, _ values: [String: String] = [:]) -> String {
-        (pieces[piece] ?? []).map { part in
-            switch part {
-            case let .text(text): return text
-            case let .value(name): return values[name] ?? ""
-            }
-        }.joined()
+        StatesPage.fill(pieces[piece] ?? [], values)
     }
 
     func position(_ n: Int, of total: Int) -> String {

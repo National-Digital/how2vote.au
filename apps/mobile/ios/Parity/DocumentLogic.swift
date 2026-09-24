@@ -42,6 +42,7 @@ enum DocumentLogic {
 
         failures += composesTheLanding(root)
         failures += readsTheQuizWording(root)
+        failures += readsTheBallotWording(root)
 
         var ran = 0
         let sample = try? Data(contentsOf: files[0])
@@ -279,6 +280,76 @@ enum DocumentLogic {
         )
         if (try? QuizWording(pruned)) != nil {
             failures.append("a quiz wording missing a piece was accepted")
+        }
+        return failures
+    }
+
+    /// The ballot picker's wording is read whole from its states page, and a page that loses a
+    /// piece, offers a repeated state, or points its lookup anywhere but an https page is refused.
+    private static func readsTheBallotWording(_ root: URL) -> [String] {
+        guard let data = try? Data(contentsOf: root.appendingPathComponent("states/ballot.json")),
+              let (page, _) = try? NativeDocument.decodeChecked(data)
+        else { return ["the ballot states page is missing or does not lay out"] }
+        var failures: [String] = []
+        do {
+            let wording = try BallotWording(page)
+            if wording.states.isEmpty { failures.append("the ballot offers no states") }
+            if wording.states.map(\.code) != wording.states.map(\.code).sorted() {
+                failures.append("the ballot's states are not in the picker's order: \(wording.states.map(\.code))")
+            }
+            if !wording.position(2, of: 3).contains("2") || !wording.position(2, of: 3).contains("3") {
+                failures.append("the ballot's position does not show the voter's step")
+            }
+            let unsure = wording.around(.unsure)
+            if unsure.before.isEmpty
+                || unsure.before + wording.text(.lookup) + unsure.after != wording.text(.unsure, ["lookup": wording.text(.lookup)]) {
+                failures.append("the lookup sentence does not split around its link: \(unsure)")
+            }
+            if let first = wording.states.first, wording.name(for: first.code.lowercased()) != first.name {
+                failures.append("a state code is not matched as the web matches it, ignoring case")
+            }
+        } catch {
+            failures.append("the ballot wording: \(error)")
+        }
+
+        func edited(_ edit: (NativeDocument.Block) -> NativeDocument.Block?) -> NativeDocument {
+            NativeDocument(
+                route: page.route, title: page.title, crumbs: nil, crumbsLabel: nil, top: page.top, brand: nil,
+                blocks: page.blocks.compactMap(edit), digest: "", spoken: "", drawn: ""
+            )
+        }
+        func section(_ block: NativeDocument.Block, _ id: String, _ content: [NativeDocument.Block]) -> NativeDocument.Block {
+            if case .section(.template, id, _) = block { return .section(role: .template, id: id, content: content) }
+            return block
+        }
+        func paragraph(_ inlines: [NativeDocument.Inline]) -> [NativeDocument.Block] {
+            [.paragraph(role: nil, id: nil, content: inlines)]
+        }
+        let entry = NativeDocument.Definition(term: [.text("NSW")], id: nil, detail: paragraph([.text("New South Wales")]))
+        let lookup = { (href: String, words: String) in
+            paragraph([.link(href: href, external: true, role: nil, label: nil, content: [.text(words)])])
+        }
+        let words = (try? BallotWording(page)).map { $0.text(.lookup) } ?? ""
+        let refused: [(String, NativeDocument)] = [
+            ("missing a piece", edited {
+                if case .section(.template, "ballot-start", _) = $0 { return nil }
+                return $0
+            }),
+            ("marking a value the screen does not fill", edited {
+                section($0, "ballot-start", paragraph([.text("Start in "), .value(name: "state", sample: "NSW")]))
+            }),
+            ("offering a state twice", edited { section($0, "ballot-states", [.definitions([entry, entry])]) }),
+            ("offering no states", edited { section($0, "ballot-states", [.definitions([])]) }),
+            ("with two national ballots", edited { section($0, "ballot-national", [.definitions([entry, entry])]) }),
+            ("linking its lookup over http", edited {
+                section($0, "ballot-lookup-link", lookup("http://check.aec.gov.au/", words))
+            }),
+            ("linking other words than its lookup piece", edited {
+                section($0, "ballot-lookup-link", lookup("https://check.aec.gov.au/", "Somewhere else"))
+            }),
+        ]
+        for (what, mutated) in refused where (try? BallotWording(mutated)) != nil {
+            failures.append("a ballot wording \(what) was accepted")
         }
         return failures
     }

@@ -254,15 +254,25 @@ final class NativeCoreHost {
             }
         case "ballot":
             guard let engine else { return nil }
-            let model = BallotViewModel.live(electionID: electionID, engine: engine)
-            return themed(
-                BallotView(
-                    model: model,
-                    electionID: electionID,
-                    allowedMapIDs: allowedMapIDs,
-                    onExit: onExit
+            // Its wording is the web's ballot page; one that is missing or incomplete declines the
+            // route, and the WebView draws the picker instead.
+            do {
+                let (page, _) = try NativeDocument.load(name: "states/ballot")
+                let wording = try BallotWording(page)
+                let model = BallotViewModel.live(electionID: electionID, engine: engine, national: wording.national)
+                return themed(
+                    BallotView(
+                        model: model,
+                        wording: wording,
+                        electionID: electionID,
+                        allowedMapIDs: allowedMapIDs,
+                        onExit: onExit
+                    )
                 )
-            )
+            } catch {
+                NSLog("How2Vote: declined ballot — \(error)")
+                return nil
+            }
         case "review":
             guard let engine else { return nil }
             let model = ReviewViewModel.live(electionID: electionID, engine: engine)

@@ -15,8 +15,11 @@
   import { election } from "$lib/election.svelte";
   import { quiz } from "$lib/quiz.svelte";
   import { nativeRoute } from "$lib/native-router.svelte";
-  import { QUIZ_COPY, SPOKEN_ANSWERS, fill, parts } from "$lib/quiz-copy";
+  import { QUIZ_COPY, SPOKEN_ANSWERS } from "$lib/quiz-copy";
+  import { around, fill } from "$lib/template";
 
+  // The load failure, on either side of its retry link.
+  const failed = around(QUIZ_COPY.failed);
   let announce = $state("");
   let advancing = $state(false);
 
@@ -163,10 +166,7 @@
     </div>
   {:else if loadError}
     <p class="kicker ui" role="alert">
-      {#each parts(QUIZ_COPY.failed) as part, i (i)}{#if "text" in part}{part.text}{:else}<a
-            href="/quiz"
-            onclick={() => location.reload()}>{QUIZ_COPY.retry}</a
-          >{/if}{/each}
+      {failed[0]}<a href="/quiz" onclick={() => location.reload()}>{QUIZ_COPY.retry}</a>{failed[1]}
     </p>
   {:else}
     <p class="kicker ui" role="status">{QUIZ_COPY.loading}</p>

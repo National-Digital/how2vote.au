@@ -20,6 +20,8 @@ struct ElectorateMapView: View {
 
     let map: StateMap
     let electorate: String
+    /// The map's accessible name, as the web's map names it.
+    let label: String
 
     private var chosen: StateMap.Division? {
         map.division(named: electorate)
@@ -57,9 +59,7 @@ struct ElectorateMapView: View {
                 // Caps the height so the confirm button stays above the fold on tall states.
                 .frame(maxHeight: 320)
                 .accessibilityElement()
-                .accessibilityLabel(
-                    "Map of \(Jurisdictions.name(for: map.state)) with the \(electorate) electorate marked"
-                )
+                .accessibilityLabel(label)
 
                 Text(map.attribution)
                     .font(.caption2.weight(.semibold))

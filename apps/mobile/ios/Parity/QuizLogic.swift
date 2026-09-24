@@ -316,6 +316,7 @@ enum QuizLogic {
     ) -> BallotViewModel {
         BallotViewModel(
             isElectorateLess: isElectorateLess,
+            national: (state: "AU", electorate: "Australia"),
             listElectorates: { _ in electorates },
             persistBallot: { state, electorate in
                 var record = store.restore()
@@ -360,7 +361,7 @@ enum QuizLogic {
         guard subject.skipToQuestions() == "/quiz" else {
             return ["an election with no electorates did not go on to the questions"]
         }
-        guard store.written.last?.electorate == BallotViewModel.nationalBallot.electorate else {
+        guard store.written.last?.electorate == subject.national.electorate else {
             return ["the sentinel national ballot was not recorded, so the quiz would bounce back"]
         }
         return []

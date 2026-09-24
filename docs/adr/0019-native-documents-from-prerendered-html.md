@@ -107,6 +107,15 @@ exists once, on the web. `DocumentLogic` requires the file to yield every piece 
 screen fills and each answer from 0 to 5 once; a file missing a piece declines the quiz for the
 WebView's.
 
+**D4e — The ballot picker's wording is the web's ballot page.** The picker keeps its native layout
+and draws every word from `states/ballot.html`, which renders `$lib/ballot-copy.ts` as the ballot
+page reads it: each piece once as a template, the states and territories in the picker's order,
+the ballot an election with no electorates records, and the lookup link. Wording only the app shows
+sits beside it in `$lib/ballot-copy.app.ts`, so it never ships in the web page's code.
+`DocumentLogic` requires every piece with the values the screen fills, a state list with no repeats,
+one national ballot and an https lookup worded as its piece; `check-native-jurisdictions.mjs` holds
+the listed states to `STATES`. A file that fails declines the picker for the WebView's.
+
 **D6 — The iOS app is a skeleton, and it has a contract with the web build.** The goal is that no
 iOS screen shows hand-written copy. Every word comes from the web build: projected pages, the
 chrome handed over with each route, and the datasets. Two checks hold this in place as the web

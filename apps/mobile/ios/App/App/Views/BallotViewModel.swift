@@ -10,11 +10,6 @@ final class BallotViewModel: ObservableObject {
         case confirm
     }
 
-    /// The sentinel ballot for a provisional election that ships no electorates. Mirrors
-    /// `NATIONAL_BALLOT` in `apps/web/src/lib/data.ts` — the quiz still needs a ballot recorded
-    /// before it will run, so an electorate-less election records this one and moves on.
-    static let nationalBallot = (state: "AU", electorate: "Australia")
-
     @Published private(set) var step: Step = .state
     @Published private(set) var chosenState: String?
     @Published private(set) var chosenElectorate: String?
@@ -29,23 +24,33 @@ final class BallotViewModel: ObservableObject {
     private let persistBallot: (String, String) throws -> Void
     /// Whether this election ships a ballot at all.
     let isElectorateLess: Bool
+    /// The sentinel ballot an election with no electorates records, as the page names it — the quiz
+    /// still needs a ballot recorded before it will run.
+    let national: (state: String, electorate: String)
 
     init(
         isElectorateLess: Bool,
+        national: (state: String, electorate: String),
         listElectorates: @escaping (String) throws -> [String],
         persistBallot: @escaping (String, String) throws -> Void
     ) {
         self.isElectorateLess = isElectorateLess
+        self.national = national
         self.listElectorates = listElectorates
         self.persistBallot = persistBallot
     }
 
-    static func live(electionID: String, engine: JSCEngine) -> BallotViewModel {
+    static func live(
+        electionID: String,
+        engine: JSCEngine,
+        national: (state: String, electorate: String)
+    ) -> BallotViewModel {
         let manifest = ManifestLoader.load(electionID: electionID)
         return BallotViewModel(
             // Fails CLOSED to "there is a ballot": an unreadable manifest must not skip the picker
             // and silently record a national ballot for an election that has real electorates.
             isElectorateLess: manifest?.isElectorateLess ?? false,
+            national: national,
             listElectorates: { state in
                 let dataset = try QuestionLoader.dataset(electionID: electionID)
                 let payload = try engine.electorates(datasetJSON: dataset, stateCode: state)
@@ -122,7 +127,7 @@ final class BallotViewModel: ObservableObject {
     /// Records the sentinel ballot for an election with no electorates to pick.
     func skipToQuestions() -> String? {
         do {
-            try persistBallot(Self.nationalBallot.state, Self.nationalBallot.electorate)
+            try persistBallot(national.state, national.electorate)
         } catch {
             saveFailed = true
             return nil

@@ -162,13 +162,6 @@ jobs:
       - name: The native wordmark is the web's wordmark
         run: node scripts/check-native-brand.mjs
 
-      # Each code is matched against the compiled dataset to build that state's electorate list, so a
-      # code that differs by a character does not look wrong — it returns an empty list and the
-      # picker appears broken for everyone who lives there. A missing entry is worse: a whole state
-      # with no way to reach the questionnaire, on one channel only.
-      - name: The native picker offers the same states
-        run: node scripts/check-native-jurisdictions.mjs
-
       # The STATIC half of the F-Droid gate — scanner-clean gradle files, the version-injection
       # contract, versionCode formula parity, recipe invariants, committed listing. A second of
       # text checks, so it runs in the cheap tier; the actual recipe-mirror build is the fdroid job.
@@ -244,6 +237,14 @@ jobs:
           done
           [ "$missing" = "0" ] || exit 1
           echo "✓ $(ls apps/web/build/native-documents | wc -l) projected document(s) present in the ios web output"
+
+      # Each code is matched against the compiled dataset to build that state's electorate list, so a
+      # code that differs by a character does not look wrong — it returns an empty list and the
+      # picker appears broken for everyone who lives there. A missing entry is worse: a whole state
+      # with no way to reach the questionnaire, on one channel only. The native picker reads them
+      # from the projected states/ballot page, so this holds that projection to STATES, once built.
+      - name: The native picker offers the same states
+        run: node scripts/check-native-jurisdictions.mjs
 
       - name: Unit tests (channel + share URL invariants included)
         run: pnpm --filter @how2vote/web test
@@ -610,7 +611,6 @@ jobs:
             apps/mobile/ios/App/App/Model/QuizExit.swift \
             apps/mobile/ios/App/App/Model/QuestionSet.swift \
             apps/mobile/ios/App/App/Model/AnswerScale.swift \
-            apps/mobile/ios/App/App/Model/Jurisdictions.swift \
             apps/mobile/ios/App/App/Model/Manifest.swift \
             apps/mobile/ios/App/App/State/NativeState.swift \
             apps/mobile/ios/App/App/State/QuizState.swift \
@@ -645,7 +645,9 @@ jobs:
             apps/mobile/ios/App/App/Model/NativeDocument.swift \
             apps/mobile/ios/App/App/Model/DocumentLayout.swift \
             apps/mobile/ios/App/App/Model/LandingComposition.swift \
+            apps/mobile/ios/App/App/Model/StatesPage.swift \
             apps/mobile/ios/App/App/Model/QuizWording.swift \
+            apps/mobile/ios/App/App/Model/BallotWording.swift \
             apps/mobile/ios/Parity/DocumentLogic.swift \
             -o "$RUNNER_TEMP/document-logic"
           "$RUNNER_TEMP/document-logic" apps/web/build/native-documents apps/mobile/ios/native-contract.json

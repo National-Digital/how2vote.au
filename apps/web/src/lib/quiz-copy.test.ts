@@ -1,7 +1,8 @@
 import { describe, expect, it } from "vitest";
 import type { AnswerPoints } from "@how2vote/engine";
 import { answerLabel } from "$lib/answers";
-import { QUIZ_COPY, SPOKEN_ANSWERS, fill, parts } from "$lib/quiz-copy";
+import { QUIZ_COPY, SPOKEN_ANSWERS } from "$lib/quiz-copy";
+import { fill, parts } from "$lib/template";
 
 describe("quiz copy", () => {
   it("fills a template's values", () => {
