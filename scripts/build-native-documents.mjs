@@ -1140,7 +1140,7 @@ export function nativeDataSections(router) {
 export function nativeDocumentRoutes(router) {
   return [
     ...listIn(router, "NATIVE_DOCUMENTS"),
-    ...listIn(router, "CURRENT_ELECTION_DOCUMENTS"),
+    ...listIn(router, "ELECTION_DOCUMENTS"),
     ...listIn(router, "AGE_GATE_DOCUMENTS"),
     ...listIn(router, "STATE_DOCUMENTS"),
   ];
@@ -1167,9 +1167,20 @@ export function ageGateDocuments(router) {
   return listIn(router, "AGE_GATE_DOCUMENTS");
 }
 
-/** The documents drawn natively only while the current election is selected. */
-export function currentElectionDocuments(router) {
-  return listIn(router, "CURRENT_ELECTION_DOCUMENTS");
+/** The documents whose text reports the selected election, as the router names them. */
+export function electionDocuments(router) {
+  return listIn(router, "ELECTION_DOCUMENTS");
+}
+
+/**
+ * Each election document as it reads for every election but the current one, which is prerendered
+ * at the document's own path: `states/<name>/<election>`, as `documentName` in the router names it.
+ *
+ * @param {string[]} names  the election documents
+ * @param {string[]} elections  the compiled elections, less the current one
+ */
+export function pastElectionDocuments(names, elections) {
+  return names.flatMap((name) => elections.map((e) => `states/${name}/${e}`));
 }
 
 function listIn(router, name) {
@@ -1225,6 +1236,12 @@ function main() {
   // offers.
   const sections = nativeDataSections(router);
   const elections = readdirSync(join(root, "data/dist")).filter((f) => existsSync(join(build, f)));
+  // Every election the build has a landing for but the current one, whose landing is the index. A
+  // past election's election document that was not rendered fails below, as a missing file.
+  const past = elections.filter((e) => existsSync(join(build, `${e}.html`)));
+  for (const name of pastElectionDocuments(electionDocuments(router), past)) {
+    routes.push({ route: `/${name}`, file: join(build, `${name}.html`) });
+  }
   for (const name of landingPages(elections, (page) => existsSync(join(build, page)))) {
     routes.push({ route: `/${name}`, file: join(build, `${name}.html`) });
   }

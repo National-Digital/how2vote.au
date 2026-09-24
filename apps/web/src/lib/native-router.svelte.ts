@@ -68,11 +68,11 @@ const NATIVE_ROUTES = new Set([
 ]);
 
 /**
- * Documents whose text reports the selected election, so they are prerendered — and projected — for
- * the current one only. They are offered to the native core only while that election is selected;
- * with any other, the WebView renders them.
+ * Documents whose text reports the selected election. The current election's is prerendered at its
+ * own path; every other election's at `states/<name>/<election>`. The native core draws the one the
+ * selected election names.
  */
-export const CURRENT_ELECTION_DOCUMENTS = ["about"] as const;
+export const ELECTION_DOCUMENTS = ["about"] as const;
 
 /**
  * The age gate's two states (ADR 0011/0012): the question at `/start`, and the explore-only
@@ -119,12 +119,9 @@ function documentName(path: string, electionId: string): string | null {
   // The current election by the store, once it holds the visitor's choice; before then — a direct
   // load, when the router first asks — by the stored choice it has yet to restore.
   const chosen = activeElection.settled ? electionId : (savedElectionId() ?? electionId);
-  if (
-    electionId === CURRENT_ELECTION_ID &&
-    chosen === CURRENT_ELECTION_ID &&
-    (CURRENT_ELECTION_DOCUMENTS as readonly string[]).includes(path.slice(1))
-  ) {
-    return path.slice(1);
+  const name = path.slice(1);
+  if ((ELECTION_DOCUMENTS as readonly string[]).includes(name) && chosen === electionId) {
+    return electionId === CURRENT_ELECTION_ID ? name : `states/${name}/${electionId}`;
   }
   const [, election, section, ...rest] = path.split("/");
   const isData =

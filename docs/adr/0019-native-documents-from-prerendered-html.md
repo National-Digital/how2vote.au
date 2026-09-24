@@ -59,8 +59,10 @@ draw text verbatim.
 4. **Prerender to hydration.** A Playwright check requires each native document's hydrated text to
    equal its prerendered text, under voter state that could change it. A page whose text depends
    on the voter's state cannot be native in that state. About reports the selected election's
-   dataset, so it is offered natively only while the current election is selected, which is the
-   election it was prerendered for. It is checked in that state (`CURRENT_ELECTION_DOCUMENTS`).
+   dataset, so it is prerendered for each election (`ELECTION_DOCUMENTS`): the current one's at
+   `/about`, every other's at `states/about/<election>` from the same component. The native core
+   draws the one the selected election names, and each is checked against `/about` hydrated with
+   that election selected.
 
 **D4 — Controls are slots, and the web still does the work.** An interactive part of a page, such
 as privacy's "clear all my data", is a declared slot. Its labels are projected with the page. Its

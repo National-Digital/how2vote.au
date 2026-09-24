@@ -6,9 +6,11 @@ import {
   VOCABULARY,
   assertConserved,
   documentText,
+  electionDocuments,
   nativeDataSections,
   nativeDocumentRoutes,
   parseMain,
+  pastElectionDocuments,
   projectDocument,
   spokenText,
 } from "./build-native-documents.mjs";
@@ -528,6 +530,24 @@ describe("nativeDocumentRoutes", () => {
     );
     expect(() =>
       nativeDocumentRoutes('export const NATIVE_DOCUMENTS = ["terms"] as const;'),
-    ).toThrow("declares no CURRENT_ELECTION_DOCUMENTS");
+    ).toThrow("declares no ELECTION_DOCUMENTS");
+  });
+});
+
+describe("pastElectionDocuments", () => {
+  it("names each election document for every past election, as the router does", () => {
+    expect(pastElectionDocuments(["about"], ["2022", "2019"])).toEqual([
+      "states/about/2022",
+      "states/about/2019",
+    ]);
+  });
+
+  it("reads the router's election documents", () => {
+    const router = readFileSync(
+      new URL("../apps/web/src/lib/native-router.svelte.ts", import.meta.url),
+      "utf8",
+    );
+    expect(electionDocuments(router)).toEqual(["about"]);
+    expect(router).toContain("`states/${name}/${electionId}`");
   });
 });

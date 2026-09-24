@@ -111,6 +111,26 @@ final class DocumentConservationTests: XCTestCase {
         try follow(firstLinkUnder: "/2025/electorates/", in: "2025/electorates", app: app)
     }
 
+    /// About for a past election: 2025 chosen from the electorates index is the selected election,
+    /// and About then reads as the build rendered it for 2025, not as it reads for the current one.
+    func testAboutReadsForThePastElectionSelected() throws {
+        let app = XCUIApplication()
+        app.launch()
+        XCTAssertTrue(app.buttons["Candidates"].waitForExistence(timeout: 30), "the native landing never appeared")
+        addTeardownBlock { [self] in XCTAssertNoThrow(try chooseTheCurrentElection(in: app)) }
+        try openAndCompare("next/electorates", from: "Candidates", in: app)
+        let election = try XCTUnwrap(
+            firstLink(under: "/2025/electorates", in: try json("next/electorates")),
+            "the electorates index offers no way to 2025"
+        )
+        tapUntilShown(app.buttons[election.label].firstMatch, in: app)
+        XCTAssertNotNil(shownDocument(startingWith: try projected("2025/electorates").spoken, in: app), "2025/electorates: not drawn natively")
+        let current = try projected("about")
+        let past = try projected("states/about/2025")
+        XCTAssertNotEqual(current.spoken, past.spoken, "the 2025 About reads as the current election's")
+        try openAndCompare("states/about/2025", from: "About", in: app)
+    }
+
     /// Begins the 2025 election's quiz, an election with a ballot: 2025 chosen from the electorates
     /// index, then its landing through the trail's first crumb and its call to action, answering the
     /// gate 18+ if an earlier test has not already.

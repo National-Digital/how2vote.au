@@ -4,7 +4,7 @@ import { fileURLToPath } from "node:url";
 import { expect, test, type Browser, type Page } from "@playwright/test";
 import {
   ageGateDocuments,
-  currentElectionDocuments,
+  electionDocuments,
   landingPages,
   nativeDataSections,
   nativeDocumentRoutes,
@@ -26,7 +26,8 @@ const router = readFileSync(new URL("../src/lib/native-router.svelte.ts", import
 const routes: string[] = nativeDocumentRoutes(router).filter(
   (name: string) => !name.startsWith("states/"),
 );
-const currentOnly = new Set<string>(currentElectionDocuments(router));
+const perElection: string[] = electionDocuments(router);
+const currentOnly = new Set<string>(perElection);
 // The gate is only ever drawn for a visitor who has not declared: a declared adult is sent on.
 const undeclared = new Set<string>(ageGateDocuments(router));
 const sections: string[] = nativeDataSections(router);
@@ -34,6 +35,11 @@ const elections = readdirSync(
   fileURLToPath(new URL("../../../data/dist/", import.meta.url)),
 ).filter((f) => !f.endsWith(".json"));
 const BUILD = fileURLToPath(new URL("../build/", import.meta.url));
+// Every election but the current one, from the registry the build renders them from.
+const registry = JSON.parse(
+  readFileSync(new URL("../../../data/dist/elections.json", import.meta.url), "utf8"),
+) as { id: string; label: string; current: boolean }[];
+const pastElections = registry.filter((e) => !e.current);
 
 /** An election's data pages, exactly as the projection selects them from the build. */
 function dataPages(election: string): string[] {
@@ -143,6 +149,44 @@ test.describe("native documents", () => {
       expect(paths.length).toBeGreaterThan(0);
       expect(await unstable(browser, paths)).toEqual([]);
     });
+  }
+
+  test("every past election has an election document to check", () => {
+    expect(pastElections.length).toBeGreaterThan(0);
+  });
+
+  // An election document for a past election is drawn from its build-time page, so the page the
+  // WebView hydrates while that election is selected must read exactly as that file does.
+  for (const name of perElection) {
+    for (const { id: election, label } of pastElections) {
+      test(`/${name} hydrates for ${election} to the text of states/${name}/${election}`, async ({
+        browser,
+        page,
+      }) => {
+        test.skip(
+          process.env["PUBLIC_DIST_CHANNEL"] !== "ios",
+          "the build-time pages ship in the iOS build alone",
+        );
+        const prerendered = await browser.newContext({ javaScriptEnabled: false });
+        const still = await prerendered.newPage();
+        await still.goto(`/states/${name}/${election}.html`);
+        const before = await articleText(still);
+        await prerendered.close();
+        expect(before.length).toBeGreaterThan(100);
+        // The page reads for its own election, so a component ignoring the election it is given
+        // cannot pass by matching a page that ignores it too.
+        expect(before).toContain(label.replace(/\s/g, ""));
+
+        await seedEligibility(page);
+        await page.addInitScript((id: string) => {
+          localStorage.setItem("how2vote:election:v1", id);
+        }, election);
+        await page.goto(`/${name}`);
+        await waitForHydration(page);
+        await page.waitForLoadState("networkidle");
+        expect(await articleText(page)).toBe(before);
+      });
+    }
   }
 
   for (const name of routes) {
