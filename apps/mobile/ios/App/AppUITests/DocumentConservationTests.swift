@@ -595,6 +595,39 @@ final class DocumentConservationTests: XCTestCase {
         XCTAssertTrue(app.buttons[clear].waitForExistence(timeout: 5), "clear data: cancelling did not return to the control")
     }
 
+    /// The contact page, from the footer: the page's text above the form as the page reads it, and
+    /// the form in the web's words, which will not send until every field is filled. Never sent: a
+    /// message from here would reach the real inbox.
+    func testTheContactFormIsInTheWebsWords() throws {
+        let form = try json("states/contact-form")
+        func piece(_ id: String) throws -> String { try self.piece("contact-\(id)", of: form) }
+        let intro = try projected("states/contact")
+
+        let app = XCUIApplication()
+        app.launch()
+        // The footer names the page as the page titles itself.
+        let contact = intro.title
+        XCTAssertTrue(app.buttons[contact].waitForExistence(timeout: 30), "contact: the native landing never appeared")
+        XCTAssertTrue(open(contact, in: app), "contact: the footer link \"\(contact)\" could not be reached")
+        guard let shown = shownDocument(startingWith: intro.spoken, in: app) else {
+            return XCTFail("states/contact: not drawn natively")
+        }
+        compare("states/contact", expected: intro.spoken, shown: shown)
+
+        let send = app.buttons[try piece("send")]
+        // Longer than a query by label may be: matched by predicate.
+        tapUntilShown(app.staticTexts.matching(NSPredicate(format: "label == %@", try piece("challenge"))).firstMatch, in: app)
+        XCTAssertTrue(send.exists, "contact: the send button is not the page's")
+        XCTAssertFalse(send.isEnabled, "contact: the form would send with its fields empty")
+        for (id, text) in [("name", "A voter"), ("email", "voter@example.com"), ("message", "Hello")] {
+            let field = app.textFields[try piece(id)].exists ? app.textFields[try piece(id)] : app.textViews[try piece(id)]
+            XCTAssertTrue(field.exists, "contact: the \(id) field is not labelled as the page labels it")
+            field.tap()
+            field.typeText(text)
+        }
+        XCTAssertTrue(send.isEnabled, "contact: the form will not send with every field filled")
+    }
+
     /// The saved cards, reached from the privacy policy's link to them, in the web's words: with none
     /// saved, the page's empty state, its call to build a comparison, and the clear-all-data section
     /// the page ends with. Named to run after the quiz, which declares the visitor 18+: the screen is

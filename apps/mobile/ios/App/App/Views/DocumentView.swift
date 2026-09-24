@@ -17,6 +17,8 @@ struct DocumentView: View {
     /// The brand bar's theme toggle: its name in each theme, from the page, and what it asks for.
     var theme: (labels: LandingComposition.ThemeLabels, toggle: () -> Void)?
     let onExit: (String) -> Void
+    /// A native form beneath the page's text, where the page has one: the contact form.
+    var form: AnyView?
 
     @State private var scrollTarget: String?
     @State private var term: TermSelection?
@@ -40,6 +42,9 @@ struct DocumentView: View {
                         DocumentBlocks(blocks: layout.blocks, layout: layout, onExit: onExit)
                             .accessibilityElement(children: .contain)
                             .accessibilityIdentifier("native-document")
+                        if let form {
+                            form.padding(.top, 14)
+                        }
                         SiteFooter()
                             .padding(.top, 40)
                     }

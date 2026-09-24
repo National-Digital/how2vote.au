@@ -195,6 +195,7 @@ type NativeRouterPlugin = {
   }): Promise<{ presented: boolean }>;
   dismiss(): Promise<void>;
   themeChanged(options: { theme: string }): Promise<void>;
+  answer(options: { request: string; answer: string }): Promise<void>;
   addListener(
     event: "nativeRouteExit",
     handler: (data: { route: string; session?: string; electionId?: string }) => void,
@@ -213,7 +214,7 @@ type NativeRouterPlugin = {
   ): Promise<{ remove: () => Promise<void> }> | { remove: () => void };
   addListener(
     event: "nativeScreenAction",
-    handler: (data: { screen: string; action: string; value?: string }) => void,
+    handler: (data: { screen: string; action: string; value?: string; request?: string }) => void,
   ): Promise<{ remove: () => Promise<void> }> | { remove: () => void };
 };
 

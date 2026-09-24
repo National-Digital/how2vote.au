@@ -47,6 +47,7 @@ describe("verifyNativeChrome", () => {
       review: "ReviewView",
       document: "DocumentView",
       saved: "SavedView",
+      contact: "DocumentView",
     });
   });
 

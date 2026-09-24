@@ -19,7 +19,8 @@ public class NativeRouterPlugin: CAPPlugin, CAPBridgedPlugin {
     public let pluginMethods: [CAPPluginMethod] = [
         CAPPluginMethod(name: "present", returnType: CAPPluginReturnPromise),
         CAPPluginMethod(name: "dismiss", returnType: CAPPluginReturnPromise),
-        CAPPluginMethod(name: "themeChanged", returnType: CAPPluginReturnPromise)
+        CAPPluginMethod(name: "themeChanged", returnType: CAPPluginReturnPromise),
+        CAPPluginMethod(name: "answer", returnType: CAPPluginReturnPromise)
     ]
 
     /// Emitted when the voter leaves a native screen, carrying the route the web should show.
@@ -47,6 +48,14 @@ public class NativeRouterPlugin: CAPPlugin, CAPBridgedPlugin {
     /// deleted. The web makes the change and offers the route again, and the screen is redrawn from
     /// what it then holds.
     private static let screenActionEvent = "nativeScreenAction"
+
+    /// The screens waiting on the web's answer to a request, by the request's id.
+    private var waiting: [String: (String) -> Void] = [:]
+
+    /// How long a screen waits for the web's answer before it is answered empty, as a failure. Longer
+    /// than the web's own bound on a submission (a 20-second request after its anti-spam check), so
+    /// only an answer that is never coming — a WebView reloaded mid-request — is cut short.
+    private static let answerTimeout: TimeInterval = 60
 
     @objc func present(_ call: CAPPluginCall) {
         guard let route = call.getString("route") else {
@@ -128,10 +137,23 @@ public class NativeRouterPlugin: CAPPlugin, CAPBridgedPlugin {
                     if slot == .clearData { QuizState.sessionRecords.removeAll() }
                     self?.notifyListeners(Self.slotActionEvent, data: ["slot": slot.rawValue, "action": action])
                 },
-                onScreenAction: { [weak self] action, value in
+                onScreenAction: { [weak self] action, value, reply in
+                    guard let self else {
+                        reply?("")
+                        return
+                    }
                     var data: [String: Any] = ["screen": action.screen, "action": action.name]
                     if let value { data["value"] = value }
-                    self?.notifyListeners(Self.screenActionEvent, data: data)
+                    if let reply {
+                        let request = UUID().uuidString
+                        self.waiting[request] = reply
+                        data["request"] = request
+                        // Every request is answered once: by the web, or empty when it never does.
+                        DispatchQueue.main.asyncAfter(deadline: .now() + Self.answerTimeout) { [weak self] in
+                            self?.waiting.removeValue(forKey: request)?("")
+                        }
+                    }
+                    self.notifyListeners(Self.screenActionEvent, data: data)
                 },
                 from: controller
             ) { [weak self] path in
@@ -156,6 +178,17 @@ public class NativeRouterPlugin: CAPPlugin, CAPBridgedPlugin {
         let preference = call.getString("theme") ?? "system"
         DispatchQueue.main.async {
             NativeTheme.shared.accept(preference)
+            call.resolve()
+        }
+    }
+
+    /// The web's answer to a screen's request: how sending a contact message went, say. Each request
+    /// is answered once; an answer to none waiting is dropped.
+    @objc func answer(_ call: CAPPluginCall) {
+        let request = call.getString("request") ?? ""
+        let answer = call.getString("answer") ?? ""
+        DispatchQueue.main.async { [weak self] in
+            self?.waiting.removeValue(forKey: request)?(answer)
             call.resolve()
         }
     }
@@ -194,6 +227,7 @@ extension QuizExit {
 enum ScreenAction: String, CaseIterable {
     case savedRemove = "saved:remove"
     case savedClear = "saved:clear"
+    case contactSend = "contact:send"
 
     /// The screen that asks.
     var screen: String { String(rawValue.prefix { $0 != ":" }) }

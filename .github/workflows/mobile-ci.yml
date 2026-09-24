@@ -656,6 +656,7 @@ jobs:
             apps/mobile/ios/App/App/Model/ReviewWording.swift \
             apps/mobile/ios/App/App/Model/ClearDataWording.swift \
             apps/mobile/ios/App/App/Model/SavedWording.swift \
+            apps/mobile/ios/App/App/Model/ContactWording.swift \
             apps/mobile/ios/Parity/DocumentLogic.swift \
             -o "$RUNNER_TEMP/document-logic"
           "$RUNNER_TEMP/document-logic" apps/web/build/native-documents apps/mobile/ios/native-contract.json

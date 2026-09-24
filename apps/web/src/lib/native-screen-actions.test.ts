@@ -6,8 +6,10 @@ const store = vi.hoisted(() => ({
   clear: vi.fn(),
 }));
 vi.mock("$lib/saved.svelte", () => ({ saved: store }));
+const forms = vi.hoisted(() => ({ submitContact: vi.fn(async () => "offline" as const) }));
+vi.mock("$lib/forms", () => forms);
 
-const { performScreenAction } = await import("./native-screen-actions");
+const { handleScreenAction, performScreenAction } = await import("./native-screen-actions");
 
 describe("performScreenAction", () => {
   const resync = vi.fn();
@@ -32,6 +34,30 @@ describe("performScreenAction", () => {
     expect(resync).not.toHaveBeenCalled();
   });
 
+  it("sends a contact message as the page's form does, and answers with how it went", async () => {
+    const reply = vi.fn();
+    const fields = { name: "A", email: "a@b.c", message: "Hi" };
+    expect(performScreenAction("contact", "send", JSON.stringify(fields), resync, reply)).toBe(
+      true,
+    );
+    expect(forms.submitContact).toHaveBeenCalledWith(fields);
+    await vi.waitFor(() => expect(reply).toHaveBeenCalledWith("offline"));
+    expect(resync).not.toHaveBeenCalled();
+  });
+
+  it("sends nothing for a message with a field missing or empty, or none at all", () => {
+    for (const value of [
+      JSON.stringify({ name: "A", email: "a@b.c" }),
+      JSON.stringify({ name: "A", email: "a@b.c", message: "  " }),
+      JSON.stringify({ name: "A", email: 1, message: "Hi" }),
+      "not json",
+      undefined,
+    ]) {
+      expect(performScreenAction("contact", "send", value, resync)).toBe(false);
+    }
+    expect(forms.submitContact).not.toHaveBeenCalled();
+  });
+
   it("does nothing for an action it does not know", () => {
     for (const [screen, action] of [
       ["saved", "wipe"],
@@ -42,5 +68,39 @@ describe("performScreenAction", () => {
     }
     expect(store.remove).not.toHaveBeenCalled();
     expect(store.clear).not.toHaveBeenCalled();
+  });
+});
+
+describe("handleScreenAction", () => {
+  const resync = vi.fn();
+  beforeEach(() => vi.clearAllMocks());
+
+  it("answers a request it does not know empty, so the screen is never left waiting", () => {
+    const answer = vi.fn(async () => undefined);
+    handleScreenAction({ screen: "contact", action: "post", request: "r1" }, resync, answer);
+    expect(answer).toHaveBeenCalledWith("r1", "");
+    handleScreenAction(
+      { screen: "contact", action: "send", value: "{}", request: "r2" },
+      resync,
+      answer,
+    );
+    expect(answer).toHaveBeenCalledWith("r2", "");
+    expect(forms.submitContact).not.toHaveBeenCalled();
+  });
+
+  it("answers a sent message with the page's outcome, once", async () => {
+    const answer = vi.fn(async () => undefined);
+    const value = JSON.stringify({ name: "A", email: "a@b.c", message: "Hi" });
+    handleScreenAction({ screen: "contact", action: "send", value, request: "r3" }, resync, answer);
+    await vi.waitFor(() => expect(answer).toHaveBeenCalledWith("r3", "offline"));
+    expect(answer).toHaveBeenCalledOnce();
+  });
+
+  it("answers nothing for a request no screen is waiting on", () => {
+    const answer = vi.fn(async () => undefined);
+    handleScreenAction({ screen: "saved", action: "clear" }, resync, answer);
+    handleScreenAction({ screen: "saved", action: "wipe" }, resync, answer);
+    expect(answer).not.toHaveBeenCalled();
+    expect(store.clear).toHaveBeenCalledOnce();
   });
 });

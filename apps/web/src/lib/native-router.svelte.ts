@@ -22,7 +22,7 @@ import { CURRENT_ELECTION_ID, ELECTIONS, ELECTION_IDS } from "@how2vote/data-sch
 import { STATES } from "$lib/data";
 import { isMapAvailable } from "$lib/governance";
 import { backupToNative, restoreFromNative } from "$lib/native-storage";
-import { performScreenAction } from "$lib/native-screen-actions";
+import { handleScreenAction } from "$lib/native-screen-actions";
 import { performSlotAction } from "$lib/native-slot-actions";
 import { election as activeElection, savedElectionId } from "$lib/election.svelte";
 import { now } from "$lib/now.svelte";
@@ -64,6 +64,7 @@ const NATIVE_ROUTES = new Set([
   "/quiz",
   "/review",
   "/saved",
+  "/contact",
   // The landing renders for a past election too (`/2019`, `/2022`), and the election toggle moves
   // between them. Without these the toggle would drop out of the native surface mid-tap.
   ...ELECTION_IDS.map((id) => `/${id}`),
@@ -95,6 +96,8 @@ export const STATE_DOCUMENTS = [
   "states/review",
   "states/clear-data",
   "states/saved",
+  "states/contact",
+  "states/contact-form",
 ] as const;
 
 /**
@@ -513,15 +516,15 @@ function attach(navigate: (path: string) => void, electionId: () => string): voi
   });
 
   // A native screen asks the web to change what it holds — a saved card deleted — and is redrawn
-  // from what the web then holds.
-  const screenAction = router.addListener("nativeScreenAction", ({ screen, action, value }) => {
-    performScreenAction(
-      screen,
-      action,
-      value,
+  // from what the web then holds; or to do what the page does and answer how it went — a contact
+  // message sent.
+  const screenAction = router.addListener("nativeScreenAction", (event) =>
+    handleScreenAction(
+      event,
       () => void nativeRoute.sync(new URL(window.location.href), electionId()),
-    );
-  });
+      (request, answer) => router.answer({ request, answer }),
+    ),
+  );
 
   teardowns.push(() => {
     void Promise.resolve(screenAction).then((r) => r.remove());

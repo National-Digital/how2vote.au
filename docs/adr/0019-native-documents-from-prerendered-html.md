@@ -143,6 +143,15 @@ a card is saved from the card page, which the WebView serves.
 performs, and every event the plugin emits to have a listener on the web. The screen is offered
 only to a visitor the layout lets reach the page (18+), and only once the web has read the cards.
 
+**D4h — The contact page is a document with a native form beneath it.** The page's text above its
+form is `ContactIntro.svelte`, which the page renders and `states/contact.html` renders under the
+page's title and top bar. The native screen draws that as a document, and its own form beneath it
+from `states/contact-form.html`, which renders `$lib/contact-copy.ts` as the page's form reads it.
+Sending is a `ScreenAction` that waits on an answer: the web makes the page's own submission, its
+anti-spam check included, and answers with the page's outcome (sent, offline or failed) through the
+plugin's `answer`. Any other answer reads as a failure, so a message the web did not say it sent is
+never shown as sent, and the fields stay filled until it is.
+
 **D6 — The iOS app is a skeleton, and it has a contract with the web build.** The goal is that no
 iOS screen shows hand-written copy. Every word comes from the web build: projected pages, the
 chrome handed over with each route, and the datasets. Two checks hold this in place as the web

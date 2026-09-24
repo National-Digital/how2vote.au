@@ -46,6 +46,7 @@ enum DocumentLogic {
         failures += readsTheReviewWording(root)
         failures += readsTheClearDataWording(root)
         failures += readsTheSavedWording(root)
+        failures += readsTheContactWording(root)
 
         var ran = 0
         let sample = try? Data(contentsOf: files[0])
@@ -509,6 +510,73 @@ enum DocumentLogic {
             ("a card listed twice", "[\(card),\(card)]"),
         ] as [(String, String?)] where (try? SavedCard.list(list)) != nil {
             failures.append("saved cards with \(what) were accepted")
+        }
+        return failures
+    }
+
+    /// The contact form's wording is the web's: every piece worded and distinct, and a page missing
+    /// one refused. The page's text above the form is a document of its own, with no piece of the
+    /// form's in it. A message is handed to the web only with every field filled, and only the web's
+    /// "ok" reads as sent.
+    private static func readsTheContactWording(_ root: URL) -> [String] {
+        guard let data = try? Data(contentsOf: root.appendingPathComponent("states/contact-form.json")),
+              let (page, _) = try? NativeDocument.decodeChecked(data)
+        else { return ["the contact form's states page is missing or does not lay out"] }
+        var failures: [String] = []
+        do {
+            let wording = try ContactWording(page)
+            let texts = ContactWording.Piece.allCases.map(wording.text)
+            if texts.contains(where: \.isEmpty) || Set(texts).count != texts.count {
+                failures.append("the contact form's pieces are not each worded and distinct: \(texts)")
+            }
+        } catch {
+            failures.append("the contact form's wording: \(error)")
+        }
+        let missing = NativeDocument(
+            route: page.route, title: page.title, crumbs: nil, crumbsLabel: nil, top: page.top, brand: nil,
+            blocks: page.blocks.filter {
+                if case .section(.template, "contact-challenge", _) = $0 { return false }
+                return true
+            },
+            digest: "", spoken: "", drawn: ""
+        )
+        if (try? ContactWording(missing)) != nil {
+            failures.append("a contact form wording missing a piece was accepted")
+        }
+
+        if let intro = try? Data(contentsOf: root.appendingPathComponent("states/contact.json")),
+           let (document, _) = try? NativeDocument.decodeChecked(intro) {
+            if document.top == nil || document.title.isEmpty {
+                failures.append("the contact page's text has no title or top bar of its own")
+            }
+            if !StatesPage(document).sections.isEmpty {
+                failures.append("the contact page's text carries pieces of its form")
+            }
+        } else {
+            failures.append("the contact page's text is missing or does not lay out")
+        }
+
+        for (answer, outcome) in [
+            ("ok", ContactWording.Outcome.sent), ("offline", .offline), ("error", .failed), ("", .failed), ("OK", .failed),
+        ] where ContactWording.Outcome(answer) != outcome {
+            failures.append("the web's answer \"\(answer)\" reads as \(ContactWording.Outcome(answer)), not \(outcome)")
+        }
+        if ContactWording.fields(name: "A", email: "a@b.c", message: " ") != nil
+            || ContactWording.fields(name: "", email: "a@b.c", message: "Hi") != nil
+            || ContactWording.fields(name: "A", email: "a@b.c", message: "\u{FEFF}\u{3000}\n") != nil {
+            failures.append("a message with a field the web reads as blank would be handed to it")
+        }
+        // JavaScript's trim() keeps U+0085, so the web sends a message holding it: so must the form.
+        if ContactWording.fields(name: "A", email: "a@b.c", message: "\u{85}") == nil {
+            failures.append("a message the web would send is refused")
+        }
+        if let sent = ContactWording.fields(name: "A", email: "a@b.c", message: "Hi"),
+           let object = try? JSONSerialization.jsonObject(with: Data(sent.utf8)) as? [String: String] {
+            if object != ["name": "A", "email": "a@b.c", "message": "Hi"] {
+                failures.append("a message is handed to the web as \(object), not the page's three fields")
+            }
+        } else {
+            failures.append("a filled message is not handed to the web")
         }
         return failures
     }

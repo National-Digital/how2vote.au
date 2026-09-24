@@ -87,7 +87,7 @@ final class NativeCoreHost {
         chrome: SiteChrome,
         onDismissStale: @escaping (String) -> Void,
         onSlotAction: @escaping (NativeDocument.Slot, String) -> Void,
-        onScreenAction: @escaping (ScreenAction, String?) -> Void,
+        onScreenAction: @escaping (ScreenAction, String?, ((String) -> Void)?) -> Void,
         from presenter: UIViewController,
         onExit: @escaping (String) -> Void
     ) -> Bool {
@@ -202,7 +202,7 @@ final class NativeCoreHost {
         canExplore: Bool,
         allowedMapIDs: Set<String>,
         engine: JSCEngine?,
-        onScreenAction: @escaping (ScreenAction, String?) -> Void,
+        onScreenAction: @escaping (ScreenAction, String?, ((String) -> Void)?) -> Void,
         onExit: @escaping (String) -> Void
     ) -> AnyView? {
         // A screen reports a WEB PATH when the voter leaves it, never the next native screen. The web
@@ -327,11 +327,33 @@ final class NativeCoreHost {
                 let clearData = try ClearDataWording(NativeDocument.load(name: "states/clear-data").0)
                 let cards = try SavedCard.list(data)
                 return themed(
-                    SavedView(wording: wording, cards: cards, onAction: onScreenAction, onExit: onExit)
+                    SavedView(wording: wording, cards: cards, onAction: { onScreenAction($0, $1, nil) }, onExit: onExit)
                         .environment(\.clearDataWording, clearData)
                 )
             } catch {
                 NSLog("How2Vote: declined saved — \(error)")
+                return nil
+            }
+        case "contact":
+            // The page's text above its form is drawn as a document; the form is drawn from the
+            // form's wording, and sending asks the web, which makes the page's own submission.
+            do {
+                let (_, intro) = try NativeDocument.load(name: "states/contact")
+                let wording = try ContactWording(NativeDocument.load(name: "states/contact-form").0)
+                return themed(
+                    DocumentView(
+                        layout: intro,
+                        anchor: nil,
+                        onExit: onExit,
+                        form: AnyView(ContactForm(wording: wording) { fields in
+                            await withCheckedContinuation { answered in
+                                onScreenAction(.contactSend, fields) { answered.resume(returning: $0) }
+                            }
+                        })
+                    )
+                )
+            } catch {
+                NSLog("How2Vote: declined contact — \(error)")
                 return nil
             }
         default:
@@ -342,7 +364,7 @@ final class NativeCoreHost {
     /// Whether a route's screen runs the engine. A page drawn from its projection, and a list the web
     /// hands over, need none.
     private static func needsEngine(_ route: String) -> Bool {
-        route != "document" && route != "saved"
+        !["document", "saved", "contact"].contains(route)
     }
 
     private func loadedEngine() -> JSCEngine? {

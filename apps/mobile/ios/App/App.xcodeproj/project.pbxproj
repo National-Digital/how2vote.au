@@ -57,6 +57,8 @@
 		B10E458696682A57EF6D66D2 /* ClearDataWording.swift in Sources */ = {isa = PBXBuildFile; fileRef = E454E23648A41EEBFC5DF323 /* ClearDataWording.swift */; };
 		966C27B3D73CAA98F8634F9D /* SavedWording.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6C4B77007BD5732F2CEE5AB6 /* SavedWording.swift */; };
 		A3B848EF8AF286E48A88E8D2 /* SavedView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 625E6F6FC46AC02940B69BF6 /* SavedView.swift */; };
+		D5D5E00C337833638E826B61 /* ContactWording.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5D48CC15C7E6AB40CF86BC66 /* ContactWording.swift */; };
+		6736E0EBE36B520AF75D3CE7 /* ContactForm.swift in Sources */ = {isa = PBXBuildFile; fileRef = 999903476E610EDBDEC4BEC4 /* ContactForm.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -123,6 +125,8 @@
 		E454E23648A41EEBFC5DF323 /* ClearDataWording.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = ClearDataWording.swift; path = Model/ClearDataWording.swift; sourceTree = "<group>"; };
 		6C4B77007BD5732F2CEE5AB6 /* SavedWording.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = SavedWording.swift; path = Model/SavedWording.swift; sourceTree = "<group>"; };
 		625E6F6FC46AC02940B69BF6 /* SavedView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = SavedView.swift; path = Views/SavedView.swift; sourceTree = "<group>"; };
+		5D48CC15C7E6AB40CF86BC66 /* ContactWording.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = ContactWording.swift; path = Model/ContactWording.swift; sourceTree = "<group>"; };
+		999903476E610EDBDEC4BEC4 /* ContactForm.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = ContactForm.swift; path = Views/ContactForm.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -166,6 +170,8 @@
 		504EC3061FED79650016851F /* App */ = {
 			isa = PBXGroup;
 			children = (
+				999903476E610EDBDEC4BEC4 /* ContactForm.swift */,
+				5D48CC15C7E6AB40CF86BC66 /* ContactWording.swift */,
 				625E6F6FC46AC02940B69BF6 /* SavedView.swift */,
 				6C4B77007BD5732F2CEE5AB6 /* SavedWording.swift */,
 				E454E23648A41EEBFC5DF323 /* ClearDataWording.swift */,
@@ -339,6 +345,8 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				6736E0EBE36B520AF75D3CE7 /* ContactForm.swift in Sources */,
+				D5D5E00C337833638E826B61 /* ContactWording.swift in Sources */,
 				A3B848EF8AF286E48A88E8D2 /* SavedView.swift in Sources */,
 				966C27B3D73CAA98F8634F9D /* SavedWording.swift in Sources */,
 				B10E458696682A57EF6D66D2 /* ClearDataWording.swift in Sources */,
