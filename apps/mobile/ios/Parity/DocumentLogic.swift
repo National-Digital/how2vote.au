@@ -45,6 +45,7 @@ enum DocumentLogic {
         failures += readsTheBallotWording(root)
         failures += readsTheReviewWording(root)
         failures += readsTheClearDataWording(root)
+        failures += readsTheSavedWording(root)
 
         var ran = 0
         let sample = try? Data(contentsOf: files[0])
@@ -417,6 +418,97 @@ enum DocumentLogic {
         )
         if (try? ClearDataWording(missing)) != nil {
             failures.append("a clear-data wording missing a piece was accepted")
+        }
+        return failures
+    }
+
+    /// The saved-cards screen's wording is the web's: every piece worded, the how-to naming its button
+    /// between two pieces of text, and the clear-all-data section the page ends with, whole, needing
+    /// its confirmation. A page that loses a piece or the section, or links from it, is refused; and
+    /// the cards handed over must each be a route, listed once.
+    private static func readsTheSavedWording(_ root: URL) -> [String] {
+        guard let data = try? Data(contentsOf: root.appendingPathComponent("states/saved.json")),
+              let (page, _) = try? NativeDocument.decodeChecked(data)
+        else { return ["the saved states page is missing or does not lay out"] }
+        var failures: [String] = []
+        do {
+            let wording = try SavedWording(page)
+            let texts = SavedWording.Piece.allCases.map { wording.text($0) }
+            if texts.contains(where: \.isEmpty) {
+                failures.append("a saved-cards piece is empty: \(texts)")
+            }
+            let (before, after) = wording.how
+            if before.isEmpty || after.isEmpty || before + wording.text(.action) + after != wording.text(.how, ["action": wording.text(.action)]) {
+                failures.append("the saved how-to does not read as the page reads it around its button")
+            }
+            // The same control the privacy policy holds, rendered by the same component, so the two
+            // must lay out alike.
+            let policy = (try? Data(contentsOf: root.appendingPathComponent("privacy.json")))
+                .flatMap { try? NativeDocument.decodeChecked($0).0 }
+            func clearData(in blocks: [NativeDocument.Block]) -> NativeDocument.Block? {
+                for block in blocks {
+                    if case .section(.clearData, _, _) = block { return block }
+                    if case let .section(_, _, content) = block, let found = clearData(in: content) { return found }
+                }
+                return nil
+            }
+            let theirs = policy.flatMap { clearData(in: $0.blocks) }.map {
+                DocumentLayout(NativeDocument(
+                    route: "/privacy", title: "", crumbs: nil, crumbsLabel: nil, top: nil, brand: nil,
+                    blocks: [$0], digest: "", spoken: "", drawn: ""
+                )).blocks
+            }
+            if theirs == nil || theirs != wording.clearData.blocks {
+                failures.append("the saved screen's clear-data section does not read as the privacy policy's")
+            }
+        } catch {
+            failures.append("the saved wording: \(error)")
+        }
+        if !ClearDataWording.isNeeded(by: page) {
+            failures.append("the saved page's clear-data control is not recognised, so it would be drawn without its confirmation")
+        }
+
+        func without(_ keep: (NativeDocument.Block) -> Bool) -> NativeDocument {
+            NativeDocument(
+                route: page.route, title: page.title, crumbs: nil, crumbsLabel: nil, top: page.top, brand: nil,
+                blocks: page.blocks.filter(keep), digest: "", spoken: "", drawn: ""
+            )
+        }
+        let linked: [NativeDocument.Block] = page.blocks.map { block in
+            guard case let .section(.clearData, id, content) = block else { return block }
+            return .section(role: .clearData, id: id, content: content + [
+                .paragraph(role: nil, id: nil, content: [.link(href: "/privacy", external: false, role: nil, label: nil, content: [.text("x")])]),
+            ])
+        }
+        let refused: [(String, NativeDocument)] = [
+            ("missing a piece", without {
+                if case .section(.template, "saved-cancel", _) = $0 { return false }
+                return true
+            }),
+            ("missing its clear-data section", without {
+                if case .section(.clearData, _, _) = $0 { return false }
+                return true
+            }),
+            ("linking from its clear-data section", NativeDocument(
+                route: page.route, title: page.title, crumbs: nil, crumbsLabel: nil, top: page.top, brand: nil,
+                blocks: linked, digest: "", spoken: "", drawn: ""
+            )),
+        ]
+        for (what, mutated) in refused where (try? SavedWording(mutated)) != nil {
+            failures.append("a saved wording \(what) was accepted")
+        }
+
+        let card = #"{"url":"/card#v1.x","electorate":"Sydney","state":"New South Wales","date":"1 Jan 2026"}"#
+        if (try? SavedCard.list("[\(card)]"))?.count != 1 {
+            failures.append("a saved card as the web hands it over was refused")
+        }
+        for (what, list) in [
+            ("none handed over", nil),
+            ("a link off the app", "[" + card.replacingOccurrences(of: "/card#", with: "https://x/card#") + "]"),
+            ("a link to another host", "[" + card.replacingOccurrences(of: "/card#", with: "//x/card#") + "]"),
+            ("a card listed twice", "[\(card),\(card)]"),
+        ] as [(String, String?)] where (try? SavedCard.list(list)) != nil {
+            failures.append("saved cards with \(what) were accepted")
         }
         return failures
     }

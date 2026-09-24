@@ -160,8 +160,10 @@ was written.
 
 So ownership is declared at runtime and each key has exactly one writer. The native core writes
 `how2vote:native-core:v1` to Preferences at launch, and the mirror stands down for the prefixes it
-names (`quiz:`, `saved:`, `election:`) only when it finds that marker — restoring them into
-`localStorage` so the WebView can READ native state, never mirroring them back. Everything else
+names (`quiz:`, `election:`) only when it finds that marker — restoring them into
+`localStorage` so the WebView can READ native state, never mirroring them back. The saved cards
+(`saved:`) are the WebView's: a card is saved from the card page, which stays in the WebView (D1a),
+so the WebView is their one writer and the native saved-cards screen asks it to delete them. Everything else
 (terms acceptance, consent, the eligibility bit, theme) stays the WebView's, which lines up with the
 compliance chrome living in the D8 islands.
 

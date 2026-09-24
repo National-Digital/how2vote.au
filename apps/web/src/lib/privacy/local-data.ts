@@ -71,10 +71,13 @@ export const NATIVE_CORE_MARKER_KEY = `${STORAGE_KEY_PREFIX}native-core:v1`;
  * A consequence worth stating plainly: no route served by the WebView may WRITE one of these keys
  * while the marker is present, or the single-writer rule breaks in the direction this exists to
  * prevent. `scripts/check-native-state-keys.mjs` holds the native side to the same list.
+ *
+ * The saved cards (`saved:`) are not among them: a card is saved from the card page, which the
+ * WebView serves (ADR 0018 D1a), so the WebView is their one writer and they are mirrored like any
+ * other WebView key. The native saved-cards screen asks the web to delete them.
  */
 export const NATIVE_OWNED_KEY_PREFIXES: readonly string[] = [
   `${STORAGE_KEY_PREFIX}quiz:`,
-  `${STORAGE_KEY_PREFIX}saved:`,
   `${STORAGE_KEY_PREFIX}election:`,
 ];
 

@@ -595,6 +595,57 @@ final class DocumentConservationTests: XCTestCase {
         XCTAssertTrue(app.buttons[clear].waitForExistence(timeout: 5), "clear data: cancelling did not return to the control")
     }
 
+    /// The saved cards, reached from the privacy policy's link to them, in the web's words: with none
+    /// saved, the page's empty state, its call to build a comparison, and the clear-all-data section
+    /// the page ends with. Named to run after the quiz, which declares the visitor 18+: the screen is
+    /// an adult's alone.
+    func testTheVoterSeesTheirSavedCardsInTheWebsWords() throws {
+        let wording = try json("states/saved")
+        func piece(_ id: String, _ values: [String: String] = [:]) throws -> String {
+            try self.piece("saved-\(id)", of: wording, values)
+        }
+        let action = try piece("action")
+        let how = try piece("how", ["action": action])
+        let privacy = try XCTUnwrap(Self.footerLabels["privacy"])
+        let link = try XCTUnwrap(firstLink(under: "/saved", in: try json("privacy")), "the privacy policy does not link the saved cards")
+
+        let app = XCUIApplication()
+        app.launch()
+        XCTAssertTrue(app.buttons[privacy].waitForExistence(timeout: 30), "saved: the native landing never appeared")
+        XCTAssertTrue(open(privacy, in: app), "saved: the privacy policy could not be reached")
+        let element = app.links[link.label].firstMatch.exists ? app.links[link.label].firstMatch : app.buttons[link.label].firstMatch
+        tapUntilShown(element, in: app)
+
+        XCTAssertTrue(app.staticTexts[try piece("none")].waitForExistence(timeout: 20), "saved: not drawn natively, or its empty state is not the page's")
+        XCTAssertEqual(app.buttons["top-back"].label, try piece("back"), "saved: the back button is not the page's")
+        XCTAssertTrue(app.staticTexts.matching(NSPredicate(format: "label == %@", how)).firstMatch.exists, "saved: the how-to is not the page's")
+        XCTAssertTrue(app.buttons[try piece("build")].exists, "saved: the call to build is not the page's")
+        let heading = try XCTUnwrap(
+            (wording["blocks"] as? [[String: Any]])?
+                .first { $0["role"] as? String == "clear-data" }
+                .flatMap { ($0["c"] as? [[String: Any]])?.first?["c"] as? [[String: Any]] }?
+                .compactMap { $0["s"] as? String }.joined(),
+            "the saved page has no clear-data section"
+        )
+        let clearHeading = app.staticTexts[heading]
+        var swipes = 0
+        while !clearHeading.exists, swipes < 20 {
+            app.swipeUp()
+            swipes += 1
+        }
+        XCTAssertTrue(clearHeading.exists, "saved: the clear-all-data section is not the page's")
+        // The control is drawn with its confirmation: pressed, it asks as the page asks. Cancelled, so
+        // nothing is cleared.
+        let confirmation = try json("states/clear-data")
+        let clear = try XCTUnwrap(controls(of: "clear-data", in: wording).first { $0.action == "clear" }?.label)
+        tapUntilShown(app.buttons[clear], in: app)
+        XCTAssertTrue(
+            app.staticTexts[try self.piece("clear-ask", of: confirmation)].waitForExistence(timeout: 5),
+            "saved: the clear-all-data control is not drawn, or does not ask as the page asks"
+        )
+        app.buttons[try self.piece("clear-cancel", of: confirmation)].tap()
+    }
+
     /// The gate in both states, as a first-time visitor meets it: from the landing's call to action,
     /// then answering "under 18" with the button the page labels. Both states must read exactly as
     /// the page does.

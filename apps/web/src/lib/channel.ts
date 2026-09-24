@@ -191,6 +191,7 @@ type NativeRouterPlugin = {
     document?: string;
     anchor?: string;
     theme?: string;
+    data?: string;
   }): Promise<{ presented: boolean }>;
   dismiss(): Promise<void>;
   themeChanged(options: { theme: string }): Promise<void>;
@@ -209,6 +210,10 @@ type NativeRouterPlugin = {
   addListener(
     event: "nativeSlotAction",
     handler: (data: { slot: string; action: string }) => void,
+  ): Promise<{ remove: () => Promise<void> }> | { remove: () => void };
+  addListener(
+    event: "nativeScreenAction",
+    handler: (data: { screen: string; action: string; value?: string }) => void,
   ): Promise<{ remove: () => Promise<void> }> | { remove: () => void };
 };
 

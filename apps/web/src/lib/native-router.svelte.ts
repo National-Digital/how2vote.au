@@ -22,11 +22,13 @@ import { CURRENT_ELECTION_ID, ELECTIONS, ELECTION_IDS } from "@how2vote/data-sch
 import { STATES } from "$lib/data";
 import { isMapAvailable } from "$lib/governance";
 import { backupToNative, restoreFromNative } from "$lib/native-storage";
+import { performScreenAction } from "$lib/native-screen-actions";
 import { performSlotAction } from "$lib/native-slot-actions";
 import { election as activeElection, savedElectionId } from "$lib/election.svelte";
 import { now } from "$lib/now.svelte";
 import { quiz, type Persisted } from "$lib/quiz.svelte";
 import { saved } from "$lib/saved.svelte";
+import { savedRows } from "$lib/saved-rows";
 import { AUTHORISATION, FEEDBACK_LINK, footerCredit, footerLinks } from "$lib/site-chrome";
 import { LINK_CUE } from "$lib/external-link-copy";
 import { STALE_ACTIONS, staleDismissal, staleMessage } from "$lib/stale-notice.svelte";
@@ -61,6 +63,7 @@ const NATIVE_ROUTES = new Set([
   "/ballot",
   "/quiz",
   "/review",
+  "/saved",
   // The landing renders for a past election too (`/2019`, `/2022`), and the election toggle moves
   // between them. Without these the toggle would drop out of the native surface mid-tap.
   ...ELECTION_IDS.map((id) => `/${id}`),
@@ -91,6 +94,7 @@ export const STATE_DOCUMENTS = [
   "states/ballot",
   "states/review",
   "states/clear-data",
+  "states/saved",
 ] as const;
 
 /**
@@ -191,6 +195,23 @@ function siteChrome(): string {
   });
 }
 
+/**
+ * What a screen draws that is the web's to hold, handed over with the route: the saved cards, as the
+ * saved page lists them. Undefined for a screen with none, and null for one whose data the web has
+ * not read yet, which the native core cannot draw.
+ */
+function screenData(route: string): string | null | undefined {
+  if (route !== "saved") return undefined;
+  if (!saved.hydrated) return null;
+  return JSON.stringify(savedRows(saved.items));
+}
+
+/**
+ * Routes the layout sends a visitor away from unless they may use them (ADR 0011/0012): an under-18
+ * never sees them, so they are never drawn natively for one either.
+ */
+const ADULT_ONLY_NATIVE_ROUTES = new Set(["/saved"]);
+
 /** An under-18 explorer's in-memory quiz, which is never persisted, or undefined for anyone else. */
 function explorerSession(electionId: string): string | undefined {
   if (ageGate.confirmed) return undefined;
@@ -267,7 +288,13 @@ class NativeRoute {
 
     const path = routePath(url);
     const document = documentName(path, electionId);
-    if (!NATIVE_ROUTES.has(path) && document === null) {
+    const route = document !== null ? "document" : routeName(path, electionId);
+    const data = screenData(route);
+    const offered =
+      (NATIVE_ROUTES.has(path) || document !== null) &&
+      data !== null &&
+      (ageGate.canVote || !ADULT_ONLY_NATIVE_ROUTES.has(path));
+    if (!offered) {
       this.#renderer = "web";
       this.#pending = null;
       if (this.#covered) {
@@ -277,8 +304,9 @@ class NativeRoute {
       return;
     }
 
-    // A document opened at a fragment, or the gate in its other state, is a different request.
-    const request = `${path}${url.hash}|${document ?? ""}`;
+    // A document opened at a fragment, the gate in its other state, or a screen with other data is
+    // a different request.
+    const request = `${path}${url.hash}|${document ?? ""}|${data ?? ""}`;
     if (this.#pending === request) return;
     this.#pending = request;
     this.#renderer = "deciding";
@@ -291,7 +319,7 @@ class NativeRoute {
       await backupToNative();
       const { presented } = await router.present({
         // From the document decided above, not a second reading of the stores after the await.
-        route: document !== null ? "document" : routeName(path, electionId),
+        route,
         electionId: id,
         // From the navigation's own URL, not `location`: a queued sync would otherwise read
         // whatever the address bar happens to hold when it finally runs.
@@ -309,9 +337,10 @@ class NativeRoute {
         theme: theme.pref,
         // An explorer's quiz lives only in memory (ADR 0012), so the native core is handed it.
         session: explorerSession(id),
+        ...(data !== undefined ? { data } : {}),
         ...(document !== null
           ? { document, anchor: fragment(url) }
-          : routeName(path, electionId) === "landing"
+          : route === "landing"
             ? { document: landingDocument(id) }
             : {}),
       });
@@ -483,7 +512,19 @@ function attach(navigate: (path: string) => void, electionId: () => string): voi
     );
   });
 
+  // A native screen asks the web to change what it holds — a saved card deleted — and is redrawn
+  // from what the web then holds.
+  const screenAction = router.addListener("nativeScreenAction", ({ screen, action, value }) => {
+    performScreenAction(
+      screen,
+      action,
+      value,
+      () => void nativeRoute.sync(new URL(window.location.href), electionId()),
+    );
+  });
+
   teardowns.push(() => {
+    void Promise.resolve(screenAction).then((r) => r.remove());
     void Promise.resolve(slotAction).then((r) => r.remove());
     void Promise.resolve(exit).then((r) => r.remove());
     void Promise.resolve(themeChange).then((r) => r.remove());

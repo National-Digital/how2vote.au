@@ -3,16 +3,15 @@
   import ClearMyData from "$lib/components/ClearMyData.svelte";
   import Meta from "$lib/components/Meta.svelte";
   import TopBar from "$lib/components/TopBar.svelte";
-  import { stateName } from "$lib/data";
   import { saved } from "$lib/saved.svelte";
+  import { SAVED_COPY } from "$lib/saved-copy";
+  import { savedRows } from "$lib/saved-rows";
+  import { around, fill } from "$lib/template";
 
   let confirmingClear = $state(false);
 
-  const dateFmt = new Intl.DateTimeFormat("en-AU", {
-    day: "numeric",
-    month: "short",
-    year: "numeric",
-  });
+  const rows = $derived(savedRows(saved.items));
+  const [howBefore, howAfter] = around(SAVED_COPY.how);
 
   function clearAll(): void {
     saved.clear();
@@ -22,43 +21,36 @@
 
 <Meta />
 
-<TopBar label="Saved cards" onback={() => goto("/")} backLabel="Back to start" />
+<TopBar label={SAVED_COPY.title} onback={() => goto("/")} backLabel={SAVED_COPY.back} />
 
 <div class="page">
-  <h1>Saved cards</h1>
+  <h1>{SAVED_COPY.title}</h1>
 
   {#if !saved.hydrated}
-    <p class="muted ui" aria-live="polite">Loading your saved cards…</p>
+    <p class="muted ui" aria-live="polite">{SAVED_COPY.loading}</p>
   {:else if saved.count === 0}
-    <p class="lede">You haven't saved any cards yet.</p>
-    <p class="muted">
-      When you build a voting comparison, choose <strong>Save on this device</strong> to keep it here.
-      Saved cards live only in this browser — they're never uploaded — so you can reopen them later, even
-      offline.
-    </p>
-    <a class="btn" href="/ballot">Build my comparison</a>
+    <p class="lede">{SAVED_COPY.none}</p>
+    <p class="muted">{howBefore}<strong>{SAVED_COPY.action}</strong>{howAfter}</p>
+    <a class="btn" href="/ballot">{SAVED_COPY.build}</a>
   {:else}
-    <p class="muted">
-      Kept only in this browser, on this device — never uploaded. Reopen them any time, even
-      offline. Clearing your browser data removes them.
-    </p>
+    <p class="muted">{SAVED_COPY.kept}</p>
 
     <ul class="list">
-      {#each saved.items as card (card.url)}
+      {#each rows as card (card.url)}
         <li>
           <a class="open" href={card.url}>
             <span class="name">{card.electorate}</span>
             <span class="meta ui">
-              {stateName(card.state)} · saved {dateFmt.format(new Date(card.savedAt))}
+              {fill(SAVED_COPY.meta, { state: card.state, date: card.date })}
             </span>
           </a>
           <button
             type="button"
             class="del ui"
             onclick={() => saved.remove(card.url)}
-            aria-label={`Delete saved card for ${card.electorate}`}
+            aria-label={fill(SAVED_COPY.removal, { electorate: card.electorate })}
           >
-            Delete
+            {SAVED_COPY.remove}
           </button>
         </li>
       {/each}
@@ -66,14 +58,14 @@
 
     <div class="clear ui">
       {#if confirmingClear}
-        <span class="ask">Delete all {saved.count} saved cards?</span>
-        <button type="button" class="danger" onclick={clearAll}>Yes, delete all</button>
+        <span class="ask">{fill(SAVED_COPY.ask, { count: saved.count })}</span>
+        <button type="button" class="danger" onclick={clearAll}>{SAVED_COPY.confirm}</button>
         <button type="button" class="cancel" onclick={() => (confirmingClear = false)}
-          >Cancel</button
+          >{SAVED_COPY.cancel}</button
         >
       {:else}
         <button type="button" class="cancel" onclick={() => (confirmingClear = true)}>
-          Clear all
+          {SAVED_COPY.clear}
         </button>
       {/if}
     </div>

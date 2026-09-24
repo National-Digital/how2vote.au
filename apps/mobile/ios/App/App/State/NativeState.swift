@@ -33,7 +33,6 @@ enum NativeState {
     /// The key prefixes this core owns and is the sole writer of.
     static let ownedPrefixes = [
         "how2vote:quiz:",
-        "how2vote:saved:",
         "how2vote:election:",
     ]
 

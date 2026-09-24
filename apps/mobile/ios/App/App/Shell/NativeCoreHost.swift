@@ -53,6 +53,8 @@ final class NativeCoreHost {
     private var currentElectionID: String?
     /// The document on screen, for the document route, including the fragment it was opened at.
     private var currentDocument: String?
+    /// What the web handed over for the screen on display, which a change of updates it.
+    private var currentData: String?
     /// The layout chrome for the screen being built, and what its links and notice do.
     private var chrome: SiteChrome?
     private var chromeActions = SiteChromeActions()
@@ -81,9 +83,11 @@ final class NativeCoreHost {
         canExplore: Bool,
         allowedMapIDs: Set<String>,
         document: DocumentRequest? = nil,
+        data: String? = nil,
         chrome: SiteChrome,
         onDismissStale: @escaping (String) -> Void,
         onSlotAction: @escaping (NativeDocument.Slot, String) -> Void,
+        onScreenAction: @escaping (ScreenAction, String?) -> Void,
         from presenter: UIViewController,
         onExit: @escaping (String) -> Void
     ) -> Bool {
@@ -91,13 +95,13 @@ final class NativeCoreHost {
             NSLog("How2Vote: declined \(route) — no election id was passed")
             return false
         }
-        if isShowing(route: route, electionID: electionID, isEditing: isEditing, document: document) {
+        if isShowing(route: route, electionID: electionID, isEditing: isEditing, document: document, data: data) {
             return true
         }
 
         // A document is drawn from its projection alone, so it needs no engine.
         let engine = loadedEngine()
-        guard engine != nil || route == "document" else {
+        guard engine != nil || !Self.needsEngine(route) else {
             NSLog("How2Vote: declined \(route) — the engine did not load")
             return false
         }
@@ -106,16 +110,20 @@ final class NativeCoreHost {
         let previous = (self.chrome, chromeActions, screenIdentity)
         self.chrome = chrome
         chromeActions = SiteChromeActions(exit: onExit, dismissStale: onDismissStale, slotAction: onSlotAction)
+        // Not the data: a screen handed new data — a saved card deleted — is updated in place, so
+        // the voter keeps their place in it.
         screenIdentity = "\(route)|\(electionID)|\(isEditing)|\(document?.identity ?? "")"
         guard let screen = screen(
             for: route,
             electionID: electionID,
             isEditing: isEditing,
             document: document,
+            data: data,
             eligible: eligible,
             canExplore: canExplore,
             allowedMapIDs: allowedMapIDs,
             engine: engine,
+            onScreenAction: onScreenAction,
             onExit: onExit
         ) else {
             (self.chrome, chromeActions, screenIdentity) = previous
@@ -127,6 +135,7 @@ final class NativeCoreHost {
         currentIsEditing = isEditing
         currentElectionID = electionID
         currentDocument = document?.identity
+        currentData = data
         NSLog("How2Vote: presenting \(route)\(document.map { " \($0.name)" } ?? "")")
 
         if let hosting {
@@ -146,9 +155,11 @@ final class NativeCoreHost {
     }
 
     /// True when this exact screen is already on display, so a request for it changes nothing.
-    func isShowing(route: String, electionID: String, isEditing: Bool, document: DocumentRequest? = nil) -> Bool {
+    func isShowing(
+        route: String, electionID: String, isEditing: Bool, document: DocumentRequest? = nil, data: String? = nil
+    ) -> Bool {
         currentRoute == route && currentIsEditing == isEditing && currentElectionID == electionID
-            && currentDocument == document?.identity && hosting != nil
+            && currentDocument == document?.identity && currentData == data && hosting != nil
     }
 
     /// Takes the native cover down, revealing the WebView. Called when the web reaches a route the
@@ -158,6 +169,7 @@ final class NativeCoreHost {
         currentIsEditing = false
         currentElectionID = nil
         currentDocument = nil
+        currentData = nil
         guard let hosting else { return }
         self.hosting = nil
         hosting.dismiss(animated: false)
@@ -185,10 +197,12 @@ final class NativeCoreHost {
         electionID: String,
         isEditing: Bool,
         document: DocumentRequest?,
+        data: String?,
         eligible: Bool,
         canExplore: Bool,
         allowedMapIDs: Set<String>,
         engine: JSCEngine?,
+        onScreenAction: @escaping (ScreenAction, String?) -> Void,
         onExit: @escaping (String) -> Void
     ) -> AnyView? {
         // A screen reports a WEB PATH when the voter leaves it, never the next native screen. The web
@@ -304,9 +318,31 @@ final class NativeCoreHost {
                 NSLog("How2Vote: declined document \(document.name) — \(error)")
                 return nil
             }
+        case "saved":
+            // The cards are the web's to hold, handed over with the route; the screen's words are the
+            // web's saved page. Either missing declines the route, and the WebView lists the cards.
+            do {
+                let (page, _) = try NativeDocument.load(name: "states/saved")
+                let wording = try SavedWording(page)
+                let clearData = try ClearDataWording(NativeDocument.load(name: "states/clear-data").0)
+                let cards = try SavedCard.list(data)
+                return themed(
+                    SavedView(wording: wording, cards: cards, onAction: onScreenAction, onExit: onExit)
+                        .environment(\.clearDataWording, clearData)
+                )
+            } catch {
+                NSLog("How2Vote: declined saved — \(error)")
+                return nil
+            }
         default:
             return nil
         }
+    }
+
+    /// Whether a route's screen runs the engine. A page drawn from its projection, and a list the web
+    /// hands over, need none.
+    private static func needsEngine(_ route: String) -> Bool {
+        route != "document" && route != "saved"
     }
 
     private func loadedEngine() -> JSCEngine? {

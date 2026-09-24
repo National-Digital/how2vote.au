@@ -155,6 +155,17 @@ enum DocumentURL: Equatable {
     }
 }
 
+/// Part of a projected page drawn inside a native screen, as the document screen draws it: the
+/// clear-data section of the saved cards' page. It holds no links or terms, so nothing in it is for
+/// a tap to follow.
+struct ProjectedBlocks: View {
+    let layout: DocumentLayout
+
+    var body: some View {
+        DocumentBlocks(blocks: layout.blocks, layout: layout, onExit: { _ in })
+    }
+}
+
 /// A sequence of laid-out blocks.
 private struct DocumentBlocks: View {
     let blocks: [DocumentLayout.Block]

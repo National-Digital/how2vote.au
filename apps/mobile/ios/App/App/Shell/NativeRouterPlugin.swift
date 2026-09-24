@@ -43,6 +43,11 @@ public class NativeRouterPlugin: CAPPlugin, CAPBridgedPlugin {
     /// draws the button and never acts on it itself.
     private static let slotActionEvent = "nativeSlotAction"
 
+    /// Emitted when the voter asks a native screen to change state the web holds — a saved card
+    /// deleted. The web makes the change and offers the route again, and the screen is redrawn from
+    /// what it then holds.
+    private static let screenActionEvent = "nativeScreenAction"
+
     @objc func present(_ call: CAPPluginCall) {
         guard let route = call.getString("route") else {
             call.reject("present requires a route")
@@ -68,6 +73,8 @@ public class NativeRouterPlugin: CAPPlugin, CAPBridgedPlugin {
         // The theme the WebView holds now. Handed over with every route, so a native screen follows
         // a change made anywhere — including the reset a data wipe makes.
         let theme = call.getString("theme")
+        // What the screen draws that the web holds — the saved cards — handed over with the route.
+        let data = call.getString("data")
         // The page to draw, for the document route.
         let document = call.getString("document").map {
             DocumentRequest(name: $0, anchor: call.getString("anchor").flatMap { $0.isEmpty ? nil : $0 })
@@ -92,7 +99,7 @@ public class NativeRouterPlugin: CAPPlugin, CAPBridgedPlugin {
             // The web's copy is current at a handover, not at a repeat of the screen already showing,
             // where the native record may be newer.
             let repeated = NativeCoreHost.shared.isShowing(
-                route: route, electionID: electionID, isEditing: editing, document: document
+                route: route, electionID: electionID, isEditing: editing, document: document, data: data
             )
             QuizState.acceptHandover(
                 session: session, electionID: electionID, eligible: eligible, repeated: repeated
@@ -112,6 +119,7 @@ public class NativeRouterPlugin: CAPPlugin, CAPBridgedPlugin {
                 canExplore: canExplore,
                 allowedMapIDs: allowedMapIDs,
                 document: document,
+                data: data,
                 chrome: chrome,
                 onDismissStale: { [weak self] version in
                     self?.notifyListeners(Self.staleDismissEvent, data: ["dataVersion": version])
@@ -119,6 +127,11 @@ public class NativeRouterPlugin: CAPPlugin, CAPBridgedPlugin {
                 onSlotAction: { [weak self] slot, action in
                     if slot == .clearData { QuizState.sessionRecords.removeAll() }
                     self?.notifyListeners(Self.slotActionEvent, data: ["slot": slot.rawValue, "action": action])
+                },
+                onScreenAction: { [weak self] action, value in
+                    var data: [String: Any] = ["screen": action.screen, "action": action.name]
+                    if let value { data["value"] = value }
+                    self?.notifyListeners(Self.screenActionEvent, data: data)
                 },
                 from: controller
             ) { [weak self] path in
@@ -174,4 +187,16 @@ extension QuizExit {
         case .pause: return "/"
         }
     }
+}
+
+/// A request a native screen makes of the web, for state the web holds (ADR 0018 D3), named as
+/// `SCREEN_ACTIONS` in `native-screen-actions.ts` names it: `<screen>:<action>`.
+enum ScreenAction: String, CaseIterable {
+    case savedRemove = "saved:remove"
+    case savedClear = "saved:clear"
+
+    /// The screen that asks.
+    var screen: String { String(rawValue.prefix { $0 != ":" }) }
+    /// What it asks for.
+    var name: String { String(rawValue.drop { $0 != ":" }.dropFirst()) }
 }

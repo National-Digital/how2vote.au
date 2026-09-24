@@ -130,6 +130,19 @@ ballot picker's on-device note is of `states/ballot.html`. They stay registered 
 `docs/legal/native-copy.json`, marked `drawnFrom` their page: not generated into Swift, but still held
 verbatim to their web source, so rewording one still changes the register.
 
+**D4g — A screen whose state is the web's is handed that state, and asks the web to change it.**
+The saved cards are the web's to hold (ADR 0018 D3). With the route, the web hands over the rows its
+saved page lists (`savedRows`), so the state's name and the date read as the page writes them. The
+screen draws every word from `states/saved.html`, which renders `$lib/saved-copy.ts` as the saved
+page reads it, and ends with the clear-all-data section that page renders. Deleting a card or
+clearing them all is a `ScreenAction`, a request by name that the web performs through the saved
+page's own store calls, and the web then offers the route again with what it holds, which updates
+the screen in place. The saved cards are the WebView's keys, not the native core's (ADR 0018 D3):
+a card is saved from the card page, which the WebView serves.
+`check-native-router.mjs` requires every action the native screens send to be one the web
+performs, and every event the plugin emits to have a listener on the web. The screen is offered
+only to a visitor the layout lets reach the page (18+), and only once the web has read the cards.
+
 **D6 — The iOS app is a skeleton, and it has a contract with the web build.** The goal is that no
 iOS screen shows hand-written copy. Every word comes from the web build: projected pages, the
 chrome handed over with each route, and the datasets. Two checks hold this in place as the web

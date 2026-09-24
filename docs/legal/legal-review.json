@@ -313,6 +313,13 @@
       "disposition": "no-review-required",
       "reviewer": "cameron-young",
       "affectedControls": ["control-4", "control-5", "control-15"]
+    },
+    {
+      "date": "2026-09-25",
+      "change": "On iOS, the saved cards are drawn natively (ADR 0019 D4g), and their on-device durable copy is corrected. The saved-cards key prefix (how2vote:saved:) is removed from the keys the native core owns, in apps/web/src/lib/privacy/local-data.ts and NativeState.swift alike, which scripts/check-native-state-keys.mjs holds equal: a card is saved from the card page, which stays in the WebView (ADR 0018 D1a), so the WebView is the saved cards' one writer, and while the prefix was listed as native-owned a card saved on iOS was never written to the durable copy that protects it from WebKit storage eviction, and could be replaced by an older durable copy on restore. The saved cards are now mirrored like the WebView's other keys, and the native screen asks the web to delete a card or clear them all, through the saved page's own store calls; ADR 0018 D3 records the change. The saved cards still stay on the device and are never uploaded, the clear-all-data control still removes them with everything else, and nothing about what is stored, where or for how long is changed. No register content, public wording, legal position, obligation, permitted use, or collection, use, disclosure, retention or overseas-processing practice is altered, and no consent or Terms version is affected; no legal review was sought or is required.",
+      "disposition": "no-review-required",
+      "reviewer": "cameron-young",
+      "affectedControls": ["control-24"]
     }
   ],
   "nextMandatoryReviewDate": "2027-07-15",
