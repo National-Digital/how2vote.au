@@ -22,22 +22,4 @@ enum LegalCopy {
 
     /// The plan foot's user-authorship statement, which carries the s321D authoriser model (ADR 0010).
     static let userAuthoredOrder = "You chose every number — How2Vote does not recommend a candidate or a preference order."
-
-    /// One paragraph of the AEC Spatial Data Download derivative-product notice, which the licence requires to be DISPLAYED wherever the boundary data is shown — a bare attribution credit does not satisfy it. Registered against the source record itself, not a component, because that record is where the accepted wording lives and where the web reads it from too (apps/web/src/lib/mapLicence.ts re-exports it).
-    static let mapLicenceIncorporates = "This product (how2vote.au) incorporates data that is: © Commonwealth of Australia (Australian Electoral Commission) 2026"
-
-    /// One paragraph of the AEC Spatial Data Download derivative-product notice, which the licence requires to be DISPLAYED wherever the boundary data is shown — a bare attribution credit does not satisfy it. Registered against the source record itself, not a component, because that record is where the accepted wording lives and where the web reads it from too (apps/web/src/lib/mapLicence.ts re-exports it).
-    static let mapLicencePermission = "The Data (Commonwealth Electoral Boundaries (various years)) has been used in how2vote.au with the permission of the Australian Electoral Commission."
-
-    /// One paragraph of the AEC Spatial Data Download derivative-product notice, which the licence requires to be DISPLAYED wherever the boundary data is shown — a bare attribution credit does not satisfy it. Registered against the source record itself, not a component, because that record is where the accepted wording lives and where the web reads it from too (apps/web/src/lib/mapLicence.ts re-exports it).
-    static let mapLicenceNoWarranty = "The Australian Electoral Commission has not evaluated the Data as altered and incorporated within how2vote.au, and therefore gives no warranty regarding its accuracy, completeness, currency or suitability for any particular purpose."
-
-    /// One paragraph of the AEC Spatial Data Download derivative-product notice, which the licence requires to be DISPLAYED wherever the boundary data is shown — a bare attribution credit does not satisfy it. Registered against the source record itself, not a component, because that record is where the accepted wording lives and where the web reads it from too (apps/web/src/lib/mapLicence.ts re-exports it).
-    static let mapLicencePersonalUse = "You may use how2vote.au to load, display, print and reproduce views obtained from the Data, retaining this notice, for your personal use, or use within your organisation only."
-
-    /// The licence the derivative-product notice is prescribed by, named and linked beside the notice as the web map does.
-    static let mapLicenceName = "AEC Spatial Data Download Data Licence"
-
-    /// The AEC licence page the notice links to.
-    static let mapLicenceURL = "https://www.aec.gov.au/Electorates/gis/"
 }

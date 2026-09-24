@@ -40,6 +40,10 @@ struct BallotWording: Equatable {
     let national: (state: String, electorate: String)
     /// Where the lookup link leads.
     let lookupURL: URL
+    /// The map's prescribed licence notice, a paragraph each, in the order the licence sets out.
+    let licence: [String]
+    /// The licence the notice is prescribed by, and where it is published.
+    let licenceLink: (name: String, url: URL)
     private let pieces: [Piece: [Part]]
 
     init(_ page: NativeDocument) throws {
@@ -62,15 +66,53 @@ struct BallotWording: Equatable {
               let url = URL(string: href), url.scheme == "https", url.host != nil
         else { throw states.missing("lookup link") }
 
+        // The licence notice the map must carry wherever it is shown: every paragraph the page
+        // numbers, from the first with none missing, each plain text in full, and the licence's own
+        // link. A notice read short would be shown short, so anything else is refused.
+        let numbered = states.sections.keys.compactMap { id -> Int? in
+            guard id.hasPrefix("ballot-licence-") else { return nil }
+            return Int(id.dropFirst("ballot-licence-".count))
+        }
+        guard !numbered.isEmpty, numbered.sorted() == Array(1...numbered.count) else {
+            throw states.missing("map licence notice numbered from 1 without a gap")
+        }
+        var licence: [String] = []
+        for n in 1...numbered.count {
+            guard let words = BallotWording.plainText(try states.paragraph("ballot-licence-\(n)")), !words.isEmpty
+            else { throw states.missing("licence notice paragraph \(n) as plain text") }
+            licence.append(words)
+        }
+        guard let named = try? states.paragraph("ballot-licence-link"), named.count == 1,
+              case let .link(licenceHref, true, _, _, licenceContent) = named[0],
+              // Its words in full: text, beside only the cue and glyph the link view draws itself.
+              let licenceName = BallotWording.plainText(licenceContent.filter {
+                  switch $0 { case .hidden, .glyph: return false; default: return true }
+              }).map({ $0.trimmingCharacters(in: .whitespaces) }), !licenceName.isEmpty,
+              let licenceURL = URL(string: licenceHref), licenceURL.scheme == "https", licenceURL.host != nil
+        else { throw states.missing("map licence link") }
+
         self.states = offered
         self.national = (national[0].term, national[0].detail)
         lookupURL = url
+        self.licence = licence
+        licenceLink = (licenceName, licenceURL)
         self.pieces = pieces
     }
 
     static func == (a: BallotWording, b: BallotWording) -> Bool {
         a.states == b.states && a.national == b.national && a.lookupURL == b.lookupURL
-            && a.pieces == b.pieces
+            && a.licence == b.licence && a.licenceLink == b.licenceLink && a.pieces == b.pieces
+    }
+
+    /// A paragraph's words when it holds nothing but text, or nil: a notice that carries emphasis or
+    /// markup is not one this screen draws in full.
+    private static func plainText(_ content: [NativeDocument.Inline]) -> String? {
+        var words = ""
+        for inline in content {
+            guard case let .text(text) = inline else { return nil }
+            words += text
+        }
+        return words
     }
 
     /// A link's drawn words, without the external-link cue the link view adds itself.

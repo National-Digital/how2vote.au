@@ -158,7 +158,7 @@
           "owner": "eng-web",
           "status": "passing",
           "enforcedBy": "scripts/check-native-copy.mjs",
-          "note": "Required-notice register (docs/legal/native-copy.json) for the native iOS core (ADR 0018 D9): each registered notice must appear verbatim in the web source it names, and the generated Swift (apps/mobile/ios/App/App/Generated/LegalCopy.swift) must be the exact rendering of the register. Web-side rewording and hand-edited Swift both fail the build, so the native channel cannot state copy the web-scoped guards never reviewed."
+          "note": "Required-notice register (docs/legal/native-copy.json) for the native iOS core (ADR 0018 D9): each registered notice must appear verbatim in the web source it names. A notice the native core draws from a projected states page (drawnFrom) must, once the iOS build exists, be drawn by the section of that page it names exactly as registered; every other notice is generated into apps/mobile/ios/App/App/Generated/LegalCopy.swift, which must be the exact rendering of the register. Web-side rewording, a states page that words a notice its own way, and hand-edited Swift all fail the build, so the native channel cannot state copy the web-scoped guards never reviewed."
         },
         {
           "id": "native-copy-guard",
@@ -315,7 +315,7 @@
           "owner": "eng-web",
           "status": "passing",
           "enforcedBy": "scripts/check-native-copy.mjs",
-          "note": "Required-notice register (docs/legal/native-copy.json) for the native iOS core (ADR 0018 D9): each registered notice must appear verbatim in the web source it names, and the generated Swift (apps/mobile/ios/App/App/Generated/LegalCopy.swift) must be the exact rendering of the register. Web-side rewording and hand-edited Swift both fail the build, so the native channel cannot state copy the web-scoped guards never reviewed."
+          "note": "Required-notice register (docs/legal/native-copy.json) for the native iOS core (ADR 0018 D9): each registered notice must appear verbatim in the web source it names. A notice the native core draws from a projected states page (drawnFrom) must, once the iOS build exists, be drawn by the section of that page it names exactly as registered; every other notice is generated into apps/mobile/ios/App/App/Generated/LegalCopy.swift, which must be the exact rendering of the register. Web-side rewording, a states page that words a notice its own way, and hand-edited Swift all fail the build, so the native channel cannot state copy the web-scoped guards never reviewed."
         },
         {
           "id": "native-copy-guard",
@@ -779,7 +779,7 @@
           "owner": "eng-web",
           "status": "passing",
           "enforcedBy": "scripts/check-native-copy.mjs",
-          "note": "ADR 0018 D10. The four paragraphs of the prescribed derivative-product notice are registered in docs/legal/native-copy.json against data/aec-spatial/source-record.json itself — the record where the accepted wording lives and where the web reads it from too — and generated into the Swift the native map displays. The licence requires the notice to be DISPLAYED wherever the boundary data is shown, so it is rendered beside the map rather than behind a link, and a rewording of the record fails the build until the native rendering follows."
+          "note": "ADR 0018 D10. The four paragraphs of the prescribed derivative-product notice are registered in docs/legal/native-copy.json against data/aec-spatial/source-record.json itself — the record where the accepted wording lives and where the web reads it from too. The native map draws them, with the licence's name and link, from the ballot's projected states page (states/ballot.html), which renders them from that record, and the register requires each paragraph to be drawn by its own section of that page exactly as recorded. The licence requires the notice to be DISPLAYED wherever the boundary data is shown, so it is rendered beside the map rather than behind a link, and a rewording of the record fails the build until the register, and so a legal-review record, follows."
         },
         {
           "id": "native-boundary-maps",

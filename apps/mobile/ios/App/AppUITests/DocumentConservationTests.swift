@@ -439,6 +439,21 @@ final class DocumentConservationTests: XCTestCase {
         XCTAssertTrue(app.staticTexts[electorate].exists, "ballot: the chosen electorate \"\(electorate)\" is not shown")
         XCTAssertTrue(app.buttons[try piece("start")].exists, "ballot: the start button is not the page's")
         XCTAssertTrue(app.buttons[try piece("different")].exists, "ballot: the way back is not the page's")
+        // The map, where one is allowed, carries the licence notice in the page's words.
+        if app.otherElements[try piece("map", ["state": first.name, "electorate": electorate])].exists {
+            // Numbered from 1, as the page numbers them; looked up without asserting, so the end of
+            // the notice is not a failure.
+            let ids = Set(((ballot["blocks"] as? [[String: Any]]) ?? []).compactMap { $0["id"] as? String })
+            var n = 1
+            while ids.contains("ballot-licence-\(n)") {
+                let paragraph = try piece("licence-\(n)")
+                // Matched by predicate: a subscript refuses an identifier over 128 characters.
+                let shown = app.staticTexts.matching(NSPredicate(format: "label == %@", paragraph)).firstMatch
+                XCTAssertTrue(shown.exists, "ballot: the map's licence paragraph \(n) is not the page's")
+                n += 1
+            }
+            XCTAssertGreaterThan(n, 1, "ballot: the page carries no licence notice for the map")
+        }
         app.buttons["top-back"].tap()
         XCTAssertTrue(app.staticTexts[try piece("electorate")].waitForExistence(timeout: 10), "ballot: back did not return to the electorates")
     }

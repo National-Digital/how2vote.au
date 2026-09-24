@@ -306,6 +306,13 @@
       "disposition": "no-review-required",
       "reviewer": "cameron-young",
       "affectedControls": ["control-24", "control-26", "control-28"]
+    },
+    {
+      "date": "2026-09-25",
+      "change": "On iOS, the electorate map's AEC Spatial Data Download derivative-product notice (its four paragraphs) and the licence's name and link are drawn from the ballot's projected states page (states/ballot.html) instead of from the generated LegalCopy.swift. That page renders them at build time, a paragraph per section, from $lib/mapLicence, which reads data/aec-spatial/source-record.json, the record the web's map reads; the native ballot is declined for the WebView's unless the page carries the notice as plain-text paragraphs numbered from the first without a gap, and an https licence link. The six entries stay registered in docs/legal/native-copy.json against the source record, marked drawnFrom states/ballot and naming their section, so each is still held verbatim to the record and, once the iOS build exists, must be drawn by its section exactly as recorded and without markup; scripts/check-native-chrome.mjs requires every paragraph of the record, and the licence's name and address, to be registered so, the states page to render each paragraph and the link from the record, the ballot to hand the map the page's notice, and the native map to draw every paragraph and link the licence. The notice is still displayed beside the map, not behind a link. The notes of the native-copy tests of control-4 and control-5 and of control-15's native-map-notice-display test in control-register.json are updated to describe this. The only notices still generated into Swift are the card's five, which stay registered as a lock on the card's wording. No wording is changed, and no legal position, obligation, permitted use, or collection, use, disclosure, retention or overseas-processing practice is altered; no consent or Terms version is affected; no legal review was sought or is required.",
+      "disposition": "no-review-required",
+      "reviewer": "cameron-young",
+      "affectedControls": ["control-4", "control-5", "control-15"]
     }
   ],
   "nextMandatoryReviewDate": "2027-07-15",

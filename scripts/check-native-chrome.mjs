@@ -92,6 +92,7 @@ export function verifyNativeChrome(raw) {
     ...raw,
     footer: code(raw?.footer),
     notice: code(raw?.notice),
+    ballotStates: code(raw?.ballotStates),
     router: code(raw?.router),
     host: code(raw?.host),
     plugin: code(raw?.plugin),
@@ -267,18 +268,71 @@ export function verifyNativeChrome(raw) {
   }
   const entries = input?.nativeCopy?.entries ?? [];
   const mapView = input?.mapView ?? "";
-  for (const paragraph of notice) {
+  // The native map draws the notice from the ballot's states page, which renders it from the same
+  // record, and the register holds each paragraph to both the record and that page's section.
+  const ballotStates = input?.ballotStates ?? "";
+  notice.forEach((paragraph, i) => {
     const entry = entries.find((e) => e.text === paragraph);
     if (!entry) {
       push(`the AEC map notice paragraph "${paragraph.slice(0, 48)}…" is not in native-copy.json`);
-    } else if (!new RegExp(`LegalCopy\\.${entry.swiftName}\\b`).test(mapView)) {
-      push(`ElectorateMapView does not draw LegalCopy.${entry.swiftName}`);
+    } else if (entry.drawnFrom !== "states/ballot" || entry.section !== `ballot-licence-${i + 1}`) {
+      push(
+        `native-copy.json does not hold map notice paragraph ${i + 1} to its states/ballot section`,
+      );
+    }
+  });
+  // The licence's name and destination are registered against the record and that page too.
+  const licence = input?.sourceRecord?.licence ?? {};
+  for (const [what, text] of [
+    ["name", licence.name],
+    ["url", licence.url],
+  ]) {
+    const entry = entries.find((e) => e.text === text);
+    if (
+      !text ||
+      !entry ||
+      entry.drawnFrom !== "states/ballot" ||
+      entry.section !== "ballot-licence-link"
+    ) {
+      push(
+        `native-copy.json does not hold the map licence's ${what} to states/ballot's licence link`,
+      );
     }
   }
-  for (const name of ["mapLicenceName", "mapLicenceURL"]) {
-    if (!new RegExp(`LegalCopy\\.${name}\\b`).test(mapView)) {
-      push(`ElectorateMapView does not link the licence (LegalCopy.${name})`);
-    }
+  // Matched on the uses, not the import: a paragraph a section each, and the licence's own link.
+  if (
+    !/\{#each MAP_LICENCE_NOTICE as \w+, \w+ \(\w+\)\}\s*<section class="template" id="ballot-licence-\{\w+ \+ 1\}"><p>\{\w+\}<\/p><\/section>/.test(
+      ballotStates,
+    )
+  ) {
+    push(
+      "BallotStates.svelte does not render each paragraph of the map licence in its own section",
+    );
+  }
+  if (
+    !/id="ballot-licence-link">\s*<p><ExternalLink href=\{MAP_LICENCE_URL\}>\{MAP_LICENCE_NAME\}<\/ExternalLink><\/p>/.test(
+      ballotStates,
+    )
+  ) {
+    push("BallotStates.svelte does not render the map licence's own link");
+  }
+  if (
+    !/ForEach\(Array\(licence\.enumerated\(\)\), id: \\\.offset\) \{ _, (\w+) in\s*Text\(\1\)/.test(
+      mapView,
+    )
+  ) {
+    push("ElectorateMapView does not draw every paragraph of the licence notice");
+  }
+  if (!/ExternalLinkView\(title: licenceLink\.name, url: licenceLink\.url\)/.test(mapView)) {
+    push("ElectorateMapView does not link the licence");
+  }
+  const ballotView = input?.views?.BallotView ?? "";
+  if (
+    !/ElectorateMapView\((?:(?!ElectorateMapView\()[\s\S])*?licence: wording\.licence,\s*licenceLink: wording\.licenceLink\s*\)/.test(
+      ballotView,
+    )
+  ) {
+    push("BallotView does not hand the map the licence notice the page words");
   }
   if (!/map\.attribution/.test(mapView))
     push("ElectorateMapView does not show the map's attribution");
@@ -338,6 +392,7 @@ function main() {
     layout: read("apps/web/src/routes/+layout.svelte"),
     footer: read("apps/web/src/lib/components/Footer.svelte"),
     notice: read("apps/web/src/lib/components/StaleDataNotice.svelte"),
+    ballotStates: read("apps/web/src/lib/components/BallotStates.svelte"),
     router: read("apps/web/src/lib/native-router.svelte.ts"),
     host: read("apps/mobile/ios/App/App/Shell/NativeCoreHost.swift"),
     plugin: read("apps/mobile/ios/App/App/Shell/NativeRouterPlugin.swift"),

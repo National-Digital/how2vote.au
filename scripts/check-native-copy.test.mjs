@@ -112,6 +112,18 @@ describe("an entry drawn from a projected page", () => {
       { t: "section", id: "review-y", c: [{ t: "paragraph", c: [{ t: "text", s: drawn.text }] }] },
     ]);
     expect(verifyProjected(registry, { "states/review": elsewhere })).not.toEqual([]);
+    const marked = {
+      blocks: [
+        {
+          t: "section",
+          id: "review-x",
+          c: [{ t: "paragraph", c: [{ t: "strong", c: [{ t: "text", s: drawn.text }] }] }],
+        },
+      ],
+    };
+    expect(verifyProjected(registry, { "states/review": marked }).join(" ")).toContain(
+      "marks the notice up (strong)",
+    );
     expect(verifyProjected(registry, {}).join(" ")).toContain("fail closed");
     const unnamed = { entries: [entry({ drawnFrom: "states/review" })] };
     expect(verifyProjected(unnamed, { "states/review": page(drawn.text) }).join(" ")).toContain(
@@ -136,6 +148,8 @@ describe("an entry drawn from a projected page", () => {
       href: "https://x.org/",
       c: [
         { t: "text", s: "X" },
+        { t: "text", s: " " },
+        { t: "glyph", s: "↗" },
         { t: "hidden", c: [{ t: "text", s: " (opens in an in-app browser)" }] },
       ],
     };

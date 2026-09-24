@@ -350,9 +350,12 @@ export function verifyNativeCopy(input) {
   return { ok: errors.length === 0, errors };
 }
 
+/** The nodes a registered notice's section may hold: paragraphs of text, and a link with its cue. */
+const PLAIN = new Set(["paragraph", "text", "link", "hidden", "glyph"]);
+
 /**
- * The text a projected section draws, and the links it holds: its text runs in order, less what is
- * hidden (an external link's spoken cue), and each link's destination.
+ * The text a projected section draws, and the links it holds: its text runs in order, less an
+ * external link's spoken cue and decorative glyph, and each link's destination.
  *
  * @param {object[]} blocks
  * @param {string} id
@@ -366,16 +369,20 @@ function projectedSection(blocks, id) {
       if (node?.t === "section" && node.id === id) {
         const text = [];
         const hrefs = [];
+        const marked = [];
         const read = (inner) => {
           for (const n of Array.isArray(inner) ? inner : []) {
-            if (n?.t === "hidden") continue;
+            // A notice is drawn as plain text; emphasis or other markup is not drawn as registered.
+            if (!PLAIN.has(n?.t)) marked.push(n?.t);
+            // Not the notice's words: a link's spoken cue, and a decorative glyph VoiceOver skips.
+            if (n?.t === "hidden" || n?.t === "glyph") continue;
             if (n?.t === "link" && typeof n.href === "string") hrefs.push(n.href);
             if (typeof n?.s === "string") text.push(n.s);
             read(n?.c);
           }
         };
         read(node.c);
-        found = { text: text.join("").replace(/\s+/g, " ").trim(), hrefs };
+        found = { text: text.join("").replace(/\s+/g, " ").trim(), hrefs, marked };
       } else {
         walk(node?.c);
       }
@@ -412,6 +419,11 @@ export function verifyProjected(registry, pages) {
     const text = String(e.text).replace(/\s+/g, " ").trim();
     if (!section) {
       errors.push(`${e.id}: the projected ${e.drawnFrom} has no section ${e.section}`);
+    } else if (section.marked.length > 0) {
+      errors.push(
+        `${e.id}: the projected ${e.drawnFrom} section ${e.section} marks the notice up ` +
+          `(${[...new Set(section.marked)].join(", ")}), and the app draws it as plain text`,
+      );
     } else if (
       section.text !== text &&
       !(section.hrefs.length === 1 && section.hrefs[0] === text)

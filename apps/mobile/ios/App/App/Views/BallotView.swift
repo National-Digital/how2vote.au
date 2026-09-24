@@ -243,7 +243,9 @@ struct BallotView: View {
                     ElectorateMapView(
                         map: map,
                         electorate: electorate,
-                        label: wording.text(.map, ["state": wording.name(for: state), "electorate": electorate])
+                        label: wording.text(.map, ["state": wording.name(for: state), "electorate": electorate]),
+                        licence: wording.licence,
+                        licenceLink: wording.licenceLink
                     )
                         .padding(.bottom, 16)
                 }

@@ -78,6 +78,8 @@
       "swiftName": "mapLicenceIncorporates",
       "text": "This product (how2vote.au) incorporates data that is: © Commonwealth of Australia (Australian Electoral Commission) 2026",
       "webSource": "data/aec-spatial/source-record.json",
+      "drawnFrom": "states/ballot",
+      "section": "ballot-licence-1",
       "backingControls": ["control-15"],
       "note": "One paragraph of the AEC Spatial Data Download derivative-product notice, which the licence requires to be DISPLAYED wherever the boundary data is shown — a bare attribution credit does not satisfy it. Registered against the source record itself, not a component, because that record is where the accepted wording lives and where the web reads it from too (apps/web/src/lib/mapLicence.ts re-exports it)."
     },
@@ -86,6 +88,8 @@
       "swiftName": "mapLicencePermission",
       "text": "The Data (Commonwealth Electoral Boundaries (various years)) has been used in how2vote.au with the permission of the Australian Electoral Commission.",
       "webSource": "data/aec-spatial/source-record.json",
+      "drawnFrom": "states/ballot",
+      "section": "ballot-licence-2",
       "backingControls": ["control-15"],
       "note": "One paragraph of the AEC Spatial Data Download derivative-product notice, which the licence requires to be DISPLAYED wherever the boundary data is shown — a bare attribution credit does not satisfy it. Registered against the source record itself, not a component, because that record is where the accepted wording lives and where the web reads it from too (apps/web/src/lib/mapLicence.ts re-exports it)."
     },
@@ -94,6 +98,8 @@
       "swiftName": "mapLicenceNoWarranty",
       "text": "The Australian Electoral Commission has not evaluated the Data as altered and incorporated within how2vote.au, and therefore gives no warranty regarding its accuracy, completeness, currency or suitability for any particular purpose.",
       "webSource": "data/aec-spatial/source-record.json",
+      "drawnFrom": "states/ballot",
+      "section": "ballot-licence-3",
       "backingControls": ["control-15"],
       "note": "One paragraph of the AEC Spatial Data Download derivative-product notice, which the licence requires to be DISPLAYED wherever the boundary data is shown — a bare attribution credit does not satisfy it. Registered against the source record itself, not a component, because that record is where the accepted wording lives and where the web reads it from too (apps/web/src/lib/mapLicence.ts re-exports it)."
     },
@@ -102,6 +108,8 @@
       "swiftName": "mapLicencePersonalUse",
       "text": "You may use how2vote.au to load, display, print and reproduce views obtained from the Data, retaining this notice, for your personal use, or use within your organisation only.",
       "webSource": "data/aec-spatial/source-record.json",
+      "drawnFrom": "states/ballot",
+      "section": "ballot-licence-4",
       "backingControls": ["control-15"],
       "note": "One paragraph of the AEC Spatial Data Download derivative-product notice, which the licence requires to be DISPLAYED wherever the boundary data is shown — a bare attribution credit does not satisfy it. Registered against the source record itself, not a component, because that record is where the accepted wording lives and where the web reads it from too (apps/web/src/lib/mapLicence.ts re-exports it)."
     },
@@ -110,6 +118,8 @@
       "swiftName": "mapLicenceName",
       "text": "AEC Spatial Data Download Data Licence",
       "webSource": "data/aec-spatial/source-record.json",
+      "drawnFrom": "states/ballot",
+      "section": "ballot-licence-link",
       "backingControls": ["control-15"],
       "note": "The licence the derivative-product notice is prescribed by, named and linked beside the notice as the web map does."
     },
@@ -118,6 +128,8 @@
       "swiftName": "mapLicenceURL",
       "text": "https://www.aec.gov.au/Electorates/gis/",
       "webSource": "data/aec-spatial/source-record.json",
+      "drawnFrom": "states/ballot",
+      "section": "ballot-licence-link",
       "backingControls": ["control-15"],
       "note": "The AEC licence page the notice links to."
     },

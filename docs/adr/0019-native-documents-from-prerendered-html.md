@@ -169,9 +169,11 @@ where the checks above already live.
 - The hand-written copy record is empty: no native screen holds copy of its own. The stale-data
   notice's controls arrive with the chrome, and the list disc and the external-link arrow are drawn
   as symbols, as the web's stylesheet draws its disc. External links append the web's app cue
-  (`$lib/external-link-copy.ts`), handed over with the site chrome. The map licence is the one set of
-  notices in `docs/legal/native-copy.json` still drawn from a typed copy checked against its source
-  rather than from the build, and is the next move. The card's notices stay registered as a lock on the card's wording, though no
-  native screen draws them.
+  (`$lib/external-link-copy.ts`), handed over with the site chrome, and the map's licence notice is
+  drawn from `states/ballot.html`, which renders it from the source record. Every notice in
+  `docs/legal/native-copy.json` the app shows is now drawn from the build: the register holds each
+  one drawn from a states page to the section that draws it, and the link cue to the web module the
+  site chrome hands over. The only notices it still generates into Swift are the card's, kept as a
+  lock on the card's wording, which no native screen draws.
 - Existing installs keep their data. The `how2vote:` keys and the native-core ownership marker are
   not changed by any of this.

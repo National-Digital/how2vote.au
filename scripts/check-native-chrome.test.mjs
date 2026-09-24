@@ -16,6 +16,7 @@ const COMMITTED = {
   layout: read("../apps/web/src/routes/+layout.svelte"),
   footer: read("../apps/web/src/lib/components/Footer.svelte"),
   notice: read("../apps/web/src/lib/components/StaleDataNotice.svelte"),
+  ballotStates: read("../apps/web/src/lib/components/BallotStates.svelte"),
   router: read("../apps/web/src/lib/native-router.svelte.ts"),
   host: read("../apps/mobile/ios/App/App/Shell/NativeCoreHost.swift"),
   plugin: read("../apps/mobile/ios/App/App/Shell/NativeRouterPlugin.swift"),
@@ -175,9 +176,49 @@ describe("verifyNativeChrome", () => {
     const sourceRecord = JSON.parse(JSON.stringify(COMMITTED.sourceRecord));
     sourceRecord.notice.components.push("A fifth paragraph the licence now requires.");
     expect(mutate({ sourceRecord })).toContain("is not in native-copy.json");
+    const nativeCopy = JSON.parse(JSON.stringify(COMMITTED.nativeCopy));
+    nativeCopy.entries.find((e) => e.id === "map-licence-3").section = "ballot-licence-2";
+    expect(mutate({ nativeCopy })).toContain("does not hold map notice paragraph 3");
+    // The import alone is not a rendering: every paragraph, and the link, must be drawn.
+    const each = /\s*\{#each MAP_LICENCE_NOTICE[\s\S]*?\{\/each\}/;
+    expect(mutate({ ballotStates: COMMITTED.ballotStates.replace(each, "") })).toContain(
+      "does not render each paragraph of the map licence",
+    );
     expect(
-      mutate({ mapView: views.ElectorateMapView.replace("LegalCopy.mapLicenceNoWarranty,", "") }),
-    ).toContain("does not draw LegalCopy.mapLicenceNoWarranty");
+      mutate({
+        ballotStates: COMMITTED.ballotStates.replace(
+          "{MAP_LICENCE_NAME}</ExternalLink>",
+          "Licence</ExternalLink>",
+        ),
+      }),
+    ).toContain("does not render the map licence's own link");
+    expect(
+      mutate({
+        mapView: views.ElectorateMapView.replace(
+          "in\n                    Text(paragraph)",
+          "in\n                    EmptyView()",
+        ),
+      }),
+    ).toContain("does not draw every paragraph");
+    expect(
+      mutate(
+        withView(
+          "BallotView",
+          views.BallotView.replace("licence: wording.licence,", "licence: [],"),
+        ),
+      ),
+    ).toContain("does not hand the map the licence notice");
+    const unlinked = JSON.parse(JSON.stringify(COMMITTED.nativeCopy));
+    unlinked.entries = unlinked.entries.filter((e) => e.id !== "map-licence-url");
+    expect(mutate({ nativeCopy: unlinked })).toContain("the map licence's url");
+    expect(
+      mutate({
+        mapView: views.ElectorateMapView.replace(
+          "ForEach(Array(licence.enumerated())",
+          "ForEach(Array(licence.prefix(2).enumerated())",
+        ),
+      }),
+    ).toContain("does not draw every paragraph");
   });
 
   it("catches the map's attribution or licence link dropped", () => {
@@ -186,9 +227,12 @@ describe("verifyNativeChrome", () => {
     ).toContain("does not show the map's attribution");
     expect(
       mutate({
-        mapView: views.ElectorateMapView.replace("LegalCopy.mapLicenceURL", '"https://x"'),
+        mapView: views.ElectorateMapView.replace(
+          "url: licenceLink.url",
+          'url: URL(string: "https://x")!',
+        ),
       }),
-    ).toContain("does not link the licence (LegalCopy.mapLicenceURL)");
+    ).toContain("does not link the licence");
   });
 
   it("catches a view writing quiz state past the explorer path", () => {
@@ -257,15 +301,15 @@ describe("verifyNativeChrome", () => {
     }
   });
 
-  it("is not satisfied by a map licence named only in a string", () => {
+  it("is not satisfied by a map licence link named only in a string", () => {
     expect(
       mutate({
         mapView: COMMITTED.mapView.replace(
-          "LegalCopy.mapLicenceName",
-          '"LegalCopy.mapLicenceName"',
+          "ExternalLinkView(title: licenceLink.name, url: licenceLink.url)",
+          '"ExternalLinkView(title: licenceLink.name, url: licenceLink.url)"',
         ),
       }),
-    ).toContain("LegalCopy.mapLicenceName");
+    ).toContain("does not link the licence");
   });
 
   it("reads a case that names several routes", () => {

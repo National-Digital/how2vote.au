@@ -307,6 +307,15 @@ enum DocumentLogic {
                 || unsure.before + wording.text(.lookup) + unsure.after != wording.text(.unsure, ["lookup": wording.text(.lookup)]) {
                 failures.append("the lookup sentence does not split around its link: \(unsure)")
             }
+            let numbered = page.blocks.filter {
+                if case let .section(.template, id?, _) = $0, id.hasPrefix("ballot-licence-"), Int(id.dropFirst(15)) != nil {
+                    return true
+                }
+                return false
+            }.count
+            if wording.licence.count != numbered || numbered < 2 || Set(wording.licence).count != numbered {
+                failures.append("the map's licence notice is read as \(wording.licence.count) of the page's \(numbered) paragraphs")
+            }
             if let first = wording.states.first, wording.name(for: first.code.lowercased()) != first.name {
                 failures.append("a state code is not matched as the web matches it, ignoring case")
             }
@@ -348,6 +357,24 @@ enum DocumentLogic {
             }),
             ("linking other words than its lookup piece", edited {
                 section($0, "ballot-lookup-link", lookup("https://check.aec.gov.au/", "Somewhere else"))
+            }),
+            ("without the map's licence notice", edited {
+                if case .section(.template, "ballot-licence-1", _) = $0 { return nil }
+                return $0
+            }),
+            ("with a gap in the map's licence notice", edited {
+                if case .section(.template, "ballot-licence-3", _) = $0 { return nil }
+                return $0
+            }),
+            ("marking up a paragraph of the map's licence notice", edited {
+                guard case let .section(.template, "ballot-licence-2", content) = $0,
+                      case let .paragraph(role, id, inlines)? = content.first else { return $0 }
+                return .section(role: .template, id: "ballot-licence-2", content: [
+                    .paragraph(role: role, id: id, content: [.strong(inlines)]),
+                ])
+            }),
+            ("linking its licence over http", edited {
+                section($0, "ballot-licence-link", lookup("http://www.aec.gov.au/Electorates/gis/", "Licence"))
             }),
         ]
         for (what, mutated) in refused where (try? BallotWording(mutated)) != nil {
