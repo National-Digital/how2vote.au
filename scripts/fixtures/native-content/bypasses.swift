@@ -22,6 +22,8 @@ struct Bypasses: View {
         Label("AustralianElectoralCommission", systemImage: "star")
         accessibilityIdentifier("Bare helper shows this sentence")
         Text(x).accessibilityLabel("electorate-map")
+        Banner(source: "Shown as a banner's source")
+        let script = "Held for a script, shown instead"
     }
     func bridge() {
         let title = call.getString("title", "Default shown to voter")

@@ -28,7 +28,7 @@ import { now } from "$lib/now.svelte";
 import { quiz, type Persisted } from "$lib/quiz.svelte";
 import { saved } from "$lib/saved.svelte";
 import { AUTHORISATION, FEEDBACK_LINK, footerCredit, footerLinks } from "$lib/site-chrome";
-import { staleDismissal, staleMessage } from "$lib/stale-notice.svelte";
+import { STALE_ACTIONS, staleDismissal, staleMessage } from "$lib/stale-notice.svelte";
 import { assessStaleness } from "$lib/staleness";
 import { theme } from "$lib/theme.svelte";
 
@@ -179,6 +179,8 @@ function siteChrome(): string {
           dataVersion: verdict.dataVersion,
           prominent: verdict.level === "prominent",
           updateUrl: storeListingUrl(),
+          update: STALE_ACTIONS.update,
+          dismiss: STALE_ACTIONS.dismiss,
         }
       : null;
   return JSON.stringify({

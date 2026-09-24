@@ -25,6 +25,9 @@ struct SiteChrome: Decodable, Equatable {
         let prominent: Bool
         /// The store listing, or nil where there is none to send the voter to.
         let updateUrl: String?
+        /// The labels of its two controls, as the web's notice words them.
+        let update: String
+        let dismiss: String
     }
 
     let authorisation: String
@@ -39,11 +42,16 @@ struct SiteChrome: Decodable, Equatable {
     static func decode(_ json: String?) -> SiteChrome? {
         guard let data = json?.data(using: .utf8),
               let chrome = try? JSONDecoder().decode(SiteChrome.self, from: data),
-              !chrome.authorisation.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty,
+              !isBlank(chrome.authorisation),
               !chrome.credit.isEmpty,
               !chrome.links.isEmpty,
-              chrome.links.allSatisfy({ $0.href.hasPrefix("/") })
+              chrome.links.allSatisfy({ $0.href.hasPrefix("/") }),
+              chrome.stale.map({ !isBlank($0.update) && !isBlank($0.dismiss) }) ?? true
         else { return nil }
         return chrome
+    }
+
+    private static func isBlank(_ text: String) -> Bool {
+        text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
     }
 }

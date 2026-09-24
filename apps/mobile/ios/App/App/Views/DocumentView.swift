@@ -317,12 +317,12 @@ private struct DocumentList: View {
                           let (tick, claim) = run.splitting(after: \.decorative) {
                     // The page's own tick is the marker, set apart from the claim as `.tick` is.
                     HStack(alignment: .firstTextBaseline, spacing: 10) {
-                        ListMarker(text: tick.visible)
+                        ListMarker(.text(tick.visible))
                         RunText(run: claim, layout: layout)
                     }
                 } else {
                     HStack(alignment: .firstTextBaseline, spacing: 8) {
-                        ListMarker(text: ordered ? "\(index + 1)." : "•")
+                        ListMarker(ordered ? .text("\(index + 1).") : .disc)
                         DocumentBlocks(blocks: item, layout: layout, onExit: onExit)
                     }
                 }
@@ -333,17 +333,43 @@ private struct DocumentList: View {
 
 /// A list item's marker: drawn, never heard.
 private struct ListMarker: View {
-    @Environment(\.colorScheme) private var scheme
+    enum Kind {
+        /// The page's own marker text, or an ordered item's number.
+        case text(String)
+        /// An unordered item's disc, drawn as the web's `list-style` draws it rather than written.
+        case disc
+    }
 
-    let text: String
+    @Environment(\.colorScheme) private var scheme
+    /// The disc's size and lift above the baseline, scaled with the text beside it.
+    @ScaledMetric(relativeTo: .body) private var disc: CGFloat = 6
+
+    let kind: Kind
+
+    init(_ kind: Kind) {
+        self.kind = kind
+    }
 
     var body: some View {
-        Text(text)
+        marker
             .foregroundStyle(Theme.ink2.resolve(scheme))
             .accessibilityHidden(true)
             // UI tests see elements VoiceOver skips; this marks the one drawn glyph a document screen
             // adds, so the on-screen check can skip it too.
             .accessibilityIdentifier(DocumentURL.decoration)
+    }
+
+    private var marker: Text {
+        switch kind {
+        case let .text(text):
+            return Text(text)
+        case .disc:
+            // Labelled empty, so the symbol's own name is not what a UI test reads for it.
+            return Text(Image(systemName: "circle.fill"))
+                .accessibilityLabel(Text(verbatim: ""))
+                .font(.system(size: disc))
+                .baselineOffset(disc * 0.6)
+        }
     }
 }
 

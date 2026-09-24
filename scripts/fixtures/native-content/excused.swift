@@ -21,6 +21,9 @@ struct Excused {
         self.notifyListeners("routeChanged", data: [:])
         throw Failure.missing("a thrown sentence")
         fatalError("an unreachable state")
+        controller.addUserScript(WKUserScript(source: """
+            (function () { console.info("How2Vote: ready"); })();
+            """, injectionTime: .atDocumentStart, forMainFrameOnly: true))
     }
 }
 

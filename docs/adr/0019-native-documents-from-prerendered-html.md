@@ -162,8 +162,10 @@ where the checks above already live.
   - offline;
   - saved;
   - the card.
-- The quiz, ballot and review screens still hold the hand-written copy the record lists,
-  and the registered notices in `docs/legal/native-copy.json` are still typed copies checked
-  against the web source rather than read from the build. Both are the next moves.
+- The hand-written copy record is empty: no native screen holds copy of its own. The stale-data
+  notice's controls arrive with the chrome, and the list disc and the external-link arrow are drawn
+  as symbols, as the web's stylesheet draws its disc. The registered notices in
+  `docs/legal/native-copy.json` are still typed copies checked against the web source rather than
+  read from the build, and are the next move.
 - Existing installs keep their data. The `how2vote:` keys and the native-core ownership marker are
   not changed by any of this.

@@ -91,6 +91,7 @@ export function verifyNativeChrome(raw) {
   const input = {
     ...raw,
     footer: code(raw?.footer),
+    notice: code(raw?.notice),
     router: code(raw?.router),
     host: code(raw?.host),
     plugin: code(raw?.plugin),
@@ -214,6 +215,32 @@ export function verifyNativeChrome(raw) {
     }
   }
 
+  // The native notice decodes both labels as required, so one missing declines every route.
+  const chrome = /function siteChrome\(\)[\s\S]*?\n}\n/.exec(router)?.[0] ?? "";
+  for (const label of ["update", "dismiss"]) {
+    if (!new RegExp(`\\b${label}: STALE_ACTIONS\\.${label}\\b`).test(chrome)) {
+      push(`the chrome handed to the native core omits the stale notice's ${label} label`);
+    }
+  }
+
+  // The native notice is handed STALE_ACTIONS' labels, so the web's must draw the same ones.
+  const staleNotice = input?.notice ?? "";
+  const controls = [
+    ...staleNotice.matchAll(/<(a|button)\b((?:[^>{]|\{[^}]*\})*)>([\s\S]*?)<\/\1\s*>/g),
+  ].map(([, tag, attributes, content]) => ({
+    kind: tag === "a" ? "update" : /\bonclick=\{reload\}/.test(attributes) ? "reload" : "dismiss",
+    label: /^\s*\{STALE_ACTIONS\.(\w+)\}\s*$/.exec(content)?.[1] ?? null,
+  }));
+  // Each control by what it does: the store link, the reload, and the dismissal.
+  if (
+    !["update", "dismiss"].every((kind) => controls.some((c) => c.kind === kind)) ||
+    controls.some((c) => c.label !== c.kind)
+  ) {
+    push(
+      "StaleDataNotice.svelte words a control other than by its own STALE_ACTIONS label, so the native notice can drift",
+    );
+  }
+
   const footer = input?.footer ?? "";
   if (!/from "\$lib\/site-chrome"/.test(footer)) {
     push("Footer.svelte does not render from $lib/site-chrome, so the native footer can drift");
@@ -305,6 +332,7 @@ function main() {
   const errors = verifyNativeChrome({
     layout: read("apps/web/src/routes/+layout.svelte"),
     footer: read("apps/web/src/lib/components/Footer.svelte"),
+    notice: read("apps/web/src/lib/components/StaleDataNotice.svelte"),
     router: read("apps/web/src/lib/native-router.svelte.ts"),
     host: read("apps/mobile/ios/App/App/Shell/NativeCoreHost.swift"),
     plugin: read("apps/mobile/ios/App/App/Shell/NativeRouterPlugin.swift"),

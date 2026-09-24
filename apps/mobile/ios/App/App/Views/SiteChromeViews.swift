@@ -53,10 +53,10 @@ struct StaleNotice: View {
                 HStack(spacing: 16) {
                     if let raw = stale.updateUrl, let url = URL(string: raw) {
                         // A system handoff to the store listing, not the in-app browser.
-                        Button("Update") { openURL(url) }
+                        Button(stale.update) { openURL(url) }
                             .foregroundStyle(Theme.ink.resolve(scheme))
                     }
-                    Button("Dismiss") {
+                    Button(stale.dismiss) {
                         dismissed = true
                         actions.dismissStale(stale.dataVersion)
                     }

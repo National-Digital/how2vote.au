@@ -6,18 +6,18 @@
     (enum_case_decl range=[bypasses.swift:4:5 - line:4:16]
       (enum_element_decl range=[bypasses.swift:4:10 - line:4:16] "key"))
     (enum_element_decl range=[bypasses.swift:4:10 - line:4:16] "key"))
-  (struct_decl range=[bypasses.swift:8:1 - line:32:1] "Bypasses" inherits="<null>"
+  (struct_decl range=[bypasses.swift:8:1 - line:34:1] "Bypasses" inherits="<null>"
     (available_attr range=[bypasses.swift:7:2 - line:7:61] platform=* deprecated message="An attribute's sentence")
-    (pattern_binding_decl range=[bypasses.swift:9:5 - line:25:5]
+    (pattern_binding_decl range=[bypasses.swift:9:5 - line:27:5]
       (pattern_typed
         (pattern_named "body")
         (type_opaque_return
           (type_unqualified_ident id="View" unbound))))
     (var_decl range=[bypasses.swift:9:9 - line:9:9] "body"
-      (accessor_decl range=[bypasses.swift:9:25 - line:25:5] <anonymous @ 0x5f7dd13a49f8> get for="body"
+      (accessor_decl range=[bypasses.swift:9:25 - line:27:5] <anonymous @ 0x61c2d74c8928> get for="body"
         (parameter "self") thrown_type="<null>"
         (parameter_list)
-        (brace_stmt range=[bypasses.swift:9:25 - line:25:5]
+        (brace_stmt range=[bypasses.swift:9:25 - line:27:5]
           (call_expr type="<null>" isolation_crossing="none"
             (unresolved_decl_ref_expr type="<null>" name="Text" function_ref=unapplied)
             (argument_list
@@ -124,12 +124,22 @@
                     (unresolved_decl_ref_expr type="<null>" name="x" function_ref=unapplied)))))
             (argument_list
               (argument
-                (string_literal_expr type="<null>" encoding=utf8 value="electorate-map" builtin_initializer="**NULL**" initializer="**NULL**")))))))
-    (func_decl range=[bypasses.swift:26:5 - line:31:5] "bridge()"
+                (string_literal_expr type="<null>" encoding=utf8 value="electorate-map" builtin_initializer="**NULL**" initializer="**NULL**"))))
+          (call_expr type="<null>" isolation_crossing="none"
+            (unresolved_decl_ref_expr type="<null>" name="Banner" function_ref=unapplied)
+            (argument_list labels="source:"
+              (argument label="source"
+                (string_literal_expr type="<null>" encoding=utf8 value="Shown as a banner's source" builtin_initializer="**NULL**" initializer="**NULL**"))))
+          (pattern_binding_decl range=[bypasses.swift:26:9 - line:26:22]
+            (pattern_named "script")
+            (original_init=string_literal_expr type="<null>" encoding=utf8 value="Held for a script, shown instead" builtin_initializer="**NULL**" initializer="**NULL**")
+            (processed_init=string_literal_expr type="<null>" encoding=utf8 value="Held for a script, shown instead" builtin_initializer="**NULL**" initializer="**NULL**"))
+          (var_decl range=[bypasses.swift:26:13 - line:26:13] "script" let))))
+    (func_decl range=[bypasses.swift:28:5 - line:33:5] "bridge()"
       (parameter "self") thrown_type="<null>"
-      (parameter_list range=[bypasses.swift:26:16 - line:26:17])
-      (brace_stmt range=[bypasses.swift:26:19 - line:31:5]
-        (pattern_binding_decl range=[bypasses.swift:27:9 - line:27:69]
+      (parameter_list range=[bypasses.swift:28:16 - line:28:17])
+      (brace_stmt range=[bypasses.swift:28:19 - line:33:5]
+        (pattern_binding_decl range=[bypasses.swift:29:9 - line:29:69]
           (pattern_named "title")
           (original_init=call_expr type="<null>" isolation_crossing="none"
             (unresolved_dot_expr type="<null>" field="getString" function_ref=unapplied
@@ -147,7 +157,7 @@
                 (string_literal_expr type="<null>" encoding=utf8 value="title" builtin_initializer="**NULL**" initializer="**NULL**"))
               (argument
                 (string_literal_expr type="<null>" encoding=utf8 value="Default shown to voter" builtin_initializer="**NULL**" initializer="**NULL**")))))
-        (var_decl range=[bypasses.swift:27:13 - line:27:13] "title" let)
+        (var_decl range=[bypasses.swift:29:13 - line:29:13] "title" let)
         (call_expr type="<null>" isolation_crossing="none"
           (unresolved_dot_expr type="<null>" field="notifyListeners" function_ref=unapplied
             (unresolved_decl_ref_expr type="<null>" name="self" function_ref=unapplied))
@@ -165,35 +175,35 @@
           (argument_list
             (argument
               (string_literal_expr type="<null>" encoding=utf8 value="You're offline \xE2\x80\x94 reconnect and try again" builtin_initializer="**NULL**" initializer="**NULL**"))))
-        (throw_stmt range=[bypasses.swift:30:9 - line:30:67]
+        (throw_stmt range=[bypasses.swift:32:9 - line:32:67]
           (call_expr type="<null>" isolation_crossing="none"
             (unresolved_dot_expr type="<null>" field="missing" function_ref=unapplied
               (unresolved_decl_ref_expr type="<null>" name="Failure" function_ref=unapplied))
             (argument_list
               (argument
                 (string_literal_expr type="<null>" encoding=utf8 value="Your electorate could not be found" builtin_initializer="**NULL**" initializer="**NULL**"))))))))
-  (enum_decl range=[bypasses.swift:34:1 - line:37:1] "Notice" inherits="<null>, <null>"
-    (enum_case_decl range=[bypasses.swift:35:5 - line:35:10]
-      (enum_element_decl range=[bypasses.swift:35:10 - line:35:10] "offline"))
-    (enum_element_decl range=[bypasses.swift:35:10 - line:35:10] "offline")
-    (pattern_binding_decl range=[bypasses.swift:36:5 - line:36:74]
+  (enum_decl range=[bypasses.swift:36:1 - line:39:1] "Notice" inherits="<null>, <null>"
+    (enum_case_decl range=[bypasses.swift:37:5 - line:37:10]
+      (enum_element_decl range=[bypasses.swift:37:10 - line:37:10] "offline"))
+    (enum_element_decl range=[bypasses.swift:37:10 - line:37:10] "offline")
+    (pattern_binding_decl range=[bypasses.swift:38:5 - line:38:74]
       (pattern_typed
         (pattern_named "description")
         (type_unqualified_ident id="String" unbound)))
-    (var_decl range=[bypasses.swift:36:9 - line:36:9] "description"
-      (accessor_decl range=[bypasses.swift:36:29 - line:36:74] <anonymous @ 0x5f7dd13dee70> get for="description"
+    (var_decl range=[bypasses.swift:38:9 - line:38:9] "description"
+      (accessor_decl range=[bypasses.swift:38:29 - line:38:74] <anonymous @ 0x61c2d7503070> get for="description"
         (parameter "self") thrown_type="<null>"
         (parameter_list)
-        (brace_stmt range=[bypasses.swift:36:29 - line:36:74]
+        (brace_stmt range=[bypasses.swift:38:29 - line:38:74]
           (string_literal_expr type="<null>" encoding=utf8 value="You're offline \xE2\x80\x94 reconnect to continue" builtin_initializer="**NULL**" initializer="**NULL**")))))
-  (struct_decl range=[bypasses.swift:39:1 - line:41:1] "Card" inherits="<null>"
-    (pattern_binding_decl range=[bypasses.swift:40:5 - line:40:61]
+  (struct_decl range=[bypasses.swift:41:1 - line:43:1] "Card" inherits="<null>"
+    (pattern_binding_decl range=[bypasses.swift:42:5 - line:42:61]
       (pattern_typed
         (pattern_named "description")
         (type_unqualified_ident id="String" unbound)))
-    (var_decl range=[bypasses.swift:40:9 - line:40:9] "description"
-      (accessor_decl range=[bypasses.swift:40:29 - line:40:61] <anonymous @ 0x5f7dd13df360> get for="description"
+    (var_decl range=[bypasses.swift:42:9 - line:42:9] "description"
+      (accessor_decl range=[bypasses.swift:42:29 - line:42:61] <anonymous @ 0x61c2d7503560> get for="description"
         (parameter "self") thrown_type="<null>"
         (parameter_list)
-        (brace_stmt range=[bypasses.swift:40:29 - line:40:61]
+        (brace_stmt range=[bypasses.swift:42:29 - line:42:61]
           (string_literal_expr type="<null>" encoding=utf8 value="a lower-case line on a card" builtin_initializer="**NULL**" initializer="**NULL**"))))))

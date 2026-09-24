@@ -5,7 +5,7 @@ import UIKit
 /// A link to a page outside the app, which says so before it is followed.
 ///
 /// Mirrors `apps/web/src/lib/components/ExternalLink.svelte`, including the part that is easy to drop
-/// natively: the cue. Two audiences, one cue — the ↗ glyph for anyone scanning the screen, and the
+/// natively: the cue. Two audiences, one cue — the ↗ arrow for anyone scanning the screen, and the
 /// same words inside the accessible name, so a screen reader announces the destination change rather
 /// than dropping the reader into an unexplained context (WCAG 3.2.5).
 ///
@@ -31,7 +31,7 @@ struct ExternalLinkView: View {
                 Text(title)
                     .underline()
                 if showsGlyph {
-                    Text("↗")
+                    Image(systemName: "arrow.up.right")
                         .font(.caption2)
                 }
             }

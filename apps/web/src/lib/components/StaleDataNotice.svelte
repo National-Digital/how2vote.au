@@ -4,7 +4,7 @@
   import { ELECTIONS } from "@how2vote/data-schema";
   import { isNativeShell, storeListingUrl } from "$lib/channel";
   import { now } from "$lib/now.svelte";
-  import { staleDismissal, staleMessage } from "$lib/stale-notice.svelte";
+  import { STALE_ACTIONS, staleDismissal, staleMessage } from "$lib/stale-notice.svelte";
   import { assessStaleness } from "$lib/staleness";
 
   onMount(() => {
@@ -30,14 +30,14 @@
     <div class="actions">
       {#if isNativeShell && storeUrl}
         <!-- User-initiated OS handoff to the store listing — no version lookup, no network. -->
-        <a class="act" href={storeUrl} rel="noopener">Update</a>
+        <a class="act" href={storeUrl} rel="noopener">{STALE_ACTIONS.update}</a>
       {:else if !isNativeShell}
-        <button type="button" class="act" onclick={reload}>Reload</button>
+        <button type="button" class="act" onclick={reload}>{STALE_ACTIONS.reload}</button>
       {/if}
       <button
         type="button"
         class="dismiss"
-        onclick={() => staleDismissal.remember(verdict.dataVersion)}>Dismiss</button
+        onclick={() => staleDismissal.remember(verdict.dataVersion)}>{STALE_ACTIONS.dismiss}</button
       >
     </div>
   </aside>

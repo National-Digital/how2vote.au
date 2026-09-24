@@ -56,34 +56,30 @@ class MainViewController: CAPBridgeViewController {
 final class MarkerLog: NSObject, WKScriptMessageHandler {
     private static let name = "how2voteMarker"
 
-    /// The forwarder runs at document start, wraps `console.info` and passes the original call
-    /// through, so the web keeps whatever logging it would otherwise have done.
-    private static let script = """
-        (function () {
-          var pass = console.info.bind(console);
-          console.info = function () {
-            try {
-              var text = Array.prototype.map.call(arguments, String).join(" ");
-              if (text.indexOf("How2Vote:") === 0) {
-                window.webkit.messageHandlers.how2voteMarker.postMessage(text);
-              }
-            } catch (e) {
-              /* never let a diagnostic break the page */
-            }
-            return pass.apply(console, arguments);
-          };
-        })();
-        """
-
     func install(on webView: WKWebView?) {
         guard let controller = webView?.configuration.userContentController else {
             NSLog("How2Vote: marker log NOT installed — no web view")
             return
         }
         controller.add(self, name: Self.name)
-        controller.addUserScript(
-            WKUserScript(source: Self.script, injectionTime: .atDocumentStart, forMainFrameOnly: true)
-        )
+        // The forwarder runs at document start, wraps `console.info` and passes the original call
+        // through, so the web keeps whatever logging it would otherwise have done.
+        controller.addUserScript(WKUserScript(source: """
+            (function () {
+              var pass = console.info.bind(console);
+              console.info = function () {
+                try {
+                  var text = Array.prototype.map.call(arguments, String).join(" ");
+                  if (text.indexOf("How2Vote:") === 0) {
+                    window.webkit.messageHandlers.how2voteMarker.postMessage(text);
+                  }
+                } catch (e) {
+                  /* never let a diagnostic break the page */
+                }
+                return pass.apply(console, arguments);
+              };
+            })();
+            """, injectionTime: .atDocumentStart, forMainFrameOnly: true))
         // Its own marker. Without it, a run with no web markers cannot say whether the web stayed
         // silent or the forwarder was never there to carry it — which is the ambiguity that made
         // the last several runs cost a round trip each to interpret.

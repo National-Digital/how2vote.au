@@ -628,11 +628,11 @@ final class DocumentConservationTests: XCTestCase {
     /// What VoiceOver reads inside an element, in order: each text and control once, by its label.
     private func texts(in element: XCUIElementSnapshot) -> [String] {
         // A list marker: hidden from VoiceOver, but visible to UI tests. Skipped only if it really is
-        // one — a marked element holding anything else is counted, so misplacing the mark cannot hide
-        // page text from this check.
+        // one — a disc (labelled empty), a tick or a number — so misplacing the mark cannot hide page
+        // text from this check.
         if element.identifier == "document-decoration" {
             let isMarker = element.children.isEmpty
-                && element.label.range(of: #"^(•|✓|\d+\.)$"#, options: .regularExpression) != nil
+                && element.label.range(of: #"^(✓|\d+\.)?$"#, options: .regularExpression) != nil
             if isMarker { return [] }
         }
         switch element.elementType {

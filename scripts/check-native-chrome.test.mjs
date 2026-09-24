@@ -15,6 +15,7 @@ const views = Object.fromEntries(
 const COMMITTED = {
   layout: read("../apps/web/src/routes/+layout.svelte"),
   footer: read("../apps/web/src/lib/components/Footer.svelte"),
+  notice: read("../apps/web/src/lib/components/StaleDataNotice.svelte"),
   router: read("../apps/web/src/lib/native-router.svelte.ts"),
   host: read("../apps/mobile/ios/App/App/Shell/NativeCoreHost.swift"),
   plugin: read("../apps/mobile/ios/App/App/Shell/NativeRouterPlugin.swift"),
@@ -136,6 +137,29 @@ describe("verifyNativeChrome", () => {
     expect(
       mutate({ router: COMMITTED.router.replace("authorisation: AUTHORISATION,", "") }),
     ).toContain("omits AUTHORISATION");
+    expect(
+      mutate({ router: COMMITTED.router.replace("dismiss: STALE_ACTIONS.dismiss,", "") }),
+    ).toContain("omits the stale notice's dismiss label");
+    expect(
+      mutate({ router: COMMITTED.router.replace("update: STALE_ACTIONS.update,", "") }),
+    ).toContain("omits the stale notice's update label");
+  });
+
+  it("catches the web's stale notice worded other than by the labels the native one is handed", () => {
+    expect(mutate({})).toEqual("");
+    expect(
+      mutate({ notice: COMMITTED.notice.replace("{STALE_ACTIONS.dismiss}", "Dismiss") }),
+    ).toContain("StaleDataNotice.svelte words a control");
+    expect(
+      mutate({
+        notice: COMMITTED.notice.replace("{STALE_ACTIONS.update}", "{STALE_ACTIONS.reload}"),
+      }),
+    ).toContain("StaleDataNotice.svelte words a control");
+    const swapped = COMMITTED.notice
+      .replace("{STALE_ACTIONS.update}", "@@")
+      .replace("{STALE_ACTIONS.dismiss}", "{STALE_ACTIONS.update}")
+      .replace("@@", "{STALE_ACTIONS.dismiss}");
+    expect(mutate({ notice: swapped })).toContain("StaleDataNotice.svelte words a control");
   });
 
   it("catches a footer link hard-coded outside the shared module", () => {

@@ -51,7 +51,8 @@ enum ChromeLogic {
         {"authorisation":"\(authorisation)",
          "credit":[{"text":"© "},{"text":"Org","href":"https://example.org"}],
          "links":[{"label":"Feedback","href":"/contact"},{"label":"Privacy policy","href":"/privacy"}],
-         "stale":{"message":"Old data.","dataVersion":"2025-01-01","prominent":true,"updateUrl":null}}
+         "stale":{"message":"Old data.","dataVersion":"2025-01-01","prominent":true,"updateUrl":null,
+                  "update":"Update","dismiss":"Dismiss"}}
         """
     }
 
@@ -81,7 +82,8 @@ enum ChromeLogic {
         guard chrome.links.first?.href == "/contact", chrome.credit.count == 2 else {
             return ["the handover decoded without its links or credit"]
         }
-        guard chrome.stale?.prominent == true, chrome.stale?.updateUrl == nil else {
+        guard chrome.stale?.prominent == true, chrome.stale?.updateUrl == nil,
+              chrome.stale?.update == "Update", chrome.stale?.dismiss == "Dismiss" else {
             return ["the stale notice did not survive the handover"]
         }
         return []
@@ -106,6 +108,13 @@ enum ChromeLogic {
         if SiteChrome.decode(external) != nil {
             failures.append("a footer link that is not a web route was accepted")
         }
+        // The notice's controls are worded by the web; a notice without them cannot be drawn.
+        let unlabelled = #"{"authorisation":"A","credit":[{"text":"c"}],"links":[{"label":"x","href":"/x"}],"#
+            + #""stale":{"message":"m","dataVersion":"v","prominent":false,"update":"u","dismiss":" "}}"#
+        if SiteChrome.decode(unlabelled) != nil { failures.append("a stale notice with a blank control was accepted") }
+        let unworded = #"{"authorisation":"A","credit":[{"text":"c"}],"links":[{"label":"x","href":"/x"}],"#
+            + #""stale":{"message":"m","dataVersion":"v","prominent":false}}"#
+        if SiteChrome.decode(unworded) != nil { failures.append("a stale notice without its controls was accepted") }
         return failures
     }
 

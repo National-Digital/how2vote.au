@@ -11,6 +11,13 @@ import type { StalenessVerdict } from "$lib/staleness";
 // up and cleared like all other on-device state.
 const DISMISS_KEY = "how2vote:stale-dismissed:v1";
 
+/** The notice's controls: the store handoff in a shell, a reload on the web, and the dismissal. */
+export const STALE_ACTIONS = {
+  update: "Update",
+  reload: "Reload",
+  dismiss: "Dismiss",
+} as const;
+
 export function staleMessage(verdict: StalenessVerdict): string {
   return verdict.level === "prominent"
     ? `This app's candidate data (from ${verdict.dataVersion}) is from before nominations were finalised, so the ballot may be incomplete.`

@@ -23,6 +23,9 @@
  *     diagnostic: starting lower-case, as no sentence shown to a voter does;
  *   - a key or event name passed as one (`call.getString("electionId")`), an identifier, or a
  *     resource name (`systemName:`);
+ *   - script source injected into the web view (`WKUserScript(source:)`), which runs rather than
+ *     shows. Script that writes text into the page is not told apart, so such a script must not
+ *     carry copy: the page's words are the web build's;
  *   - punctuation and format strings of ASCII alone;
  *   - a token shaped like a key, route, URL or type name — unless it is passed straight to a view or
  *     an accessibility modifier, where it is drawn or heard.
@@ -98,6 +101,9 @@ const KEY_CALLS = new Set([
   "context.objectForKeyedSubscript",
   "self.notifyListeners",
 ]);
+
+/** Arguments, by callee and label, that are source code to run rather than text to show. */
+const CODE_ARGUMENTS = new Set(["WKUserScript:source"]);
 
 /** Methods, called on something, whose arguments are identifiers. */
 const IDENTIFIER_METHODS = new Set(["accessibilityIdentifier"]);
@@ -457,6 +463,7 @@ function isExcused({ text, path }, { lines, model }) {
   const method = call ? call.name.slice(call.name.lastIndexOf(".") + 1) : "";
   if (call && DIAGNOSTIC_FUNCTIONS.has(call.name)) return true;
   if (call?.label && NAME_LABELS.has(call.label) && !/\s/.test(text)) return true;
+  if (call?.label && CODE_ARGUMENTS.has(`${call.name}:${call.label}`)) return true;
   if (call && call.name.includes(".") && IDENTIFIER_METHODS.has(method)) return true;
   if (call?.isFirst && (KEY_CALLS.has(call.name) || (model && MODEL_KEY_CALLS.has(call.name)))) {
     return true;
