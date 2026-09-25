@@ -49,6 +49,7 @@ describe("verifyNativeChrome", () => {
       saved: "SavedView",
       contact: "DocumentView",
       insights: "InsightsView",
+      survey: "SurveyView",
     });
   });
 

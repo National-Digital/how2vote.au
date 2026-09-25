@@ -21,6 +21,8 @@ const PAGE_PATHS = [
   "apps/web/src/lib/insights-copy.ts",
   "apps/web/src/lib/content/PrivacyContent.svelte",
   "apps/web/src/routes/survey/+page.svelte",
+  "apps/web/src/lib/survey-copy.ts",
+  "apps/web/src/lib/components/SurveyNotes.svelte",
   "apps/web/src/lib/content/TermsContent.svelte",
 ];
 const PAGES = Object.fromEntries(PAGE_PATHS.map((p) => [p, read(p)]));
@@ -247,5 +249,16 @@ describe("verdict — wording held outside the page", () => {
     expect(
       hasError(verdict({ ...baseInput(), register }), "renderedBy and via must be given together"),
     ).toBe(true);
+  });
+});
+
+describe("verdict — the survey's prefer-not-to-say label", () => {
+  it("fails when the page stops rendering the label its wording holds", () => {
+    const page = PAGES["apps/web/src/routes/survey/+page.svelte"].replace(
+      "{SURVEY_COPY.prefer}",
+      "{SURVEY_COPY.progress}",
+    );
+    const res = verdict({ ...baseInput(), surveyPageText: page });
+    expect(hasError(res, 'visible "Prefer not to say" label not found')).toBe(true);
   });
 });

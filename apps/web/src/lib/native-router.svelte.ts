@@ -30,6 +30,8 @@ import { quiz, type Persisted } from "$lib/quiz.svelte";
 import { saved } from "$lib/saved.svelte";
 import { savedRows } from "$lib/saved-rows";
 import { readInsights } from "$lib/insights";
+import { survey } from "$lib/survey-flow.svelte";
+import { termsAcceptance } from "$lib/terms.svelte";
 import { AUTHORISATION, FEEDBACK_LINK, footerCredit, footerLinks } from "$lib/site-chrome";
 import { LINK_CUE } from "$lib/external-link-copy";
 import { STALE_ACTIONS, staleDismissal, staleMessage } from "$lib/stale-notice.svelte";
@@ -67,6 +69,7 @@ const NATIVE_ROUTES = new Set([
   "/saved",
   "/contact",
   "/insights",
+  "/survey",
   // The landing renders for a past election too (`/2019`, `/2022`), and the election toggle moves
   // between them. Without these the toggle would drop out of the native surface mid-tap.
   ...ELECTION_IDS.map((id) => `/${id}`),
@@ -101,6 +104,7 @@ export const STATE_DOCUMENTS = [
   "states/contact",
   "states/contact-form",
   "states/insights",
+  "states/survey",
 ] as const;
 
 /**
@@ -213,11 +217,16 @@ async function statsFile(name: string): Promise<unknown> {
 
 /**
  * What a screen draws that is the web's to hold, handed over with the route: the saved cards, as the
- * saved page lists them, and the Insights page's figures. Undefined for a screen with none, and null
+ * saved page lists them, the Insights page's figures, and the survey's step. Undefined for a screen with none, and null
  * for one whose data the web has not read yet, which the native core cannot draw.
  */
 async function screenData(route: string): Promise<string | null | undefined> {
   if (route === "insights") return JSON.stringify(await readInsights(statsFile));
+  if (route === "survey") {
+    // Whether the current Terms still need accepting decides whether their checkbox is shown.
+    if (!termsAcceptance.ready) termsAcceptance.hydrate();
+    return JSON.stringify(survey.nativeStep());
+  }
   if (route !== "saved") return undefined;
   if (!saved.hydrated) return null;
   return JSON.stringify(savedRows(saved.items));
@@ -227,7 +236,7 @@ async function screenData(route: string): Promise<string | null | undefined> {
  * Routes the layout sends a visitor away from unless they may use them (ADR 0011/0012): an under-18
  * never sees them, so they are never drawn natively for one either.
  */
-const ADULT_ONLY_NATIVE_ROUTES = new Set(["/saved"]);
+const ADULT_ONLY_NATIVE_ROUTES = new Set(["/saved", "/survey"]);
 
 /** An under-18 explorer's in-memory quiz, which is never persisted, or undefined for anyone else. */
 function explorerSession(electionId: string): string | undefined {
@@ -541,7 +550,10 @@ function attach(navigate: (path: string) => void, electionId: () => string): voi
   const screenAction = router.addListener("nativeScreenAction", (event) =>
     handleScreenAction(
       event,
-      () => void nativeRoute.sync(new URL(window.location.href), electionId()),
+      {
+        resync: () => void nativeRoute.sync(new URL(window.location.href), electionId()),
+        navigate,
+      },
       (request, answer) => router.answer({ request, answer }),
     ),
   );

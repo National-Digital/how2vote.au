@@ -48,6 +48,7 @@ enum DocumentLogic {
         failures += readsTheSavedWording(root)
         failures += readsTheContactWording(root)
         failures += readsTheInsights(root)
+        failures += readsTheSurvey(root)
 
         var ran = 0
         let sample = try? Data(contentsOf: files[0])
@@ -658,6 +659,104 @@ enum DocumentLogic {
         }
         if (try? InsightsData.decode(nil)) != nil {
             failures.append("an insights screen with no figures handed over was accepted")
+        }
+        return failures
+    }
+
+    /// The survey's wording is the web's: every piece worded, a past election's notice naming the
+    /// year it is given, and the documents the gate links being pages the app draws. The steps the
+    /// web hands over (`survey-steps.json`, which the web's test holds to its step type) decode, and
+    /// steps the screen could only draw wrongly are refused.
+    private static func readsTheSurvey(_ root: URL) -> [String] {
+        guard let data = try? Data(contentsOf: root.appendingPathComponent("states/survey.json")),
+              let (page, _) = try? NativeDocument.decodeChecked(data)
+        else { return ["the survey states page is missing or does not lay out"] }
+        var failures: [String] = []
+        do {
+            let wording = try SurveyWording(page)
+            let texts = SurveyWording.Piece.allCases.map(wording.text)
+            if texts.contains(where: \.isEmpty) || Set(texts).count != texts.count {
+                failures.append("the survey's pieces are not each worded and distinct: \(texts)")
+            }
+            if texts.contains(where: { $0.contains("{") }) {
+                failures.append("a survey piece is drawn with a value unfilled")
+            }
+            let past = wording.notes(archived: true, year: "1901").blocks.map(Self.visible).joined()
+            if past.components(separatedBy: "1901").count != 3 {
+                failures.append("a past election's notice does not name the year it is given, twice")
+            }
+            let live = wording.notes(archived: false, year: "1901").blocks.map(Self.visible).joined()
+            if live.contains("1901") || live.isEmpty {
+                failures.append("the notice for any other election names a year")
+            }
+            let links = wording.notes(archived: true, year: "1901").links.map(\.href) + wording.terms.layout.links.map(\.href)
+            for href in Set(links) {
+                let name = String(href.dropFirst())
+                let file = root.appendingPathComponent("\(name).json")
+                if (try? NativeDocument.decodeChecked(Data(contentsOf: file)))?.0.route != href {
+                    failures.append("the survey gate links \(href), which is not a page the app draws")
+                }
+            }
+            if !wording.close("Privacy policy").contains("Privacy policy") || wording.close("Privacy policy") == "Privacy policy" {
+                failures.append("the survey's close control does not name the document it closes")
+            }
+            if wording.terms.spoken.isEmpty || wording.top.back == nil {
+                failures.append("the survey's Terms acceptance or way back is not worded")
+            }
+        } catch {
+            failures.append("the survey wording: \(error)")
+        }
+        func without(_ id: String) -> NativeDocument {
+            NativeDocument(
+                route: page.route, title: page.title, crumbs: nil, crumbsLabel: nil, top: page.top, brand: nil,
+                blocks: page.blocks.filter {
+                    if case .section(.template, id, _) = $0 { return false }
+                    return true
+                },
+                digest: "", spoken: "", drawn: ""
+            )
+        }
+        for id in ["survey-prefer", "survey-notes-archived", "survey-terms"] where (try? SurveyWording(without(id))) != nil {
+            failures.append("a survey wording missing \(id) was accepted")
+        }
+
+        guard let fixture = try? String(contentsOf: URL(fileURLWithPath: "apps/mobile/ios/Parity/survey-steps.json"), encoding: .utf8),
+              let steps = try? JSONSerialization.jsonObject(with: Data(fixture.utf8)) as? [[String: Any]]
+        else { return failures + ["the survey steps fixture is missing"] }
+        let json = { (object: [String: Any]) in String(decoding: try! JSONSerialization.data(withJSONObject: object), as: UTF8.self) }
+        var kinds: [String] = []
+        for step in steps {
+            do {
+                switch try SurveyStep.decode(json(step)) {
+                case .gate: kinds.append("gate")
+                case .question: kinds.append("question")
+                }
+            } catch {
+                failures.append("a survey step the web hands over does not decode: \(error)")
+            }
+        }
+        if kinds != ["gate", "question"] {
+            failures.append("the survey fixture does not hold a gate and a question: \(kinds)")
+        }
+        let gate = steps.first { $0["step"] as? String == "gate" } ?? [:]
+        let question = steps.first { $0["step"] as? String == "question" } ?? [:]
+        for (what, mutated) in [
+            ("a contribution allowed without consent", gate.merging(["canContribute": true, "consented": false]) { _, b in b }),
+            ("a question with no answers", question.merging(["options": [String]()]) { _, b in b }),
+            ("a question out of its place", question.merging(["position": 0]) { _, b in b }),
+            ("a step of no kind the screen draws", gate.merging(["step": "thanks"]) { _, b in b }),
+        ] where (try? SurveyStep.decode(json(mutated))) != nil {
+            failures.append("a survey step with \(what) was accepted")
+        }
+        if (try? SurveyStep.decode(nil)) != nil {
+            failures.append("a survey screen with no step handed over was accepted")
+        }
+        // An answer names the question it answers, as the web requires of it.
+        if let step = try? SurveyStep.decode(json(question)), case let .question(q) = step {
+            let sent = (try? JSONSerialization.jsonObject(with: Data(SurveyStep.answer(q, "x").utf8))) as? [String: String]
+            if sent != ["key": q.key, "answer": "x"] || step.key != q.key {
+                failures.append("a survey answer does not name the question it answers: \(sent ?? [:])")
+            }
         }
         return failures
     }

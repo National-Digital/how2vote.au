@@ -560,6 +560,96 @@ final class DocumentConservationTests: XCTestCase {
         star.tap()
         let on = XCTNSPredicateExpectation(predicate: NSPredicate(format: "value == '1'"), object: star)
         XCTAssertEqual(XCTWaiter.wait(for: [on], timeout: 5), .completed, "review: the star did not turn on")
+
+        // On to the survey's gate, as an 18+ voter reaches it.
+        app.buttons[try piece("compare")].tap()
+        try checkTheSurveyGate(in: app)
+    }
+
+    /// The survey's gate, in the web's words: its title for the election compared, the consents the
+    /// page asks for, and a contribution the web allows only once they are given — each tick asked of
+    /// the web and drawn from what it then holds. Nothing is contributed.
+    private func checkTheSurveyGate(in app: XCUIApplication) throws {
+        let wording = try json("states/survey")
+        func piece(_ id: String) throws -> String {
+            try self.piece("survey-\(id)", of: wording, ["age": "18"])
+        }
+        XCTAssertTrue(app.staticTexts.matching(NSPredicate(format: "label ==[c] %@", try piece("ready"))).firstMatch.waitForExistence(timeout: 20), "survey: not drawn natively")
+        let titles = [try piece("archivedTitle"), try piece("liveTitle")]
+        XCTAssertTrue(titles.contains { app.staticTexts[$0].exists }, "survey: the gate's title is not the page's")
+        let consent = app.switches.matching(NSPredicate(format: "label == %@ OR label == %@", try piece("archivedConsent"), try piece("liveConsent"))).firstMatch
+        XCTAssertTrue(consent.exists, "survey: the research consent is not the page's")
+        XCTAssertTrue(
+            app.switches.matching(NSPredicate(format: "label == %@", try piece("sensitiveConsent"))).firstMatch.exists,
+            "survey: the separate sensitive consent is not the page's"
+        )
+        let contribute = app.buttons[try piece("contribute")]
+        XCTAssertTrue(contribute.exists, "survey: the way to contribute is not the page's")
+        XCTAssertFalse(contribute.isEnabled, "survey: a contribution is allowed with nothing ticked")
+        consent.tap()
+        let on = XCTNSPredicateExpectation(predicate: NSPredicate(format: "value == '1'"), object: consent)
+        XCTAssertEqual(XCTWaiter.wait(for: [on], timeout: 5), .completed, "survey: the consent did not tick")
+        let skips = [try piece("skipPlan"), try piece("skipComparison")]
+        XCTAssertTrue(skips.contains { app.buttons[$0].exists }, "survey: the way to skip is not the page's")
+
+        // The Terms are still to accept whenever consent alone does not allow a contribution.
+        if !contribute.isEnabled {
+            try checkTheTermsOpenOverTheGate(in: app, wording: wording)
+        }
+        XCTAssertTrue(contribute.isEnabled, "survey: a contribution is refused with every decision made")
+        try checkTheSurveySteps(in: app, wording: wording)
+    }
+
+    /// The Terms, opened from their acceptance over the gate as the page's dialog opens them, and
+    /// closed by the dialog's own name for that control, back to the gate as it was; then accepted.
+    private func checkTheTermsOpenOverTheGate(in app: XCUIApplication, wording: [String: Any]) throws {
+        let link = try XCTUnwrap(firstLink(under: "/terms", in: wording), "survey: the Terms acceptance links no Terms")
+        let terms = try projected("terms")
+        let element = app.links[link.label].firstMatch.exists ? app.links[link.label].firstMatch : app.buttons[link.label].firstMatch
+        // Read by its text: the link's internal address is its identifier, which VoiceOver never reads.
+        XCTAssertEqual(element.label, link.label, "survey: the Terms link is not read by its text")
+        tapUntilShown(element, in: app)
+        guard let shown = shownDocument(startingWith: terms.spoken, in: app) else {
+            return XCTFail("survey: the Terms did not open over the gate")
+        }
+        compare("terms", expected: terms.spoken, shown: shown)
+        let close = app.buttons[try self.piece("survey-close", of: wording, ["title": terms.title])]
+        XCTAssertTrue(close.exists, "survey: the Terms are not closed by the dialog's name for it")
+        close.tap()
+        // Read as its label begins: the acceptance's text before the link to the Terms.
+        let section = (wording["blocks"] as? [[String: Any]])?.first { $0["id"] as? String == "survey-terms" }
+        let opening = try XCTUnwrap(
+            ((section?["c"] as? [[String: Any]])?.first?["c"] as? [[String: Any]])?.first?["s"] as? String,
+            "survey: the Terms acceptance has no text"
+        ).trimmingCharacters(in: .whitespaces)
+        let accept = app.switches.matching(NSPredicate(format: "label BEGINSWITH %@", opening)).firstMatch
+        XCTAssertTrue(accept.waitForExistence(timeout: 10), "survey: closing the Terms left the gate")
+        XCTAssertEqual(accept.value as? String, "0", "survey: the Terms were accepted by reading them")
+        accept.tap()
+        let on = XCTNSPredicateExpectation(predicate: NSPredicate(format: "value == '1'"), object: accept)
+        XCTAssertEqual(XCTWaiter.wait(for: [on], timeout: 5), .completed, "survey: the Terms acceptance did not tick")
+    }
+
+    /// Into the questions and back out, each step the web's: a question left unanswered moves the
+    /// survey on, and back returns to it, then to the gate. It stops short of the last question, the
+    /// only step that uploads.
+    private func checkTheSurveySteps(in app: XCUIApplication, wording: [String: Any]) throws {
+        app.buttons[try self.piece("survey-contribute", of: wording, ["age": "18"])].tap()
+        let progress = app.descendants(matching: .any)
+            .matching(NSPredicate(format: "label == %@", try self.piece("survey-progress", of: wording))).firstMatch
+        XCTAssertTrue(progress.waitForExistence(timeout: 20), "survey: contributing did not reach the questions")
+        let first = progress.value as? String
+        let prefer = app.buttons[try self.piece("survey-prefer", of: wording)]
+        XCTAssertTrue(prefer.exists, "survey: a question offers no way to give no answer in the page's words")
+        prefer.tap()
+        let moved = XCTNSPredicateExpectation(predicate: NSPredicate(format: "value != %@", first ?? ""), object: progress)
+        XCTAssertEqual(XCTWaiter.wait(for: [moved], timeout: 10), .completed, "survey: giving no answer did not move the survey on")
+        app.buttons["top-back"].tap()
+        let returned = XCTNSPredicateExpectation(predicate: NSPredicate(format: "value == %@", first ?? ""), object: progress)
+        XCTAssertEqual(XCTWaiter.wait(for: [returned], timeout: 10), .completed, "survey: back did not return to the question before")
+        app.buttons["top-back"].tap()
+        let ready = app.staticTexts.matching(NSPredicate(format: "label ==[c] %@", try self.piece("survey-ready", of: wording)))
+        XCTAssertTrue(ready.firstMatch.waitForExistence(timeout: 10), "survey: back from the first question did not return to the gate")
     }
 
     /// The name of the first state the ballot page offers.

@@ -163,6 +163,21 @@ windows the web names (ADR 0014), and when a close it was handed ends, it asks t
 route again. `insights-model.json` is the model for a fixed input: the web's test holds it to
 `insightsModel`, and `DocumentLogic` holds the app's decoder to it.
 
+**D4j — The survey is the web's, step by step.** The survey's questions carry rules as code (a
+question skipped for an earlier answer), and its gate carries the consents the one upload path
+depends on, so no part of it is re-implemented natively. Its state and steps are
+`$lib/survey-flow.svelte.ts`, which the survey page renders. With the route, the web hands the app
+the step it is on (`nativeStep`): the gate and its ticks, or the question and its place. Each tick,
+the contribution, each answer and the way back is a `ScreenAction` the web takes through the same
+methods the page's controls call, then offers the route again at the step it shows, or leaves for
+the page that step leads to. An answer or a step back names the step it was drawn for, and the web
+refuses one from a step it has moved past, so a tap made before the next step is drawn cannot
+answer a question the voter never saw. The app draws each step in the words of `states/survey.html`, which
+renders `$lib/survey-copy.ts`, the collection notice and the Terms acceptance as the page renders
+them. The privacy policy and the terms open over the gate, as `DocLink` opens them. Skipping leaves
+for the plan and uploads nothing. `survey-steps.json` is a step of each kind, typed as the web's own
+step, and `DocumentLogic` holds the app's decoder to it.
+
 **D6 — The iOS app is a skeleton, and it has a contract with the web build.** The goal is that no
 iOS screen shows hand-written copy. Every word comes from the web build: projected pages, the
 chrome handed over with each route, and the datasets. Two checks hold this in place as the web

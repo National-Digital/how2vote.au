@@ -229,7 +229,21 @@ export function verdict(input = {}) {
           "prove prefer-not-to-say is on every item",
       );
     }
-    if (!/prefer not to say/i.test(surveyPage)) {
+    // The label is the page's own markup, or the survey wording's that the page renders by name —
+    // never a comment or a style rule that happens to mention it.
+    const markup = surveyPage
+      .replace(/<script[\s\S]*?<\/script>/g, "")
+      .replace(/<style[\s\S]*?<\/style>/g, "")
+      .replace(/<!--[\s\S]*?-->/g, "")
+      .replace(/\/\*[\s\S]*?\*\//g, "")
+      .replace(/\/\/[^\n]*/g, "");
+    const copy = (input.pages?.["apps/web/src/lib/survey-copy.ts"] ?? "")
+      .replace(/\/\*[\s\S]*?\*\//g, "")
+      .replace(/\/\/[^\n]*/g, "");
+    const labelled =
+      /prefer not to say/i.test(markup) ||
+      (/\{SURVEY_COPY\.prefer\}/.test(markup) && /prefer:\s*"Prefer not to say"/i.test(copy));
+    if (!labelled) {
       push('survey page: visible "Prefer not to say" label not found');
     }
     // Structural: the prefer control must sit outside (after) the options {#each} loop.
@@ -500,6 +514,8 @@ const PAGE_PATHS = [
   "apps/web/src/lib/insights-copy.ts",
   "apps/web/src/lib/content/PrivacyContent.svelte",
   "apps/web/src/routes/survey/+page.svelte",
+  "apps/web/src/lib/survey-copy.ts",
+  "apps/web/src/lib/components/SurveyNotes.svelte",
   "apps/web/src/lib/content/TermsContent.svelte",
 ];
 

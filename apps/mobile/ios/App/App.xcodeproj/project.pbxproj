@@ -61,6 +61,8 @@
 		6736E0EBE36B520AF75D3CE7 /* ContactForm.swift in Sources */ = {isa = PBXBuildFile; fileRef = 999903476E610EDBDEC4BEC4 /* ContactForm.swift */; };
 		3EE8F9261EB6824D924FE698 /* InsightsWording.swift in Sources */ = {isa = PBXBuildFile; fileRef = E829967CED125BC3EE4653FF /* InsightsWording.swift */; };
 		81AD510C2AADA487D9939099 /* InsightsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E562E3C5C08013F020A12282 /* InsightsView.swift */; };
+		DEA34ACB2F685C702C828DDC /* SurveyWording.swift in Sources */ = {isa = PBXBuildFile; fileRef = 08E496FE03E5E08F4493A1CA /* SurveyWording.swift */; };
+		86AE8FE902182CBAD79058AA /* SurveyView.swift in Sources */ = {isa = PBXBuildFile; fileRef = DFFB42FD6E27B88837136241 /* SurveyView.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -131,6 +133,8 @@
 		999903476E610EDBDEC4BEC4 /* ContactForm.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = ContactForm.swift; path = Views/ContactForm.swift; sourceTree = "<group>"; };
 		E829967CED125BC3EE4653FF /* InsightsWording.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = InsightsWording.swift; path = Model/InsightsWording.swift; sourceTree = "<group>"; };
 		E562E3C5C08013F020A12282 /* InsightsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = InsightsView.swift; path = Views/InsightsView.swift; sourceTree = "<group>"; };
+		08E496FE03E5E08F4493A1CA /* SurveyWording.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = SurveyWording.swift; path = Model/SurveyWording.swift; sourceTree = "<group>"; };
+		DFFB42FD6E27B88837136241 /* SurveyView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = SurveyView.swift; path = Views/SurveyView.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -174,6 +178,8 @@
 		504EC3061FED79650016851F /* App */ = {
 			isa = PBXGroup;
 			children = (
+				DFFB42FD6E27B88837136241 /* SurveyView.swift */,
+				08E496FE03E5E08F4493A1CA /* SurveyWording.swift */,
 				E562E3C5C08013F020A12282 /* InsightsView.swift */,
 				E829967CED125BC3EE4653FF /* InsightsWording.swift */,
 				999903476E610EDBDEC4BEC4 /* ContactForm.swift */,
@@ -351,6 +357,8 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				86AE8FE902182CBAD79058AA /* SurveyView.swift in Sources */,
+				DEA34ACB2F685C702C828DDC /* SurveyWording.swift in Sources */,
 				81AD510C2AADA487D9939099 /* InsightsView.swift in Sources */,
 				3EE8F9261EB6824D924FE698 /* InsightsWording.swift in Sources */,
 				6736E0EBE36B520AF75D3CE7 /* ContactForm.swift in Sources */,

@@ -87,3 +87,94 @@ struct StatesPage {
         }.joined()
     }
 }
+
+// MARK: - Rich pieces
+
+extension StatesPage {
+    /// The values a page's blocks mark, in reading order.
+    static func marked(in blocks: [NativeDocument.Block]) -> [(name: String, sample: String)] {
+        func inline(_ node: NativeDocument.Inline) -> [(name: String, sample: String)] {
+            switch node {
+            case let .value(name, sample): return [(name, sample)]
+            case let .strong(c), let .emphasis(c), let .code(c), let .hidden(c), let .aside(_, c),
+                 let .link(_, _, _, _, c), let .term(_, c, _):
+                return c.flatMap(inline)
+            case .text, .lineBreak, .glyph: return []
+            }
+        }
+        return blocks.flatMap { block -> [(name: String, sample: String)] in
+            switch block {
+            case let .heading(_, _, c), let .paragraph(_, _, c): return c.flatMap(inline)
+            case let .section(_, _, c), let .quote(c): return marked(in: c)
+            case let .list(_, _, items): return items.flatMap { marked(in: $0) }
+            case let .definitions(items): return items.flatMap { $0.term.flatMap(inline) + marked(in: $0.detail) }
+            case .electionSwitch, .slot, .logo: return []
+            }
+        }
+    }
+
+    /// A block with each value it marks given, where one is.
+    static func filling(_ block: NativeDocument.Block, _ values: [String: String]) -> NativeDocument.Block {
+        func inline(_ node: NativeDocument.Inline) -> NativeDocument.Inline {
+            switch node {
+            case let .value(name, sample): return .value(name: name, sample: values[name] ?? sample)
+            case let .strong(c): return .strong(c.map(inline))
+            case let .emphasis(c): return .emphasis(c.map(inline))
+            case let .code(c): return .code(c.map(inline))
+            case let .hidden(c): return .hidden(c.map(inline))
+            case let .aside(role, c): return .aside(role: role, content: c.map(inline))
+            case let .link(href, external, role, label, c):
+                return .link(href: href, external: external, role: role, label: label, content: c.map(inline))
+            case .text, .lineBreak, .glyph, .term: return node
+            }
+        }
+        switch block {
+        case let .heading(level, id, c): return .heading(level: level, id: id, content: c.map(inline))
+        case let .paragraph(role, id, c): return .paragraph(role: role, id: id, content: c.map(inline))
+        case let .section(role, id, c): return .section(role: role, id: id, content: c.map { filling($0, values) })
+        case let .quote(c): return .quote(c.map { filling($0, values) })
+        case let .list(ordered, role, items):
+            return .list(ordered: ordered, role: role, items: items.map { $0.map { filling($0, values) } })
+        case .definitions, .electionSwitch, .slot, .logo: return block
+        }
+    }
+
+    /// A piece's text as read aloud: its words, and each value it marks as given.
+    static func plain(_ blocks: [NativeDocument.Block]) -> String {
+        func inline(_ node: NativeDocument.Inline) -> String {
+            switch node {
+            case let .text(text), let .glyph(text): return text
+            case let .value(_, sample): return sample
+            case .lineBreak: return "\n"
+            case let .strong(c), let .emphasis(c), let .code(c), let .hidden(c), let .aside(_, c),
+                 let .link(_, _, _, _, c), let .term(_, c, _):
+                return c.map(inline).joined()
+            }
+        }
+        return blocks.map { block -> String in
+            switch block {
+            case let .heading(_, _, c), let .paragraph(_, _, c): return c.map(inline).joined()
+            case let .section(_, _, c), let .quote(c): return plain(c)
+            default: return ""
+            }
+        }.joined(separator: "\n")
+    }
+
+    /// The routes a piece links to, in reading order.
+    static func links(in blocks: [NativeDocument.Block]) -> [String] {
+        func inline(_ node: NativeDocument.Inline) -> [String] {
+            switch node {
+            case let .link(href, _, _, _, c): return [href] + c.flatMap(inline)
+            case let .strong(c), let .emphasis(c), let .code(c), let .hidden(c), let .aside(_, c): return c.flatMap(inline)
+            default: return []
+            }
+        }
+        return blocks.flatMap { block -> [String] in
+            switch block {
+            case let .heading(_, _, c), let .paragraph(_, _, c): return c.flatMap(inline)
+            case let .section(_, _, c), let .quote(c): return links(in: c)
+            default: return []
+            }
+        }
+    }
+}

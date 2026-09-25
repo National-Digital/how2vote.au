@@ -15,6 +15,8 @@ const LEAF = readFileSync(url("../apps/web/src/lib/terms/terms.ts"), "utf8");
 const STORE = readFileSync(url("../apps/web/src/lib/terms.svelte.ts"), "utf8");
 const CARD = readFileSync(url("../apps/web/src/routes/card/+page.svelte"), "utf8");
 const SURVEY = readFileSync(url("../apps/web/src/routes/survey/+page.svelte"), "utf8");
+const FLOW_PATH = "apps/web/src/lib/survey-flow.svelte.ts";
+const FLOW = readFileSync(url(`../${FLOW_PATH}`), "utf8");
 
 const leafConst = (name) => {
   const m = new RegExp(`export\\s+const\\s+${name}\\s*=\\s*([\\s\\S]*?);`).exec(LEAF);
@@ -35,6 +37,7 @@ const baseInput = () => ({
   wiringSources: [
     { path: "card", text: CARD },
     { path: "survey", text: SURVEY },
+    { path: FLOW_PATH, text: FLOW },
   ],
 });
 
@@ -181,5 +184,38 @@ describe("helpers", () => {
   });
   it("normalisePageText collapses whitespace and entities", () => {
     expect(normalisePageText("<p>a\n  &amp; b</p>")).toBe("a & b");
+  });
+});
+
+describe("the survey's contribution gates", () => {
+  const withFlow = (text) => ({
+    ...baseInput(),
+    wiringSources: [
+      ...baseInput().wiringSources.filter((w) => w.path !== FLOW_PATH),
+      { path: FLOW_PATH, text },
+    ],
+  });
+
+  it("holds each of the survey state's gates on the acceptance, not a mention of it", () => {
+    for (const [mutated, needle] of [
+      [
+        FLOW.replace(
+          "this.consented && (termsAcceptance.accepted || this.termsChecked)",
+          "this.consented",
+        ),
+        "canContribute",
+      ],
+      [
+        FLOW.replace("if (!termsAcceptance.accepted) termsAcceptance.accept();", ""),
+        "does not record the acceptance",
+      ],
+      [
+        FLOW.replace(" || !termsAcceptance.accepted) return;", ") return;"),
+        "can upload without the acceptance",
+      ],
+    ]) {
+      expect(mutated).not.toBe(FLOW);
+      expect(hasError(verdict(withFlow(mutated)), needle)).toBe(true);
+    }
   });
 });

@@ -19,6 +19,11 @@ struct DocumentView: View {
     let onExit: (String) -> Void
     /// A native form beneath the page's text, where the page has one: the contact form.
     var form: AnyView?
+    /// What the top bar's back button does, where it does not leave for the start: a page read over
+    /// another screen closes.
+    var onBack: (() -> Void)?
+    /// The back button's name where `onBack` gives it another action than the page's own.
+    var backLabel: String?
 
     @State private var scrollTarget: String?
     @State private var term: TermSelection?
@@ -32,7 +37,9 @@ struct DocumentView: View {
             if let crumbs = layout.crumbs {
                 Breadcrumbs(crumbs: crumbs, label: layout.crumbsLabel ?? "", onExit: onExit)
             } else if let top = layout.top {
-                ProjectedTopBar(top: top) { onExit("/") }
+                ProjectedTopBar(top: backLabel.map { NativeDocument.TopBar(label: top.label, back: $0) } ?? top) {
+                    if let onBack { onBack() } else { onExit("/") }
+                }
             } else if let brand = layout.brand {
                 BrandBar(brand: brand, theme: theme)
             }
@@ -161,13 +168,21 @@ enum DocumentURL: Equatable {
 }
 
 /// Part of a projected page drawn inside a native screen, as the document screen draws it: the
-/// clear-data section of the saved cards' page. It holds no links or terms, so nothing in it is for
-/// a tap to follow.
+/// clear-data section of the saved cards' page, or the survey's collection notice. A link in it is
+/// handed to `onLink` by its route; a part without links has nothing for a tap to follow.
 struct ProjectedBlocks: View {
     let layout: DocumentLayout
+    var onLink: (String) -> Void = { _ in }
 
     var body: some View {
-        DocumentBlocks(blocks: layout.blocks, layout: layout, onExit: { _ in })
+        DocumentBlocks(blocks: layout.blocks, layout: layout, onExit: onLink)
+            .environment(\.openURL, OpenURLAction { url in
+                guard case let .link(index)? = DocumentURL(url), layout.links.indices.contains(index) else {
+                    return .discarded
+                }
+                onLink(layout.links[index].href)
+                return .handled
+            })
     }
 }
 

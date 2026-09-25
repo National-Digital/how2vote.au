@@ -351,6 +351,29 @@ export function verdict(input = {}) {
         `${src.path}: does not gate on termsAcceptance.accepted — a consequential action must fail closed without a current-version acceptance`,
       );
     }
+    // The survey's own state holds its contribution: a mention of the acceptance anywhere is not
+    // enough there — the contribution, its recording and the upload must each depend on it.
+    if (src.path.endsWith("survey-flow.svelte.ts")) {
+      const gates = [
+        [
+          /canContribute\s*=\s*\$derived\([^;]*termsAcceptance\.accepted/,
+          "allows a contribution without the acceptance (canContribute)",
+        ],
+        [
+          /if\s*\(!termsAcceptance\.accepted\)\s*termsAcceptance\.accept\(\)/,
+          "does not record the acceptance when the voter contributes",
+        ],
+        [
+          /if\s*\([^)]*!termsAcceptance\.accepted\)\s*return;/,
+          "can upload without the acceptance (the fail-closed guard before the upload)",
+        ],
+      ];
+      // Read as code: a gate that survives only in a comment gates nothing.
+      const code = src.text.replace(/\/\*[\s\S]*?\*\//g, "").replace(/\/\/[^\n]*/g, "");
+      for (const [pattern, fault] of gates) {
+        if (!pattern.test(code)) push(`${src.path}: ${fault}`);
+      }
+    }
   }
 
   return { ok: errors.length === 0, errors };
@@ -368,7 +391,12 @@ const TERMS_PAGE = "apps/web/src/lib/content/TermsContent.svelte";
 const LEAF = "apps/web/src/lib/terms/terms.ts";
 const STORE = "apps/web/src/lib/terms.svelte.ts";
 const REGISTRY = "docs/legal/terms-registry.json";
-const WIRING = ["apps/web/src/routes/card/+page.svelte", "apps/web/src/routes/survey/+page.svelte"];
+const WIRING = [
+  "apps/web/src/routes/card/+page.svelte",
+  "apps/web/src/routes/survey/+page.svelte",
+  // Where the survey's contribution is gated, for the page and the iOS app alike.
+  "apps/web/src/lib/survey-flow.svelte.ts",
+];
 
 function read(relPath) {
   return readFileSync(rel(relPath), "utf8");

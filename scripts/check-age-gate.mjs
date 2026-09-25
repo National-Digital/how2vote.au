@@ -150,6 +150,8 @@ export function verdict(input) {
 const ROOT = new URL("../", import.meta.url);
 const PAYLOAD_FILES = [
   "apps/web/src/routes/survey/+page.svelte",
+  // The survey's steps and its one upload path, which the page and the iOS app both take.
+  "apps/web/src/lib/survey-flow.svelte.ts",
   "apps/web/src/lib/survey.ts",
   // The question set + option allowlists moved here (leaf module the ingestion Function imports
   // directly); it sits on the payload path, so it must stay isolated from the age gate too.

@@ -79,13 +79,17 @@
     {
       "id": "survey-voluntary-skip",
       "concern": "voluntary",
-      "page": "apps/web/src/routes/survey/+page.svelte",
+      "page": "apps/web/src/lib/survey-copy.ts",
+      "renderedBy": "apps/web/src/routes/survey/+page.svelte",
+      "via": "SURVEY_COPY.skipPlan",
       "text": "Skip research and build my voting plan"
     },
     {
       "id": "survey-no-withdrawal",
       "concern": "no-withdrawal",
-      "page": "apps/web/src/routes/survey/+page.svelte",
+      "page": "apps/web/src/lib/components/SurveyNotes.svelte",
+      "renderedBy": "apps/web/src/routes/survey/+page.svelte",
+      "via": "<SurveyNotes",
       "text": "cannot later be located or deleted"
     },
     {

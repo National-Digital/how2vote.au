@@ -48,7 +48,7 @@ struct InsightsWording: Equatable {
             throw states.missing("title and top bar")
         }
         guard let lead = states.sections["insights-lead"],
-              case let marked = Self.values(in: lead), marked.map(\.name) == ["min"], let minimum = marked.first?.sample
+              case let marked = StatesPage.marked(in: lead), marked.map(\.name) == ["min"], let minimum = marked.first?.sample
         else {
             throw states.missing("lead naming its group size once")
         }
@@ -78,59 +78,11 @@ struct InsightsWording: Equatable {
     /// The page's title and top bar, and — unless the page is closed — its lead with the group size
     /// given, laid out as the page draws them.
     func head(closed: Bool, minimum: String) -> DocumentLayout {
-        let blocks = [heading] + (closed ? [] : lead.map { Self.fill($0, ["min": minimum]) })
+        let blocks = [heading] + (closed ? [] : lead.map { StatesPage.filling($0, ["min": minimum]) })
         return DocumentLayout(NativeDocument(
             route: page.route, title: page.title, crumbs: nil, crumbsLabel: nil, top: page.top, brand: nil,
             blocks: blocks, digest: "", spoken: "", drawn: ""
         ))
-    }
-
-    /// The values a page's blocks mark, in reading order.
-    static func values(in blocks: [NativeDocument.Block]) -> [(name: String, sample: String)] {
-        func inline(_ node: NativeDocument.Inline) -> [(name: String, sample: String)] {
-            switch node {
-            case let .value(name, sample): return [(name, sample)]
-            case let .strong(c), let .emphasis(c), let .code(c), let .hidden(c), let .aside(_, c),
-                 let .link(_, _, _, _, c), let .term(_, c, _):
-                return c.flatMap(inline)
-            case .text, .lineBreak, .glyph: return []
-            }
-        }
-        return blocks.flatMap { block -> [(name: String, sample: String)] in
-            switch block {
-            case let .heading(_, _, c), let .paragraph(_, _, c): return c.flatMap(inline)
-            case let .section(_, _, c), let .quote(c): return values(in: c)
-            case let .list(_, _, items): return items.flatMap { values(in: $0) }
-            case let .definitions(items): return items.flatMap { $0.term.flatMap(inline) + values(in: $0.detail) }
-            case .electionSwitch, .slot, .logo: return []
-            }
-        }
-    }
-
-    /// A block with each value it marks given, where one is.
-    static func fill(_ block: NativeDocument.Block, _ values: [String: String]) -> NativeDocument.Block {
-        func inline(_ node: NativeDocument.Inline) -> NativeDocument.Inline {
-            switch node {
-            case let .value(name, sample): return .value(name: name, sample: values[name] ?? sample)
-            case let .strong(c): return .strong(c.map(inline))
-            case let .emphasis(c): return .emphasis(c.map(inline))
-            case let .code(c): return .code(c.map(inline))
-            case let .hidden(c): return .hidden(c.map(inline))
-            case let .aside(role, c): return .aside(role: role, content: c.map(inline))
-            case let .link(href, external, role, label, c):
-                return .link(href: href, external: external, role: role, label: label, content: c.map(inline))
-            case .text, .lineBreak, .glyph, .term: return node
-            }
-        }
-        switch block {
-        case let .heading(level, id, c): return .heading(level: level, id: id, content: c.map(inline))
-        case let .paragraph(role, id, c): return .paragraph(role: role, id: id, content: c.map(inline))
-        case let .section(role, id, c): return .section(role: role, id: id, content: c.map { fill($0, values) })
-        case let .quote(c): return .quote(c.map { fill($0, values) })
-        case let .list(ordered, role, items):
-            return .list(ordered: ordered, role: role, items: items.map { $0.map { fill($0, values) } })
-        case .definitions, .electionSwitch, .slot, .logo: return block
-        }
     }
 }
 
