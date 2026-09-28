@@ -1,0 +1,107 @@
+{
+  "version": 4,
+  "blocks": [
+    "heading",
+    "paragraph",
+    "list",
+    "definitions",
+    "quote",
+    "section",
+    "switch",
+    "slot",
+    "logo"
+  ],
+  "inlines": [
+    "text",
+    "break",
+    "strong",
+    "em",
+    "code",
+    "link",
+    "term",
+    "hidden",
+    "aside",
+    "glyph",
+    "value"
+  ],
+  "blockRoles": [
+    "clear-data",
+    "empty",
+    "evidence",
+    "intro",
+    "inventory",
+    "kicker",
+    "lede",
+    "meta",
+    "note",
+    "picker",
+    "source",
+    "stage",
+    "template",
+    "updated"
+  ],
+  "inlineRoles": [
+    "caveat",
+    "evidence",
+    "primary",
+    "provenance",
+    "secondary"
+  ],
+  "listRoles": [
+    "claims",
+    "index",
+    "rows",
+    "steps"
+  ],
+  "slots": [
+    "age-continue",
+    "age-declare",
+    "clear-data",
+    "landing-complete",
+    "landing-fresh",
+    "landing-resume",
+    "quiz-answer",
+    "theme-dark",
+    "theme-light"
+  ],
+  "slotActions": {
+    "age-continue": [
+      "continue"
+    ],
+    "age-declare": [
+      "adult",
+      "minor"
+    ],
+    "clear-data": [
+      "clear"
+    ],
+    "landing-complete": [
+      "card",
+      "start"
+    ],
+    "landing-fresh": [
+      "start"
+    ],
+    "landing-resume": [
+      "resume",
+      "start"
+    ],
+    "quiz-answer": [
+      "0",
+      "1",
+      "2",
+      "3",
+      "4",
+      "5"
+    ],
+    "theme-dark": [
+      "theme"
+    ],
+    "theme-light": [
+      "theme"
+    ]
+  },
+  "slotLinks": [
+    "landing-fresh"
+  ]
+}

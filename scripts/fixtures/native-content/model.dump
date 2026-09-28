@@ -1,0 +1,46 @@
+(source_file "model.swift"
+  (func_decl range=[model.swift:2:1 - line:5:1] "verify()" thrown_type="<null>"
+    (parameter_list range=[model.swift:2:12 - line:2:13])
+    (brace_stmt range=[model.swift:2:15 - line:5:1]
+      (call_expr type="<null>" isolation_crossing="none"
+        (unresolved_dot_expr type="<null>" field="append" function_ref=unapplied
+          (unresolved_decl_ref_expr type="<null>" name="problems" function_ref=unapplied))
+        (argument_list
+          (argument
+            (string_literal_expr type="<null>" encoding=utf8 value="the layout's text does not match" builtin_initializer="**NULL**" initializer="**NULL**"))))
+      (call_expr type="<null>" isolation_crossing="none"
+        (unresolved_dot_expr type="<null>" field="append" function_ref=unapplied
+          (unresolved_decl_ref_expr type="<null>" name="failures" function_ref=unapplied))
+        (argument_list
+          (argument
+            (string_literal_expr type="<null>" encoding=utf8 value="a slot with no controls" builtin_initializer="**NULL**" initializer="**NULL**"))))))
+  (func_decl range=[model.swift:6:1 - line:8:1] "decode()" thrown_type="<null>"
+    (parameter_list range=[model.swift:6:12 - line:6:13])
+    (brace_stmt range=[model.swift:6:22 - line:8:1]
+      (pattern_binding_decl range=[model.swift:7:5 - line:7:81]
+        (pattern_named "c")
+        (original_init=try_expr type="<null>"
+          (call_expr type="<null>" isolation_crossing="none"
+            (unresolved_decl_ref_expr type="<null>" name="Strict" function_ref=unapplied)
+            (argument_list labels="_:node:fields:"
+              (argument
+                (unresolved_decl_ref_expr type="<null>" name="decoder" function_ref=unapplied))
+              (argument label="node"
+                (string_literal_expr type="<null>" encoding=utf8 value="switch option" builtin_initializer="**NULL**" initializer="**NULL**"))
+              (argument label="fields"
+                (array_expr type="<null>" initializer="**NULL**"
+                  (string_literal_expr type="<null>" encoding=utf8 value="label" builtin_initializer="**NULL**" initializer="**NULL**")
+                  (string_literal_expr type="<null>" encoding=utf8 value="href" builtin_initializer="**NULL**" initializer="**NULL**"))))))
+        (processed_init=try_expr type="<null>"
+          (call_expr type="<null>" isolation_crossing="none"
+            (unresolved_decl_ref_expr type="<null>" name="Strict" function_ref=unapplied)
+            (argument_list labels="_:node:fields:"
+              (argument
+                (unresolved_decl_ref_expr type="<null>" name="decoder" function_ref=unapplied))
+              (argument label="node"
+                (string_literal_expr type="<null>" encoding=utf8 value="switch option" builtin_initializer="**NULL**" initializer="**NULL**"))
+              (argument label="fields"
+                (array_expr type="<null>" initializer="**NULL**"
+                  (string_literal_expr type="<null>" encoding=utf8 value="label" builtin_initializer="**NULL**" initializer="**NULL**")
+                  (string_literal_expr type="<null>" encoding=utf8 value="href" builtin_initializer="**NULL**" initializer="**NULL**")))))))
+      (var_decl range=[model.swift:7:9 - line:7:9] "c" let))))

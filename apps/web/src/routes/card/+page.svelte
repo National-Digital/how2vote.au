@@ -1,440 +1,59 @@
 <script lang="ts">
-  import DocLink from "$lib/components/DocLink.svelte";
   import ExternalLink from "$lib/components/ExternalLink.svelte";
-  import GlossaryTerm from "$lib/components/GlossaryTerm.svelte";
   import { version } from "$app/environment";
   import { beforeNavigate, goto } from "$app/navigation";
   import { onDestroy, onMount, tick } from "svelte";
-  import { electionPhase } from "@how2vote/data-schema";
-  import {
-    bandFor,
-    decodeShare,
-    encodeShare,
-    encodeShareV2,
-    evidenceFor,
-    generateCard,
-    shareElectionId,
-    slugify,
-    type Answer,
-    type Card,
-    type HouseBallotRow,
-    type SenateBallotRow,
-    type SenateGroupRow,
-  } from "@how2vote/engine";
   import { ageGate } from "$lib/age.svelte";
   import PartyAlignmentPanel from "$lib/components/PartyAlignmentPanel.svelte";
-  import {
-    distinctPartyAlignments,
-    PARTY_ALIGNMENT_QUALIFIER,
-    type PartyAlignmentRow,
-  } from "$lib/candidate-alignment";
-  import { suspendedPartyKeys } from "$lib/corrections";
-  import {
-    hasCorrectionNotice,
-    isBallotAvailable,
-    isChamberAvailable,
-    isDecodingAllowed,
-    isElectionAvailable,
-    isElectorateAvailable,
-    isPrintingAllowed,
-    suspendedPropositionIds,
-  } from "$lib/governance";
+  import { PARTY_ALIGNMENT_QUALIFIER } from "$lib/candidate-alignment";
+  import CardAck from "$lib/components/CardAck.svelte";
+  import CardAdvocacy from "$lib/components/CardAdvocacy.svelte";
+  import CardArchiveBanner from "$lib/components/CardArchiveBanner.svelte";
+  import CardCorrectionNotice from "$lib/components/CardCorrectionNotice.svelte";
+  import CardHint from "$lib/components/CardHint.svelte";
+  import CardSaveNote from "$lib/components/CardSaveNote.svelte";
+  import CardShareWarning from "$lib/components/CardShareWarning.svelte";
+  import CardVintage from "$lib/components/CardVintage.svelte";
+  import CardWhyNote from "$lib/components/CardWhyNote.svelte";
+  import CardWorksheetFoot from "$lib/components/CardWorksheetFoot.svelte";
   import Logo from "$lib/components/Logo.svelte";
   import Meta from "$lib/components/Meta.svelte";
   import PlanAuthorisationBand from "$lib/components/PlanAuthorisationBand.svelte";
   import PlanRow from "$lib/components/PlanRow.svelte";
   import PrintAuthorisationDialog from "$lib/components/PrintAuthorisationDialog.svelte";
   import TermsGate from "$lib/components/TermsGate.svelte";
-  import { NATIONAL_BALLOT, isElectorateLess, loadData, stateName, type Data } from "$lib/data";
+  import { cardFlow as flow, rowId, TVFY_POLICY } from "$lib/card-flow.svelte";
+  import { CARD_COPY } from "$lib/card-copy";
+  import { stateName } from "$lib/data";
   import { election } from "$lib/election.svelte";
   import { printAuth } from "$lib/print-auth.svelte";
-  import { termsAcceptance } from "$lib/terms.svelte";
-  import { CIVIC_LINKS, RESEARCH_MIN_AGE } from "$lib/org";
-  import { moveDown, moveUp, planStatus, prefOf, setRank } from "$lib/plan";
-  import { quiz } from "$lib/quiz.svelte";
-  import { saved } from "$lib/saved.svelte";
+  import { RESEARCH_MIN_AGE } from "$lib/org";
+  import { prefOf } from "$lib/plan";
   import { isNativeShell, nativeSharePlugin } from "$lib/channel";
   import { ogImageFor, shareUrl } from "$lib/seo";
+  import { fill } from "$lib/template";
 
-  type Ready = { card: Card; answers: Answer[]; shared: boolean };
-
-  // "unavailable" is the fail-closed governance state: the runtime kill-switch control
-  // plane has suspended this election / electorate / ballot, or decoding, or is itself
-  // tampered/unsigned — the card REFUSES rather than rendering a withdrawn capability.
-  let status = $state<"loading" | "ready" | "error" | "archived-link" | "unavailable">("loading");
-  let data = $state<Ready | null>(null);
-  // The election this card belongs to, kept for the reactive governance gates below.
-  let activeElectionId = $state<string | null>(null);
-  // The loaded dataset, kept so "Why these numbers?" can pull per-candidate evidence on demand.
-  let dataset = $state<Data["dataset"] | null>(null);
-
-  // Two separated stages: Compare shows alignment as evidence in ballot order, nothing crowned;
-  // Build is where the voter authors their own preference order from a blank ballot. A shared link
-  // only ever shows Compare — it carries answers (a comparison), never a chosen order.
-  let stage = $state<"compare" | "build">("compare");
-
-  // Discriminated card session (see docs/adr/0010). The card is exactly one of:
-  //   - shared-readonly     — opened from a share link; carries someone else's answers, never a
-  //                           chosen order; can NEVER print (no owner capability, no build stage);
-  //   - owner-session       — this browser built this card from its own in-progress quiz; may build
-  //                           a plan and, after mandatory s321D authorisation, print it;
-  //   - print-authorisation — an owner is entering their s321D particulars before a print.
-  // It DEFAULTS to the least-privileged state so any bug fails closed to shared-readonly (which
-  // cannot print) rather than to owner-session. The actual print permission is the in-memory
-  // `printAuth.isOwner` capability (never persisted, never in a URL), asserted again at print time.
-  type CardSession = "shared-readonly" | "owner-session" | "print-authorisation";
-  let session = $state<CardSession>("shared-readonly");
-
-  // Most voters vote above the line, so that is the default Senate view; below the line is one
-  // toggle away. Only ever one method is shown/built at a time — marking both changes how the paper
-  // is counted.
-  let senateView = $state<"above" | "below">("above");
-  let showWhy = $state(false);
-  let copied = $state(false);
-  // Versioned Terms-of-Use acceptance before any consequential action. A gated action
-  // (build / share / print) that is requested before the CURRENT Terms version has been accepted is
-  // held in `pendingAction`; the reusable TermsGate records the versioned acceptance and then the
-  // held action runs. Separate from research consent, which has its own gate on the survey.
-  let pendingAction = $state<null | "build" | "share" | "print">(null);
-  // Non-revocable-link warning gate: once Terms are accepted, sharing still NEVER copies
-  // straight away — share() opens this warning first, and only an explicit confirm inside it performs
-  // the copy/native share, so a link can never leave this device before the user has been told it
-  // cannot be recalled.
-  let showShareWarning = $state(false);
-  // The shareable path (with fragment) for this comparison — the key it's saved under on-device.
-  let cardUrl = $state("");
-
-  // The voter-authored orders, one per ballot/method. Each starts EMPTY — a blank ballot. A
-  // candidate's preference is its 1-based index in its order (see $lib/plan); nothing is pre-filled.
-  let houseOrder = $state<string[]>([]);
-  let senateAboveOrder = $state<string[]>([]);
-  let senateBelowOrder = $state<string[]>([]);
-
-  /** Stable per-row id (candidate + printed position), used as the plan-order key. */
-  const rowId = (candidate: string, position: number): string => `${candidate}|${position}`;
-
-  // Governance kill-switch — proposition + chamber/ballot exclusion, applied when a card
-  // is built so a suspended capability never renders on any surface (compare, build, or print).
-
-  /** Drop answers to SUSPENDED propositions before scoring, so a withdrawn question never counts. */
-  function withoutSuspendedPropositions(answers: Answer[], electionId: string): Answer[] {
-    const suspended = suspendedPropositionIds(electionId);
-    return suspended.size === 0 ? answers : answers.filter((a) => !suspended.has(a.id));
-  }
-
-  /**
-   * Empty a chamber's rows when that chamber — or this card's specific ballot within it (House: the
-   * electorate; Senate: the state) — is suspended, so neither the comparison nor the plan builder can
-   * show or print a withdrawn ballot. Election/electorate-wide suspensions are handled earlier by the
-   * "unavailable" state; this covers the finer chamber/ballot scopes.
-   */
-  function applyChamberSuspensions(card: Card, electionId: string, electorateSlug: string): Card {
-    const houseOk =
-      isChamberAvailable(electionId, "house") &&
-      isBallotAvailable(electionId, "house", electorateSlug);
-    const senateOk =
-      isChamberAvailable(electionId, "senate") &&
-      isBallotAvailable(electionId, "senate", card.state);
-    if (houseOk && senateOk) return card;
-    return {
-      ...card,
-      house: houseOk ? card.house : [],
-      senate: senateOk ? card.senate : [],
-      senateAboveLine: senateOk ? card.senateAboveLine : [],
-    };
-  }
-
-  // Liveness guard: the async loadData continuation below can resolve AFTER the user has navigated
-  // away. Cleared in onDestroy so a late resolution never mutates state or history.replaceState on a
-  // page that is no longer mounted (pattern mirrors ElectorateMap.svelte).
-  let live = true;
-  onDestroy(() => {
-    live = false;
-  });
-
+  // The card's state, its rules and its gates are the flow's (`$lib/card-flow`), which the iOS app
+  // draws from too; this page renders it and owns only what a browser does: navigation, the share
+  // sheet or clipboard, and printing.
   onMount(() => {
-    termsAcceptance.hydrate();
-    // Old how2vote.com.au share links (?res=<id>) pointed at cards stored in that site's database,
-    // which is gone — they can only be explained, not resolved.
-    if (new URLSearchParams(window.location.search).has("res")) {
-      status = "archived-link";
-      return;
-    }
-
-    const hash = window.location.hash;
-    const ownCard = !(hash && hash.length > 1);
-    // Reading a shared comparison is legitimate without an in-progress quiz; only our own requires one.
-    if (ownCard && !quiz.hasBallot) {
-      goto("/ballot");
-      return;
-    }
-
-    const electionId = ownCard ? election.id : shareElectionId(hash);
-    if (!electionId) {
-      status = "error";
-      return;
-    }
-    if (!ownCard) election.set(electionId);
-
-    void loadData(electionId)
-      .then((d) => {
-        if (!live) return; // navigated away before the dataset resolved — do not touch state/history
-        const { electorateFromSlug, questionIds } = d;
-        dataset = d.dataset;
-
-        if (!ownCard) {
-          // Fail-closed decode gate: if the `decoding` scope (or this election) is
-          // suspended, or the control plane is tampered, we NEVER decode the fragment — a shared link
-          // simply cannot be opened while decoding is withdrawn.
-          if (!isDecodingAllowed(electionId)) {
-            status = "unavailable";
-            return;
-          }
-          // A shared comparison: reconstruct entirely from the fragment (no server, works offline).
-          // A provisional (upcoming) quiz uses the version-pinned v2 codec: decodeShare fails closed
-          // unless the election's CURRENT dataVersion still matches the link, so a changed quiz shows
-          // "start again" rather than silently rebinding stale answers.
-          const decoded = decodeShare(
-            hash,
-            (id) => (id === electionId ? questionIds : undefined),
-            (id) => (id === electionId ? d.dataset.questions.dataVersion : undefined),
-          );
-          if (!decoded) {
-            status = "error";
-            return;
-          }
-          // An electorate-less (provisional) election has no ballot to resolve a slug against: the
-          // comparison is party-level only, so use the sentinel national selection.
-          const electorate = isElectorateLess(d.dataset)
-            ? { state: NATIONAL_BALLOT.state, electorate: NATIONAL_BALLOT.electorate }
-            : electorateFromSlug(decoded.electorateSlug);
-          if (!electorate) {
-            status = "error";
-            return;
-          }
-          // Election / electorate suspension (or a tampered plane) makes this card unavailable.
-          if (
-            !isElectionAvailable(electionId) ||
-            !isElectorateAvailable(electionId, decoded.electorateSlug)
-          ) {
-            status = "unavailable";
-            return;
-          }
-          const answers = decoded.answers;
-          const card = applyChamberSuspensions(
-            generateCard(d.dataset, {
-              state: electorate.state,
-              electorate: electorate.electorate,
-              answers: withoutSuspendedPropositions(answers, electionId),
-              suspended: suspendedPartyKeys(electionId),
-            }),
-            electionId,
-            decoded.electorateSlug,
-          );
-          activeElectionId = electionId;
-          data = { card, answers, shared: true };
-          cardUrl = window.location.pathname + window.location.hash;
-          // A shared link is read-only: drop any stale owner capability so it can never print.
-          session = "shared-readonly";
-          printAuth.reset();
-          status = "ready";
-          return;
-        }
-
-        // Our own comparison, from the in-progress quiz for the active election. Progress tracks
-        // the answerable (active) questions; the share fragment stays positional over the full
-        // codec list so a withdrawal never shifts previously shared payloads.
-        quiz.syncQuestions(d.activeQuestionIds);
-        const answers = quiz.toAnswers();
-        const electorateSlug = slugify(quiz.electorate!);
-        // Election / electorate suspension (or a tampered plane) makes this card unavailable, even for
-        // its owner building from their own quiz.
-        if (
-          !isElectionAvailable(electionId) ||
-          !isElectorateAvailable(electionId, electorateSlug)
-        ) {
-          status = "unavailable";
-          return;
-        }
-        const card = applyChamberSuspensions(
-          generateCard(d.dataset, {
-            state: quiz.state!,
-            electorate: quiz.electorate!,
-            answers: withoutSuspendedPropositions(answers, electionId),
-            suspended: suspendedPartyKeys(electionId),
-          }),
-          electionId,
-          electorateSlug,
-        );
-        activeElectionId = electionId;
-        data = { card, answers, shared: false };
-        // This browser built this card from its own quiz: claim the in-memory owner capability that
-        // (and only that) permits a print. It lives in memory only, is never persisted or put in a
-        // URL, and is lost on reload — a reloaded /card#… link comes back as shared-readonly.
-        session = "owner-session";
-        printAuth.claimOwnership();
-        status = "ready";
-        // Make the URL shareable without a navigation (carries the election id + answers, no order).
-        // A provisional (upcoming) quiz can still change, so it uses the version-pinned v2 codec: the
-        // link stamps the dataVersion and stops decoding once the quiz changes (fail closed to "start
-        // again"). A live/archived election keeps the durable positional v1 codec.
-        const fragment =
-          electionPhase(election.meta) === "upcoming"
-            ? encodeShareV2(
-                { electorate: quiz.electorate!, answers },
-                questionIds,
-                electionId,
-                d.dataset.questions.dataVersion,
-              )
-            : encodeShare({ electorate: quiz.electorate!, answers }, questionIds, electionId);
-        history.replaceState(history.state, "", `/card#${fragment}`);
-        cardUrl = `/card#${fragment}`;
-      })
-      .catch(() => {
-        // A transient dataset import/fetch failure must surface an error state, not hang on "loading"
-        // forever (loadData now evicts the rejected promise, so a reload retries cleanly).
-        status = "error";
-      });
+    void flow.open(new URL(window.location.href), (path) => void goto(path));
   });
+  onDestroy(() => flow.close());
 
-  // An electorate-less (provisional) election ships no ballot, so there are no candidate rows to
-  // derive the party panel from. The comparison is party-level only, sourced straight from the
-  // per-party percentages: show the registered PARTIES (single-member independents are a
-  // per-electorate concern a national, ballot-less comparison does not rank).
-  const electorateLess = $derived(dataset ? isElectorateLess(dataset) : false);
-  const allPartyAlignments = $derived.by(() => {
-    if (!data || !dataset || !activeElectionId) return [];
-    const suspended = suspendedPartyKeys(activeElectionId);
-    const byKey = new Map(dataset.parties.parties.map((p) => [p.key, p]));
-    // Parties off the AEC register (deregistered/renamed) cannot contest, so they are removed from the
-    // ballot-less comparison entirely — never shown as an option for the next election.
-    const deregistered = new Set((dataset.parties.deregistered ?? []).map((d) => d.key));
-    const rows: PartyAlignmentRow[] = [];
-    for (const [key, score] of data.card.percentages) {
-      const party = byKey.get(key);
-      if (!party || party.kind !== "party" || deregistered.has(key)) continue;
-      const isSusp = suspended.has(key);
-      const s = isSusp ? -1 : score;
-      rows.push({
-        party: party.displayName,
-        partyKey: key,
-        score: s,
-        band: bandFor(s),
-        suspended: isSusp,
-        // A registered family (e.g. the Coalition brands) is shown together in the panel — each
-        // still keeps its own figure. Only carried for the ballot-less panel; the House/Senate
-        // ballot panels stay in ballot order and never regroup.
-        ...(party.federalGroup ? { federalGroup: party.federalGroup } : {}),
-        ...(party.region ? { region: party.region } : {}),
-      });
-    }
-    return distinctPartyAlignments(rows);
-  });
+  const data = $derived(flow.data);
 
   const metaTitle = $derived(
-    status === "archived-link"
-      ? "A card from the old How2Vote"
+    flow.status === "archived-link"
+      ? CARD_COPY.metaArchivedLink
       : data
-        ? electorateLess
-          ? "The current Parliament — How2Vote comparison"
-          : `${data.card.electorate} — How2Vote ${election.meta.year} comparison`
+        ? flow.electorateLess
+          ? CARD_COPY.metaParliament
+          : fill(CARD_COPY.metaElectorate, {
+              electorate: data.card.electorate,
+              year: election.meta.year,
+            })
         : undefined,
-  );
-
-  // On-device save (explicit, never automatic). Reactive to the store so the label flips instantly.
-  const isSaved = $derived(cardUrl !== "" && saved.has(cardUrl));
-
-  function toggleSave(): void {
-    // Saving a comparison on-device is a vote-capable capability (ADR 0012): an under-18 explorer
-    // gets a session-only result, nothing persisted. Fail closed — the UI already hides the control.
-    if (!ageGate.canVote) return;
-    if (!data || !cardUrl) return;
-    if (saved.has(cardUrl)) saved.remove(cardUrl);
-    else saved.save({ url: cardUrl, electorate: data.card.electorate, state: data.card.state });
-  }
-
-  const house = $derived<HouseBallotRow[]>(data ? data.card.house : []);
-  const senate = $derived<SenateBallotRow[]>(data ? data.card.senate : []);
-  const senateAtl = $derived<SenateGroupRow[]>(data ? data.card.senateAboveLine : []);
-  const senateGroups = $derived([
-    ...new Map(senate.map((r) => [r.group, senate.filter((s) => s.group === r.group)])).entries(),
-  ]);
-
-  // Party-level alignment panels — the ONLY place a figure is shown. Alignment is a property of the
-  // PARTY, so it is derived per DISTINCT party and never attached to a candidate row.
-  //   - House: dedupe the candidate rows by partyKey; independents (null partyKey) have no party
-  //     record and are dropped from the panel (they still appear in the neutral ballot list).
-  //   - Senate: the above-the-line groups are already party/group-level, so they ARE the party panel.
-  // Each derived party object explicitly carries partyKey + suspended so the fail-closed independent /
-  // suspension treatments reach alignmentPresentation() inside the panel.
-  const houseParties = $derived(
-    distinctPartyAlignments(
-      house.map((r) => ({
-        party: r.party,
-        partyKey: r.partyKey,
-        score: r.score,
-        band: r.band,
-        suspended: r.suspended,
-      })),
-    ),
-  );
-  const senateParties = $derived(
-    distinctPartyAlignments(
-      senateAtl.map((r) => ({
-        party: r.party,
-        partyKey: r.partyKey,
-        score: r.score,
-        band: r.band,
-        suspended: r.suspended,
-      })),
-    ),
-  );
-
-  // The parties the "Why do these parties align?" evidence lists, matching whichever alignment panel
-  // is actually on screen. The ballot-less (provisional) flow shows `allPartyAlignments` (derived
-  // from the per-party percentages), NOT `houseParties` — which is empty with no ballot, so the
-  // evidence section rendered blank when it iterated houseParties directly.
-  const evidenceParties = $derived(electorateLess ? allPartyAlignments : houseParties);
-
-  // Ballot-order id lists per ballot, for the plan reducers and the mechanical check.
-  const houseIds = $derived(house.map((r) => rowId(r.candidate, r.position)));
-  const senateAboveIds = $derived(senateAtl.map((r) => r.group));
-  const senateBelowIds = $derived(senate.map((r) => rowId(r.candidate, r.position)));
-
-  const houseStatus = $derived(planStatus(houseOrder, houseIds));
-  const senateAboveStatus = $derived(planStatus(senateAboveOrder, senateAboveIds));
-  const senateBelowStatus = $derived(planStatus(senateBelowOrder, senateBelowIds));
-
-  // Territory (ACT/NT) Senate papers carry different numbering minimums, so the "at least 6 / 12"
-  // guidance is shown only for states; territories defer to the ballot.
-  const isTerritory = $derived(
-    data ? data.card.state === "ACT" || data.card.state === "NT" : false,
-  );
-
-  // Lifecycle phase, derived deterministically from the polling day + verified ballot-final flag
-  // (never the `current` toggle). Archived = polling day passed → historical demonstration.
-  const phase = $derived(data ? electionPhase(election.meta) : "upcoming");
-  const isArchived = $derived(phase === "archived");
-
-  // Ballot-order gating: the plan builder opens for a live or an archived
-  // election, but stays closed for an `upcoming` one until its official candidate list and ballot
-  // order are final and verified. An archived election's builder is a clearly-labelled historical
-  // demonstration (see the banner + build-stage copy below), never an instruction for a live vote.
-  // The printing capability is now the runtime kill-switch: global `printing` (the former
-  // EXPORTS_ENABLED lever), this election, or this electorate can each be suspended, and a tampered
-  // control plane refuses printing outright (fail closed).
-  const plansEnabled = $derived(
-    data && activeElectionId
-      ? isPrintingAllowed(activeElectionId, slugify(data.card.electorate)) && phase !== "upcoming"
-      : false,
-  );
-
-  // "Under review" correction banner: a granular suspension (withdrawn mapping /
-  // proposition, or a suspended chamber/ballot) is affecting what this card shows.
-  const correctionNotice = $derived(
-    data && activeElectionId
-      ? hasCorrectionNotice(activeElectionId, slugify(data.card.electorate))
-      : false,
   );
 
   // In-memory-only teardown of the print acknowledgement (National Digital authoriser model; see
@@ -458,24 +77,6 @@
   beforeNavigate(() => printAuth.reset());
   onDestroy(() => printAuth.reset());
 
-  // Creating a share link is a consequential action, so it requires a current-version Terms
-  // acceptance first. If already accepted we share straight away; otherwise the gate is
-  // shown and the share runs only once the visitor accepts.
-  function requestShare(): void {
-    // Sharing produces a link others open — a vote-capable action, 18+ only (ADR 0012). Fail closed.
-    if (!ageGate.canVote) return;
-    if (termsAcceptance.accepted) void share();
-    else pendingAction = "share";
-  }
-
-  // Terms are accepted by now; show the non-revocable-link warning before anything is copied/shared.
-  // The actual copy happens only from copyShareLink(), reached by an explicit confirm.
-  function share(): void {
-    showShareWarning = true;
-  }
-
-  // Actually copy/share the link — reached ONLY from the non-revocable warning's confirm,
-  // i.e. after the user has been told the link cannot be recalled.
   // A user who dismisses a share sheet meant to cancel — never silently fall through to another
   // share surface or copy the answers-bearing link to the clipboard. Only a genuine
   // unavailability/failure (not a cancel) should try the next mechanism.
@@ -485,8 +86,10 @@
     return /cancel/i.test(message);
   }
 
+  // Actually copy/share the link — reached ONLY from the non-revocable warning's confirm,
+  // i.e. after the user has been told the link cannot be recalled.
   async function copyShareLink(): Promise<void> {
-    showShareWarning = false;
+    if (!flow.confirmShare()) return;
     // Always the canonical https origin — never window.location, whose origin is the local
     // WebView scheme in the native shells and would produce a link recipients cannot open.
     const url = shareUrl(window.location.pathname, window.location.hash);
@@ -513,76 +116,22 @@
     }
     try {
       await navigator.clipboard.writeText(url);
-      copied = true;
-      window.setTimeout(() => (copied = false), 2000);
+      flow.markCopied();
     } catch {
       /* clipboard unavailable */
     }
   }
 
-  // Making your own from a shared card starts a CLEAN session — wipe any in-progress quiz that a
-  // previous session left on this device first so nothing carries over, then send the
-  // visitor to the blank ballot.
-  function startFresh(): void {
-    quiz.reset();
-    void goto("/ballot");
-  }
-
-  // "Why do I align with these candidates?" — evidence for each scored House candidate (the
-  // receipts). Each question's id is its They Vote For You policy id, so it links to the record.
-  const TVFY_POLICY = "https://theyvoteforyou.org.au/policies";
-  function evidence(partyKey: string | null) {
-    if (!partyKey || !data || !dataset) return [];
-    // Exclude any SUSPENDED proposition here too, so a withdrawn question never surfaces
-    // in the evidence detail even though the stable share payload still carries the raw answer.
-    const answers = activeElectionId
-      ? withoutSuspendedPropositions(data.answers, activeElectionId)
-      : data.answers;
-    return evidenceFor(dataset, partyKey, answers).filter((l) => l.agreement !== "skipped");
-  }
-
-  const vintage = $derived(
-    new Date(election.manifest.dataVersion).toLocaleDateString("en-AU", {
-      day: "numeric",
-      month: "short",
-      year: "numeric",
-    }),
-  );
-  // Withdrawn questions are disabled outputs (ADR 0005): excluded from scoring and presentation,
-  // disclosed here and listed on /corrections.
-  const withdrawnCount = $derived(
-    dataset ? dataset.questions.questions.filter((q) => q.withdrawn !== undefined).length : 0,
-  );
-  // Date the plan is built/printed — recorded on the worksheet so a stale printout is obvious.
-  const builtOn = $derived(
-    new Date().toLocaleDateString("en-AU", { day: "numeric", month: "short", year: "numeric" }),
-  );
-
-  // "Build my voting plan" — a plan-creation action, so it requires a current-version Terms
-  // acceptance. If already accepted we go straight to the builder; otherwise the gate is
-  // shown and the build begins only once the visitor accepts.
-  function requestBuild(): void {
-    // The plan builder is the how-to-vote card — a vote-capable capability, 18+ only (ADR 0012). An
-    // under-18 explorer never reaches this (the button is replaced by the advocacy note); guard anyway.
-    if (!ageGate.canVote) return;
-    if (termsAcceptance.accepted) startBuild();
-    else pendingAction = "build";
-  }
-
-  // The reusable TermsGate has recorded a current-version acceptance; run whichever action was held.
-  function onTermsAccepted(): void {
-    const action = pendingAction;
-    pendingAction = null;
-    if (action === "build") startBuild();
-    else if (action === "share") void share();
-    else if (action === "print") openPrintAuthorisation();
-  }
-
   function startBuild(): void {
-    // Fail closed: the build stage is the how-to-vote card, never opened for an under-18 (ADR 0012).
-    if (!ageGate.canVote) return;
-    stage = "build";
-    window.scrollTo({ top: 0 });
+    flow.requestBuild();
+    if (flow.stage === "build") window.scrollTo({ top: 0 });
+  }
+
+  function onTermsAccepted(): void {
+    // Only a build the gate was holding starts the plan at its top; a print keeps the voter's place.
+    const building = flow.pendingAction === "build";
+    flow.onTermsAccepted();
+    if (building && flow.stage === "build") window.scrollTo({ top: 0 });
   }
 
   // The stamp actually PRINTED on the plan — National Digital's authorisation plus the "preference
@@ -594,49 +143,12 @@
   // unauthorised how-to-vote material can be produced without being marked as such.
   const printAuthorised = $derived(printAuth.acknowledged);
 
-  // Print acknowledgement gate (National Digital authoriser model; see docs/adr/0010). Printing is
-  // NEVER wired directly to window.print(): the only path to a print is through this gate, and only an
-  // owner session that actually holds the in-memory capability can open it. A shared-readonly card
-  // can never get here.
-  function requestPrint(): void {
-    // Printing is a web-PWA capability only. The shells offer no print action at all (printing from a
-    // phone is not a real workflow, and the sanctioned share-image path replaces it), so fail closed
-    // here as well as hiding the control — the gate must not depend on the markup alone.
-    if (isNativeShell) return;
-    // Printing a how-to-vote card is vote-capable, 18+ only (ADR 0012). An under-18 can never reach
-    // the build stage that hosts the print action, but fail closed here regardless.
-    if (!ageGate.canVote) return;
-    if (session !== "owner-session" || !printAuth.isOwner) return;
-    // Printing is a consequential action, so it also requires a current-version Terms acceptance,
-    // asserted here before the print acknowledgement gate opens.
-    if (!termsAcceptance.accepted) {
-      pendingAction = "print";
-      return;
-    }
-    openPrintAuthorisation();
-  }
-
-  function openPrintAuthorisation(): void {
-    if (!ageGate.canVote) return;
-    if (session !== "owner-session" || !printAuth.isOwner || !termsAcceptance.accepted) return;
-    printAuth.clearAcknowledgement();
-    session = "print-authorisation";
-  }
-
-  function cancelPrint(): void {
-    printAuth.clearAcknowledgement();
-    session = "owner-session";
-  }
-
   async function confirmPrint(): Promise<void> {
-    // Fail closed: re-assert the owner capability before printing. The acknowledgement is enforced by
-    // the dialog's confirm button, which only invokes this once the declaration is ticked.
-    if (session !== "print-authorisation" || !printAuth.isOwner) return;
-    // Acknowledge the print — only NOW does the printed authorisation stamp become non-empty.
-    printAuth.acknowledge();
-    // Close the acknowledgement screen so the WORKSHEET (not the modal) is what prints; the
-    // authorisation stamp is rendered once at the end of the document.
-    session = "owner-session";
+    // Fail closed: the owner capability is re-asserted before printing, and the acknowledgement is
+    // enforced by the dialog's confirm button, which only invokes this once the declaration is
+    // ticked. Only NOW does the printed authorisation stamp become non-empty; the acknowledgement
+    // screen closes so the WORKSHEET (not the modal) is what prints, the stamp once at its end.
+    if (!flow.acknowledgePrint()) return;
     await tick();
     window.print();
     // Belt-and-braces: also clear here in case a browser fires no `afterprint`.
@@ -646,54 +158,41 @@
 
 <Meta title={metaTitle} image={ogImageFor(election.id)} />
 
-{#if status === "loading"}
-  <p class="pad ui">Preparing your comparison…</p>
-{:else if status === "archived-link"}
+{#if flow.status === "loading"}
+  <p class="pad ui">{CARD_COPY.loading}</p>
+{:else if flow.status === "archived-link"}
   <div class="pad archived-link">
-    <p class="kicker ui">A link from the old how2vote.com.au</p>
-    <h1>This card can't be opened any more</h1>
-    <p class="ui note">
-      This link points to a How2Vote card made on our old site. Cards made there were stored on that
-      site's server, which has since been retired — so the card behind this link can't be retrieved.
-    </p>
-    <p class="ui note">
-      Today, How2Vote works differently: your answers travel in the link itself, nothing is stored
-      on a server, and a shared comparison keeps working — even offline.
-    </p>
-    <a class="btn" href="/ballot">Make a new card</a>
+    <p class="kicker ui">{CARD_COPY.archivedLinkKicker}</p>
+    <h1>{CARD_COPY.archivedLinkTitle}</h1>
+    <p class="ui note">{CARD_COPY.archivedLinkOld}</p>
+    <p class="ui note">{CARD_COPY.archivedLinkNow}</p>
+    <a class="btn" href="/ballot">{CARD_COPY.archivedLinkAction}</a>
   </div>
-{:else if status === "error"}
+{:else if flow.status === "error"}
   <div class="pad">
-    <h1>That link didn't work</h1>
-    <p class="ui note">We couldn't read the comparison from this link. You can build your own.</p>
-    <a class="btn" href="/ballot">Start</a>
+    <h1>{CARD_COPY.errorTitle}</h1>
+    <p class="ui note">{CARD_COPY.errorNote}</p>
+    <a class="btn" href="/ballot">{CARD_COPY.errorAction}</a>
   </div>
-{:else if status === "unavailable"}
+{:else if flow.status === "unavailable"}
   <!-- Fail-closed governance state: a capability this card needs has been suspended by
        the signed runtime kill-switch control plane (or the plane is tampered/unsigned). We refuse to
        render rather than show a withdrawn ballot / comparison. -->
   <div class="pad">
-    <h1>Temporarily unavailable</h1>
-    <p class="ui note">
-      This comparison is temporarily unavailable while it is under review. This is a precaution —
-      the material has been withdrawn until a check is complete. Please try again later.
-    </p>
-    <a class="btn" href="/">Back to home</a>
+    <h1>{CARD_COPY.unavailableTitle}</h1>
+    <p class="ui note">{CARD_COPY.unavailableNote}</p>
+    <a class="btn" href="/">{CARD_COPY.unavailableAction}</a>
   </div>
 {:else if data}
   <div class="card-head">
     <div class="ch-top ui">
-      <a class="home" href="/" aria-label="How2Vote home"><Logo size="sm" /></a>
-      <span
-        >{stage === "build"
-          ? isArchived
-            ? "Historical demonstration plan"
-            : "Your voting plan"
-          : "Your comparison"}</span
-      >
+      <a class="home" href="/" aria-label={CARD_COPY.home}><Logo size="sm" /></a>
+      <span>{flow.stageLabel}</span>
     </div>
     <h1>
-      {#if electorateLess}The current Parliament{:else}{data.card.electorate}<span class="st ui">
+      {#if flow.electorateLess}{CARD_COPY.parliament}{:else}{data.card.electorate}<span
+          class="st ui"
+        >
           · {stateName(data.card.state)}</span
         >{/if}
     </h1>
@@ -701,39 +200,21 @@
 
   <!-- Persistent historical-use warning. Shown on both stages and, deliberately, on the
        printed worksheet — an archived election's plan is a demonstration, never a live instruction. -->
-  {#if isArchived}
+  {#if flow.isArchived}
     <div class="archive-banner ui" role="note">
-      <b>Historical demonstration — {election.meta.label}.</b> This election has already been held.
-      What you see and build here is a retrospective demonstration using the {election.meta.year}
-      candidates and ballot as they stood then, scored on the parliamentary record of the time. It is
-      not current and cannot be used to vote.
+      <CardArchiveBanner label={election.meta.label} year={election.meta.year} />
     </div>
   {/if}
 
   <!-- "Under review" correction banner: a granular kill-switch suspension is affecting
        what this card shows — a withdrawn party alignment / proposition, or a suspended ballot. The
-       affected figures are already withheld by the engine + card build above; this explains why. -->
-  {#if correctionNotice}
-    <div class="archive-banner ui" role="note">
-      <b>Some figures are under review.</b> One or more items on this card have been temporarily withdrawn
-      while a correction or right-of-reply is assessed. They are shown as unavailable rather than left
-      standing, and will return once the review is complete.
-    </div>
+       affected figures are already withheld by the engine + card build; this explains why. -->
+  {#if flow.correctionNotice}
+    <div class="archive-banner ui" role="note"><CardCorrectionNotice /></div>
   {/if}
 
-  {#if stage === "compare"}
-    <p class="hint ui pad-x">
-      {#if electorateLess}
-        This shows how often the <b>parties'</b> recorded votes in the current Parliament align with
-        your answers — as <b>evidence only</b>. The next election hasn't been announced, so there
-        are no candidates or ballot yet; this is a provisional comparison against the parties, not a
-        recommendation.
-      {:else}
-        For each chamber, this shows how often the <b>parties'</b> recorded votes align with your
-        answers — as <b>evidence only</b>. Nothing here is ranked or recommended: How2Vote does not
-        tell you who to put first. When you're ready, you build your own order.
-      {/if}
-    </p>
+  {#if flow.stage === "compare"}
+    <p class="hint ui pad-x"><CardHint electorateLess={flow.electorateLess} /></p>
     <!-- Candidate-level predictive-claim limit, shown next to the scores, not only in the
          Terms — a party record is not evidence of a candidate's own views or future votes. Single-
          sourced from $lib/candidate-alignment so the visible copy, the per-row wording and the
@@ -741,7 +222,7 @@
     <p class="disclaimer ui pad-x">{PARTY_ALIGNMENT_QUALIFIER}</p>
 
     <section class="ballot">
-      {#if electorateLess}
+      {#if flow.electorateLess}
         <!-- No ballot yet (provisional/upcoming): there is no House/Senate split to show, so the
              comparison is a single party voting-record panel sourced from the per-party percentages
              (the current Parliament's record), not from candidate rows. -->
@@ -749,13 +230,14 @@
           <header class="chamber-head ui">
             <span class="chamber-n" aria-hidden="true">✓</span>
             <span class="chamber-t">
-              <b>Party voting-record alignment</b>
-              <small>Current Parliament · House and Senate combined</small>
+              <b>{CARD_COPY.parliamentPanel}</b>
+              <small>{CARD_COPY.parliamentPanelNote}</small>
             </span>
           </header>
+          <!-- Each row carries its partyKey and suspended flag from the flow (`allPartyAlignments`). -->
           <PartyAlignmentPanel
-            parties={allPartyAlignments}
-            caption="Party voting-record alignment (current Parliament)"
+            parties={flow.allPartyAlignments}
+            caption={CARD_COPY.parliamentCaption}
             ballotOrdered={false}
           />
         </div>
@@ -764,48 +246,42 @@
           <header class="chamber-head ui">
             <span class="chamber-n" aria-hidden="true">1</span>
             <span class="chamber-t">
-              <b>House of Representatives</b>
-              <small>Green ballot paper · your local member</small>
+              <b>{CARD_COPY.house}</b>
+              <small>{CARD_COPY.houseCompare}</small>
             </span>
           </header>
           <!-- The results screen shows party voting-record alignment only — no candidate list. A
                ballot order shown here, with no selection against it, reads as a ranking; the ballot
-               (with blank preference boxes) belongs in the build stage, where the voter authors it. -->
-          <PartyAlignmentPanel
-            parties={houseParties}
-            caption="Party voting-record alignment (House parties)"
-          />
+               (with blank preference boxes) belongs in the build stage, where the voter authors it.
+               Each row carries its partyKey and suspended flag from the flow (`houseParties`). -->
+          <PartyAlignmentPanel parties={flow.houseParties} caption={CARD_COPY.houseCaption} />
         </div>
 
         <div class="chamber">
           <header class="chamber-head ui">
             <span class="chamber-n" aria-hidden="true">2</span>
             <span class="chamber-t">
-              <b>Senate</b>
-              <small>White ballot paper · {stateName(data.card.state)}</small>
+              <b>{CARD_COPY.senate}</b>
+              <small>{fill(CARD_COPY.senatePaper, { state: stateName(data.card.state) })}</small>
             </span>
           </header>
 
           <!-- Party alignment only here too. The Senate above-the-line groups ARE party/group-level,
                so the party panel is the whole surface; above/below-the-line ballot order belongs in
-               the build stage, where the voter numbers it themselves. -->
-          <PartyAlignmentPanel
-            parties={senateParties}
-            caption="Party voting-record alignment (Senate groups)"
-          />
+               the build stage, where the voter numbers it themselves. Each row carries its partyKey
+               and suspended flag from the flow (`senateParties`). -->
+          <PartyAlignmentPanel parties={flow.senateParties} caption={CARD_COPY.senateCaption} />
         </div>
       {/if}
     </section>
 
     <p class="vintage ui pad-x">
-      Compared against parliamentary <GlossaryTerm id="division">divisions</GlossaryTerm> up to {vintage}.{#if isArchived}{" "}This
-        is a historical comparison for the {election.meta.year} election, not a current recommendation.{/if}
-      {#if withdrawnCount > 0}{" "}{withdrawnCount === 1
-          ? "One question has been withdrawn pending correction and is excluded from this comparison"
-          : `${withdrawnCount} questions have been withdrawn pending correction and are excluded from this comparison`}
-        <!-- Opens over the comparison: this line explains why a figure on screen is missing, so
-             navigating away would remove what it refers to. -->
-        — see <DocLink href="/corrections">corrections</DocLink>.{/if}
+      <CardVintage
+        vintage={flow.vintage}
+        archived={flow.isArchived}
+        year={election.meta.year}
+        withdrawn={flow.withdrawnCount}
+      />
     </p>
 
     {#if ageGate.canVote}
@@ -814,20 +290,13 @@
           <!-- A shared comparison is someone else's answers: it stays comparison-only, and the
                recipient is directed to make their own (the link below). Building a plan on top of
                another person's comparison is deliberately not offered. -->
-          <p class="gated ui">
-            This is a shared comparison. To build your own voting plan, make your own comparison
-            first.
-          </p>
-        {:else if plansEnabled}
-          <button type="button" class="btn" onclick={requestBuild}>
-            {isArchived ? "Build a demonstration plan" : "Build my voting plan"}
+          <p class="gated ui">{CARD_COPY.shared}</p>
+        {:else if flow.plansEnabled}
+          <button type="button" class="btn" onclick={startBuild}>
+            {flow.isArchived ? CARD_COPY.buildDemonstration : CARD_COPY.build}
           </button>
         {:else}
-          <p class="gated ui">
-            Building a printable voting plan is not available right now. It becomes available once
-            this election's official candidate list and ballot order are confirmed and verified and
-            the printable-plan feature is switched on.
-          </p>
+          <p class="gated ui">{CARD_COPY.plansClosed}</p>
         {/if}
         {#if !data.shared}
           <!-- Sharing is only offered on your OWN comparison. A shared card is already someone
@@ -838,94 +307,64 @@
           <button
             type="button"
             class="btn ghost"
-            class:span-full={!plansEnabled}
-            onclick={requestShare}
-            aria-expanded={showShareWarning}
+            class:span-full={!flow.plansEnabled}
+            onclick={() => flow.requestShare()}
+            aria-expanded={flow.showShareWarning}
             aria-controls="share-warning"
           >
-            {copied ? "Link copied ✓" : "Share this comparison"}
+            {flow.copied ? CARD_COPY.copied : CARD_COPY.share}
           </button>
         {/if}
       </div>
     {:else}
-      <!-- Under-18 explore mode (ADR 0012): the comparison IS the result. No how-to-vote card is
-           built, printed, shared or saved for someone too young to vote — that would be electoral
-           material for a non-voter. Point to lawful, non-partisan ways to take part instead. -->
+      <!-- Under-18 explore mode (ADR 0012): the comparison IS the result. -->
       <div class="advocacy ui" role="note">
-        <p class="adv-head">
-          <b>This comparison is yours to explore — How2Vote won't build you a how-to-vote plan.</b>
-        </p>
-        <p>
-          You told us you're under {RESEARCH_MIN_AGE}, so you can't vote at a federal election yet,
-          and a how-to-vote card is material for casting a vote. The comparison above still shows
-          how your answers line up with the parties' recorded votes. When you're old enough to vote,
-          come back and build your plan.
-        </p>
-        <p class="adv-sub"><b>Want your voice heard now?</b></p>
-        <ul>
-          <li>
-            <ExternalLink href={CIVIC_LINKS.enrol}>Enrol early with the AEC</ExternalLink>
-            — at 16 or 17 you can provisionally enrol, so you're ready to vote the day you turn {RESEARCH_MIN_AGE}.
-          </li>
-          <li>
-            <ExternalLink href={CIVIC_LINKS.findMember}>
-              {electorateLess
-                ? "Contact your local federal member"
-                : `Contact the member for ${data.card.electorate}`}
-            </ExternalLink>
-            — tell the person who represents your area what matters to you.
-          </li>
-          <li>
-            <ExternalLink href={CIVIC_LINKS.votingRecord}>
-              See how Parliament has voted
-            </ExternalLink>
-            — the parliamentary records behind this quiz, on They Vote For You.
-          </li>
-        </ul>
+        <CardAdvocacy
+          age={RESEARCH_MIN_AGE}
+          electorate={data.card.electorate}
+          electorateLess={flow.electorateLess}
+        />
       </div>
     {/if}
 
-    {#if pendingAction}
+    {#if flow.pendingAction}
       <!-- Versioned Terms acceptance before a build / share / print. Separate from
            research consent, which has its own gate on the survey. -->
-      <TermsGate onaccept={onTermsAccepted} oncancel={() => (pendingAction = null)} />
+      <TermsGate onaccept={onTermsAccepted} oncancel={() => flow.cancelTerms()} />
     {/if}
 
-    {#if showShareWarning}
+    {#if flow.showShareWarning}
       <!-- Non-revocable-link warning, shown BEFORE any copy/share. The link carries the
            answers in its own fragment and lives on no server of ours, so it cannot be expired or
            recalled once sent — the user is told this and must confirm before the link is copied. -->
-      <div class="share-warning ui" id="share-warning" role="group" aria-label="Before you share">
-        <p class="sw-head"><b>This link can't be recalled</b></p>
-        <p>
-          Your share link contains your answers and <b>does not expire</b>. Anyone you send it to
-          can open this comparison, and you <b>cannot deactivate or recall it</b> afterwards — clearing
-          your own device does not remove a copy someone else already has. Only share it with people you
-          choose.
-        </p>
+      <div
+        class="share-warning ui"
+        id="share-warning"
+        role="group"
+        aria-label={CARD_COPY.shareWarning}
+      >
+        <p class="sw-head"><b>{CARD_COPY.shareWarningTitle}</b></p>
+        <p><CardShareWarning /></p>
         <div class="sw-actions">
-          <button type="button" class="btn" onclick={copyShareLink}>Copy link</button>
-          <button type="button" class="btn ghost" onclick={() => (showShareWarning = false)}>
-            Cancel
+          <button type="button" class="btn" onclick={copyShareLink}>{CARD_COPY.copyLink}</button>
+          <button type="button" class="btn ghost" onclick={() => flow.cancelShare()}>
+            {CARD_COPY.cancel}
           </button>
         </div>
       </div>
     {/if}
 
-    {#if cardUrl && ageGate.canVote && !data.shared}
+    {#if flow.cardUrl && ageGate.canVote && !data.shared}
       <div class="save ui">
-        <button type="button" class="save-btn" class:on={isSaved} onclick={toggleSave}>
-          {isSaved ? "Saved on this device ✓" : "Save on this device"}
+        <button
+          type="button"
+          class="save-btn"
+          class:on={flow.isSaved}
+          onclick={() => flow.toggleSave()}
+        >
+          {flow.isSaved ? CARD_COPY.savedOn : CARD_COPY.save}
         </button>
-        <p class="save-note">
-          {#if isSaved}
-            Kept only in this browser, never uploaded.
-            <a href="/saved">Your saved comparisons</a>
-          {:else}
-            Kept only in this browser, on this device — never uploaded, and yours to delete any
-            time.
-          {/if}
-        </p>
+        <p class="save-note"><CardSaveNote saved={flow.isSaved} /></p>
       </div>
     {/if}
 
@@ -933,26 +372,22 @@
       <button
         type="button"
         class="why-toggle"
-        onclick={() => (showWhy = !showWhy)}
-        aria-expanded={showWhy}
+        onclick={() => (flow.showWhy = !flow.showWhy)}
+        aria-expanded={flow.showWhy}
       >
-        {showWhy ? "Hide the evidence" : "Why do these parties align with my answers?"}
+        {flow.showWhy ? CARD_COPY.whyHide : CARD_COPY.whyShow}
       </button>
-      {#if showWhy}
-        <p class="why-note">
-          Each figure compares your answers with that <b>party's</b> recorded parliamentary votes — not
-          any individual candidate's personal views. Independents and any party whose alignment is under
-          review for a correction are not shown a figure.
-        </p>
-        {#each evidenceParties.filter((p) => !p.suspended) as p (p.partyKey)}
+      {#if flow.showWhy}
+        <p class="why-note"><CardWhyNote /></p>
+        {#each flow.evidenceParties.filter((p) => !p.suspended) as p (p.partyKey)}
           <details class="evi">
             <summary>
               <b>{p.party}</b> — {p.score < 0
-                ? "no recorded party votes"
-                : `${p.score}% party alignment`}
+                ? CARD_COPY.noPartyVotes
+                : fill(CARD_COPY.partyScore, { score: p.score })}
             </summary>
             <ul>
-              {#each evidence(p.partyKey) as line (line.questionId)}
+              {#each flow.evidence(p.partyKey) as line (line.questionId)}
                 <li>
                   <span class="ag ag-{line.agreement}">{line.agreement}</span>
                   <span class="q">
@@ -960,9 +395,9 @@
                     <ExternalLink
                       href="{TVFY_POLICY}/{line.questionId}"
                       class="rec"
-                      ariaLabel="See the parliamentary voting record for “{line.question}” on They Vote For You"
+                      ariaLabel={fill(CARD_COPY.recordLabel, { question: line.question })}
                     >
-                      record
+                      {CARD_COPY.record}
                     </ExternalLink>
                   </span>
                 </li>
@@ -974,13 +409,17 @@
     </div>
 
     {#if !data.shared}
-      <p class="restart ui"><a href="/review">Change my answers</a></p>
+      <p class="restart ui"><a href="/review">{CARD_COPY.changeAnswers}</a></p>
     {:else}
       <!-- Making your own from a shared card starts a CLEAN session — startFresh() wipes any
            in-progress quiz on this device first so nothing carries over. -->
       <p class="restart ui">
-        <button type="button" class="restart-btn" onclick={startFresh}>
-          Make my own comparison
+        <button
+          type="button"
+          class="restart-btn"
+          onclick={() => flow.startFresh((path) => void goto(path))}
+        >
+          {CARD_COPY.makeOwn}
         </button>
       </p>
     {/if}
@@ -993,24 +432,7 @@
          compliance mechanism on its own, so the material itself must not reach paper unauthorised. -->
     <div class="worksheet" class:print-locked={!printAuthorised}>
       <div class="ack ui pad-x" role="note">
-        {#if isArchived}
-          <p>
-            <b>These numbers are your choice.</b> How2Vote does not recommend a candidate or a
-            preference order — every box starts blank and you decide each number. This is a
-            historical demonstration of the {election.meta.year} ballot: the election is over, this is
-            not a ballot paper, and it cannot be used to vote.
-          </p>
-        {:else}
-          <p>
-            <b>These numbers are your choice.</b> How2Vote does not recommend a candidate or a preference
-            order — every box starts blank and you decide each number. A voting plan is not a ballot paper:
-            copy your numbers onto the official paper at the polling place and follow the AEC's instructions.
-          </p>
-        {/if}
-        <p class="ack-order">
-          The candidates below are listed in the same order as the official ballot paper — so you
-          can match each one box for box. That order is the ballot's, not a ranking by How2Vote.
-        </p>
+        <CardAck archived={flow.isArchived} year={election.meta.year} />
       </div>
 
       <section class="ballot">
@@ -1018,94 +440,76 @@
           <header class="chamber-head ui">
             <span class="chamber-n" aria-hidden="true">1</span>
             <span class="chamber-t">
-              <b>House of Representatives</b>
-              <small>Green ballot paper · number every box</small>
+              <b>{CARD_COPY.house}</b>
+              <small>{CARD_COPY.houseBuild}</small>
             </span>
           </header>
           <ol class="rows">
-            {#each house as r (r.candidate + r.position)}
+            {#each flow.house as r (r.candidate + r.position)}
               {@const id = rowId(r.candidate, r.position)}
               <PlanRow
                 uid={`h-${id}`}
                 candidate={r.candidate}
                 party={r.party}
-                pref={prefOf(houseOrder, id)}
-                total={houseIds.length}
-                onset={(n) => (houseOrder = setRank(houseOrder, id, n, houseIds.length))}
-                onup={() => (houseOrder = moveUp(houseOrder, id))}
-                ondown={() => (houseOrder = moveDown(houseOrder, id))}
+                pref={prefOf(flow.houseOrder, id)}
+                total={flow.houseIds.length}
+                onset={(n) => flow.setRank("house", id, n)}
+                onup={() => flow.moveUp("house", id)}
+                ondown={() => flow.moveDown("house", id)}
               />
             {/each}
           </ol>
-          <p class="check ui" role="status">
-            {#if houseStatus.complete}
-              All {houseStatus.total} boxes numbered. Check them against your ballot paper.
-            {:else}
-              {houseStatus.ranked} of {houseStatus.total} numbered — number every box for a formal House
-              vote.
-            {/if}
-          </p>
+          <p class="check ui" role="status">{flow.houseStatusText}</p>
         </div>
 
         <div class="chamber">
           <header class="chamber-head ui">
             <span class="chamber-n" aria-hidden="true">2</span>
             <span class="chamber-t">
-              <b>Senate</b>
-              <small>White ballot paper · {stateName(data.card.state)}</small>
+              <b>{CARD_COPY.senate}</b>
+              <small>{fill(CARD_COPY.senatePaper, { state: stateName(data.card.state) })}</small>
             </span>
           </header>
 
-          <div class="senate-mode ui" role="group" aria-label="Senate voting method">
+          <div class="senate-mode ui" role="group" aria-label={CARD_COPY.senateMethod}>
             <button
               type="button"
-              class:on={senateView === "above"}
-              aria-pressed={senateView === "above"}
-              onclick={() => (senateView = "above")}
+              class:on={flow.senateView === "above"}
+              aria-pressed={flow.senateView === "above"}
+              onclick={() => (flow.senateView = "above")}
             >
-              Above the line
+              {CARD_COPY.above}
             </button>
             <button
               type="button"
-              class:on={senateView === "below"}
-              aria-pressed={senateView === "below"}
-              onclick={() => (senateView = "below")}
+              class:on={flow.senateView === "below"}
+              aria-pressed={flow.senateView === "below"}
+              onclick={() => (flow.senateView = "below")}
             >
-              Below the line
+              {CARD_COPY.below}
             </button>
           </div>
-          <p class="senate-note ui">
-            Choose one method only — if you number above the line, leave the boxes below it blank.
-          </p>
+          <p class="senate-note ui">{CARD_COPY.senateOneMethod}</p>
 
-          {#if senateView === "above"}
+          {#if flow.senateView === "above"}
             <ol class="rows">
-              {#each senateAtl as r (r.group)}
+              {#each flow.aboveRows as r (r.id)}
                 <PlanRow
-                  uid={`sa-${r.group}`}
-                  candidate={r.party || `Group ${r.group}`}
-                  party={`Column ${r.group} · ${r.candidates} candidate${r.candidates === 1 ? "" : "s"}`}
-                  pref={prefOf(senateAboveOrder, r.group)}
-                  total={senateAboveIds.length}
-                  onset={(n) =>
-                    (senateAboveOrder = setRank(
-                      senateAboveOrder,
-                      r.group,
-                      n,
-                      senateAboveIds.length,
-                    ))}
-                  onup={() => (senateAboveOrder = moveUp(senateAboveOrder, r.group))}
-                  ondown={() => (senateAboveOrder = moveDown(senateAboveOrder, r.group))}
+                  uid={`sa-${r.id}`}
+                  candidate={r.candidate}
+                  party={r.party}
+                  pref={prefOf(flow.senateAboveOrder, r.id)}
+                  total={flow.senateAboveIds.length}
+                  onset={(n) => flow.setRank("above", r.id, n)}
+                  onup={() => flow.moveUp("above", r.id)}
+                  ondown={() => flow.moveDown("above", r.id)}
                 />
               {/each}
             </ol>
-            <p class="check ui" role="status">
-              {senateAboveStatus.ranked} numbered{#if !isTerritory}
-                — number at least 6 boxes above the line{/if}.
-            </p>
+            <p class="check ui" role="status">{flow.aboveStatusText}</p>
           {:else}
-            {#each senateGroups as [group, rows] (group)}
-              <p class="col ui">Column {group}</p>
+            {#each flow.senateGroups as [group, rows] (group)}
+              <p class="col ui">{fill(CARD_COPY.column, { group })}</p>
               <ol class="rows">
                 {#each rows as r (r.candidate + r.position)}
                   {@const id = rowId(r.candidate, r.position)}
@@ -1113,20 +517,16 @@
                     uid={`sb-${id}`}
                     candidate={r.candidate}
                     party={r.party}
-                    pref={prefOf(senateBelowOrder, id)}
-                    total={senateBelowIds.length}
-                    onset={(n) =>
-                      (senateBelowOrder = setRank(senateBelowOrder, id, n, senateBelowIds.length))}
-                    onup={() => (senateBelowOrder = moveUp(senateBelowOrder, id))}
-                    ondown={() => (senateBelowOrder = moveDown(senateBelowOrder, id))}
+                    pref={prefOf(flow.senateBelowOrder, id)}
+                    total={flow.senateBelowIds.length}
+                    onset={(n) => flow.setRank("below", id, n)}
+                    onup={() => flow.moveUp("below", id)}
+                    ondown={() => flow.moveDown("below", id)}
                   />
                 {/each}
               </ol>
             {/each}
-            <p class="check ui" role="status">
-              {senateBelowStatus.ranked} numbered{#if !isTerritory}
-                — number at least 12 boxes below the line{/if}.
-            </p>
+            <p class="check ui" role="status">{flow.belowStatusText}</p>
           {/if}
         </div>
       </section>
@@ -1136,29 +536,14 @@
          USER'S. National Digital's electoral authorisation of the material it publishes is stamped
          once at the end of the document (National Digital authoriser model; docs/adr/0010). -->
       <div class="worksheet-foot ui">
-        <p>
-          <b>Preference order selected by the user.</b> You chose every number — How2Vote does not recommend
-          a candidate or a preference order. This how-to-vote plan is published and authorised by National
-          Digital, which authorises the fixed plan template and comparison it contains. A voting plan
-          is not a ballot paper and does not cast a vote.
-        </p>
-        <p>
-          Built {builtOn} · {election.meta.label} (AEC) · data {election.manifest.dataVersion} · app
-          {version}.
-          {#if isArchived}
-            This is a historical demonstration of an election that has already been held — it cannot
-            be used to vote.
-          {:else}
-            Candidates and ballot order can change — always check your actual ballot paper and the
-            current AEC instructions before voting.
-          {/if}
-        </p>
-        <!-- Data attribution travels with the printed worksheet (ODbL/AEC obligation): the worksheet
-             footer is NOT hidden in print, so the required credits appear on the printed output too. -->
-        <p class="worksheet-attribution">
-          Vote data © {data.card.attribution}. Candidates and ballot: Australian Electoral
-          Commission.
-        </p>
+        <CardWorksheetFoot
+          built={flow.builtOn}
+          label={election.meta.label}
+          dataVersion={election.manifest.dataVersion}
+          {version}
+          archived={flow.isArchived}
+          attribution={data.card.attribution}
+        />
       </div>
 
       <div class="actions ui">
@@ -1166,19 +551,19 @@
              viewport is the on-screen guarantee there, and a sanctioned share-image is the intended
              way a plan leaves the device. requestPrint() fails closed on native regardless. -->
         {#if !isNativeShell}
-          <button type="button" class="btn" onclick={requestPrint}>
-            {isArchived ? "Print this demonstration" : "Print my voting plan"}
+          <button type="button" class="btn" onclick={() => flow.requestPrint()}>
+            {flow.isArchived ? CARD_COPY.printDemonstration : CARD_COPY.print}
           </button>
         {/if}
-        <button type="button" class="btn ghost" onclick={() => (stage = "compare")}>
-          Back to the comparison
+        <button type="button" class="btn ghost" onclick={() => flow.backToCompare()}>
+          {CARD_COPY.backToCompare}
         </button>
       </div>
 
-      {#if pendingAction}
+      {#if flow.pendingAction}
         <!-- Fail-closed Terms re-acceptance before a print — e.g. if the Terms version
            changed after the plan was built. Normally already accepted at build, so unseen here. -->
-        <TermsGate onaccept={onTermsAccepted} oncancel={() => (pendingAction = null)} />
+        <TermsGate onaccept={onTermsAccepted} oncancel={() => flow.cancelTerms()} />
       {/if}
     </div>
     <!-- /.worksheet — everything above is hidden in print until the print acknowledgement is given. -->
@@ -1187,13 +572,13 @@
          Everything below this point is print-only: the stamp and the watermark are `@media print`,
          so without this band a screenshot of the plan would carry neither the s321D particulars
          nor (for a historical election) any marker saying so. See PlanAuthorisationBand.svelte. -->
-    <PlanAuthorisationBand archived={isArchived} />
+    <PlanAuthorisationBand archived={flow.isArchived} />
 
     <!-- Archived-election watermark — a large, print-only diagonal overlay repeated on EVERY printed
          page, shown only when this is a historical (archived) election so a printed demonstration can
          never be mistaken for a live how-to-vote instruction. Hidden on screen (the band above is
          its on-screen counterpart). -->
-    {#if isArchived}
+    {#if flow.isArchived}
       <div class="print-watermark" aria-hidden="true">
         HISTORICAL EXAMPLE — NOT VALID FOR VOTING
       </div>
@@ -1216,13 +601,13 @@
       </div>
     {/if}
 
-    {#if session === "print-authorisation"}
+    {#if flow.session === "print-authorisation"}
       <!-- Print acknowledgement (National Digital authoriser model; see docs/adr/0010), as a
            focus-trapping modal. No user particulars are collected — the plan carries National
            Digital's authorisation; the voter acknowledges that the preference order is their own
            selection and that the plan is not a ballot paper. Declaration prose is subject to final
            legal sign-off before public release. -->
-      <PrintAuthorisationDialog onconfirm={confirmPrint} oncancel={cancelPrint} />
+      <PrintAuthorisationDialog onconfirm={confirmPrint} oncancel={() => flow.cancelPrint()} />
     {/if}
   {/if}
 {/if}
@@ -1302,13 +687,13 @@
     padding-bottom: 12px;
     border-left: 3px solid var(--rule);
   }
-  .ack p {
+  .ack :global(p) {
     font-size: 13px;
     color: var(--ink2);
     line-height: 1.55;
     margin: 0;
   }
-  .ack p + p {
+  .ack :global(p + p) {
     margin-top: 8px;
   }
   /* Persistent historical-use warning. Prominent (not muted), and kept visible in print so the
@@ -1460,18 +845,19 @@
     color: var(--ink2);
     line-height: 1.55;
   }
-  .advocacy p {
+  .advocacy :global(p) {
     margin: 0 0 10px;
   }
-  .advocacy .adv-head {
+  /* The note's heading and its sub-heading, first and third of its paragraphs (CardAdvocacy). */
+  .advocacy :global(p:first-child) {
     color: var(--ink);
     font-size: 15px;
   }
-  .advocacy .adv-sub {
+  .advocacy :global(p:nth-of-type(3)) {
     color: var(--ink);
     margin-top: 4px;
   }
-  .advocacy ul {
+  .advocacy :global(ul) {
     margin: 0;
     padding: 0;
     list-style: none;
@@ -1508,7 +894,7 @@
   .worksheet-foot {
     padding: 14px var(--gutter) 0;
   }
-  .worksheet-foot p {
+  .worksheet-foot :global(p) {
     font-size: 11.5px;
     color: var(--ink2);
     line-height: 1.5;
@@ -1544,7 +930,7 @@
     margin: 8px 0 0;
     text-align: center;
   }
-  .save-note a {
+  .save-note :global(a) {
     color: var(--ink2);
     text-decoration: underline;
     text-underline-offset: 3px;

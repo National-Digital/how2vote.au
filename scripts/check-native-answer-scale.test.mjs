@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { readFileSync } from "node:fs";
 import {
+  answerBindings,
   nativeImportancePoints,
   nativeScale,
   verifyAnswerScale,
@@ -12,6 +13,10 @@ const url = (p) => new URL(p, import.meta.url);
 const WEB = readFileSync(url("../apps/web/src/lib/answers.ts"), "utf8");
 const NATIVE = readFileSync(url("../apps/mobile/ios/App/App/Model/AnswerScale.swift"), "utf8");
 const WEB_QUIZ = readFileSync(url("../apps/web/src/lib/quiz.svelte.ts"), "utf8");
+const ANSWER_OPTIONS = readFileSync(
+  url("../apps/web/src/lib/components/AnswerOptions.svelte"),
+  "utf8",
+);
 /** The importance rule in the shape `record()` writes it, for the synthetic fixtures below. */
 const rule = (points = [1, 5]) =>
   `const imp = important && (${points.map((p) => `points === ${p}`).join(" || ")})`;
@@ -83,84 +88,79 @@ describe("webScale", () => {
 });
 
 describe("nativeScale", () => {
-  it("reads the committed source", () => {
-    const scale = nativeScale(NATIVE);
-    expect(scale.options).toHaveLength(6);
-    expect(scale.options.at(-1)?.kind).toBe("skip");
-    expect(Object.keys(scale.labels)).toHaveLength(6);
+  it("reads the committed source, which restates no options and no labels", () => {
+    expect(nativeScale(NATIVE)).toEqual({ options: [], labels: {}, star: null });
+  });
+
+  it("reads a restatement", () => {
+    const scale = nativeScale(swift({ options: SCALE, labels: LABELS }));
+    expect(scale.options).toHaveLength(3);
+    expect(scale.labels).toEqual(LABELS);
     expect(scale.star).toBe("★");
   });
 });
 
+describe("answerBindings", () => {
+  it("reads the committed page", () => {
+    expect(answerBindings(ANSWER_OPTIONS)).toEqual({ answer: true, skip: true });
+  });
+});
+
 describe("verifyAnswerScale", () => {
+  const verify = (web, native, options = ANSWER_OPTIONS) =>
+    verifyAnswerScale(web, native, rule(), options);
+
   it("passes on the committed sources", () => {
-    expect(verifyAnswerScale(WEB, NATIVE, WEB_QUIZ)).toEqual([]);
+    expect(verifyAnswerScale(WEB, NATIVE, WEB_QUIZ, ANSWER_OPTIONS)).toEqual([]);
   });
 
-  it("fails closed when either side is unreadable", () => {
-    expect(verifyAnswerScale("", NATIVE, WEB_QUIZ).join(" ")).toContain(
+  it("fails closed when the web's scale or its bindings are unreadable", () => {
+    expect(verifyAnswerScale("", NATIVE, WEB_QUIZ, ANSWER_OPTIONS).join(" ")).toContain(
       "the web declares no OPTIONS",
     );
-    expect(verifyAnswerScale(WEB, "", WEB_QUIZ).join(" ")).toContain("declares no options");
+    expect(verifyAnswerScale(WEB, NATIVE, WEB_QUIZ, "").join(" ")).toContain(
+      "does not name each answer's points",
+    );
   });
 
   // The failure this guard exists for: the screen still reads correctly and the engine still
   // scores, but the tap is recorded as its opposite.
-  it("catches a rebound label", () => {
-    const swapped = SCALE.map((o) => (o.points === 5 ? { ...o, points: 1 } : o));
-    const errors = verifyAnswerScale(
-      ts({ options: SCALE, labels: LABELS }),
-      swift({ options: swapped, labels: LABELS }),
-      rule(),
+  it("catches a page that binds an answer to other points", () => {
+    const rebound = ANSWER_OPTIONS.replace(
+      "value={String(opt.points)}",
+      "value={String(6 - opt.points)}",
     );
-    expect(errors.join(" ")).toContain("option 1 differs");
+    expect(verify(ts({ options: SCALE, labels: LABELS }), "", rebound).join(" ")).toContain(
+      "does not name each answer's points",
+    );
+    const skip = ANSWER_OPTIONS.replace('value="0"', 'value="5"');
+    expect(verify(ts({ options: SCALE, labels: LABELS }), "", skip).join(" ")).toContain(
+      "does not name each answer's points",
+    );
   });
 
-  it("catches a scale of a different length", () => {
-    const errors = verifyAnswerScale(
+  it("fails a native restatement of the options, a second binding free to drift", () => {
+    const errors = verify(
       ts({ options: SCALE, labels: LABELS }),
-      swift({ options: SCALE.slice(0, 2), labels: LABELS }),
-      rule(),
+      swift({ options: SCALE, labels: LABELS }),
     );
-    expect(errors.join(" ")).toContain("3 options on the web and 2 natively");
+    expect(errors.join(" ")).toContain("AnswerScale.swift restates the options");
   });
 
-  it("catches drifted secondary text", () => {
-    const reworded = SCALE.map((o) => (o.sub ? { ...o, sub: "both sides have a case" } : o));
-    const errors = verifyAnswerScale(
-      ts({ options: SCALE, labels: LABELS }),
-      swift({ options: reworded, labels: LABELS }),
-      rule(),
+  it("fails a native restatement of the short labels, or of their star", () => {
+    const web = ts({ options: SCALE, labels: LABELS });
+    expect(verify(web, swift({ labels: { 3: "Mixed views" } })).join(" ")).toContain(
+      "restates the short labels",
     );
-    expect(errors.join(" ")).toContain("option 2 differs");
-  });
-
-  it("catches a short label that would misreport an answer to VoiceOver", () => {
-    const errors = verifyAnswerScale(
-      ts({ options: SCALE, labels: LABELS }),
-      swift({ options: SCALE, labels: { ...LABELS, 3: "Mixed views" } }),
-      rule(),
+    expect(verify(web, '        return important ? "★ \\(text)" : text\n').join(" ")).toContain(
+      "restates the short labels",
     );
-    expect(errors.join(" ")).toContain("the short label for 3 differs");
   });
 
   it("catches a scored option that answerLabel cannot name", () => {
     const unnamed = { 0: "Skipped", 5: "Strongly agree" };
-    const errors = verifyAnswerScale(
-      ts({ options: SCALE, labels: unnamed }),
-      swift({ options: SCALE, labels: unnamed }),
-      rule(),
-    );
+    const errors = verify(ts({ options: SCALE, labels: unnamed }), "");
     expect(errors.join(" ")).toContain("the web scores 3 but answerLabel has no name for it");
-  });
-
-  it("catches a drifted importance mark", () => {
-    const errors = verifyAnswerScale(
-      ts({ options: SCALE, labels: LABELS }),
-      swift({ options: SCALE, labels: LABELS, star: "*" }),
-      rule(),
-    );
-    expect(errors.join(" ")).toContain("mark differs");
   });
 });
 
@@ -177,7 +177,9 @@ describe("the \u00d710 importance lever", () => {
       "importanceApplies: Set<Int> = [1, 5]",
       "importanceApplies: Set<Int> = [1, 3, 5]",
     );
-    expect(verifyAnswerScale(WEB, widened, WEB_QUIZ).join(" ")).toContain("[1,3,5] natively");
+    expect(verifyAnswerScale(WEB, widened, WEB_QUIZ, ANSWER_OPTIONS).join(" ")).toContain(
+      "[1,3,5] natively",
+    );
   });
 
   it("catches a web rule the native side has not followed", () => {
@@ -185,12 +187,18 @@ describe("the \u00d710 importance lever", () => {
       "points === 1 || points === 5",
       "points === 1 || points === 2 || points === 5",
     );
-    expect(verifyAnswerScale(WEB, NATIVE, changed).join(" ")).toContain("[1,2,5] on the web");
+    expect(verifyAnswerScale(WEB, NATIVE, changed, ANSWER_OPTIONS).join(" ")).toContain(
+      "[1,2,5] on the web",
+    );
   });
 
   it("fails closed when either side stops declaring the rule", () => {
-    expect(verifyAnswerScale(WEB, NATIVE, "").join(" ")).toContain("no importance rule");
+    expect(verifyAnswerScale(WEB, NATIVE, "", ANSWER_OPTIONS).join(" ")).toContain(
+      "no importance rule",
+    );
     const stripped = NATIVE.replace(/static let importanceApplies: Set<Int> = \[[^\]]*\]/, "");
-    expect(verifyAnswerScale(WEB, stripped, WEB_QUIZ).join(" ")).toContain("no importanceApplies");
+    expect(verifyAnswerScale(WEB, stripped, WEB_QUIZ, ANSWER_OPTIONS).join(" ")).toContain(
+      "no importanceApplies",
+    );
   });
 });

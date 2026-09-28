@@ -14,16 +14,45 @@
  */
 import { browser } from "$app/environment";
 import { routePath } from "$lib/native-route-path";
-import { afterNavigate } from "$app/navigation";
+import { afterNavigate, goto } from "$app/navigation";
 import { onDestroy, onMount } from "svelte";
 import { ageGate } from "$lib/age.svelte";
-import { nativeRouterPlugin } from "$lib/channel";
-import { ELECTION_IDS } from "@how2vote/data-schema";
+import { nativeRouterPlugin, storeListingUrl } from "$lib/channel";
+import { CURRENT_ELECTION_ID, ELECTIONS, ELECTION_IDS } from "@how2vote/data-schema";
 import { STATES } from "$lib/data";
 import { isMapAvailable } from "$lib/governance";
 import { backupToNative, restoreFromNative } from "$lib/native-storage";
-import { quiz } from "$lib/quiz.svelte";
+import { handleScreenAction, loadCardFlow } from "$lib/native-screen-actions";
+import { performSlotAction } from "$lib/native-slot-actions";
+import { election as activeElection, savedElectionId } from "$lib/election.svelte";
+import { now } from "$lib/now.svelte";
+import { quiz, type Persisted } from "$lib/quiz.svelte";
+import { saved } from "$lib/saved.svelte";
+import { savedRows } from "$lib/saved-rows";
+import { readInsights } from "$lib/insights";
+import { survey } from "$lib/survey-flow.svelte";
+import { termsAcceptance } from "$lib/terms.svelte";
+import { AUTHORISATION, FEEDBACK_LINK, footerCredit, footerLinks } from "$lib/site-chrome";
+import { LINK_CUE } from "$lib/external-link-copy";
+import { STALE_ACTIONS, staleDismissal, staleMessage } from "$lib/stale-notice.svelte";
+import { assessStaleness } from "$lib/staleness";
 import { theme } from "$lib/theme.svelte";
+
+/**
+ * The prerendered documents the native core draws from their projection
+ * (`scripts/build-native-documents.mjs`). Each one's hydrated text must equal its prerendered text,
+ * which `e2e/native-documents.spec.ts` holds it to; a page whose text depends on the voter's state
+ * does not belong here.
+ */
+export const NATIVE_DOCUMENTS = [
+  "accessibility",
+  "corrections",
+  "glossary",
+  "methodology",
+  "privacy",
+  "research",
+  "terms",
+] as const;
 
 /**
  * The routes the native core can serve, by path.
@@ -37,20 +66,105 @@ const NATIVE_ROUTES = new Set([
   "/ballot",
   "/quiz",
   "/review",
+  "/saved",
+  "/contact",
+  "/insights",
+  "/survey",
+  "/card",
   // The landing renders for a past election too (`/2019`, `/2022`), and the election toggle moves
   // between them. Without these the toggle would drop out of the native surface mid-tap.
   ...ELECTION_IDS.map((id) => `/${id}`),
+  ...NATIVE_DOCUMENTS.map((name) => `/${name}`),
 ]);
+
+/**
+ * Documents whose text reports the selected election. The current election's is prerendered at its
+ * own path; every other election's at `states/<name>/<election>`. The native core draws the one the
+ * selected election names.
+ */
+export const ELECTION_DOCUMENTS = ["about"] as const;
+
+/**
+ * The age gate's two states (ADR 0011/0012): the question at `/start`, and the explore-only
+ * explainer an under-18 sees after answering, rendered at build time as `states/start`. The native
+ * gate draws whichever applies and asks the web to act on each answer (`nativeSlotAction`).
+ */
+export const AGE_GATE_DOCUMENTS = ["start", "states/start"] as const;
+
+/**
+ * Pages of states the build would not otherwise render (ADR 0019 D4b): the native screen they
+ * belong to draws the state that applies from them.
+ */
+export const STATE_DOCUMENTS = [
+  "states/landing",
+  "states/quiz",
+  "states/ballot",
+  "states/review",
+  "states/clear-data",
+  "states/saved",
+  "states/contact",
+  "states/contact-form",
+  "states/insights",
+  "states/survey",
+  "states/card",
+] as const;
+
+/**
+ * The landing's own page for an election: `index` for the current one, else the election's id.
+ * Drawn with `states/landing`, from which the native landing takes the stage, call to action and
+ * theme label that apply.
+ */
+export function landingDocument(electionId: string): string {
+  return electionId === CURRENT_ELECTION_ID ? "index" : electionId;
+}
+
+/**
+ * The election data sections the native core draws the same way: each section's index and every
+ * page under it, for every election (`/2025/issues`, `/next/parties/greens`, …). Every one is held
+ * to its hydrated text by the same spec as the documents.
+ */
+export const NATIVE_DATA_SECTIONS = ["issues", "parties", "electorates", "senate"] as const;
+
+const DOCUMENT_PATHS = new Set<string>(NATIVE_DOCUMENTS.map((name) => `/${name}`));
+
+/** The projected page a path names, or null when it is not one the native core draws. */
+function documentName(path: string, electionId: string): string | null {
+  if (DOCUMENT_PATHS.has(path)) return path.slice(1);
+  // A declared adult is sent on by the page itself; drawing the question first would flash it.
+  if (path === "/start" && !ageGate.confirmed) return ageGate.minor ? "states/start" : "start";
+  // The current election by the store, once it holds the visitor's choice; before then — a direct
+  // load, when the router first asks — by the stored choice it has yet to restore.
+  const chosen = activeElection.settled ? electionId : (savedElectionId() ?? electionId);
+  const name = path.slice(1);
+  if ((ELECTION_DOCUMENTS as readonly string[]).includes(name) && chosen === electionId) {
+    return electionId === CURRENT_ELECTION_ID ? name : `states/${name}/${electionId}`;
+  }
+  const [, election, section, ...rest] = path.split("/");
+  const isData =
+    ELECTION_IDS.includes(election ?? "") &&
+    (NATIVE_DATA_SECTIONS as readonly string[]).includes(section ?? "") &&
+    rest.length <= 1 &&
+    rest.every((segment) => /^[a-z0-9-]+$/.test(segment));
+  return isData ? path.slice(1) : null;
+}
 
 /**
  * The shell's name for a path.
  *
  * The landing serves several paths — `/` and one per election — and they are one screen, told which
- * election to show through `electionId`. Everything else is its path without the slash.
+ * election to show through `electionId`. The documents are one screen too, told which page to
+ * draw through `document`. Everything else is its path without the slash.
  */
-function routeName(path: string): string {
+function routeName(path: string, electionId: string): string {
   if (path === "/" || ELECTION_IDS.some((id) => path === `/${id}`)) return "landing";
+  if (documentName(path, electionId) !== null) return "document";
   return path.replace(/^\//, "");
+}
+
+/** The election a landing path names, read from the path rather than the store it updates. */
+function landingElection(path: string): string | undefined {
+  if (path === "/") return CURRENT_ELECTION_ID;
+  return ELECTION_IDS.find((id) => path === `/${id}`);
 }
 
 /**
@@ -66,6 +180,93 @@ function allowedMapIds(electionId: string): string[] {
   return STATES.map((s) => `${electionId}/${s.code}`).filter(isMapAvailable);
 }
 
+/**
+ * The layout chrome a native screen covers and must render itself: the footer's links, credit and
+ * authorisation, and the stale-data notice when it applies. The shell declines a route without it.
+ */
+function siteChrome(): string {
+  now.start();
+  const verdict = assessStaleness(ELECTIONS, now.current);
+  const stale =
+    verdict.level !== "none" && verdict.dataVersion !== staleDismissal.version
+      ? {
+          message: staleMessage(verdict),
+          dataVersion: verdict.dataVersion,
+          prominent: verdict.level === "prominent",
+          updateUrl: storeListingUrl(),
+          update: STALE_ACTIONS.update,
+          dismiss: STALE_ACTIONS.dismiss,
+        }
+      : null;
+  return JSON.stringify({
+    authorisation: AUTHORISATION,
+    credit: footerCredit(__BUILD_YEAR__),
+    links: [FEEDBACK_LINK, ...footerLinks(saved.hydrated ? saved.count : 0)],
+    linkCue: LINK_CUE.app,
+    stale,
+  });
+}
+
+/** Reads a published stats file as the Insights page does, or null for one it cannot. */
+async function statsFile(name: string): Promise<unknown> {
+  try {
+    const res = await fetch(`/stats/${name}.json`, { cache: "no-cache" });
+    return res.ok ? await res.json() : null;
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * What a screen draws that is the web's to hold, handed over with the route: the saved cards, as the
+ * saved page lists them, the Insights page's figures, the survey's step, and the card. Undefined for a screen with none, and null
+ * for one whose data the web has not read yet, which the native core cannot draw.
+ */
+async function screenData(route: string, url: URL): Promise<string | null | undefined> {
+  if (route === "insights") return JSON.stringify(await readInsights(statsFile));
+  if (route === "card") {
+    // The card the page opens, or is opening: the same one, so the page and the screen agree.
+    const cardFlow = await loadCardFlow();
+    await cardFlow.open(url, (path) => void goto(path));
+    const card = cardFlow.nativeCard();
+    return card ? JSON.stringify(card) : null;
+  }
+  if (route === "survey") {
+    // Whether the current Terms still need accepting decides whether their checkbox is shown.
+    if (!termsAcceptance.ready) termsAcceptance.hydrate();
+    return JSON.stringify(survey.nativeStep());
+  }
+  if (route !== "saved") return undefined;
+  if (!saved.hydrated) return null;
+  return JSON.stringify(savedRows(saved.items));
+}
+
+/**
+ * Routes the layout sends a visitor away from unless they may use them (ADR 0011/0012): an under-18
+ * never sees them, so they are never drawn natively for one either.
+ */
+const ADULT_ONLY_NATIVE_ROUTES = new Set(["/saved", "/survey"]);
+
+/** An under-18 explorer's in-memory quiz, which is never persisted, or undefined for anyone else. */
+function explorerSession(electionId: string): string | undefined {
+  if (ageGate.confirmed) return undefined;
+  const record = quiz.snapshot(electionId);
+  return record ? JSON.stringify(record) : undefined;
+}
+
+/**
+ * The fragment a navigation names, decoded. A malformed escape (`#%E0`) is kept as written rather
+ * than thrown: a throw here would read as "no native core" for the rest of the session.
+ */
+function fragment(url: URL): string {
+  const raw = url.hash.slice(1);
+  try {
+    return decodeURIComponent(raw);
+  } catch {
+    return raw;
+  }
+}
+
 /** Who is rendering the current route. */
 export type Renderer = "deciding" | "native" | "web";
 
@@ -77,6 +278,8 @@ class NativeRoute {
   #renderer = $state<Renderer>("web");
   /** Guards against a second handover for a navigation already in flight. */
   #pending: string | null = null;
+  /** Counts navigations, so one still reading its screen's data can tell a later one began. */
+  #navigations = 0;
   /**
    * Set once the shell has proved it is not there.
    *
@@ -121,7 +324,19 @@ class NativeRoute {
     }
 
     const path = routePath(url);
-    if (!NATIVE_ROUTES.has(path)) {
+    const document = documentName(path, electionId);
+    const route = document !== null ? "document" : routeName(path, electionId);
+    const navigation = ++this.#navigations;
+    const candidate = NATIVE_ROUTES.has(path) || document !== null;
+    // Read before the route is offered. The Insights page's figures and the card are read
+    // asynchronously; neither writes a key the native core owns, so each may render while it is read.
+    // A read that fails is data the screen cannot draw: the route is declined, not left pending.
+    const data = candidate ? await screenData(route, url).catch(() => null) : undefined;
+    // A later navigation is being handled; this one's answer is no longer wanted.
+    if (navigation !== this.#navigations) return;
+    const offered =
+      candidate && data !== null && (ageGate.canVote || !ADULT_ONLY_NATIVE_ROUTES.has(path));
+    if (!offered) {
       this.#renderer = "web";
       this.#pending = null;
       if (this.#covered) {
@@ -131,9 +346,13 @@ class NativeRoute {
       return;
     }
 
-    if (this.#pending === path) return;
-    this.#pending = path;
+    // A document opened at a fragment, the gate in its other state, or a screen with other data is
+    // a different request.
+    const request = `${path}${url.hash}|${document ?? ""}|${data ?? ""}`;
+    if (this.#pending === request) return;
+    this.#pending = request;
     this.#renderer = "deciding";
+    const id = landingElection(path) ?? electionId;
 
     try {
       // The durable copy is the only thing the native core can read: it holds no localStorage.
@@ -141,8 +360,9 @@ class NativeRoute {
       // open.
       await backupToNative();
       const { presented } = await router.present({
-        route: routeName(path),
-        electionId,
+        // From the document decided above, not a second reading of the stores after the await.
+        route,
+        electionId: id,
         // From the navigation's own URL, not `location`: a queued sync would otherwise read
         // whatever the address bar happens to hold when it finally runs.
         editing: url.searchParams.has("edit"),
@@ -154,17 +374,27 @@ class NativeRoute {
         // May enter the quiz: an adult, or an under-18 exploring this session. Distinct from
         // `eligible`, which is the declaration that gates persistence and a printable plan.
         canExplore: ageGate.canExplore,
-        allowedMapIds: allowedMapIds(electionId),
+        allowedMapIds: allowedMapIds(id),
+        chrome: siteChrome(),
+        theme: theme.pref,
+        // An explorer's quiz lives only in memory (ADR 0012), so the native core is handed it.
+        session: explorerSession(id),
+        ...(data !== undefined ? { data } : {}),
+        ...(document !== null
+          ? { document, anchor: fragment(url) }
+          : route === "landing"
+            ? { document: landingDocument(id) }
+            : {}),
       });
       // A later navigation may have overtaken this call; its answer, not this one, is current.
-      if (this.#pending !== path) return;
+      if (this.#pending !== request) return;
       this.#covered = presented;
       this.#renderer = presented ? "native" : "web";
     } catch {
       // A rejected bridge call must not strand the voter on a page that will not render. It also
       // answers the only question that matters about this platform, so it is not asked again.
       this.#absent = true;
-      if (this.#pending === path) this.#renderer = "web";
+      if (this.#pending === request) this.#renderer = "web";
     }
   }
 }
@@ -228,19 +458,29 @@ export function wireNativeRouter(electionId: () => string, navigate: (path: stri
   });
 }
 
+/**
+ * Tells the native core the theme this side now holds. For a change the native side did not ask
+ * for — the restore at launch, which can bring back a theme WebKit's storage had lost.
+ */
+export function syncNativeTheme(): void {
+  void nativeRouterPlugin()
+    ?.themeChanged({ theme: theme.pref })
+    .catch(() => undefined);
+}
+
 /** Teardowns for whatever `attach` registered, released by the layout's own destruction. */
 const teardowns: Array<() => void> = [];
 
 /** Attaches the listeners if the shell is there, then offers the route to it. */
 function offer(url: URL, electionId: () => string, navigate: (path: string) => void): void {
-  attach(navigate);
+  attach(navigate, electionId);
   void nativeRoute.sync(url, electionId());
 }
 
 /** Listeners are attached once, the first time the shell is actually there to attach them to. */
 let attached = false;
 
-function attach(navigate: (path: string) => void): void {
+function attach(navigate: (path: string) => void, electionId: () => string): void {
   if (attached) return;
   const router = nativeRouterPlugin();
 
@@ -267,11 +507,27 @@ function attach(navigate: (path: string) => void): void {
   if (!router) return;
   attached = true;
 
-  const exit = router.addListener("nativeRouteExit", ({ route }) => {
+  const exit = router.addListener("nativeRouteExit", ({ route, session, electionId }) => {
+    if (session && electionId) {
+      try {
+        if (quiz.adopt(electionId, JSON.parse(session) as Persisted)) {
+          navigate(route);
+          return;
+        }
+      } catch {
+        // An unreadable record falls through to the durable copy rather than stranding the voter.
+      }
+      // As does one for an election this side has not loaded.
+    }
     void restoreFromNative().then(() => {
       quiz.rehydrate();
       navigate(route);
     });
+  });
+
+  const staleDismiss = router.addListener("nativeStaleDismiss", ({ dataVersion }) => {
+    staleDismissal.remember(dataVersion);
+    void backupToNative();
   });
 
   // A native screen asks; this side writes. The theme preference is the WebView's key (ADR 0018 D3),
@@ -286,8 +542,37 @@ function attach(navigate: (path: string) => void): void {
     void backupToNative();
   });
 
+  // A native control was pressed. The native side draws a slot's buttons from the page and, but for
+  // the landing's (ADR 0019 D4c), never acts on them itself; this side does what the web page's own
+  // control does.
+  const slotAction = router.addListener("nativeSlotAction", ({ slot, action }) => {
+    performSlotAction(
+      slot,
+      action,
+      navigate,
+      () => void nativeRoute.sync(new URL(window.location.href), electionId()),
+    );
+  });
+
+  // A native screen asks the web to change what it holds — a saved card deleted — and is redrawn
+  // from what the web then holds; or to do what the page does and answer how it went — a contact
+  // message sent.
+  const screenAction = router.addListener("nativeScreenAction", (event) =>
+    handleScreenAction(
+      event,
+      {
+        resync: () => void nativeRoute.sync(new URL(window.location.href), electionId()),
+        navigate,
+      },
+      (request, answer) => router.answer({ request, answer }),
+    ),
+  );
+
   teardowns.push(() => {
+    void Promise.resolve(screenAction).then((r) => r.remove());
+    void Promise.resolve(slotAction).then((r) => r.remove());
     void Promise.resolve(exit).then((r) => r.remove());
     void Promise.resolve(themeChange).then((r) => r.remove());
+    void Promise.resolve(staleDismiss).then((r) => r.remove());
   });
 }

@@ -13,6 +13,8 @@ struct Wordmark: View {
     /// The ink. Passed explicitly rather than inherited: the layers are `Shape`s with their own
     /// fills, which do not pick up an ancestor's `foregroundStyle`.
     var color: Color
+    /// The name VoiceOver reads, as the page names the mark.
+    var label: String
 
     private var width: CGFloat { height * (BrandMark.size.width / BrandMark.size.height) }
 
@@ -26,7 +28,7 @@ struct Wordmark: View {
         }
         .frame(width: width, height: height)
         .accessibilityElement()
-        .accessibilityLabel("How2Vote")
+        .accessibilityLabel(label)
     }
 }
 

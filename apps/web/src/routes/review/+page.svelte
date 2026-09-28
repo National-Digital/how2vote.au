@@ -9,6 +9,8 @@
   import { election } from "$lib/election.svelte";
   import { quiz } from "$lib/quiz.svelte";
   import { nativeRoute } from "$lib/native-router.svelte";
+  import { REVIEW_COPY } from "$lib/review-copy";
+  import { around, fill } from "$lib/template";
 
   let questions = $state<Question[]>([]);
 
@@ -41,6 +43,8 @@
       });
   });
 
+  const failed = around(REVIEW_COPY.failed);
+
   function edit(index: number): void {
     quiz.setCursor(index);
     // `edit` mode: answering this one question returns here, rather than walking the rest of the quiz.
@@ -58,29 +62,25 @@
 
 <Meta />
 
-<TopBar label="Review your answers" onback={() => goto("/quiz")} />
-<Progress value={1} max={1} label="Quiz complete" />
+<TopBar label={REVIEW_COPY.title} backLabel={REVIEW_COPY.back} onback={() => goto("/quiz")} />
+<Progress value={1} max={1} label={REVIEW_COPY.progress} />
 
 <div class="body">
   <h1>
-    {quiz.recorded === quiz.total
-      ? `All ${quiz.total} answered.`
-      : `${quiz.recorded} of ${quiz.total} answered.`}
+    {fill(quiz.recorded === quiz.total ? REVIEW_COPY.all : REVIEW_COPY.some, {
+      recorded: quiz.recorded,
+      total: quiz.total,
+    })}
   </h1>
-  <p class="note ui">
-    Tap a question to change your answer. Star (★) the issues that matter most — only your strongest
-    answers can count ten times as much.
-  </p>
+  <p class="note ui">{REVIEW_COPY.importance}</p>
 
-  {#if !nativeRoute.isWeb}
-    <p class="note ui" role="status">Loading your answers…</p>
+  {#if !nativeRoute.isWeb || (!loadError && questions.length === 0)}
+    <p class="note ui" role="status">{REVIEW_COPY.loading}</p>
   {:else if loadError}
     <p class="note ui" role="alert">
-      Couldn't load your answers. Please check your connection and
-      <a href="/review" onclick={() => location.reload()}>try again</a>.
+      {failed[0]}<a href="/review" onclick={() => location.reload()}>{REVIEW_COPY.retry}</a
+      >{failed[1]}
     </p>
-  {:else if questions.length === 0}
-    <p class="note ui" role="status">Loading your answers…</p>
   {/if}
   <ol class="rev ui">
     {#each questions as q, i (q.id)}
@@ -91,7 +91,7 @@
           <span class="n">{i + 1}</span>
           <span class="q">{q.text}</span>
           <span class="a" class:dim={!a || a.points === 0}>
-            {a ? answerLabel(a.points, false) : "Not answered"}
+            {a ? answerLabel(a.points, false) : REVIEW_COPY.unanswered}
           </span>
         </button>
         {#if strong}
@@ -100,9 +100,9 @@
             class="star"
             class:on={a.important}
             aria-pressed={a.important}
-            aria-label={`Mark "${q.text}" as extremely important`}
-            title="Extremely important (×10)"
-            onclick={() => quiz.toggleImportant(q.id)}>★</button
+            aria-label={fill(REVIEW_COPY.star, { question: q.text })}
+            title={REVIEW_COPY.multiplier}
+            onclick={() => quiz.toggleImportant(q.id)}>{REVIEW_COPY.glyph}</button
           >
         {:else}
           <span class="star-spacer" aria-hidden="true"></span>
@@ -112,7 +112,7 @@
   </ol>
 
   <div class="cta">
-    <button type="button" class="btn" onclick={getCard}>See how I compare</button>
+    <button type="button" class="btn" onclick={getCard}>{REVIEW_COPY.compare}</button>
   </div>
 </div>
 

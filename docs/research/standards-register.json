@@ -32,12 +32,16 @@
   "insightsWarnings": [
     {
       "id": "sample-size-withholding",
-      "page": "apps/web/src/routes/insights/+page.svelte",
+      "page": "apps/web/src/lib/components/InsightsLead.svelte",
+      "renderedBy": "apps/web/src/routes/insights/+page.svelte",
+      "via": "<InsightsLead",
       "text": "A figure is shown only when its group is large enough that a single response cannot be singled out"
     },
     {
       "id": "non-representative",
-      "page": "apps/web/src/routes/insights/+page.svelte",
+      "page": "apps/web/src/lib/insights-copy.ts",
+      "renderedBy": "apps/web/src/routes/insights/+page.svelte",
+      "via": "INSIGHTS_COPY.footnote",
       "text": "it is not a representative poll"
     }
   ],
@@ -75,13 +79,17 @@
     {
       "id": "survey-voluntary-skip",
       "concern": "voluntary",
-      "page": "apps/web/src/routes/survey/+page.svelte",
+      "page": "apps/web/src/lib/survey-copy.ts",
+      "renderedBy": "apps/web/src/routes/survey/+page.svelte",
+      "via": "SURVEY_COPY.skipPlan",
       "text": "Skip research and build my voting plan"
     },
     {
       "id": "survey-no-withdrawal",
       "concern": "no-withdrawal",
-      "page": "apps/web/src/routes/survey/+page.svelte",
+      "page": "apps/web/src/lib/components/SurveyNotes.svelte",
+      "renderedBy": "apps/web/src/routes/survey/+page.svelte",
+      "via": "<SurveyNotes",
       "text": "cannot later be located or deleted"
     },
     {

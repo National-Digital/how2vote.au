@@ -31,7 +31,10 @@ const isDataPage = (path: string): boolean => ELECTION_IDS.some((id) => path.sta
 // `prerendered` holds the built HTML for every route; keep the core flow (drop the data pages) so
 // the whole flow is available offline on first install and the offline-status page can honestly
 // report each step as saved.
-const corePrerendered = prerendered.filter((path) => !isDataPage(path));
+// The build-time states files are the iOS app's to project and never a page to open.
+const corePrerendered = prerendered.filter(
+  (path) => !isDataPage(path) && !path.startsWith("/states/"),
+);
 
 // The prerenderer's env shim, which is in NEITHER `build` (the client manifest) nor `files` (static/)
 // because the prerenderer writes it. Every prerendered page boots through it — a client module reads

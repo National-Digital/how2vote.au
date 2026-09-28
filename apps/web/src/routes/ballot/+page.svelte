@@ -5,11 +5,13 @@
   import Meta from "$lib/components/Meta.svelte";
   import Progress from "$lib/components/Progress.svelte";
   import TopBar from "$lib/components/TopBar.svelte";
-  import { NATIONAL_BALLOT, STATES, loadData, stateName, type Data } from "$lib/data";
+  import { AEC_LOOKUP, BALLOT_COPY, PICKER_STATES } from "$lib/ballot-copy";
+  import { NATIONAL_BALLOT, loadData, stateName, type Data } from "$lib/data";
   import { election } from "$lib/election.svelte";
   import { manifestFor } from "$lib/manifest";
   import { quiz } from "$lib/quiz.svelte";
   import { nativeRoute } from "$lib/native-router.svelte";
+  import { around, fill } from "$lib/template";
 
   let step = $state<1 | 2 | 3>(1);
   let chosenState = $state<string | null>(null);
@@ -46,8 +48,9 @@
       });
   });
 
-  // State picker is shown alphabetically (STATES itself is kept in ballot-paper order).
-  const states = [...STATES].sort((a, b) => a.code.localeCompare(b.code));
+  // The two sentences with a link inside, on either side of it.
+  const failed = around(BALLOT_COPY.failed);
+  const unsure = around(BALLOT_COPY.unsure);
 
   const list = $derived(chosenState && data ? data.electoratesFor(chosenState) : []);
   const filtered = $derived(
@@ -87,40 +90,44 @@
 
 <Meta />
 
-<TopBar label={`Your ballot · ${step} of 3`} onback={back} />
-<Progress value={step} max={3} label="Ballot setup progress" />
+<TopBar
+  label={fill(BALLOT_COPY.position, { step, total: 3 })}
+  backLabel={BALLOT_COPY.back}
+  onback={back}
+/>
+<Progress value={step} max={3} label={BALLOT_COPY.progress} />
 
 <div class="body">
   {#if !nativeRoute.isWeb}
-    <p class="note ui" role="status">Loading…</p>
+    <p class="note ui" role="status">{BALLOT_COPY.loading}</p>
   {:else if step === 1}
-    <h1>Where will you vote?</h1>
+    <h1>{BALLOT_COPY.pick}</h1>
     <div class="states">
-      {#each states as s (s.code)}
+      {#each PICKER_STATES as s (s.code)}
         <button type="button" class="state" onclick={() => pickState(s.code)}>
           <b>{s.code}</b><span>{s.name}</span>
         </button>
       {/each}
     </div>
-    <p class="note ui">Your answers stay on this device until you choose to share your card.</p>
+    <p class="note ui">{BALLOT_COPY.device}</p>
   {:else if step === 2 && loadError}
-    <h1>Your federal electorate</h1>
+    <h1>{BALLOT_COPY.electorate}</h1>
     <p class="note ui" role="alert">
-      Couldn't load the electorate list. Please check your connection and
-      <a href="/ballot" onclick={() => location.reload()}>try again</a>.
+      {failed[0]}<a href="/ballot" onclick={() => location.reload()}>{BALLOT_COPY.retry}</a
+      >{failed[1]}
     </p>
   {:else if step === 2 && !data}
-    <h1>Your federal electorate</h1>
-    <p class="note ui" role="status">Loading electorates…</p>
+    <h1>{BALLOT_COPY.electorate}</h1>
+    <p class="note ui" role="status">{BALLOT_COPY.loadingElectorates}</p>
   {:else if step === 2}
-    <h1>Your federal electorate</h1>
+    <h1>{BALLOT_COPY.electorate}</h1>
     <div class="search ui">
       <span aria-hidden="true">⌕</span>
       <input
         type="search"
         bind:value={filter}
-        placeholder={`Search ${list.length} ${chosenState} electorates…`}
-        aria-label="Search electorates"
+        placeholder={fill(BALLOT_COPY.search, { count: list.length, code: chosenState ?? "" })}
+        aria-label={BALLOT_COPY.searchLabel}
         autocomplete="off"
       />
     </div>
@@ -132,21 +139,19 @@
           </button>
         </li>
       {:else}
-        <li class="empty">No electorate matches “{filter}”.</li>
+        <li class="empty">{fill(BALLOT_COPY.none, { filter })}</li>
       {/each}
     </ul>
     <p class="note ui">
-      Not sure? <ExternalLink href="https://check.aec.gov.au/"
-        >Look up your electorate on the AEC website</ExternalLink
-      > — your progress is kept.
+      {unsure[0]}<ExternalLink href={AEC_LOOKUP}>{BALLOT_COPY.lookup}</ExternalLink>{unsure[1]}
     </p>
   {:else if chosenState && chosenElectorate}
     <h1>{chosenElectorate}</h1>
-    <p class="sub ui">Federal electorate in {stateName(chosenState)}</p>
+    <p class="sub ui">{fill(BALLOT_COPY.located, { state: stateName(chosenState) })}</p>
     <ElectorateMap electionId={election.id} stateCode={chosenState} electorate={chosenElectorate} />
     <div class="confirm ui">
-      <button type="button" class="btn" onclick={confirm}>This is my electorate — start</button>
-      <button type="button" class="link" onclick={back}>Choose a different electorate</button>
+      <button type="button" class="btn" onclick={confirm}>{BALLOT_COPY.start}</button>
+      <button type="button" class="link" onclick={back}>{BALLOT_COPY.different}</button>
     </div>
   {/if}
 </div>

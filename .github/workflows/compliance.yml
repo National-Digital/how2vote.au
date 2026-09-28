@@ -249,6 +249,11 @@ jobs:
       # that the generated Swift is exactly what the register renders.
       - name: Native notice register in sync (web ↔ register ↔ generated Swift)
         run: node scripts/check-native-copy.mjs
+      # The native core covers the web layout, so its footer (with the s321D authorisation) and the
+      # stale-data notice exist on iOS only if every native screen renders them. Unit test runs in
+      # the main `pnpm test`.
+      - name: Native screens carry the layout chrome (footer, authorisation, stale notice)
+        run: node scripts/check-native-chrome.mjs
       # Public copy carries no categorical / quasi-legal wording unless a current, evidence-backed
       # permit in docs/legal/absolute-claims.json allows it. Unit test runs in the main `pnpm test`.
       - name: Absolute-claims register + banned-wording gate

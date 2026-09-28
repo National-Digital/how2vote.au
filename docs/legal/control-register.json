@@ -158,7 +158,7 @@
           "owner": "eng-web",
           "status": "passing",
           "enforcedBy": "scripts/check-native-copy.mjs",
-          "note": "Required-notice register (docs/legal/native-copy.json) for the native iOS core (ADR 0018 D9): each registered notice must appear verbatim in the web source it names, and the generated Swift (apps/mobile/ios/App/App/Generated/LegalCopy.swift) must be the exact rendering of the register. Web-side rewording and hand-edited Swift both fail the build, so the native channel cannot state copy the web-scoped guards never reviewed."
+          "note": "Required-notice register (docs/legal/native-copy.json) for the native iOS core (ADR 0018 D9): each registered notice must appear verbatim in the web source it names. A notice the native core draws from a projected states page (drawnFrom) must, once the iOS build exists, be drawn by the section of that page it names exactly as registered; every other notice is generated into apps/mobile/ios/App/App/Generated/LegalCopy.swift, which must be the exact rendering of the register. Web-side rewording, a states page that words a notice its own way, and hand-edited Swift all fail the build, so the native channel cannot state copy the web-scoped guards never reviewed."
         },
         {
           "id": "native-copy-guard",
@@ -196,7 +196,7 @@
           "owner": "eng-web",
           "status": "passing",
           "enforcedBy": "scripts/check-native-jurisdictions.mjs",
-          "note": "ADR 0018 D1. The native ballot picker offers the same states and territories, in the same order, as apps/web/src/lib/data.ts. The codes are not labels: each is matched against the compiled dataset to build that state's electorate list, so a code differing by a character returns an empty list and the picker appears broken for everyone who lives there, and a missing entry is a whole state with no way to reach the questionnaire on one channel only."
+          "note": "ADR 0018 D1, ADR 0019 D4e. The native ballot picker holds no list of its own: it reads the states and territories from the web's states/ballot page, which renders them from apps/web/src/lib/data.ts. This holds that projected page to STATES entry by entry, in the picker's order (alphabetical by code), and fails closed if either side is empty. The codes are not labels: each is matched against the compiled dataset to build that state's electorate list, so a code differing by a character returns an empty list and the picker appears broken for everyone who lives there, and a missing entry is a whole state with no way to reach the questionnaire on one channel only."
         },
         {
           "id": "native-jurisdictions-guard",
@@ -211,7 +211,7 @@
           "owner": "eng-web",
           "status": "passing",
           "enforcedBy": "scripts/check-native-answer-scale.mjs",
-          "note": "ADR 0018 D2. Each answer carries the points that reach the scoring engine, so the label-to-points binding is the meaning of a tap. This asserts the options, their order, their points, their labels and secondary text, the answerLabel map and the importance mark agree between apps/web/src/lib/answers.ts and AnswerScale.swift. A drifted native scale reads correctly and scores without error while recording the opposite of what the voter chose — and so misstates a party's alignment with that voter."
+          "note": "ADR 0018 D2, ADR 0019 D4d and D4f. Each answer carries the points that reach the scoring engine, so the label-to-points binding is the meaning of a tap. That binding now exists once, on the web: the native quiz reads the options, their order, labels, secondary text and points from the web's states/quiz page, where each answer button names its points as its value, and the native review reads each answer's short label from the web's states/review page. This fails if AnswerOptions.svelte stops naming each answer's points as its value, if AnswerScale.swift restates the options, the short labels or the importance mark, or if the answers the ×10 importance lever may attach to differ from the web's rule in quiz.svelte.ts; DocumentLogic separately requires both pages to name every answer from 0 to 5 once. A drifted native scale would read correctly and score without error while recording the opposite of what the voter chose — and so misstate a party's alignment with that voter."
         },
         {
           "id": "native-answer-scale-guard",
@@ -315,7 +315,7 @@
           "owner": "eng-web",
           "status": "passing",
           "enforcedBy": "scripts/check-native-copy.mjs",
-          "note": "Required-notice register (docs/legal/native-copy.json) for the native iOS core (ADR 0018 D9): each registered notice must appear verbatim in the web source it names, and the generated Swift (apps/mobile/ios/App/App/Generated/LegalCopy.swift) must be the exact rendering of the register. Web-side rewording and hand-edited Swift both fail the build, so the native channel cannot state copy the web-scoped guards never reviewed."
+          "note": "Required-notice register (docs/legal/native-copy.json) for the native iOS core (ADR 0018 D9): each registered notice must appear verbatim in the web source it names. A notice the native core draws from a projected states page (drawnFrom) must, once the iOS build exists, be drawn by the section of that page it names exactly as registered; every other notice is generated into apps/mobile/ios/App/App/Generated/LegalCopy.swift, which must be the exact rendering of the register. Web-side rewording, a states page that words a notice its own way, and hand-edited Swift all fail the build, so the native channel cannot state copy the web-scoped guards never reviewed."
         },
         {
           "id": "native-copy-guard",
@@ -406,7 +406,7 @@
           "owner": "eng-web",
           "status": "passing",
           "enforcedBy": "scripts/check-native-jurisdictions.mjs",
-          "note": "ADR 0018 D1. The native ballot picker offers the same states and territories, in the same order, as apps/web/src/lib/data.ts. The codes are not labels: each is matched against the compiled dataset to build that state's electorate list, so a code differing by a character returns an empty list and the picker appears broken for everyone who lives there, and a missing entry is a whole state with no way to reach the questionnaire on one channel only."
+          "note": "ADR 0018 D1, ADR 0019 D4e. The native ballot picker holds no list of its own: it reads the states and territories from the web's states/ballot page, which renders them from apps/web/src/lib/data.ts. This holds that projected page to STATES entry by entry, in the picker's order (alphabetical by code), and fails closed if either side is empty. The codes are not labels: each is matched against the compiled dataset to build that state's electorate list, so a code differing by a character returns an empty list and the picker appears broken for everyone who lives there, and a missing entry is a whole state with no way to reach the questionnaire on one channel only."
         },
         {
           "id": "native-jurisdictions-guard",
@@ -421,7 +421,7 @@
           "owner": "eng-web",
           "status": "passing",
           "enforcedBy": "scripts/check-native-answer-scale.mjs",
-          "note": "ADR 0018 D2. Each answer carries the points that reach the scoring engine, so the label-to-points binding is the meaning of a tap. This asserts the options, their order, their points, their labels and secondary text, the answerLabel map and the importance mark agree between apps/web/src/lib/answers.ts and AnswerScale.swift. A drifted native scale reads correctly and scores without error while recording the opposite of what the voter chose — and so misstates a party's alignment with that voter."
+          "note": "ADR 0018 D2, ADR 0019 D4d and D4f. Each answer carries the points that reach the scoring engine, so the label-to-points binding is the meaning of a tap. That binding now exists once, on the web: the native quiz reads the options, their order, labels, secondary text and points from the web's states/quiz page, where each answer button names its points as its value, and the native review reads each answer's short label from the web's states/review page. This fails if AnswerOptions.svelte stops naming each answer's points as its value, if AnswerScale.swift restates the options, the short labels or the importance mark, or if the answers the ×10 importance lever may attach to differ from the web's rule in quiz.svelte.ts; DocumentLogic separately requires both pages to name every answer from 0 to 5 once. A drifted native scale would read correctly and score without error while recording the opposite of what the voter chose — and so misstate a party's alignment with that voter."
         },
         {
           "id": "native-answer-scale-guard",
@@ -572,6 +572,14 @@
           "owner": "eng-web",
           "status": "passing",
           "enforcedBy": "scripts/check-age-gate.test.mjs"
+        },
+        {
+          "id": "native-age-gate",
+          "type": "ci-job",
+          "owner": "eng-web",
+          "status": "passing",
+          "enforcedBy": "apps/mobile/ios/App/AppUITests/DocumentConservationTests.swift",
+          "note": "ADR 0019 D4b. On iOS the gate is drawn natively from the web's prerendered /start page and a build-time states file holding its explore-only explainer. The simulator test opens it from the landing as a first-time visitor, holds both states' on-screen text to the page, and answers under-18 with the button the page names as the minor answer; the web performs the declaration through the same functions its page calls, and the projection fails unless each answer names its action, so the storage rules asserted by age-gate.spec.ts are the ones applied."
         }
       ],
       "evidence": [
@@ -771,7 +779,7 @@
           "owner": "eng-web",
           "status": "passing",
           "enforcedBy": "scripts/check-native-copy.mjs",
-          "note": "ADR 0018 D10. The four paragraphs of the prescribed derivative-product notice are registered in docs/legal/native-copy.json against data/aec-spatial/source-record.json itself — the record where the accepted wording lives and where the web reads it from too — and generated into the Swift the native map displays. The licence requires the notice to be DISPLAYED wherever the boundary data is shown, so it is rendered beside the map rather than behind a link, and a rewording of the record fails the build until the native rendering follows."
+          "note": "ADR 0018 D10. The four paragraphs of the prescribed derivative-product notice are registered in docs/legal/native-copy.json against data/aec-spatial/source-record.json itself — the record where the accepted wording lives and where the web reads it from too. The native map draws them, with the licence's name and link, from the ballot's projected states page (states/ballot.html), which renders them from that record, and the register requires each paragraph to be drawn by its own section of that page exactly as recorded. The licence requires the notice to be DISPLAYED wherever the boundary data is shown, so it is rendered beside the map rather than behind a link, and a rewording of the record fails the build until the register, and so a legal-review record, follows."
         },
         {
           "id": "native-boundary-maps",
@@ -1261,7 +1269,7 @@
           "owner": "eng-web",
           "status": "passing",
           "enforcedBy": "scripts/check-native-copy.mjs",
-          "note": "ADR 0018 D9. Registers the external-link cue the native core announces before a link is followed (WCAG 3.2.5) and holds it to the wording in apps/web/src/lib/components/ExternalLink.svelte, so the two channels cannot describe the same behaviour differently. The web side is separately held by link-conventions.test.ts."
+          "note": "ADR 0018 D9. Registers the external-link cue the native core announces before a link is followed (WCAG 3.2.5) and holds it to the wording in apps/web/src/lib/external-link-copy.ts, which ExternalLink.svelte renders and the site chrome hands to the native core, so the two channels cannot describe the same behaviour differently. The web side is separately held by link-conventions.test.ts."
         },
         {
           "id": "native-copy-guard",

@@ -22,7 +22,12 @@
  * band) is deliberately absent: it renders in the WebView islands of D8, where the web source IS the
  * rendering and no second copy exists to govern.
  *
- * Usage: `node scripts/check-native-copy.mjs` to verify, `--write` to regenerate the Swift.
+ * An entry the native core draws from a projected states page (`drawnFrom`, ADR 0019 D4b) is not
+ * generated, since no native copy of it exists, but stays registered: its wording is still held
+ * verbatim to its web source, so rewording it still changes this register.
+ *
+ * Usage: `node scripts/check-native-copy.mjs` to verify, `--write` to regenerate the Swift, and
+ * `--projected <dir>` to also hold each such entry to the projected page the app draws it from.
  */
 import { readFileSync, writeFileSync, mkdirSync } from "node:fs";
 import { dirname } from "node:path";
@@ -127,7 +132,8 @@ export function renderSwift(registry) {
     "",
     "enum LegalCopy {",
   ];
-  for (const [i, e] of entries.entries()) {
+  // An entry drawn from a projected page has no native copy to generate.
+  for (const [i, e] of entries.filter((entry) => !entry?.drawnFrom).entries()) {
     if (i > 0) lines.push("");
     // Collapsed to one line: a note carrying a newline would put bare prose on the next line of
     // the generated file, outside any comment, and the file would not compile.
@@ -247,6 +253,18 @@ export function verifyNativeCopy(input) {
       );
     }
 
+    // Where the native core draws it instead: a projected states page, named as the router names
+    // it, or the site chrome handed over with every route.
+    if (e.drawnFrom !== undefined) {
+      if (!/^(?:states\/[a-z-]+|site-chrome)$/.test(String(e.drawnFrom))) {
+        push(
+          `${at}: drawnFrom "${e.drawnFrom}" is not a states page (states/<name>) or site-chrome`,
+        );
+      } else if (Array.isArray(input?.drawnSources) && !input.drawnSources.includes(e.drawnFrom)) {
+        push(`${at}: drawnFrom "${e.drawnFrom}" is not a page the native router offers`);
+      }
+    }
+
     if (seenIds.has(e.id)) push(`${at}: duplicate id`);
     seenIds.add(e.id);
     if (seenSwift.has(e.swiftName)) push(`${at}: duplicate swiftName "${e.swiftName}"`);
@@ -332,6 +350,93 @@ export function verifyNativeCopy(input) {
   return { ok: errors.length === 0, errors };
 }
 
+/** The nodes a registered notice's section may hold: paragraphs of text, and a link with its cue. */
+const PLAIN = new Set(["paragraph", "text", "link", "hidden", "glyph"]);
+
+/**
+ * The text a projected section draws, and the links it holds: its text runs in order, less an
+ * external link's spoken cue and decorative glyph, and each link's destination.
+ *
+ * @param {object[]} blocks
+ * @param {string} id
+ * @returns {{text: string, hrefs: string[]} | null}
+ */
+function projectedSection(blocks, id) {
+  let found = null;
+  const walk = (nodes) => {
+    for (const node of Array.isArray(nodes) ? nodes : []) {
+      if (found) return;
+      if (node?.t === "section" && node.id === id) {
+        const text = [];
+        const hrefs = [];
+        const marked = [];
+        const read = (inner) => {
+          for (const n of Array.isArray(inner) ? inner : []) {
+            // A notice is drawn as plain text; emphasis or other markup is not drawn as registered.
+            if (!PLAIN.has(n?.t)) marked.push(n?.t);
+            // Not the notice's words: a link's spoken cue, and a decorative glyph VoiceOver skips.
+            if (n?.t === "hidden" || n?.t === "glyph") continue;
+            if (n?.t === "link" && typeof n.href === "string") hrefs.push(n.href);
+            if (typeof n?.s === "string") text.push(n.s);
+            read(n?.c);
+          }
+        };
+        read(node.c);
+        found = { text: text.join("").replace(/\s+/g, " ").trim(), hrefs, marked };
+      } else {
+        walk(node?.c);
+      }
+    }
+  };
+  walk(blocks);
+  return found;
+}
+
+/**
+ * Whether each entry drawn from a projected states page is on that page exactly as registered: the
+ * template section it names (`section`) draws the entry's text and nothing else, or, for an entry
+ * that is a destination, links to it. The register holds the web source; this holds the page built
+ * from it, so a states component that words a notice its own way, or adds to it, fails too.
+ *
+ * @param {{entries?: object[]}} registry
+ * @param {Record<string, {blocks?: object[]} | null>} pages  projected pages by states name
+ * @returns {string[]}
+ */
+export function verifyProjected(registry, pages) {
+  const errors = [];
+  for (const e of Array.isArray(registry?.entries) ? registry.entries : []) {
+    if (!/^states\//.test(String(e?.drawnFrom ?? ""))) continue;
+    if (!isNonEmptyString(e.section)) {
+      errors.push(`${e.id}: drawn from ${e.drawnFrom} but names no section of it`);
+      continue;
+    }
+    const page = pages?.[e.drawnFrom];
+    if (!page || !Array.isArray(page.blocks)) {
+      errors.push(`${e.id}: ${e.drawnFrom} is not among the projected pages (fail closed)`);
+      continue;
+    }
+    const section = projectedSection(page.blocks, e.section);
+    const text = String(e.text).replace(/\s+/g, " ").trim();
+    if (!section) {
+      errors.push(`${e.id}: the projected ${e.drawnFrom} has no section ${e.section}`);
+    } else if (section.marked.length > 0) {
+      errors.push(
+        `${e.id}: the projected ${e.drawnFrom} section ${e.section} marks the notice up ` +
+          `(${[...new Set(section.marked)].join(", ")}), and the app draws it as plain text`,
+      );
+    } else if (
+      section.text !== text &&
+      !(section.hrefs.length === 1 && section.hrefs[0] === text)
+    ) {
+      errors.push(
+        `${e.id}: the projected ${e.drawnFrom} section ${e.section} draws "${section.text}", ` +
+          `not "${text}" as registered`,
+      );
+    }
+  }
+  return errors;
+}
+
 /* c8 ignore start -- CLI/fs plumbing, exercised via CI not unit tests */
 const ROOT = new URL("../", import.meta.url);
 const rel = (p) => fileURLToPath(new URL(p, ROOT));
@@ -368,7 +473,8 @@ function main() {
     const swift = renderSwift(registry);
     mkdirSync(dirname(rel(out)), { recursive: true });
     writeFileSync(rel(out), swift, "utf8");
-    console.info(`wrote ${out} (${registry.entries?.length ?? 0} notices)`);
+    const generated = (registry.entries ?? []).filter((e) => !e?.drawnFrom).length;
+    console.info(`wrote ${out} (${generated} notices)`);
     return;
   }
 
@@ -377,14 +483,43 @@ function main() {
     if (isNonEmptyString(e?.webSource)) webSources[e.webSource] = safeRead(e.webSource);
   }
 
+  // The states pages the native router offers, and the chrome it hands over with each route.
+  const router = safeRead("apps/web/src/lib/native-router.svelte.ts") ?? "";
+  const lists = ["STATE_DOCUMENTS", "AGE_GATE_DOCUMENTS"].map(
+    (name) =>
+      new RegExp(`export const ${name} = \\[([\\s\\S]*?)\\] as const;`).exec(router)?.[1] ?? "",
+  );
+  const drawnSources = lists.flatMap((list) =>
+    [...list.matchAll(/"(states\/[a-z-]+)"/g)].map((m) => m[1]),
+  );
+  if (/chrome: siteChrome\(\)/.test(router)) drawnSources.push("site-chrome");
+
   const { ok, errors } = verifyNativeCopy({
     registry,
     webSources,
+    drawnSources,
     generatedPath: out,
     generated: safeRead(out),
   });
 
-  if (!ok) {
+  // Once the iOS build exists, the pages the app draws must say what the register holds.
+  const at = process.argv.indexOf("--projected");
+  if (at !== -1) {
+    const dir = process.argv[at + 1] ?? "";
+    const pages = {};
+    for (const e of Array.isArray(registry.entries) ? registry.entries : []) {
+      if (!/^states\//.test(String(e?.drawnFrom ?? ""))) continue;
+      const raw = safeRead(`${dir}/${e.drawnFrom}.json`);
+      try {
+        pages[e.drawnFrom] = raw === null ? null : JSON.parse(raw);
+      } catch {
+        pages[e.drawnFrom] = null;
+      }
+    }
+    errors.push(...verifyProjected(registry, pages));
+  }
+
+  if (!ok || errors.length > 0) {
     for (const e of errors) console.error(`::error::native copy: ${e}`);
     process.exit(1);
   }

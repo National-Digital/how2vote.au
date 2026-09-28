@@ -10,15 +10,12 @@ final class BallotViewModel: ObservableObject {
         case confirm
     }
 
-    /// The sentinel ballot for a provisional election that ships no electorates. Mirrors
-    /// `NATIONAL_BALLOT` in `apps/web/src/lib/data.ts` — the quiz still needs a ballot recorded
-    /// before it will run, so an electorate-less election records this one and moves on.
-    static let nationalBallot = (state: "AU", electorate: "Australia")
-
     @Published private(set) var step: Step = .state
     @Published private(set) var chosenState: String?
     @Published private(set) var chosenElectorate: String?
     @Published private(set) var loadFailed = false
+    /// Set when the ballot could not be recorded, so the screen can say so.
+    @Published private(set) var saveFailed = false
     @Published var filter = ""
 
     private var electorates: [String] = []
@@ -27,23 +24,33 @@ final class BallotViewModel: ObservableObject {
     private let persistBallot: (String, String) throws -> Void
     /// Whether this election ships a ballot at all.
     let isElectorateLess: Bool
+    /// The sentinel ballot an election with no electorates records, as the page names it — the quiz
+    /// still needs a ballot recorded before it will run.
+    let national: (state: String, electorate: String)
 
     init(
         isElectorateLess: Bool,
+        national: (state: String, electorate: String),
         listElectorates: @escaping (String) throws -> [String],
         persistBallot: @escaping (String, String) throws -> Void
     ) {
         self.isElectorateLess = isElectorateLess
+        self.national = national
         self.listElectorates = listElectorates
         self.persistBallot = persistBallot
     }
 
-    static func live(electionID: String, engine: JSCEngine) -> BallotViewModel {
+    static func live(
+        electionID: String,
+        engine: JSCEngine,
+        national: (state: String, electorate: String)
+    ) -> BallotViewModel {
         let manifest = ManifestLoader.load(electionID: electionID)
         return BallotViewModel(
             // Fails CLOSED to "there is a ballot": an unreadable manifest must not skip the picker
             // and silently record a national ballot for an election that has real electorates.
             isElectorateLess: manifest?.isElectorateLess ?? false,
+            national: national,
             listElectorates: { state in
                 let dataset = try QuestionLoader.dataset(electionID: electionID)
                 let payload = try engine.electorates(datasetJSON: dataset, stateCode: state)
@@ -52,14 +59,14 @@ final class BallotViewModel: ObservableObject {
                 return rows.map(\.electorate)
             },
             persistBallot: { state, electorate in
-                var record = QuizState.load(electionID: electionID)
+                var record = QuizState.current(electionID: electionID)
                     ?? QuizState.Persisted(
                         state: nil, electorate: nil, answers: [:], cursor: 0,
                         questionIds: [], updatedAt: 0
                     )
                 record.state = state
                 record.electorate = electorate
-                try QuizState.save(record, electionID: electionID)
+                try QuizState.record(record, electionID: electionID)
             }
         )
     }
@@ -110,23 +117,29 @@ final class BallotViewModel: ObservableObject {
         do {
             try persistBallot(state, electorate)
         } catch {
+            saveFailed = true
             return nil
         }
+        saveFailed = false
         return "/quiz"
     }
 
     /// Records the sentinel ballot for an election with no electorates to pick.
     func skipToQuestions() -> String? {
         do {
-            try persistBallot(Self.nationalBallot.state, Self.nationalBallot.electorate)
+            try persistBallot(national.state, national.electorate)
         } catch {
+            saveFailed = true
             return nil
         }
+        saveFailed = false
         return "/quiz"
     }
 
     /// Steps back, or reports the web path to leave for when there is nowhere left to step.
     func back() -> String? {
+        // A failure belongs to the step it happened on.
+        saveFailed = false
         switch step {
         case .confirm:
             chosenElectorate = nil

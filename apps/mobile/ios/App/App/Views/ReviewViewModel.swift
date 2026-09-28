@@ -11,7 +11,15 @@ final class ReviewViewModel: ObservableObject {
     enum Phase: Equatable {
         case loading
         case ready([Row])
-        case failed(String)
+        case failed(Failure)
+    }
+
+    /// Why there is nothing to review.
+    enum Failure: Equatable {
+        /// The questions could not be loaded.
+        case unloaded
+        /// The election has no questions to show.
+        case empty
     }
 
     /// One question and the answer recorded for it.
@@ -28,10 +36,6 @@ final class ReviewViewModel: ObservableObject {
         var allowsImportance: Bool {
             points.map(AnswerScale.allowsImportance) ?? false
         }
-
-        var answerLabel: String {
-            points.map { AnswerScale.label(points: $0) } ?? "Not answered"
-        }
     }
 
     @Published private(set) var phase: Phase = .loading
@@ -44,6 +48,7 @@ final class ReviewViewModel: ObservableObject {
     private var answers: [String: QuizState.StoredAnswer] = [:]
     private var ballotState: String?
     private var ballotElectorate: String?
+    private var storedQuestionIDs: [Int] = []
 
     init(
         loadQuestions: @escaping () throws -> QuestionSet,
@@ -53,28 +58,32 @@ final class ReviewViewModel: ObservableObject {
         self.loadQuestions = loadQuestions
         self.persist = persist
         self.restore = restore
+        // Read before the questions load, so the heading counts from the record as the web's does.
+        restoreRecord(restore())
     }
 
     /// Wires the real engine, dataset and store for one election.
     static func live(electionID: String, engine: JSCEngine) -> ReviewViewModel {
         ReviewViewModel(
             loadQuestions: { try QuestionLoader.load(electionID: electionID, engine: engine) },
-            persist: { try QuizState.save($0, electionID: electionID) },
-            restore: { QuizState.load(electionID: electionID) }
+            persist: { try QuizState.record($0, electionID: electionID) },
+            restore: { QuizState.current(electionID: electionID) }
         )
     }
 
+    /// The questions counted: the loaded set's, or the record's until it loads, as on the web.
+    private var questionIDs: [Int] {
+        questions?.active.map(\.id) ?? storedQuestionIDs
+    }
+
+    /// Only the answers to the questions counted, as on the web: an answer left from a question
+    /// since withdrawn is not counted.
     var answered: Int {
-        rows.filter { $0.points != nil }.count
+        questionIDs.filter { answers[String($0)] != nil }.count
     }
 
     var total: Int {
-        questions?.total ?? 0
-    }
-
-    /// The heading, which reports completeness rather than implying it.
-    var headline: String {
-        answered == total && total > 0 ? "All \(total) answered." : "\(answered) of \(total) answered."
+        questionIDs.count
     }
 
     private var rows: [Row] {
@@ -85,21 +94,17 @@ final class ReviewViewModel: ObservableObject {
     func load() async {
         phase = .loading
         do {
+            restoreRecord(restore())
             let set = try loadQuestions()
             questions = set
 
-            let stored = restore()
-            answers = stored?.answers ?? [:]
-            ballotState = stored?.state
-            ballotElectorate = stored?.electorate
-
             guard !set.active.isEmpty else {
-                phase = .failed("There are no questions to show for this election.")
+                phase = .failed(.empty)
                 return
             }
             phase = .ready(build(from: set))
         } catch {
-            phase = .failed("Couldn't load your answers.")
+            phase = .failed(.unloaded)
         }
     }
 
@@ -123,6 +128,13 @@ final class ReviewViewModel: ObservableObject {
     func prepareEdit(position: Int) {
         guard let questions, questions.question(at: position) != nil else { return }
         save(cursor: position)
+    }
+
+    private func restoreRecord(_ stored: QuizState.Persisted?) {
+        answers = stored?.answers ?? [:]
+        ballotState = stored?.state
+        ballotElectorate = stored?.electorate
+        storedQuestionIDs = stored?.questionIds ?? []
     }
 
     private func build(from set: QuestionSet) -> [Row] {

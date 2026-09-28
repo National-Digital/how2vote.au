@@ -63,7 +63,27 @@ enum QuizState {
     /// that owns the gate. Never persisted natively.
     static var eligibleThisSession = false
 
+    /// Whether this session is an under-18 explorer's (ADR 0012), who may take the quiz but must not
+    /// have it persisted. Reported by the WebView alongside eligibility.
+    static var canExploreThisSession = false
+
+    /// An explorer's progress, held in memory for this session only — the native side of the web's
+    /// in-memory quiz — and exchanged with the WebView at each handover so the two agree.
+    static var sessionRecords: [String: Persisted] = [:]
+
     static func key(for electionID: String) -> String { keyPrefix + electionID }
+
+    /// Takes the WebView's copy of an explorer's in-memory quiz at a handover (ADR 0012).
+    ///
+    /// The web's copy is current when the voter arrives from a web screen. On a repeat of the screen
+    /// already showing, the native record may be newer, so it is kept. A declared adult's progress is
+    /// in durable storage, which both sides read, so nothing is exchanged.
+    static func acceptHandover(session: String?, electionID: String, eligible: Bool, repeated: Bool) {
+        guard !eligible, !repeated else { return }
+        sessionRecords[electionID] = session.flatMap {
+            try? JSONDecoder().decode(Persisted.self, from: Data($0.utf8))
+        }
+    }
 
     /// Reads stored progress, discarding anything older than the resume window.
     ///
@@ -100,6 +120,28 @@ enum QuizState {
         try NativeState.set(json, forKey: key(for: electionID))
     }
 
+    /// Reads progress from wherever this session keeps it: storage for a declared adult, memory for
+    /// an explorer.
+    static func current(electionID: String, now: Int64 = nowMilliseconds()) -> Persisted? {
+        eligibleThisSession ? load(electionID: electionID, now: now) : sessionRecords[electionID]
+    }
+
+    /// Records progress where this session keeps it. An explorer's goes to memory; anyone else
+    /// without the declaration is refused by `save`.
+    static func record(
+        _ persisted: Persisted,
+        electionID: String,
+        now: Int64 = nowMilliseconds()
+    ) throws {
+        if !eligibleThisSession, canExploreThisSession {
+            var session = persisted
+            session.updatedAt = now
+            sessionRecords[electionID] = session
+            return
+        }
+        try save(persisted, electionID: electionID, now: now)
+    }
+
     /// Discards this election's stored progress.
     ///
     /// Mirrors `reset()` in `apps/web/src/lib/quiz.svelte.ts`: "Start again" must leave nothing
@@ -107,6 +149,7 @@ enum QuizState {
     /// next launch. Unlike a write, this needs no eligibility declaration — refusing to let someone
     /// clear their own answers would be the wrong way to fail.
     static func clear(electionID: String) {
+        sessionRecords[electionID] = nil
         try? NativeState.remove(forKey: key(for: electionID))
     }
 

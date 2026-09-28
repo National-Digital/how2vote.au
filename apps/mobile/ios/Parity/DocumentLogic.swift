@@ -1,0 +1,1236 @@
+#if canImport(CryptoKit)
+import CryptoKit
+#endif
+import Foundation
+
+/// Decodes and lays out every projected page, and holds the decoder to refusing what it cannot draw.
+///
+/// Compiled from the SHIPPING model files, like `QuizLogic`. The projection records each page's text
+/// digest and the text VoiceOver should read; `DocumentLayout.verify` recomputes both from the spans
+/// the screen draws, so a page passes only if nothing was dropped or invented between the web's
+/// HTML and the native layout.
+///
+/// Build and run from the repository root, after `node scripts/build-native-documents.mjs`:
+///
+///     swiftc -O apps/mobile/ios/App/App/Model/NativeDocument.swift \
+///            apps/mobile/ios/App/App/Model/DocumentLayout.swift \
+///            apps/mobile/ios/App/App/Model/LandingComposition.swift \
+///            apps/mobile/ios/Parity/DocumentLogic.swift -o "$TMPDIR/document-logic"
+///     "$TMPDIR/document-logic" apps/web/build/native-documents apps/mobile/ios/native-contract.json
+@main
+enum DocumentLogic {
+    static func main() {
+        guard CommandLine.arguments.count == 3 else {
+            print("::error::usage: document-logic <projected documents directory> <native-contract.json>")
+            exit(2)
+        }
+        let root = URL(fileURLWithPath: CommandLine.arguments[1])
+        var failures = keepsToTheContract(URL(fileURLWithPath: CommandLine.arguments[2]))
+
+        let files = projected(under: root)
+        guard !files.isEmpty else {
+            print("::error::document logic: no projected documents under \(root.path)")
+            exit(1)
+        }
+        for file in files {
+            do {
+                _ = try NativeDocument.decodeChecked(Data(contentsOf: file))
+            } catch {
+                failures.append("\(file.path.replacingOccurrences(of: root.path, with: "")): \(error)")
+            }
+        }
+
+        failures += composesTheLanding(root)
+        failures += readsTheQuizWording(root)
+        failures += readsTheBallotWording(root)
+        failures += readsTheReviewWording(root)
+        failures += readsTheClearDataWording(root)
+        failures += readsTheSavedWording(root)
+        failures += readsTheContactWording(root)
+        failures += readsTheInsights(root)
+        failures += readsTheSurvey(root)
+        failures += readsTheCard(root)
+
+        var ran = 0
+        let sample = try? Data(contentsOf: files[0])
+        for found in [
+            refusesAnUnknownNode(sample),
+            refusesAnUnknownField(sample),
+            refusesAnUnknownRole(sample),
+            refusesAnotherVersion(sample),
+            catchesTextChangedAfterProjection(sample),
+            catchesTextHiddenByMistake(sample),
+            catchesATitleThatIsNotTheHeading(sample),
+            catchesALostAccessibleName(),
+            readsLinksAndTermsAsVoiceOverDoes(),
+            looksUpOnlyProjectedPageNames(),
+            refusesABreadcrumbThatDoesNotEndAtThePage(sample),
+            refusesAControlThatIsNotWhatItSays(try? Data(contentsOf: root.appendingPathComponent("index.json"))),
+        ] {
+            ran += 1
+            failures.append(contentsOf: found)
+        }
+
+        guard failures.isEmpty else {
+            for failure in failures.prefix(40) { print("::error::document logic: \(failure)") }
+            if failures.count > 40 { print("::error::document logic: … and \(failures.count - 40) more") }
+            exit(1)
+        }
+        print("document logic OK — \(files.count) pages laid out with their text intact, \(ran) rules hold")
+    }
+
+    /// The renderer draws exactly the vocabulary the projection may emit: a kind, role or slot the
+    /// web learned and the renderer did not — or one the renderer still carries after the web
+    /// dropped it — fails here, before any page is laid out.
+    private static func keepsToTheContract(_ file: URL) -> [String] {
+        struct Contract: Decodable {
+            let version: Int
+            let blocks, inlines, blockRoles, inlineRoles, listRoles, slots: [String]
+            let slotActions: [String: [String]]
+            let slotLinks: [String]
+        }
+        guard let data = try? Data(contentsOf: file),
+              let contract = try? JSONDecoder().decode(Contract.self, from: data)
+        else { return ["the contract at \(file.path) could not be read"] }
+        var failures: [String] = []
+        func same(_ what: String, _ contract: [String], _ renderer: [String]) {
+            let want = Set(contract), have = Set(renderer)
+            for missing in want.subtracting(have).sorted() {
+                failures.append("the contract has \(what) \"\(missing)\", which the renderer does not draw")
+            }
+            for extra in have.subtracting(want).sorted() {
+                failures.append("the renderer draws \(what) \"\(extra)\", which the contract does not have")
+            }
+        }
+        if contract.version != NativeDocument.version {
+            failures.append("the contract is version \(contract.version); the renderer draws \(NativeDocument.version)")
+        }
+        same("block", contract.blocks, NativeDocument.blockKinds)
+        same("inline", contract.inlines, NativeDocument.inlineKinds)
+        same("block role", contract.blockRoles, NativeDocument.BlockRole.allCases.map(\.rawValue))
+        same("inline role", contract.inlineRoles, NativeDocument.InlineRole.allCases.map(\.rawValue))
+        same("list role", contract.listRoles, NativeDocument.ListRole.allCases.map(\.rawValue))
+        same("slot", contract.slots, NativeDocument.Slot.allCases.map(\.rawValue))
+        for slot in NativeDocument.Slot.allCases where contract.slotActions[slot.rawValue] != slot.actions.sorted() {
+            failures.append("the \(slot.rawValue) slot's actions differ from the contract's")
+        }
+        same("slot allowing links", contract.slotLinks, NativeDocument.Slot.allCases.filter(\.allowsLinks).map(\.rawValue))
+        // Listing a kind is not drawing it: each must actually decode, from a node of its own.
+        same("block fixture", contract.blocks, Array(blockFixtures.keys))
+        same("inline fixture", contract.inlines, Array(inlineFixtures.keys))
+        for (kind, json) in blockFixtures.sorted(by: { $0.key < $1.key })
+            where (try? JSONDecoder().decode(NativeDocument.Block.self, from: Data(json.utf8))) == nil {
+            failures.append("the renderer lists block \"\(kind)\" but does not decode one")
+        }
+        for (kind, json) in inlineFixtures.sorted(by: { $0.key < $1.key })
+            where (try? JSONDecoder().decode(NativeDocument.Inline.self, from: Data(json.utf8))) == nil {
+            failures.append("the renderer lists inline \"\(kind)\" but does not decode one")
+        }
+        return failures
+    }
+
+    private static let text = #"{"t":"text","s":"x"}"#
+
+    /// One minimal node of every kind the contract names.
+    private static let blockFixtures: [String: String] = [
+        "heading": #"{"t":"heading","level":2,"c":[\#(text)]}"#,
+        "paragraph": #"{"t":"paragraph","c":[\#(text)]}"#,
+        "list": #"{"t":"list","ordered":false,"items":[[{"t":"paragraph","c":[\#(text)]}]]}"#,
+        "definitions": #"{"t":"definitions","items":[{"term":[\#(text)],"detail":[]}]}"#,
+        "quote": #"{"t":"quote","c":[{"t":"paragraph","c":[\#(text)]}]}"#,
+        "section": #"{"t":"section","c":[]}"#,
+        "switch": #"{"t":"switch","label":"E","options":[{"label":"A","href":"/a","current":true}]}"#,
+        "slot": #"{"t":"slot","name":"clear-data","controls":[{"label":"Clear","action":"clear"}]}"#,
+        "logo": #"{"t":"logo","label":"L"}"#,
+    ]
+
+    private static let inlineFixtures: [String: String] = [
+        "text": text,
+        "break": #"{"t":"break"}"#,
+        "strong": #"{"t":"strong","c":[\#(text)]}"#,
+        "em": #"{"t":"em","c":[\#(text)]}"#,
+        "code": #"{"t":"code","c":[\#(text)]}"#,
+        "link": #"{"t":"link","href":"/a","external":false,"c":[\#(text)]}"#,
+        "term": #"{"t":"term","href":"/g","c":[\#(text)],"definition":[\#(text)],"label":"D","more":"M","close":"C"}"#,
+        "hidden": #"{"t":"hidden","c":[\#(text)]}"#,
+        "aside": #"{"t":"aside","role":"provenance","c":[\#(text)]}"#,
+        "glyph": #"{"t":"glyph","s":"↗"}"#,
+        "value": #"{"t":"value","name":"n","s":"1"}"#,
+    ]
+
+    /// The native landing composes the prerendered landing with the states page. For every election,
+    /// composing it with the stage it was prerendered at and a first visit's progress must give back
+    /// the prerendered page exactly — which is what proves the states page and the real page agree,
+    /// word for word. Every other stage and progress must compose too.
+    private static func composesTheLanding(_ root: URL) -> [String] {
+        func load(_ name: String) -> NativeDocument? {
+            (try? Data(contentsOf: root.appendingPathComponent("\(name).json")))
+                .flatMap { try? NativeDocument.decodeChecked($0).0 }
+        }
+        guard let states = load("states/landing") else { return ["the landing states page is missing"] }
+        var failures: [String] = []
+        if (try? LandingComposition.themeLabels(in: states)) == nil {
+            failures.append("the states page has no theme labels")
+        }
+        // A landing is a page with the brand bar, whatever its election is called.
+        let files = (try? FileManager.default.contentsOfDirectory(atPath: root.path)) ?? []
+        let names = files.compactMap { file -> String? in
+            guard file.hasSuffix(".json") else { return nil }
+            let name = String(file.dropLast(5))
+            return load(name)?.brand != nil ? name : nil
+        }
+        if !names.contains("index") { failures.append("the current election's landing is missing") }
+        for name in names.sorted() {
+            guard let landing = load(name) else {
+                failures.append("\(name): the landing did not load")
+                continue
+            }
+            let election = name == "index" ? electionOf(landing) : name
+            guard let election, let built = LandingComposition.prerenderedPhase(of: landing, electionID: election) else {
+                failures.append("\(name): the landing names no stage")
+                continue
+            }
+            failures += laysOutClaimsAndSteps(DocumentLayout(landing), name: name)
+            do {
+                let same = try LandingComposition.compose(
+                    landing: landing, states: states, electionID: election, phase: built, progress: .fresh
+                )
+                if DocumentLayout(same).text != DocumentLayout(landing).text {
+                    failures.append("\(name): the states page's \(built) wording differs from the landing's own")
+                }
+                for phase in ["upcoming", "live", "archived"] {
+                    for progress in [LandingComposition.Progress.fresh, .partway(next: 3, total: 29), .complete] {
+                        let composed = try LandingComposition.compose(
+                            landing: landing, states: states, electionID: election, phase: phase, progress: progress
+                        )
+                        failures += laysOutClaimsAndSteps(DocumentLayout(composed), name: "\(name) (\(phase), \(progress))")
+                        // The voter's own numbers, never the states page's samples.
+                        let text = DocumentLayout(composed).text
+                        if case .partway = progress, !text.contains("question 3 of 29") {
+                            failures.append("\(name): the resume call to action does not show the voter's place")
+                        }
+                    }
+                }
+            } catch {
+                failures.append("\(name): \(error)")
+            }
+        }
+        // A states page missing a stage is refused rather than drawn with the wrong one.
+        if let landing = load("index"), let election = electionOf(landing) {
+            let pruned = NativeDocument(
+                route: states.route, title: states.title, crumbs: nil, crumbsLabel: nil,
+                top: states.top, brand: nil,
+                blocks: states.blocks.filter {
+                    if case let .section(.stage, id?, _) = $0 { return !id.hasSuffix("-archived") }
+                    return true
+                },
+                digest: "", spoken: "", drawn: ""
+            )
+            if (try? LandingComposition.compose(
+                landing: landing, states: pruned, electionID: election, phase: "archived", progress: .fresh
+            )) != nil {
+                failures.append("a landing composed from a states page missing its stage")
+            }
+            // Composed as another election's, it is refused rather than given that one's wording.
+            if let other = names.first(where: { $0 != "index" && $0 != election }),
+               (try? LandingComposition.compose(
+                   landing: landing, states: states, electionID: other, phase: "archived", progress: .fresh
+               )) != nil {
+                failures.append("the current election's landing composed as \(other)'s")
+            }
+        }
+        return failures
+    }
+
+    /// The quiz draws every word from the web's quiz page. It must yield the whole wording — each
+    /// piece with the values the screen fills, and the answer scale recording each of 0 to 5 once —
+    /// and a page missing a piece must be refused rather than drawn with a gap.
+    private static func readsTheQuizWording(_ root: URL) -> [String] {
+        guard let data = try? Data(contentsOf: root.appendingPathComponent("states/quiz.json")),
+              let (page, _) = try? NativeDocument.decodeChecked(data)
+        else { return ["the quiz states page is missing or does not lay out"] }
+        var failures: [String] = []
+        do {
+            let wording = try QuizWording(page)
+            let points = wording.answers.map(\.points)
+            if points.sorted() != [0, 1, 2, 3, 4, 5] {
+                failures.append("the quiz's answers record \(points), not each of 0 to 5 once")
+            }
+            // Each answer records exactly what the page's own button names, under the page's label:
+            // the projection holds the page to the web's scale, and this holds the native answers to
+            // the page.
+            var controls: [NativeDocument.Control] = []
+            func walk(_ blocks: [NativeDocument.Block]) {
+                for block in blocks {
+                    if case let .slot(.quizAnswer, _, found) = block { controls = found }
+                    if case let .section(_, _, content) = block { walk(content) }
+                }
+            }
+            walk(page.blocks)
+            let expected = controls.map { QuizWording.Answer(points: Int($0.action ?? "") ?? -1, label: $0.text(), sub: $0.sub) }
+            if wording.answers != expected {
+                failures.append("the quiz records answers other than the page names: \(wording.answers.map { "\($0.label)=\($0.points)" })")
+            }
+            if !wording.position(3, of: 29).contains("3") || !wording.position(3, of: 29).contains("29") {
+                failures.append("the quiz's position does not show the voter's place")
+            }
+        } catch {
+            failures.append("the quiz wording: \(error)")
+        }
+        let pruned = NativeDocument(
+            route: page.route, title: page.title, crumbs: nil, crumbsLabel: nil, top: page.top, brand: nil,
+            blocks: page.blocks.filter {
+                if case let .section(.template, id?, _) = $0 { return id != "quiz-pause" }
+                return true
+            },
+            digest: "", spoken: "", drawn: ""
+        )
+        if (try? QuizWording(pruned)) != nil {
+            failures.append("a quiz wording missing a piece was accepted")
+        }
+        return failures
+    }
+
+    /// The ballot picker's wording is read whole from its states page, and a page that loses a
+    /// piece, offers a repeated state, or points its lookup anywhere but an https page is refused.
+    private static func readsTheBallotWording(_ root: URL) -> [String] {
+        guard let data = try? Data(contentsOf: root.appendingPathComponent("states/ballot.json")),
+              let (page, _) = try? NativeDocument.decodeChecked(data)
+        else { return ["the ballot states page is missing or does not lay out"] }
+        var failures: [String] = []
+        do {
+            let wording = try BallotWording(page)
+            if wording.states.isEmpty { failures.append("the ballot offers no states") }
+            if wording.states.map(\.code) != wording.states.map(\.code).sorted() {
+                failures.append("the ballot's states are not in the picker's order: \(wording.states.map(\.code))")
+            }
+            if !wording.position(2, of: 3).contains("2") || !wording.position(2, of: 3).contains("3") {
+                failures.append("the ballot's position does not show the voter's step")
+            }
+            let unsure = wording.around(.unsure)
+            if unsure.before.isEmpty
+                || unsure.before + wording.text(.lookup) + unsure.after != wording.text(.unsure, ["lookup": wording.text(.lookup)]) {
+                failures.append("the lookup sentence does not split around its link: \(unsure)")
+            }
+            let numbered = page.blocks.filter {
+                if case let .section(.template, id?, _) = $0, id.hasPrefix("ballot-licence-"), Int(id.dropFirst(15)) != nil {
+                    return true
+                }
+                return false
+            }.count
+            if wording.licence.count != numbered || numbered < 2 || Set(wording.licence).count != numbered {
+                failures.append("the map's licence notice is read as \(wording.licence.count) of the page's \(numbered) paragraphs")
+            }
+            if let first = wording.states.first, wording.name(for: first.code.lowercased()) != first.name {
+                failures.append("a state code is not matched as the web matches it, ignoring case")
+            }
+        } catch {
+            failures.append("the ballot wording: \(error)")
+        }
+
+        func edited(_ edit: (NativeDocument.Block) -> NativeDocument.Block?) -> NativeDocument {
+            NativeDocument(
+                route: page.route, title: page.title, crumbs: nil, crumbsLabel: nil, top: page.top, brand: nil,
+                blocks: page.blocks.compactMap(edit), digest: "", spoken: "", drawn: ""
+            )
+        }
+        func section(_ block: NativeDocument.Block, _ id: String, _ content: [NativeDocument.Block]) -> NativeDocument.Block {
+            if case .section(.template, id, _) = block { return .section(role: .template, id: id, content: content) }
+            return block
+        }
+        func paragraph(_ inlines: [NativeDocument.Inline]) -> [NativeDocument.Block] {
+            [.paragraph(role: nil, id: nil, content: inlines)]
+        }
+        let entry = NativeDocument.Definition(term: [.text("NSW")], id: nil, detail: paragraph([.text("New South Wales")]))
+        let lookup = { (href: String, words: String) in
+            paragraph([.link(href: href, external: true, role: nil, label: nil, content: [.text(words)])])
+        }
+        let words = (try? BallotWording(page)).map { $0.text(.lookup) } ?? ""
+        let refused: [(String, NativeDocument)] = [
+            ("missing a piece", edited {
+                if case .section(.template, "ballot-start", _) = $0 { return nil }
+                return $0
+            }),
+            ("marking a value the screen does not fill", edited {
+                section($0, "ballot-start", paragraph([.text("Start in "), .value(name: "state", sample: "NSW")]))
+            }),
+            ("offering a state twice", edited { section($0, "ballot-states", [.definitions([entry, entry])]) }),
+            ("offering no states", edited { section($0, "ballot-states", [.definitions([])]) }),
+            ("with two national ballots", edited { section($0, "ballot-national", [.definitions([entry, entry])]) }),
+            ("linking its lookup over http", edited {
+                section($0, "ballot-lookup-link", lookup("http://check.aec.gov.au/", words))
+            }),
+            ("linking other words than its lookup piece", edited {
+                section($0, "ballot-lookup-link", lookup("https://check.aec.gov.au/", "Somewhere else"))
+            }),
+            ("without the map's licence notice", edited {
+                if case .section(.template, "ballot-licence-1", _) = $0 { return nil }
+                return $0
+            }),
+            ("with a gap in the map's licence notice", edited {
+                if case .section(.template, "ballot-licence-3", _) = $0 { return nil }
+                return $0
+            }),
+            ("marking up a paragraph of the map's licence notice", edited {
+                guard case let .section(.template, "ballot-licence-2", content) = $0,
+                      case let .paragraph(role, id, inlines)? = content.first else { return $0 }
+                return .section(role: .template, id: "ballot-licence-2", content: [
+                    .paragraph(role: role, id: id, content: [.strong(inlines)]),
+                ])
+            }),
+            ("linking its licence over http", edited {
+                section($0, "ballot-licence-link", lookup("http://www.aec.gov.au/Electorates/gis/", "Licence"))
+            }),
+        ]
+        for (what, mutated) in refused where (try? BallotWording(mutated)) != nil {
+            failures.append("a ballot wording \(what) was accepted")
+        }
+        return failures
+    }
+
+    /// The clear-data control's confirmation is the web's: every piece, each distinct, and the privacy
+    /// page that holds the control is recognised as needing it. A page missing a piece is refused.
+    private static func readsTheClearDataWording(_ root: URL) -> [String] {
+        guard let data = try? Data(contentsOf: root.appendingPathComponent("states/clear-data.json")),
+              let (page, _) = try? NativeDocument.decodeChecked(data)
+        else { return ["the clear-data states page is missing or does not lay out"] }
+        var failures: [String] = []
+        do {
+            let wording = try ClearDataWording(page)
+            let texts = ClearDataWording.Piece.allCases.map(wording.text)
+            if texts.contains(where: \.isEmpty) || Set(texts).count != texts.count {
+                failures.append("the clear-data confirmation's pieces are not each worded and distinct: \(texts)")
+            }
+        } catch {
+            failures.append("the clear-data wording: \(error)")
+        }
+        if let privacy = try? Data(contentsOf: root.appendingPathComponent("privacy.json")),
+           let (policy, _) = try? NativeDocument.decodeChecked(privacy) {
+            if !ClearDataWording.isNeeded(by: policy) {
+                failures.append("the privacy page's clear-data control is not recognised, so it would be drawn without its confirmation")
+            }
+        } else {
+            failures.append("the privacy page could not be read to find its clear-data control")
+        }
+        let missing = NativeDocument(
+            route: page.route, title: page.title, crumbs: nil, crumbsLabel: nil, top: page.top, brand: nil,
+            blocks: page.blocks.filter {
+                if case .section(.template, "clear-cancel", _) = $0 { return false }
+                return true
+            },
+            digest: "", spoken: "", drawn: ""
+        )
+        if (try? ClearDataWording(missing)) != nil {
+            failures.append("a clear-data wording missing a piece was accepted")
+        }
+        return failures
+    }
+
+    /// The saved-cards screen's wording is the web's: every piece worded, the how-to naming its button
+    /// between two pieces of text, and the clear-all-data section the page ends with, whole, needing
+    /// its confirmation. A page that loses a piece or the section, or links from it, is refused; and
+    /// the cards handed over must each be a route, listed once.
+    private static func readsTheSavedWording(_ root: URL) -> [String] {
+        guard let data = try? Data(contentsOf: root.appendingPathComponent("states/saved.json")),
+              let (page, _) = try? NativeDocument.decodeChecked(data)
+        else { return ["the saved states page is missing or does not lay out"] }
+        var failures: [String] = []
+        do {
+            let wording = try SavedWording(page)
+            let texts = SavedWording.Piece.allCases.map { wording.text($0) }
+            if texts.contains(where: \.isEmpty) {
+                failures.append("a saved-cards piece is empty: \(texts)")
+            }
+            let (before, after) = wording.how
+            if before.isEmpty || after.isEmpty || before + wording.text(.action) + after != wording.text(.how, ["action": wording.text(.action)]) {
+                failures.append("the saved how-to does not read as the page reads it around its button")
+            }
+            // The same control the privacy policy holds, rendered by the same component, so the two
+            // must lay out alike.
+            let policy = (try? Data(contentsOf: root.appendingPathComponent("privacy.json")))
+                .flatMap { try? NativeDocument.decodeChecked($0).0 }
+            func clearData(in blocks: [NativeDocument.Block]) -> NativeDocument.Block? {
+                for block in blocks {
+                    if case .section(.clearData, _, _) = block { return block }
+                    if case let .section(_, _, content) = block, let found = clearData(in: content) { return found }
+                }
+                return nil
+            }
+            let theirs = policy.flatMap { clearData(in: $0.blocks) }.map {
+                DocumentLayout(NativeDocument(
+                    route: "/privacy", title: "", crumbs: nil, crumbsLabel: nil, top: nil, brand: nil,
+                    blocks: [$0], digest: "", spoken: "", drawn: ""
+                )).blocks
+            }
+            if theirs == nil || theirs != wording.clearData.blocks {
+                failures.append("the saved screen's clear-data section does not read as the privacy policy's")
+            }
+        } catch {
+            failures.append("the saved wording: \(error)")
+        }
+        if !ClearDataWording.isNeeded(by: page) {
+            failures.append("the saved page's clear-data control is not recognised, so it would be drawn without its confirmation")
+        }
+
+        func without(_ keep: (NativeDocument.Block) -> Bool) -> NativeDocument {
+            NativeDocument(
+                route: page.route, title: page.title, crumbs: nil, crumbsLabel: nil, top: page.top, brand: nil,
+                blocks: page.blocks.filter(keep), digest: "", spoken: "", drawn: ""
+            )
+        }
+        let linked: [NativeDocument.Block] = page.blocks.map { block in
+            guard case let .section(.clearData, id, content) = block else { return block }
+            return .section(role: .clearData, id: id, content: content + [
+                .paragraph(role: nil, id: nil, content: [.link(href: "/privacy", external: false, role: nil, label: nil, content: [.text("x")])]),
+            ])
+        }
+        let refused: [(String, NativeDocument)] = [
+            ("missing a piece", without {
+                if case .section(.template, "saved-cancel", _) = $0 { return false }
+                return true
+            }),
+            ("missing its clear-data section", without {
+                if case .section(.clearData, _, _) = $0 { return false }
+                return true
+            }),
+            ("linking from its clear-data section", NativeDocument(
+                route: page.route, title: page.title, crumbs: nil, crumbsLabel: nil, top: page.top, brand: nil,
+                blocks: linked, digest: "", spoken: "", drawn: ""
+            )),
+        ]
+        for (what, mutated) in refused where (try? SavedWording(mutated)) != nil {
+            failures.append("a saved wording \(what) was accepted")
+        }
+
+        let card = #"{"url":"/card#v1.x","electorate":"Sydney","state":"New South Wales","date":"1 Jan 2026"}"#
+        if (try? SavedCard.list("[\(card)]"))?.count != 1 {
+            failures.append("a saved card as the web hands it over was refused")
+        }
+        for (what, list) in [
+            ("none handed over", nil),
+            ("a link off the app", "[" + card.replacingOccurrences(of: "/card#", with: "https://x/card#") + "]"),
+            ("a link to another host", "[" + card.replacingOccurrences(of: "/card#", with: "//x/card#") + "]"),
+            ("a card listed twice", "[\(card),\(card)]"),
+        ] as [(String, String?)] where (try? SavedCard.list(list)) != nil {
+            failures.append("saved cards with \(what) were accepted")
+        }
+        return failures
+    }
+
+    /// The contact form's wording is the web's: every piece worded and distinct, and a page missing
+    /// one refused. The page's text above the form is a document of its own, with no piece of the
+    /// form's in it. A message is handed to the web only with every field filled, and only the web's
+    /// "ok" reads as sent.
+    private static func readsTheContactWording(_ root: URL) -> [String] {
+        guard let data = try? Data(contentsOf: root.appendingPathComponent("states/contact-form.json")),
+              let (page, _) = try? NativeDocument.decodeChecked(data)
+        else { return ["the contact form's states page is missing or does not lay out"] }
+        var failures: [String] = []
+        do {
+            let wording = try ContactWording(page)
+            let texts = ContactWording.Piece.allCases.map(wording.text)
+            if texts.contains(where: \.isEmpty) || Set(texts).count != texts.count {
+                failures.append("the contact form's pieces are not each worded and distinct: \(texts)")
+            }
+        } catch {
+            failures.append("the contact form's wording: \(error)")
+        }
+        let missing = NativeDocument(
+            route: page.route, title: page.title, crumbs: nil, crumbsLabel: nil, top: page.top, brand: nil,
+            blocks: page.blocks.filter {
+                if case .section(.template, "contact-challenge", _) = $0 { return false }
+                return true
+            },
+            digest: "", spoken: "", drawn: ""
+        )
+        if (try? ContactWording(missing)) != nil {
+            failures.append("a contact form wording missing a piece was accepted")
+        }
+
+        if let intro = try? Data(contentsOf: root.appendingPathComponent("states/contact.json")),
+           let (document, _) = try? NativeDocument.decodeChecked(intro) {
+            if document.top == nil || document.title.isEmpty {
+                failures.append("the contact page's text has no title or top bar of its own")
+            }
+            if !StatesPage(document).sections.isEmpty {
+                failures.append("the contact page's text carries pieces of its form")
+            }
+        } else {
+            failures.append("the contact page's text is missing or does not lay out")
+        }
+
+        for (answer, outcome) in [
+            ("ok", ContactWording.Outcome.sent), ("offline", .offline), ("error", .failed), ("", .failed), ("OK", .failed),
+        ] where ContactWording.Outcome(answer) != outcome {
+            failures.append("the web's answer \"\(answer)\" reads as \(ContactWording.Outcome(answer)), not \(outcome)")
+        }
+        if ContactWording.fields(name: "A", email: "a@b.c", message: " ") != nil
+            || ContactWording.fields(name: "", email: "a@b.c", message: "Hi") != nil
+            || ContactWording.fields(name: "A", email: "a@b.c", message: "\u{FEFF}\u{3000}\n") != nil {
+            failures.append("a message with a field the web reads as blank would be handed to it")
+        }
+        // JavaScript's trim() keeps U+0085, so the web sends a message holding it: so must the form.
+        if ContactWording.fields(name: "A", email: "a@b.c", message: "\u{85}") == nil {
+            failures.append("a message the web would send is refused")
+        }
+        if let sent = ContactWording.fields(name: "A", email: "a@b.c", message: "Hi"),
+           let object = try? JSONSerialization.jsonObject(with: Data(sent.utf8)) as? [String: String] {
+            if object != ["name": "A", "email": "a@b.c", "message": "Hi"] {
+                failures.append("a message is handed to the web as \(object), not the page's three fields")
+            }
+        } else {
+            failures.append("a filled message is not handed to the web")
+        }
+        return failures
+    }
+
+    /// The Insights page's wording is the web's: every piece worded, the lead naming its group size
+    /// once, and the head reading as the page does, without its lead while closed. The figures the web
+    /// hands over (`insights-model.json`, which the web's own test holds to `insightsModel`) decode,
+    /// and figures the screen could only draw wrongly are refused.
+    private static func readsTheInsights(_ root: URL) -> [String] {
+        guard let data = try? Data(contentsOf: root.appendingPathComponent("states/insights.json")),
+              let (page, _) = try? NativeDocument.decodeChecked(data)
+        else { return ["the insights states page is missing or does not lay out"] }
+        var failures: [String] = []
+        do {
+            let wording = try InsightsWording(page)
+            let texts = InsightsWording.Piece.allCases.map { wording.text($0) }
+            if texts.contains(where: \.isEmpty) {
+                failures.append("an insights piece is empty: \(texts)")
+            }
+            let open = wording.head(closed: false, minimum: "12")
+            let closed = wording.head(closed: true, minimum: "12")
+            let text = { (layout: DocumentLayout) in layout.blocks.map(Self.visible).joined() }
+            if !text(open).contains("at least 12 responses") || text(open).contains("at least \(wording.defaultMinimum) responses") {
+                failures.append("the insights lead does not name the group size it is given")
+            }
+            if text(closed) != page.title || open.top != page.top {
+                failures.append("the closed insights page does not read as its title alone, under the page's bar")
+            }
+            if wording.defaultMinimum != "10" {
+                failures.append("the insights lead's own group size is \(wording.defaultMinimum), not the page's 10")
+            }
+        } catch {
+            failures.append("the insights wording: \(error)")
+        }
+        func without(_ id: String) -> NativeDocument {
+            NativeDocument(
+                route: page.route, title: page.title, crumbs: nil, crumbsLabel: nil, top: page.top, brand: nil,
+                blocks: page.blocks.filter {
+                    if case .section(.template, id, _) = $0 { return false }
+                    return true
+                },
+                digest: "", spoken: "", drawn: ""
+            )
+        }
+        for id in ["insights-footnote", "insights-lead", "insights-closed"] where (try? InsightsWording(without(id))) != nil {
+            failures.append("an insights wording missing \(id) was accepted")
+        }
+
+        let fixture = URL(fileURLWithPath: "apps/mobile/ios/Parity/insights-model.json")
+        guard let model = try? String(contentsOf: fixture, encoding: .utf8) else {
+            return failures + ["the insights figures fixture is missing"]
+        }
+        do {
+            let figures = try InsightsData.decode(model)
+            if figures.elections?.first(where: { $0.id == figures.initial })?.stats?.published != true {
+                failures.append("the insights fixture does not open on published figures")
+            }
+            let windows = figures.windows
+            if let window = windows.first {
+                let inside = Date(timeIntervalSince1970: window[0] / 1000)
+                let after = Date(timeIntervalSince1970: window[1] / 1000)
+                if !figures.isClosed(at: inside) || figures.isClosed(at: after) {
+                    failures.append("the election-day window does not hold from its start until, not at, its end")
+                }
+            } else {
+                failures.append("the insights fixture names no election-day window")
+            }
+        } catch {
+            failures.append("the insights figures the web hands over do not decode: \(error)")
+        }
+        for (what, mutated) in [
+            ("a share over 100 per cent", model.replacingOccurrences(of: "\"pct\": 67", with: "\"pct\": 167")),
+            ("a window ending before it starts", model.replacingOccurrences(of: "1746194400000", with: "1746366400000")),
+            ("an opening election it does not offer", model.replacingOccurrences(of: "\"initial\": \"2025\"", with: "\"initial\": \"1901\"")),
+            ("figures with no reason for none", #"{"windows":[],"closed":false,"failed":false,"initial":"next","elections":null}"#),
+        ] where (try? InsightsData.decode(mutated)) != nil {
+            failures.append("insights figures with \(what) were accepted")
+        }
+        if (try? InsightsData.decode(nil)) != nil {
+            failures.append("an insights screen with no figures handed over was accepted")
+        }
+        return failures
+    }
+
+    /// The card's wording is the web's: every piece worded, each paragraph marking the values the
+    /// card fills and naming them where it is given them, and the pages its paragraphs open over it
+    /// being pages the app draws. The cards the web hands over (`card-model.json`, which the web's
+    /// test holds to its card type) decode, and cards the screen could only draw wrongly are refused.
+    private static func readsTheCard(_ root: URL) -> [String] {
+        guard let data = try? Data(contentsOf: root.appendingPathComponent("states/card.json")),
+              let (page, _) = try? NativeDocument.decodeChecked(data)
+        else { return ["the card states page is missing or does not lay out"] }
+        var failures: [String] = []
+        do {
+            let wording = try CardWording(page)
+            let texts = CardWording.Piece.allCases.map { wording.text($0, ["name": "Zed", "title": "Zed"]) }
+            if texts.contains(where: \.isEmpty) {
+                failures.append("a card piece is not worded")
+            }
+            if texts.contains(where: { $0.contains("{") }) {
+                failures.append("a card piece is drawn with a value unfilled")
+            }
+            for piece in [CardWording.Piece.preferenceFor, .higher, .lower, .close]
+            where !wording.text(piece, ["name": "Zed", "title": "Zed"]).contains("Zed") {
+                failures.append("the card's \(piece) does not name what it is for")
+            }
+            let values = ["label": "Zed election", "year": "1901", "vintage": "1 Jan 1901", "n": "7", "age": "99",
+                          "electorate": "Zedland", "built": "2 Jan 1901", "data": "1901-01-01", "version": "9.9.9",
+                          "attribution": "Zed data"]
+            for paragraph in CardWording.Paragraph.allCases {
+                let text = wording.layout(paragraph, values).blocks.map(Self.visible).joined()
+                if text.isEmpty {
+                    failures.append("the card's \(paragraph.id) is not worded")
+                }
+                for name in paragraph.values where !text.contains(values[name] ?? "") {
+                    failures.append("the card's \(paragraph.id) does not name the \(name) it is given")
+                }
+                for href in wording.layout(paragraph).links.map(\.href) where href.hasPrefix("/") && href != "/saved" {
+                    let file = root.appendingPathComponent("\(href.dropFirst()).json")
+                    if (try? NativeDocument.decodeChecked(Data(contentsOf: file)))?.0.route != href {
+                        failures.append("the card's \(paragraph.id) links \(href), which is not a page the app draws")
+                    }
+                }
+            }
+            // The card's registered notices (docs/legal/native-copy.json) are drawn in the paragraphs
+            // that carry them: the plan's acknowledgement, its footer and its authorisation band.
+            func drawn(_ paragraph: CardWording.Paragraph) -> String {
+                wording.layout(paragraph, values).blocks.map(Self.visible).joined()
+            }
+            for (notice, drawnIn) in [
+                (LegalCopy.numbersAreYourChoice, [drawn(.ack(archived: false)), drawn(.ack(archived: true))]),
+                (LegalCopy.noRecommendation, [drawn(.ack(archived: false)), drawn(.ack(archived: true))]),
+                (LegalCopy.notABallotPaper, [drawn(.ack(archived: false))]),
+                (LegalCopy.userAuthoredOrder, [drawn(.foot(archived: false)), drawn(.foot(archived: true))]),
+                (LegalCopy.preferenceSource, [drawn(.foot(archived: false)), drawn(.foot(archived: true)), wording.text(.bandAuthorisation)]),
+            ] where drawnIn.contains(where: { !$0.contains(notice) }) {
+                failures.append("the card does not draw its registered notice \"\(notice)\" where the page does")
+            }
+            if wording.layout(.vintage(archived: false, withdrawn: .none)).terms.isEmpty {
+                failures.append("the card's vintage does not define the divisions it is compared against")
+            }
+        } catch {
+            failures.append("the card wording: \(error)")
+        }
+        func without(_ id: String) -> NativeDocument {
+            NativeDocument(
+                route: page.route, title: page.title, crumbs: nil, crumbsLabel: nil, top: page.top, brand: nil,
+                blocks: page.blocks.filter {
+                    if case .section(.template, id, _) = $0 { return false }
+                    return true
+                },
+                digest: "", spoken: "", drawn: ""
+            )
+        }
+        for id in ["card-bandAuthorisation", "card-ack-live", "card-foot-archived", "terms-intro", "card-qualifier"]
+        where (try? CardWording(without(id))) != nil {
+            failures.append("a card wording missing \(id) was accepted")
+        }
+
+        guard let fixture = try? String(contentsOf: URL(fileURLWithPath: "apps/mobile/ios/Parity/card-model.json"), encoding: .utf8),
+              let cards = try? JSONSerialization.jsonObject(with: Data(fixture.utf8)) as? [[String: Any]]
+        else { return failures + ["the card fixture is missing"] }
+        let json = { (object: [String: Any]) in String(decoding: try! JSONSerialization.data(withJSONObject: object), as: UTF8.self) }
+        var kinds: [String] = []
+        for card in cards {
+            do {
+                switch try CardData.decode(json(card)) {
+                case let .ready(ready): kinds.append(ready.stage.rawValue)
+                case .error, .unavailable, .archivedLink: kinds.append("explained")
+                }
+            } catch {
+                failures.append("a card the web hands over does not decode: \(error)")
+            }
+        }
+        if kinds != ["compare", "build", "explained"] {
+            failures.append("the card fixture does not hold a comparison, a plan and an explained card: \(kinds)")
+        }
+        let compare = cards.first { $0["stage"] as? String == "compare" } ?? [:]
+        let build = cards.first { $0["stage"] as? String == "build" } ?? [:]
+        let panels = (compare["panels"] as? [[String: Any]]) ?? []
+        var figureless = panels
+        if var first = figureless.first, var blocks = first["blocks"] as? [[String: Any]], var single = blocks.first,
+           var row = single["row"] as? [String: Any] {
+            row["kind"] = "independent"
+            single["row"] = row
+            blocks[0] = single
+            first["blocks"] = blocks
+            figureless[0] = first
+        }
+        for (what, mutated) in [
+            ("a figure for a party the panel shows none for", compare.merging(["panels": figureless]) { _, b in b }),
+            ("a plan on the comparison", compare.merging(["plan": build["plan"] ?? [:]]) { _, b in b }),
+            ("a plan on a shared card", build.merging(["shared": true]) { _, b in b }),
+            ("a plan for an under-18", build.merging(["canVote": false]) { _, b in b }),
+            ("a way to save a shared card", compare.merging(["shared": true]) { _, b in b }),
+            ("a share warning for an under-18", compare.merging(["canVote": false, "saveable": false, "shareWarning": true]) { _, b in b }),
+            ("a card of no status the screen draws", compare.merging(["status": "loading"]) { _, b in b }),
+        ] where (try? CardData.decode(json(mutated))) != nil {
+            failures.append("a card with \(what) was accepted")
+        }
+        if (try? CardData.decode(nil)) != nil {
+            failures.append("a card screen with no card handed over was accepted")
+        }
+        return failures
+    }
+
+    /// The survey's wording is the web's: every piece worded, a past election's notice naming the
+    /// year it is given, and the documents the gate links being pages the app draws. The steps the
+    /// web hands over (`survey-steps.json`, which the web's test holds to its step type) decode, and
+    /// steps the screen could only draw wrongly are refused.
+    private static func readsTheSurvey(_ root: URL) -> [String] {
+        guard let data = try? Data(contentsOf: root.appendingPathComponent("states/survey.json")),
+              let (page, _) = try? NativeDocument.decodeChecked(data)
+        else { return ["the survey states page is missing or does not lay out"] }
+        var failures: [String] = []
+        do {
+            let wording = try SurveyWording(page)
+            let texts = SurveyWording.Piece.allCases.map(wording.text)
+            if texts.contains(where: \.isEmpty) || Set(texts).count != texts.count {
+                failures.append("the survey's pieces are not each worded and distinct: \(texts)")
+            }
+            if texts.contains(where: { $0.contains("{") }) {
+                failures.append("a survey piece is drawn with a value unfilled")
+            }
+            let past = wording.notes(archived: true, year: "1901").blocks.map(Self.visible).joined()
+            if past.components(separatedBy: "1901").count != 3 {
+                failures.append("a past election's notice does not name the year it is given, twice")
+            }
+            let live = wording.notes(archived: false, year: "1901").blocks.map(Self.visible).joined()
+            if live.contains("1901") || live.isEmpty {
+                failures.append("the notice for any other election names a year")
+            }
+            let links = wording.notes(archived: true, year: "1901").links.map(\.href) + wording.terms.layout.links.map(\.href)
+            for href in Set(links) {
+                let name = String(href.dropFirst())
+                let file = root.appendingPathComponent("\(name).json")
+                if (try? NativeDocument.decodeChecked(Data(contentsOf: file)))?.0.route != href {
+                    failures.append("the survey gate links \(href), which is not a page the app draws")
+                }
+            }
+            if !wording.close("Privacy policy").contains("Privacy policy") || wording.close("Privacy policy") == "Privacy policy" {
+                failures.append("the survey's close control does not name the document it closes")
+            }
+            if wording.terms.spoken.isEmpty || wording.top.back == nil {
+                failures.append("the survey's Terms acceptance or way back is not worded")
+            }
+        } catch {
+            failures.append("the survey wording: \(error)")
+        }
+        func without(_ id: String) -> NativeDocument {
+            NativeDocument(
+                route: page.route, title: page.title, crumbs: nil, crumbsLabel: nil, top: page.top, brand: nil,
+                blocks: page.blocks.filter {
+                    if case .section(.template, id, _) = $0 { return false }
+                    return true
+                },
+                digest: "", spoken: "", drawn: ""
+            )
+        }
+        for id in ["survey-prefer", "survey-notes-archived", "survey-terms"] where (try? SurveyWording(without(id))) != nil {
+            failures.append("a survey wording missing \(id) was accepted")
+        }
+
+        guard let fixture = try? String(contentsOf: URL(fileURLWithPath: "apps/mobile/ios/Parity/survey-steps.json"), encoding: .utf8),
+              let steps = try? JSONSerialization.jsonObject(with: Data(fixture.utf8)) as? [[String: Any]]
+        else { return failures + ["the survey steps fixture is missing"] }
+        let json = { (object: [String: Any]) in String(decoding: try! JSONSerialization.data(withJSONObject: object), as: UTF8.self) }
+        var kinds: [String] = []
+        for step in steps {
+            do {
+                switch try SurveyStep.decode(json(step)) {
+                case .gate: kinds.append("gate")
+                case .question: kinds.append("question")
+                }
+            } catch {
+                failures.append("a survey step the web hands over does not decode: \(error)")
+            }
+        }
+        if kinds != ["gate", "question"] {
+            failures.append("the survey fixture does not hold a gate and a question: \(kinds)")
+        }
+        let gate = steps.first { $0["step"] as? String == "gate" } ?? [:]
+        let question = steps.first { $0["step"] as? String == "question" } ?? [:]
+        for (what, mutated) in [
+            ("a contribution allowed without consent", gate.merging(["canContribute": true, "consented": false]) { _, b in b }),
+            ("a question with no answers", question.merging(["options": [String]()]) { _, b in b }),
+            ("a question out of its place", question.merging(["position": 0]) { _, b in b }),
+            ("a step of no kind the screen draws", gate.merging(["step": "thanks"]) { _, b in b }),
+        ] where (try? SurveyStep.decode(json(mutated))) != nil {
+            failures.append("a survey step with \(what) was accepted")
+        }
+        if (try? SurveyStep.decode(nil)) != nil {
+            failures.append("a survey screen with no step handed over was accepted")
+        }
+        // An answer names the question it answers, as the web requires of it.
+        if let step = try? SurveyStep.decode(json(question)), case let .question(q) = step {
+            let sent = (try? JSONSerialization.jsonObject(with: Data(SurveyStep.answer(q, "x").utf8))) as? [String: String]
+            if sent != ["key": q.key, "answer": "x"] || step.key != q.key {
+                failures.append("a survey answer does not name the question it answers: \(sent ?? [:])")
+            }
+        }
+        return failures
+    }
+
+    /// A laid-out block's drawn text.
+    private static func visible(_ block: DocumentLayout.Block) -> String {
+        switch block {
+        case let .heading(_, _, run), let .paragraph(_, _, run): return run.visible
+        case let .section(_, _, content), let .quote(content): return content.map(visible).joined()
+        case let .list(_, _, items): return items.flatMap { $0.map(visible) }.joined()
+        default: return ""
+        }
+    }
+
+    /// The review reads each answer back by the web's own label, for every answer the quiz records,
+    /// and a page that loses a piece, or names an answer twice or not by its points, is refused.
+    private static func readsTheReviewWording(_ root: URL) -> [String] {
+        guard let data = try? Data(contentsOf: root.appendingPathComponent("states/review.json")),
+              let (page, _) = try? NativeDocument.decodeChecked(data)
+        else { return ["the review states page is missing or does not lay out"] }
+        var failures: [String] = []
+        do {
+            let wording = try ReviewWording(page)
+            if let quizData = try? Data(contentsOf: root.appendingPathComponent("states/quiz.json")),
+               let (quizPage, _) = try? NativeDocument.decodeChecked(quizData),
+               let quiz = try? QuizWording(quizPage) {
+                let recorded = Set(quiz.answers.map(\.points))
+                if Set(wording.answers.keys) != recorded {
+                    failures.append("the review labels answers \(wording.answers.keys.sorted()), the quiz records \(recorded.sorted())")
+                }
+                // Each answer is read back as the quiz words it, apart from a skip, which the review
+                // names as the fact rather than the option.
+                for answer in quiz.answers where answer.points != 0
+                    && wording.label(points: answer.points) != answer.label {
+                    failures.append("the review reads \(answer.points) as \(wording.label(points: answer.points)), the quiz as \(answer.label)")
+                }
+            } else {
+                failures.append("the quiz wording could not be read to hold the review's labels to")
+            }
+            if wording.label(points: nil) != wording.text(.unanswered) {
+                failures.append("an unanswered question is not read as unanswered")
+            }
+            if wording.label(points: 9) != wording.label(points: 0) {
+                failures.append("an answer the scale does not define is not read as a skip")
+            }
+            let all = wording.headline(answered: 3, total: 3), some = wording.headline(answered: 1, total: 3)
+            if all != wording.text(.all, ["total": "3"]) || some != wording.text(.some, ["recorded": "1", "total": "3"])
+                || all == some {
+                failures.append("the review heading does not report how many are answered: \(all) / \(some)")
+            }
+            if wording.text(.retry).isEmpty || !wording.failed.contains(wording.text(.retry)) {
+                failures.append("the review's load failure does not carry its retry: \(wording.failed)")
+            }
+            if wording.label(points: 0).isEmpty || wording.label(points: 0) == wording.text(.unanswered) {
+                failures.append("a skip is not read back as the page's skip")
+            }
+            if wording.headline(answered: 0, total: 0) != wording.text(.all, ["total": "0"]) {
+                failures.append("the review heading does not follow the web's rule for an empty set")
+            }
+            if !wording.text(.star, ["question": "Q"]).contains("Q") {
+                failures.append("the star's label does not name its question")
+            }
+        } catch {
+            failures.append("the review wording: \(error)")
+        }
+
+        func edited(_ edit: (NativeDocument.Block) -> NativeDocument.Block?) -> NativeDocument {
+            NativeDocument(
+                route: page.route, title: page.title, crumbs: nil, crumbsLabel: nil, top: page.top, brand: nil,
+                blocks: page.blocks.compactMap(edit), digest: "", spoken: "", drawn: ""
+            )
+        }
+        func answers(_ entries: [(String, String)]) -> (NativeDocument.Block) -> NativeDocument.Block? {
+            { block in
+                guard case .section(.template, "review-answers", _) = block else { return block }
+                return .section(role: .template, id: "review-answers", content: [.definitions(entries.map {
+                    NativeDocument.Definition(
+                        term: [.text($0.0)], id: nil,
+                        detail: [.paragraph(role: nil, id: nil, content: [.text($0.1)])]
+                    )
+                })])
+            }
+        }
+        let refused: [(String, NativeDocument)] = [
+            ("missing a piece", edited {
+                if case .section(.template, "review-compare", _) = $0 { return nil }
+                return $0
+            }),
+            ("dropping the question from the star", edited {
+                guard case .section(.template, "review-star", _) = $0 else { return $0 }
+                return .section(role: .template, id: "review-star", content: [
+                    .paragraph(role: nil, id: nil, content: [.text("Mark as extremely important")]),
+                ])
+            }),
+            ("naming an answer twice", edited(answers([("0", "Skipped"), ("5", "Agree"), ("5", "Strongly agree")]))),
+            ("naming an answer by other than its points", edited(answers([("0", "Skipped"), ("five", "Strongly agree")]))),
+            ("naming no skip", edited(answers([("5", "Strongly agree")]))),
+        ]
+        for (what, mutated) in refused where (try? ReviewWording(mutated)) != nil {
+            failures.append("a review wording \(what) was accepted")
+        }
+        return failures
+    }
+
+    /// The landing's claims and steps are laid out as the web lays them out: each claim's tick set
+    /// apart as its marker, and each step's name on a line above its detail. Both would otherwise run
+    /// together — "✓Built from…", "1 · BallotFind your electorate" — and no text check can see it,
+    /// since each ignores whitespace and markers.
+    private static func laysOutClaimsAndSteps(_ layout: DocumentLayout, name: String) -> [String] {
+        var failures: [String] = []
+        var claims = 0, steps = 0
+        func walk(_ blocks: [DocumentLayout.Block]) {
+            for block in blocks {
+                switch block {
+                case let .list(_, role, items) where role == .claims || role == .steps:
+                    for item in items {
+                        guard case let .paragraph(_, _, run)? = item.first, item.count == 1 else {
+                            failures.append("\(name): a \(role!.rawValue) item is not one paragraph")
+                            continue
+                        }
+                        if role == .claims {
+                            claims += 1
+                            if run.splitting(after: \.decorative)?.lead.visible != "✓" {
+                                failures.append("\(name): a claim has no tick of its own to mark it")
+                            }
+                        } else {
+                            steps += 1
+                            if run.splitting(after: \.strong) == nil {
+                                failures.append("\(name): a step has no name to set above its detail")
+                            }
+                        }
+                    }
+                case let .section(_, _, content), let .quote(content):
+                    walk(content)
+                default:
+                    break
+                }
+            }
+        }
+        walk(layout.blocks)
+        if claims == 0 || steps == 0 { failures.append("\(name): the landing has no claims or no steps") }
+        return failures
+    }
+
+    /// The election a landing page is for, from its stage section's id.
+    private static func electionOf(_ landing: NativeDocument) -> String? {
+        // `lede-<election>-<stage>`: the election is whatever lies between, hyphens and all.
+        for case let .section(.stage, id?, _) in landing.blocks where id.hasPrefix("lede-") {
+            let body = id.dropFirst("lede-".count)
+            guard let cut = body.lastIndex(of: "-") else { return nil }
+            return String(body[..<cut])
+        }
+        return nil
+    }
+
+    private static func projected(under root: URL) -> [URL] {
+        let walker = FileManager.default.enumerator(at: root, includingPropertiesForKeys: nil)
+        return (walker?.allObjects as? [URL] ?? [])
+            .filter { $0.pathExtension == "json" }
+            .sorted { $0.path < $1.path }
+    }
+
+    // MARK: - Mutations
+
+    /// Rewrites the first node matching `where` and returns the document re-encoded.
+    private static func mutate(
+        _ data: Data?,
+        where match: ([String: Any]) -> Bool,
+        _ change: (inout [String: Any]) -> Void
+    ) -> Data? {
+        guard let data, var doc = try? JSONSerialization.jsonObject(with: data) as? [String: Any] else { return nil }
+        var done = false
+        func walk(_ value: Any) -> Any {
+            if var dict = value as? [String: Any] {
+                if !done, match(dict) {
+                    change(&dict)
+                    done = true
+                    return dict
+                }
+                for (k, v) in dict { dict[k] = walk(v) }
+                return dict
+            }
+            if let list = value as? [Any] { return list.map(walk) }
+            return value
+        }
+        doc["blocks"] = walk(doc["blocks"] as Any)
+        return done ? try? JSONSerialization.data(withJSONObject: doc) : nil
+    }
+
+    /// A slot's link leads to one of the app's routes, and an icon button is a button: a control
+    /// the native screen would open off the app, or draw as a link with no text, is refused.
+    private static func refusesAControlThatIsNotWhatItSays(_ landing: Data?) -> [String] {
+        let isLink: ([String: Any]) -> Bool = { $0["href"] != nil && $0["t"] == nil && $0["current"] == nil }
+        return refusedAtDecode(
+            mutate(landing, where: isLink) { $0["href"] = "//example.org/methodology" },
+            for: "a control link that is not a route",
+            "a slot link off the app's routes was accepted"
+        ) + refusedAtDecode(
+            mutate(landing, where: isLink) { $0["href"] = "/\\example.org" },
+            for: "a control link that is not a route",
+            "a slot link to a backslashed host was accepted"
+        ) + refusedAtDecode(
+            mutate(landing, where: isLink) { $0["named"] = true },
+            for: "a named control that is not a button",
+            "an icon button that is a link was accepted"
+        )
+    }
+
+    /// Refused by the decoder itself, for the reason given — not by a later check that happens to
+    /// catch the same fixture, which would leave the rule under test free to go.
+    private static func refusedAtDecode(_ data: Data?, for reason: String, _ what: String) -> [String] {
+        guard let data else { return ["the fixture for \"\(what)\" could not be built"] }
+        do {
+            _ = try JSONDecoder().decode(NativeDocument.self, from: data)
+            return [what]
+        } catch {
+            return "\(error)".contains(reason) ? [] : ["\(what) — refused for another reason: \(error)"]
+        }
+    }
+
+    private static func refused(_ data: Data?, _ what: String) -> [String] {
+        guard let data else { return ["the fixture for \"\(what)\" could not be built"] }
+        return (try? NativeDocument.decodeChecked(data)) == nil ? [] : [what]
+    }
+
+    private static func isText(_ n: [String: Any]) -> Bool { n["t"] as? String == "text" }
+
+    private static func refusesAnUnknownNode(_ sample: Data?) -> [String] {
+        refused(
+            mutate(sample, where: isText) { $0["t"] = "marquee" },
+            "a node type the renderer does not know was accepted"
+        )
+    }
+
+    private static func refusesAnUnknownField(_ sample: Data?) -> [String] {
+        refused(
+            mutate(sample, where: isText) { $0["colour"] = "red" },
+            "a field the renderer does not draw was accepted"
+        )
+    }
+
+    private static func refusesAnUnknownRole(_ sample: Data?) -> [String] {
+        refused(
+            mutate(sample, where: { $0["t"] as? String == "paragraph" }) { $0["role"] = "callout" },
+            "a paragraph role the renderer has no style for was accepted"
+        )
+    }
+
+    private static func refusesAnotherVersion(_ sample: Data?) -> [String] {
+        guard let sample, var doc = try? JSONSerialization.jsonObject(with: sample) as? [String: Any] else {
+            return ["the version fixture could not be built"]
+        }
+        doc["v"] = NativeDocument.version + 1
+        return refused(try? JSONSerialization.data(withJSONObject: doc), "a document of another projection version was accepted")
+    }
+
+    /// The digest is the projection's: a word changed anywhere after it was taken is caught.
+    private static func catchesTextChangedAfterProjection(_ sample: Data?) -> [String] {
+        refused(
+            mutate(sample, where: { isText($0) && ($0["s"] as? String)?.count ?? 0 > 3 }) {
+                $0["s"] = String(($0["s"] as? String ?? "").dropLast())
+            },
+            "a document whose text no longer matches its digest was accepted"
+        )
+    }
+
+    /// Text wrongly marked hidden is still in the digest and still spoken, so only the drawn text
+    /// can catch it: it would vanish from the screen and every other check would pass.
+    private static func catchesTextHiddenByMistake(_ sample: Data?) -> [String] {
+        refused(
+            mutate(sample, where: { isText($0) && ($0["s"] as? String)?.count ?? 0 > 3 }) { node in
+                node = ["t": "hidden", "c": [node]]
+            },
+            "text hidden from the screen by mistake was accepted"
+        )
+    }
+
+    private static func catchesATitleThatIsNotTheHeading(_ sample: Data?) -> [String] {
+        guard let sample, var doc = try? JSONSerialization.jsonObject(with: sample) as? [String: Any] else {
+            return ["the title fixture could not be built"]
+        }
+        doc["title"] = "Another page"
+        return refused(try? JSONSerialization.data(withJSONObject: doc), "a title that is not the page's heading was accepted")
+    }
+
+    private static let labelled = #"""
+    {"v":4,"route":"/t","title":"T","top":{"label":"T","back":"Back"},"digest":"DIGEST","spoken":"SPOKEN","drawn":"TSee x and division.","blocks":[
+      {"t":"heading","level":1,"c":[{"t":"text","s":"T"}]},
+      {"t":"paragraph","c":[{"t":"text","s":"See "},
+        {"t":"link","href":"https://x.org","external":true,"label":"X on the web (cue)","c":[{"t":"text","s":"x"},{"t":"hidden","c":[{"t":"text","s":"(cue)"}]}]},
+        {"t":"text","s":" and "},
+        {"t":"term","href":"/glossary#d","c":[{"t":"text","s":"division"}],"definition":[{"t":"text","s":"A vote."}],"label":"Definition: Division","more":"More","close":"Shut"},
+        {"t":"text","s":"."}]}]}
+    """#
+
+    private static func fixture(spoken: String) -> Data {
+        // The text the projection would record, computed independently of the layout.
+        let text = "TSee x(cue) and divisionA vote.MoreShut."
+        let digest = sha256Hex(text)
+        return Data(labelled.replacingOccurrences(of: "DIGEST", with: digest)
+            .replacingOccurrences(of: "SPOKEN", with: spoken).utf8)
+    }
+
+    private static func catchesALostAccessibleName() -> [String] {
+        refused(fixture(spoken: "TSee x(cue) and division."), "spoken text without the link's accessible name was accepted")
+    }
+
+    private static func readsLinksAndTermsAsVoiceOverDoes() -> [String] {
+        guard let (_, layout) = try? NativeDocument.decodeChecked(fixture(spoken: "TSee X on the web (cue) and division.")) else {
+            return ["a correctly projected fixture was refused"]
+        }
+        var failures: [String] = []
+        guard case let .paragraph(_, _, run) = layout.blocks[1] else { return ["the fixture laid out without its paragraph"] }
+        if run.visible != "See x and division." { failures.append("the drawn text was \"\(run.visible)\"") }
+        if !layout.needsSpokenLabel(run) { failures.append("a paragraph with a labelled link was not given its spoken text") }
+        if layout.terms.first?.text != "division" || layout.terms.first?.more != "More"
+            || layout.links.first?.external != true {
+            failures.append("the fixture's term or link did not survive the layout")
+        }
+        return failures
+    }
+
+    /// A name reaches `Bundle.url` only in the shape the projection writes, so no path escapes the
+    /// projected documents.
+    private static func looksUpOnlyProjectedPageNames() -> [String] {
+        var failures: [String] = []
+        for name in ["privacy", "next/parties", "2025/parties/greens", "next/senate/nsw"]
+            where !NativeDocument.isDocumentName(name) {
+            failures.append("the page name \"\(name)\" was refused")
+        }
+        for name in ["", "../privacy", "Privacy", "next//parties", "a/b/c/d", "privacy.json", "next/parties/"]
+            where NativeDocument.isDocumentName(name) {
+            failures.append("the page name \"\(name)\" was accepted")
+        }
+        return failures
+    }
+
+    private static func refusesABreadcrumbThatDoesNotEndAtThePage(_ sample: Data?) -> [String] {
+        guard let sample, var doc = try? JSONSerialization.jsonObject(with: sample) as? [String: Any] else {
+            return ["the breadcrumb fixture could not be built"]
+        }
+        doc["top"] = nil
+        doc["crumbsLabel"] = "Breadcrumb"
+        doc["crumbs"] = [["label": "Home", "href": "/"], ["label": "Elsewhere", "href": "/elsewhere"]]
+        return refused(
+            try? JSONSerialization.data(withJSONObject: doc),
+            "a breadcrumb trail that ends at a link rather than the page was accepted"
+        )
+    }
+
+    private static func sha256Hex(_ text: String) -> String {
+        SHA256.hash(data: Data(text.utf8)).map { String(format: "%02x", $0) }.joined()
+    }
+}

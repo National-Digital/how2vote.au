@@ -1,0 +1,339 @@
+(source_file "excused.swift"
+  (enum_decl range=[excused.swift:3:1 - line:6:1] "LoadError" inherits="<null>, <null>"
+    (enum_case_decl range=[excused.swift:4:5 - line:4:10]
+      (enum_element_decl range=[excused.swift:4:10 - line:4:10] "failed"))
+    (enum_element_decl range=[excused.swift:4:10 - line:4:10] "failed")
+    (pattern_binding_decl range=[excused.swift:5:5 - line:5:60]
+      (pattern_typed
+        (pattern_named "description")
+        (type_unqualified_ident id="String" unbound)))
+    (var_decl range=[excused.swift:5:9 - line:5:9] "description"
+      (accessor_decl range=[excused.swift:5:29 - line:5:60] <anonymous @ 0x583b51275478> get for="description"
+        (parameter "self") thrown_type="<null>"
+        (parameter_list)
+        (brace_stmt range=[excused.swift:5:29 - line:5:60]
+          (string_literal_expr type="<null>" encoding=utf8 value="the dataset did not decode" builtin_initializer="**NULL**" initializer="**NULL**")))))
+  (struct_decl range=[excused.swift:7:1 - line:28:1] "Excused"
+    (func_decl range=[excused.swift:8:5 - line:27:5] "run()"
+      (parameter "self") thrown_type="<null>"
+      (parameter_list range=[excused.swift:8:13 - line:8:14])
+      (brace_stmt range=[excused.swift:8:23 - line:27:5]
+        (call_expr type="<null>" isolation_crossing="none"
+          (unresolved_decl_ref_expr type="<null>" name="NSLog" function_ref=unapplied)
+          (argument_list
+            (argument
+              (interpolated_string_literal_expr type="<null>" literal_capacity=21 interpolation_count=1 builder_init="**NULL**" result_init="**NULL**"
+                (tap_expr implicit type="<null>" var="excused.(file).Excused.run().$interpolation"
+                  (<null expr>)
+                  (brace_stmt implicit range=[excused.swift:9:16 - line:9:45]
+                    (var_decl implicit "$interpolation")
+                    (call_expr implicit type="<null>" isolation_crossing="none"
+                      (unresolved_dot_expr implicit type="<null>" field="appendLiteral(_:)" function_ref=unapplied
+                        (declref_expr implicit type="<null>" decl="excused.(file).Excused.run().$interpolation" function_ref=unapplied))
+                      (argument_list implicit
+                        (argument
+                          (string_literal_expr type="<null>" encoding=utf8 value="How2Vote: presenting " builtin_initializer="**NULL**" initializer="**NULL**"))))
+                    (call_expr type="<null>" isolation_crossing="none"
+                      (unresolved_dot_expr implicit type="<null>" field="appendInterpolation" function_ref=unapplied
+                        (declref_expr implicit type="<null>" decl="excused.(file).Excused.run().$interpolation" function_ref=unapplied))
+                      (argument_list
+                        (argument
+                          (unresolved_decl_ref_expr type="<null>" name="route" function_ref=unapplied))))
+                    (call_expr implicit type="<null>" isolation_crossing="none"
+                      (unresolved_dot_expr implicit type="<null>" field="appendLiteral(_:)" function_ref=unapplied
+                        (declref_expr implicit type="<null>" decl="excused.(file).Excused.run().$interpolation" function_ref=unapplied))
+                      (argument_list implicit
+                        (argument
+                          (string_literal_expr type="<null>" encoding=utf8 value="" builtin_initializer="**NULL**" initializer="**NULL**"))))))))))
+        (call_expr type="<null>" isolation_crossing="none"
+          (unresolved_dot_expr type="<null>" field="resolve" function_ref=unapplied
+            (unresolved_decl_ref_expr type="<null>" name="call" function_ref=unapplied))
+          (argument_list
+            (argument
+              (dictionary_expr type="<null>" initializer="**NULL**"
+                (tuple_expr implicit type="<null>"
+                  (string_literal_expr type="<null>" encoding=utf8 value="presented" builtin_initializer="**NULL**" initializer="**NULL**")
+                  (boolean_literal_expr type="<null>" value=false builtin_initializer="**NULL**" initializer="**NULL**"))
+                (tuple_expr implicit type="<null>"
+                  (string_literal_expr type="<null>" encoding=utf8 value="reason" builtin_initializer="**NULL**" initializer="**NULL**")
+                  (string_literal_expr type="<null>" encoding=utf8 value="no view controller" builtin_initializer="**NULL**" initializer="**NULL**"))))))
+        (call_expr type="<null>" isolation_crossing="none"
+          (unresolved_dot_expr type="<null>" field="reject" function_ref=unapplied
+            (unresolved_decl_ref_expr type="<null>" name="call" function_ref=unapplied))
+          (argument_list
+            (argument
+              (string_literal_expr type="<null>" encoding=utf8 value="the web did not answer" builtin_initializer="**NULL**" initializer="**NULL**"))))
+        (pattern_binding_decl range=[excused.swift:12:9 - line:12:46]
+          (pattern_named "key")
+          (original_init=call_expr type="<null>" isolation_crossing="none"
+            (unresolved_dot_expr type="<null>" field="getString" function_ref=unapplied
+              (unresolved_decl_ref_expr type="<null>" name="call" function_ref=unapplied))
+            (argument_list
+              (argument
+                (string_literal_expr type="<null>" encoding=utf8 value="electionId" builtin_initializer="**NULL**" initializer="**NULL**"))))
+          (processed_init=call_expr type="<null>" isolation_crossing="none"
+            (unresolved_dot_expr type="<null>" field="getString" function_ref=unapplied
+              (unresolved_decl_ref_expr type="<null>" name="call" function_ref=unapplied))
+            (argument_list
+              (argument
+                (string_literal_expr type="<null>" encoding=utf8 value="electionId" builtin_initializer="**NULL**" initializer="**NULL**")))))
+        (var_decl range=[excused.swift:12:13 - line:12:13] "key" let)
+        (call_expr type="<null>" isolation_crossing="none"
+          (unresolved_decl_ref_expr type="<null>" name="Image" function_ref=unapplied)
+          (argument_list labels="systemName:"
+            (argument label="systemName"
+              (string_literal_expr type="<null>" encoding=utf8 value="sun.max" builtin_initializer="**NULL**" initializer="**NULL**"))))
+        (call_expr type="<null>" isolation_crossing="none"
+          (unresolved_decl_ref_expr type="<null>" name="onExit" function_ref=unapplied)
+          (argument_list
+            (argument
+              (string_literal_expr type="<null>" encoding=utf8 value="/quiz?edit=1" builtin_initializer="**NULL**" initializer="**NULL**"))))
+        (call_expr type="<null>" isolation_crossing="none"
+          (unresolved_dot_expr type="<null>" field="accessibilityIdentifier" function_ref=unapplied
+            (unresolved_decl_ref_expr type="<null>" name="view" function_ref=unapplied))
+          (argument_list
+            (argument
+              (string_literal_expr type="<null>" encoding=utf8 value="native-document" builtin_initializer="**NULL**" initializer="**NULL**"))))
+        (call_expr type="<null>" isolation_crossing="none"
+          (unresolved_dot_expr type="<null>" field="accessibilityIdentifier" function_ref=unapplied
+            (call_expr type="<null>" isolation_crossing="none"
+              (unresolved_decl_ref_expr type="<null>" name="Text" function_ref=unapplied)
+              (argument_list
+                (argument
+                  (unresolved_decl_ref_expr type="<null>" name="x" function_ref=unapplied)))))
+          (argument_list
+            (argument
+              (string_literal_expr type="<null>" encoding=utf8 value="native document" builtin_initializer="**NULL**" initializer="**NULL**"))))
+        (pattern_binding_decl range=[excused.swift:17:9 - line:17:52]
+          (pattern_named "url")
+          (original_init=call_expr type="<null>" isolation_crossing="none"
+            (unresolved_decl_ref_expr type="<null>" name="URL" function_ref=unapplied)
+            (argument_list labels="string:"
+              (argument label="string"
+                (string_literal_expr type="<null>" encoding=utf8 value="https://example.org" builtin_initializer="**NULL**" initializer="**NULL**"))))
+          (processed_init=call_expr type="<null>" isolation_crossing="none"
+            (unresolved_decl_ref_expr type="<null>" name="URL" function_ref=unapplied)
+            (argument_list labels="string:"
+              (argument label="string"
+                (string_literal_expr type="<null>" encoding=utf8 value="https://example.org" builtin_initializer="**NULL**" initializer="**NULL**")))))
+        (var_decl range=[excused.swift:17:13 - line:17:13] "url" let)
+        (pattern_binding_decl range=[excused.swift:18:9 - line:18:22]
+          (pattern_named "jsName")
+          (original_init=string_literal_expr type="<null>" encoding=utf8 value="NativeRouter" builtin_initializer="**NULL**" initializer="**NULL**")
+          (processed_init=string_literal_expr type="<null>" encoding=utf8 value="NativeRouter" builtin_initializer="**NULL**" initializer="**NULL**"))
+        (var_decl range=[excused.swift:18:13 - line:18:13] "jsName" let)
+        (call_expr type="<null>" isolation_crossing="none"
+          (unresolved_dot_expr type="<null>" field="move" function_ref=unapplied
+            (unresolved_decl_ref_expr type="<null>" name="path" function_ref=unapplied))
+          (argument_list
+            (argument
+              (string_literal_expr type="<null>" encoding=utf8 value="M" builtin_initializer="**NULL**" initializer="**NULL**"))))
+        (pattern_binding_decl range=[excused.swift:20:9 - line:20:24]
+          (pattern_named "template")
+          (original_init=interpolated_string_literal_expr type="<null>" literal_capacity=8 interpolation_count=2 builder_init="**NULL**" result_init="**NULL**"
+            (tap_expr implicit type="<null>" var="excused.(file).Excused.run().$interpolation"
+              (<null expr>)
+              (brace_stmt implicit range=[excused.swift:20:25 - line:20:47]
+                (var_decl implicit "$interpolation")
+                (call_expr implicit type="<null>" isolation_crossing="none"
+                  (unresolved_dot_expr implicit type="<null>" field="appendLiteral(_:)" function_ref=unapplied
+                    (declref_expr implicit type="<null>" decl="excused.(file).Excused.run().$interpolation" function_ref=unapplied))
+                  (argument_list implicit
+                    (argument
+                      (string_literal_expr type="<null>" encoding=utf8 value="" builtin_initializer="**NULL**" initializer="**NULL**"))))
+                (call_expr type="<null>" isolation_crossing="none"
+                  (unresolved_dot_expr implicit type="<null>" field="appendInterpolation" function_ref=unapplied
+                    (declref_expr implicit type="<null>" decl="excused.(file).Excused.run().$interpolation" function_ref=unapplied))
+                  (argument_list
+                    (argument
+                      (unresolved_decl_ref_expr type="<null>" name="scheme" function_ref=unapplied))))
+                (call_expr implicit type="<null>" isolation_crossing="none"
+                  (unresolved_dot_expr implicit type="<null>" field="appendLiteral(_:)" function_ref=unapplied
+                    (declref_expr implicit type="<null>" decl="excused.(file).Excused.run().$interpolation" function_ref=unapplied))
+                  (argument_list implicit
+                    (argument
+                      (string_literal_expr type="<null>" encoding=utf8 value="://link/" builtin_initializer="**NULL**" initializer="**NULL**"))))
+                (call_expr type="<null>" isolation_crossing="none"
+                  (unresolved_dot_expr implicit type="<null>" field="appendInterpolation" function_ref=unapplied
+                    (declref_expr implicit type="<null>" decl="excused.(file).Excused.run().$interpolation" function_ref=unapplied))
+                  (argument_list
+                    (argument
+                      (unresolved_decl_ref_expr type="<null>" name="id" function_ref=unapplied))))
+                (call_expr implicit type="<null>" isolation_crossing="none"
+                  (unresolved_dot_expr implicit type="<null>" field="appendLiteral(_:)" function_ref=unapplied
+                    (declref_expr implicit type="<null>" decl="excused.(file).Excused.run().$interpolation" function_ref=unapplied))
+                  (argument_list implicit
+                    (argument
+                      (string_literal_expr type="<null>" encoding=utf8 value="" builtin_initializer="**NULL**" initializer="**NULL**")))))))
+          (processed_init=interpolated_string_literal_expr type="<null>" literal_capacity=8 interpolation_count=2 builder_init="**NULL**" result_init="**NULL**"
+            (tap_expr implicit type="<null>" var="excused.(file).Excused.run().$interpolation"
+              (<null expr>)
+              (brace_stmt implicit range=[excused.swift:20:25 - line:20:47]
+                (var_decl implicit "$interpolation")
+                (call_expr implicit type="<null>" isolation_crossing="none"
+                  (unresolved_dot_expr implicit type="<null>" field="appendLiteral(_:)" function_ref=unapplied
+                    (declref_expr implicit type="<null>" decl="excused.(file).Excused.run().$interpolation" function_ref=unapplied))
+                  (argument_list implicit
+                    (argument
+                      (string_literal_expr type="<null>" encoding=utf8 value="" builtin_initializer="**NULL**" initializer="**NULL**"))))
+                (call_expr type="<null>" isolation_crossing="none"
+                  (unresolved_dot_expr implicit type="<null>" field="appendInterpolation" function_ref=unapplied
+                    (declref_expr implicit type="<null>" decl="excused.(file).Excused.run().$interpolation" function_ref=unapplied))
+                  (argument_list
+                    (argument
+                      (unresolved_decl_ref_expr type="<null>" name="scheme" function_ref=unapplied))))
+                (call_expr implicit type="<null>" isolation_crossing="none"
+                  (unresolved_dot_expr implicit type="<null>" field="appendLiteral(_:)" function_ref=unapplied
+                    (declref_expr implicit type="<null>" decl="excused.(file).Excused.run().$interpolation" function_ref=unapplied))
+                  (argument_list implicit
+                    (argument
+                      (string_literal_expr type="<null>" encoding=utf8 value="://link/" builtin_initializer="**NULL**" initializer="**NULL**"))))
+                (call_expr type="<null>" isolation_crossing="none"
+                  (unresolved_dot_expr implicit type="<null>" field="appendInterpolation" function_ref=unapplied
+                    (declref_expr implicit type="<null>" decl="excused.(file).Excused.run().$interpolation" function_ref=unapplied))
+                  (argument_list
+                    (argument
+                      (unresolved_decl_ref_expr type="<null>" name="id" function_ref=unapplied))))
+                (call_expr implicit type="<null>" isolation_crossing="none"
+                  (unresolved_dot_expr implicit type="<null>" field="appendLiteral(_:)" function_ref=unapplied
+                    (declref_expr implicit type="<null>" decl="excused.(file).Excused.run().$interpolation" function_ref=unapplied))
+                  (argument_list implicit
+                    (argument
+                      (string_literal_expr type="<null>" encoding=utf8 value="" builtin_initializer="**NULL**" initializer="**NULL**"))))))))
+        (var_decl range=[excused.swift:20:13 - line:20:13] "template" let)
+        (call_expr type="<null>" isolation_crossing="none"
+          (unresolved_dot_expr type="<null>" field="notifyListeners" function_ref=unapplied
+            (unresolved_decl_ref_expr type="<null>" name="self" function_ref=unapplied))
+          (argument_list labels="_:data:"
+            (argument
+              (string_literal_expr type="<null>" encoding=utf8 value="routeChanged" builtin_initializer="**NULL**" initializer="**NULL**"))
+            (argument label="data"
+              (dictionary_expr type="<null>" initializer="**NULL**"))))
+        (throw_stmt range=[excused.swift:22:9 - line:22:50]
+          (call_expr type="<null>" isolation_crossing="none"
+            (unresolved_dot_expr type="<null>" field="missing" function_ref=unapplied
+              (unresolved_decl_ref_expr type="<null>" name="Failure" function_ref=unapplied))
+            (argument_list
+              (argument
+                (string_literal_expr type="<null>" encoding=utf8 value="a thrown sentence" builtin_initializer="**NULL**" initializer="**NULL**")))))
+        (call_expr type="<null>" isolation_crossing="none"
+          (unresolved_decl_ref_expr type="<null>" name="fatalError" function_ref=unapplied)
+          (argument_list
+            (argument
+              (string_literal_expr type="<null>" encoding=utf8 value="an unreachable state" builtin_initializer="**NULL**" initializer="**NULL**"))))
+        (call_expr type="<null>" isolation_crossing="none"
+          (unresolved_dot_expr type="<null>" field="addUserScript" function_ref=unapplied
+            (unresolved_decl_ref_expr type="<null>" name="controller" function_ref=unapplied))
+          (argument_list
+            (argument
+              (call_expr type="<null>" isolation_crossing="none"
+                (unresolved_decl_ref_expr type="<null>" name="WKUserScript" function_ref=unapplied)
+                (argument_list labels="source:injectionTime:forMainFrameOnly:"
+                  (argument label="source"
+                    (string_literal_expr type="<null>" encoding=utf8 value="(function () { console.info(\"How2Vote: ready\"); })();" builtin_initializer="**NULL**" initializer="**NULL**"))
+                  (argument label="injectionTime"
+                    (unresolved_member_expr type="<null>" name="atDocumentStart" function_ref=unapplied))
+                  (argument label="forMainFrameOnly"
+                    (boolean_literal_expr type="<null>" value=true builtin_initializer="**NULL**" initializer="**NULL**"))))))))))
+  (struct_decl range=[excused.swift:30:1 - line:42:1] "MoreExcused"
+    (pattern_binding_decl range=[excused.swift:31:5 - line:31:36]
+      (pattern_named "preferencesPrefix")
+      (original_init=string_literal_expr type="<null>" encoding=utf8 value="CapacitorStorage." builtin_initializer="**NULL**" initializer="**NULL**")
+      (processed_init=string_literal_expr type="<null>" encoding=utf8 value="CapacitorStorage." builtin_initializer="**NULL**" initializer="**NULL**"))
+    (var_decl range=[excused.swift:31:16 - line:31:16] "preferencesPrefix" let static)
+    (func_decl range=[excused.swift:32:5 - line:41:5] "run()"
+      (parameter "self") thrown_type="<null>"
+      (parameter_list range=[excused.swift:32:13 - line:32:14])
+      (brace_stmt range=[excused.swift:32:16 - line:41:5]
+        (pattern_binding_decl range=[excused.swift:33:9 - line:33:49]
+          (pattern_named "n")
+          (original_init=sequence_expr type="<null>"
+            (subscript_expr type="<null>"
+              (unresolved_dot_expr type="<null>" field="counts" function_ref=unapplied
+                (unresolved_decl_ref_expr type="<null>" name="manifest" function_ref=unapplied))
+              (argument_list
+                (argument
+                  (string_literal_expr type="<null>" encoding=utf8 value="questions" builtin_initializer="**NULL**" initializer="**NULL**"))))
+            (unresolved_decl_ref_expr type="<null>" name="??" function_ref=unapplied)
+            (integer_literal_expr type="<null>" value="0" builtin_initializer="**NULL**" initializer="**NULL**"))
+          (processed_init=sequence_expr type="<null>"
+            (subscript_expr type="<null>"
+              (unresolved_dot_expr type="<null>" field="counts" function_ref=unapplied
+                (unresolved_decl_ref_expr type="<null>" name="manifest" function_ref=unapplied))
+              (argument_list
+                (argument
+                  (string_literal_expr type="<null>" encoding=utf8 value="questions" builtin_initializer="**NULL**" initializer="**NULL**"))))
+            (unresolved_decl_ref_expr type="<null>" name="??" function_ref=unapplied)
+            (integer_literal_expr type="<null>" value="0" builtin_initializer="**NULL**" initializer="**NULL**")))
+        (var_decl range=[excused.swift:33:13 - line:33:13] "n" let)
+        (pattern_binding_decl range=[excused.swift:34:9 - line:34:66]
+          (pattern_named "page")
+          (original_init=try_expr type="<null>"
+            (call_expr type="<null>" isolation_crossing="none"
+              (unresolved_dot_expr type="<null>" field="load" function_ref=unapplied
+                (unresolved_decl_ref_expr type="<null>" name="NativeDocument" function_ref=unapplied))
+              (argument_list labels="name:"
+                (argument label="name"
+                  (string_literal_expr type="<null>" encoding=utf8 value="states/landing" builtin_initializer="**NULL**" initializer="**NULL**")))))
+          (processed_init=try_expr type="<null>"
+            (call_expr type="<null>" isolation_crossing="none"
+              (unresolved_dot_expr type="<null>" field="load" function_ref=unapplied
+                (unresolved_decl_ref_expr type="<null>" name="NativeDocument" function_ref=unapplied))
+              (argument_list labels="name:"
+                (argument label="name"
+                  (string_literal_expr type="<null>" encoding=utf8 value="states/landing" builtin_initializer="**NULL**" initializer="**NULL**"))))))
+        (var_decl range=[excused.swift:34:13 - line:34:13] "page" let)
+        (pattern_binding_decl range=[excused.swift:35:9 - line:35:46]
+          (pattern_named "hex")
+          (original_init=call_expr type="<null>" isolation_crossing="none"
+            (unresolved_decl_ref_expr type="<null>" name="String" function_ref=unapplied)
+            (argument_list labels="format:_:"
+              (argument label="format"
+                (string_literal_expr type="<null>" encoding=utf8 value="%02x" builtin_initializer="**NULL**" initializer="**NULL**"))
+              (argument
+                (unresolved_decl_ref_expr type="<null>" name="byte" function_ref=unapplied))))
+          (processed_init=call_expr type="<null>" isolation_crossing="none"
+            (unresolved_decl_ref_expr type="<null>" name="String" function_ref=unapplied)
+            (argument_list labels="format:_:"
+              (argument label="format"
+                (string_literal_expr type="<null>" encoding=utf8 value="%02x" builtin_initializer="**NULL**" initializer="**NULL**"))
+              (argument
+                (unresolved_decl_ref_expr type="<null>" name="byte" function_ref=unapplied)))))
+        (var_decl range=[excused.swift:35:13 - line:35:13] "hex" let)
+        (call_expr type="<null>" isolation_crossing="none"
+          (unresolved_decl_ref_expr type="<null>" name="Text" function_ref=unapplied)
+          (argument_list
+            (argument
+              (string_literal_expr type="<null>" encoding=utf8 value="" builtin_initializer="**NULL**" initializer="**NULL**"))))
+        (call_expr type="<null>" isolation_crossing="none"
+          (unresolved_decl_ref_expr type="<null>" name="Text" function_ref=unapplied)
+          (argument_list
+            (argument
+              (interpolated_string_literal_expr type="<null>" literal_capacity=1 interpolation_count=1 builder_init="**NULL**" result_init="**NULL**"
+                (tap_expr implicit type="<null>" var="excused.(file).MoreExcused.run().$interpolation"
+                  (<null expr>)
+                  (brace_stmt implicit range=[excused.swift:37:15 - line:37:23]
+                    (var_decl implicit "$interpolation")
+                    (call_expr implicit type="<null>" isolation_crossing="none"
+                      (unresolved_dot_expr implicit type="<null>" field="appendLiteral(_:)" function_ref=unapplied
+                        (declref_expr implicit type="<null>" decl="excused.(file).MoreExcused.run().$interpolation" function_ref=unapplied))
+                      (argument_list implicit
+                        (argument
+                          (string_literal_expr type="<null>" encoding=utf8 value="" builtin_initializer="**NULL**" initializer="**NULL**"))))
+                    (call_expr type="<null>" isolation_crossing="none"
+                      (unresolved_dot_expr implicit type="<null>" field="appendInterpolation" function_ref=unapplied
+                        (declref_expr implicit type="<null>" decl="excused.(file).MoreExcused.run().$interpolation" function_ref=unapplied))
+                      (argument_list
+                        (argument
+                          (unresolved_decl_ref_expr type="<null>" name="index" function_ref=unapplied))))
+                    (call_expr implicit type="<null>" isolation_crossing="none"
+                      (unresolved_dot_expr implicit type="<null>" field="appendLiteral(_:)" function_ref=unapplied
+                        (declref_expr implicit type="<null>" decl="excused.(file).MoreExcused.run().$interpolation" function_ref=unapplied))
+                      (argument_list implicit
+                        (argument
+                          (string_literal_expr type="<null>" encoding=utf8 value="." builtin_initializer="**NULL**" initializer="**NULL**"))))))))))
+        (call_expr type="<null>" isolation_crossing="none"
+          (unresolved_decl_ref_expr type="<null>" name="NSLog" function_ref=unapplied)
+          (argument_list
+            (argument
+              (string_literal_expr type="<null>" encoding=utf8 value="a diagnostic in a debug build" builtin_initializer="**NULL**" initializer="**NULL**"))))))))

@@ -1,0 +1,60 @@
+{
+  "counted": {
+    "copy": [
+      "A \"raw\" sentence",
+      "A closure's sentence",
+      "A multi-line\nsentence",
+      "A sentence as an image name",
+      "A visible line",
+      "Answer updated: {}.",
+      "Ballot setup progress",
+      "Check your enrolment at https://check.aec.gov.au before election day",
+      "Done",
+      "Look up your electorate",
+      "Question {} of {}",
+      "Retry",
+      "Search {} ({}) seats",
+      "Shown as a value",
+      "Shown to the voter",
+      "Step",
+      "We couldn’t load this election — check your connection",
+      "Welcome back",
+      "Where will you vote?",
+      "all",
+      "appended outside the model"
+    ]
+  },
+  "excused": {
+    "copy": []
+  },
+  "model": {
+    "model": true,
+    "copy": []
+  },
+  "bypasses": {
+    "copy": [
+      "18+",
+      "An attribute's sentence",
+      "AustralianElectoralCommission",
+      "Bare helper shows this sentence",
+      "Default shown to voter",
+      "Get help now",
+      "Held for a script, shown instead",
+      "Inside an else",
+      "Inside an if",
+      "Senate/House",
+      "Shown as a banner's source",
+      "Shown by the web as a toast",
+      "Vote.",
+      "You're offline — reconnect and try again",
+      "You're offline — reconnect to continue",
+      "Your electorate could not be found",
+      "a lower-case line on a card",
+      "electorate-map",
+      "no",
+      "vote",
+      "yes",
+      "✓"
+    ]
+  }
+}

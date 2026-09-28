@@ -1,0 +1,209 @@
+(source_file "bypasses.swift"
+  (enum_decl range=[bypasses.swift:2:1 - line:5:1] "Tab" inherits="<null>"
+    (enum_case_decl range=[bypasses.swift:3:5 - line:3:17]
+      (enum_element_decl range=[bypasses.swift:3:10 - line:3:17] "help"))
+    (enum_element_decl range=[bypasses.swift:3:10 - line:3:17] "help")
+    (enum_case_decl range=[bypasses.swift:4:5 - line:4:16]
+      (enum_element_decl range=[bypasses.swift:4:10 - line:4:16] "key"))
+    (enum_element_decl range=[bypasses.swift:4:10 - line:4:16] "key"))
+  (struct_decl range=[bypasses.swift:8:1 - line:34:1] "Bypasses" inherits="<null>"
+    (available_attr range=[bypasses.swift:7:2 - line:7:61] platform=* deprecated message="An attribute's sentence")
+    (pattern_binding_decl range=[bypasses.swift:9:5 - line:27:5]
+      (pattern_typed
+        (pattern_named "body")
+        (type_opaque_return
+          (type_unqualified_ident id="View" unbound))))
+    (var_decl range=[bypasses.swift:9:9 - line:9:9] "body"
+      (accessor_decl range=[bypasses.swift:9:25 - line:27:5] <anonymous @ 0x61c2d74c8928> get for="body"
+        (parameter "self") thrown_type="<null>"
+        (parameter_list)
+        (brace_stmt range=[bypasses.swift:9:25 - line:27:5]
+          (call_expr type="<null>" isolation_crossing="none"
+            (unresolved_decl_ref_expr type="<null>" name="Text" function_ref=unapplied)
+            (argument_list
+              (argument
+                (string_literal_expr type="<null>" encoding=utf8 value="Inside an if" builtin_initializer="**NULL**" initializer="**NULL**"))))
+          (call_expr type="<null>" isolation_crossing="none"
+            (unresolved_decl_ref_expr type="<null>" name="Text" function_ref=unapplied)
+            (argument_list
+              (argument
+                (string_literal_expr type="<null>" encoding=utf8 value="Inside an else" builtin_initializer="**NULL**" initializer="**NULL**"))))
+          (call_expr type="<null>" isolation_crossing="none"
+            (unresolved_decl_ref_expr type="<null>" name="Text" function_ref=unapplied)
+            (argument_list
+              (argument
+                (string_literal_expr type="<null>" encoding=utf8 value="vote" builtin_initializer="**NULL**" initializer="**NULL**"))))
+          (call_expr type="<null>" isolation_crossing="none"
+            (unresolved_decl_ref_expr type="<null>" name="Text" function_ref=unapplied)
+            (argument_list
+              (argument
+                (sequence_expr type="<null>"
+                  (unresolved_decl_ref_expr type="<null>" name="isOn" function_ref=unapplied)
+                  (ternary_expr type="<null>"
+                    (<null expr>)
+                    (string_literal_expr type="<null>" encoding=utf8 value="yes" builtin_initializer="**NULL**" initializer="**NULL**")
+                    (<null expr>))
+                  (string_literal_expr type="<null>" encoding=utf8 value="no" builtin_initializer="**NULL**" initializer="**NULL**")))))
+          (call_expr type="<null>" isolation_crossing="none"
+            (unresolved_decl_ref_expr type="<null>" name="Text" function_ref=unapplied)
+            (argument_list
+              (argument
+                (string_literal_expr type="<null>" encoding=utf8 value="Vote." builtin_initializer="**NULL**" initializer="**NULL**"))))
+          (call_expr type="<null>" isolation_crossing="none"
+            (unresolved_decl_ref_expr type="<null>" name="Text" function_ref=unapplied)
+            (argument_list
+              (argument
+                (string_literal_expr type="<null>" encoding=utf8 value="Senate/House" builtin_initializer="**NULL**" initializer="**NULL**"))))
+          (call_expr type="<null>" isolation_crossing="none"
+            (unresolved_decl_ref_expr type="<null>" name="Text" function_ref=unapplied)
+            (argument_list
+              (argument
+                (string_literal_expr type="<null>" encoding=utf8 value="\xE2\x9C\x93" builtin_initializer="**NULL**" initializer="**NULL**"))))
+          (call_expr type="<null>" isolation_crossing="none"
+            (unresolved_decl_ref_expr type="<null>" name="Text" function_ref=unapplied)
+            (argument_list
+              (argument
+                (string_literal_expr type="<null>" encoding=utf8 value="18+" builtin_initializer="**NULL**" initializer="**NULL**"))))
+          (call_expr type="<null>" isolation_crossing="none"
+            (unresolved_decl_ref_expr type="<null>" name="Text" function_ref=unapplied)
+            (argument_list
+              (argument
+                (interpolated_string_literal_expr type="<null>" literal_capacity=1 interpolation_count=2 builder_init="**NULL**" result_init="**NULL**"
+                  (tap_expr implicit type="<null>" var="bypasses.(file).Bypasses.<anonymous>.$interpolation"
+                    (<null expr>)
+                    (brace_stmt implicit range=[bypasses.swift:21:15 - line:21:28]
+                      (var_decl implicit "$interpolation")
+                      (call_expr implicit type="<null>" isolation_crossing="none"
+                        (unresolved_dot_expr implicit type="<null>" field="appendLiteral(_:)" function_ref=unapplied
+                          (declref_expr implicit type="<null>" decl="bypasses.(file).Bypasses.<anonymous>.$interpolation" function_ref=unapplied))
+                        (argument_list implicit
+                          (argument
+                            (string_literal_expr type="<null>" encoding=utf8 value="" builtin_initializer="**NULL**" initializer="**NULL**"))))
+                      (call_expr type="<null>" isolation_crossing="none"
+                        (unresolved_dot_expr implicit type="<null>" field="appendInterpolation" function_ref=unapplied
+                          (declref_expr implicit type="<null>" decl="bypasses.(file).Bypasses.<anonymous>.$interpolation" function_ref=unapplied))
+                        (argument_list
+                          (argument
+                            (unresolved_decl_ref_expr type="<null>" name="n" function_ref=unapplied))))
+                      (call_expr implicit type="<null>" isolation_crossing="none"
+                        (unresolved_dot_expr implicit type="<null>" field="appendLiteral(_:)" function_ref=unapplied
+                          (declref_expr implicit type="<null>" decl="bypasses.(file).Bypasses.<anonymous>.$interpolation" function_ref=unapplied))
+                        (argument_list implicit
+                          (argument
+                            (string_literal_expr type="<null>" encoding=utf8 value="/" builtin_initializer="**NULL**" initializer="**NULL**"))))
+                      (call_expr type="<null>" isolation_crossing="none"
+                        (unresolved_dot_expr implicit type="<null>" field="appendInterpolation" function_ref=unapplied
+                          (declref_expr implicit type="<null>" decl="bypasses.(file).Bypasses.<anonymous>.$interpolation" function_ref=unapplied))
+                        (argument_list
+                          (argument
+                            (unresolved_decl_ref_expr type="<null>" name="total" function_ref=unapplied))))
+                      (call_expr implicit type="<null>" isolation_crossing="none"
+                        (unresolved_dot_expr implicit type="<null>" field="appendLiteral(_:)" function_ref=unapplied
+                          (declref_expr implicit type="<null>" decl="bypasses.(file).Bypasses.<anonymous>.$interpolation" function_ref=unapplied))
+                        (argument_list implicit
+                          (argument
+                            (string_literal_expr type="<null>" encoding=utf8 value="" builtin_initializer="**NULL**" initializer="**NULL**"))))))))))
+          (call_expr type="<null>" isolation_crossing="none"
+            (unresolved_decl_ref_expr type="<null>" name="Label" function_ref=unapplied)
+            (argument_list labels="_:systemImage:"
+              (argument
+                (string_literal_expr type="<null>" encoding=utf8 value="AustralianElectoralCommission" builtin_initializer="**NULL**" initializer="**NULL**"))
+              (argument label="systemImage"
+                (string_literal_expr type="<null>" encoding=utf8 value="star" builtin_initializer="**NULL**" initializer="**NULL**"))))
+          (call_expr type="<null>" isolation_crossing="none"
+            (unresolved_decl_ref_expr type="<null>" name="accessibilityIdentifier" function_ref=unapplied)
+            (argument_list
+              (argument
+                (string_literal_expr type="<null>" encoding=utf8 value="Bare helper shows this sentence" builtin_initializer="**NULL**" initializer="**NULL**"))))
+          (call_expr type="<null>" isolation_crossing="none"
+            (unresolved_dot_expr type="<null>" field="accessibilityLabel" function_ref=unapplied
+              (call_expr type="<null>" isolation_crossing="none"
+                (unresolved_decl_ref_expr type="<null>" name="Text" function_ref=unapplied)
+                (argument_list
+                  (argument
+                    (unresolved_decl_ref_expr type="<null>" name="x" function_ref=unapplied)))))
+            (argument_list
+              (argument
+                (string_literal_expr type="<null>" encoding=utf8 value="electorate-map" builtin_initializer="**NULL**" initializer="**NULL**"))))
+          (call_expr type="<null>" isolation_crossing="none"
+            (unresolved_decl_ref_expr type="<null>" name="Banner" function_ref=unapplied)
+            (argument_list labels="source:"
+              (argument label="source"
+                (string_literal_expr type="<null>" encoding=utf8 value="Shown as a banner's source" builtin_initializer="**NULL**" initializer="**NULL**"))))
+          (pattern_binding_decl range=[bypasses.swift:26:9 - line:26:22]
+            (pattern_named "script")
+            (original_init=string_literal_expr type="<null>" encoding=utf8 value="Held for a script, shown instead" builtin_initializer="**NULL**" initializer="**NULL**")
+            (processed_init=string_literal_expr type="<null>" encoding=utf8 value="Held for a script, shown instead" builtin_initializer="**NULL**" initializer="**NULL**"))
+          (var_decl range=[bypasses.swift:26:13 - line:26:13] "script" let))))
+    (func_decl range=[bypasses.swift:28:5 - line:33:5] "bridge()"
+      (parameter "self") thrown_type="<null>"
+      (parameter_list range=[bypasses.swift:28:16 - line:28:17])
+      (brace_stmt range=[bypasses.swift:28:19 - line:33:5]
+        (pattern_binding_decl range=[bypasses.swift:29:9 - line:29:69]
+          (pattern_named "title")
+          (original_init=call_expr type="<null>" isolation_crossing="none"
+            (unresolved_dot_expr type="<null>" field="getString" function_ref=unapplied
+              (unresolved_decl_ref_expr type="<null>" name="call" function_ref=unapplied))
+            (argument_list
+              (argument
+                (string_literal_expr type="<null>" encoding=utf8 value="title" builtin_initializer="**NULL**" initializer="**NULL**"))
+              (argument
+                (string_literal_expr type="<null>" encoding=utf8 value="Default shown to voter" builtin_initializer="**NULL**" initializer="**NULL**"))))
+          (processed_init=call_expr type="<null>" isolation_crossing="none"
+            (unresolved_dot_expr type="<null>" field="getString" function_ref=unapplied
+              (unresolved_decl_ref_expr type="<null>" name="call" function_ref=unapplied))
+            (argument_list
+              (argument
+                (string_literal_expr type="<null>" encoding=utf8 value="title" builtin_initializer="**NULL**" initializer="**NULL**"))
+              (argument
+                (string_literal_expr type="<null>" encoding=utf8 value="Default shown to voter" builtin_initializer="**NULL**" initializer="**NULL**")))))
+        (var_decl range=[bypasses.swift:29:13 - line:29:13] "title" let)
+        (call_expr type="<null>" isolation_crossing="none"
+          (unresolved_dot_expr type="<null>" field="notifyListeners" function_ref=unapplied
+            (unresolved_decl_ref_expr type="<null>" name="self" function_ref=unapplied))
+          (argument_list labels="_:data:"
+            (argument
+              (string_literal_expr type="<null>" encoding=utf8 value="toast" builtin_initializer="**NULL**" initializer="**NULL**"))
+            (argument label="data"
+              (dictionary_expr type="<null>" initializer="**NULL**"
+                (tuple_expr implicit type="<null>"
+                  (string_literal_expr type="<null>" encoding=utf8 value="message" builtin_initializer="**NULL**" initializer="**NULL**")
+                  (string_literal_expr type="<null>" encoding=utf8 value="Shown by the web as a toast" builtin_initializer="**NULL**" initializer="**NULL**"))))))
+        (call_expr type="<null>" isolation_crossing="none"
+          (unresolved_dot_expr type="<null>" field="reject" function_ref=unapplied
+            (unresolved_decl_ref_expr type="<null>" name="call" function_ref=unapplied))
+          (argument_list
+            (argument
+              (string_literal_expr type="<null>" encoding=utf8 value="You're offline \xE2\x80\x94 reconnect and try again" builtin_initializer="**NULL**" initializer="**NULL**"))))
+        (throw_stmt range=[bypasses.swift:32:9 - line:32:67]
+          (call_expr type="<null>" isolation_crossing="none"
+            (unresolved_dot_expr type="<null>" field="missing" function_ref=unapplied
+              (unresolved_decl_ref_expr type="<null>" name="Failure" function_ref=unapplied))
+            (argument_list
+              (argument
+                (string_literal_expr type="<null>" encoding=utf8 value="Your electorate could not be found" builtin_initializer="**NULL**" initializer="**NULL**"))))))))
+  (enum_decl range=[bypasses.swift:36:1 - line:39:1] "Notice" inherits="<null>, <null>"
+    (enum_case_decl range=[bypasses.swift:37:5 - line:37:10]
+      (enum_element_decl range=[bypasses.swift:37:10 - line:37:10] "offline"))
+    (enum_element_decl range=[bypasses.swift:37:10 - line:37:10] "offline")
+    (pattern_binding_decl range=[bypasses.swift:38:5 - line:38:74]
+      (pattern_typed
+        (pattern_named "description")
+        (type_unqualified_ident id="String" unbound)))
+    (var_decl range=[bypasses.swift:38:9 - line:38:9] "description"
+      (accessor_decl range=[bypasses.swift:38:29 - line:38:74] <anonymous @ 0x61c2d7503070> get for="description"
+        (parameter "self") thrown_type="<null>"
+        (parameter_list)
+        (brace_stmt range=[bypasses.swift:38:29 - line:38:74]
+          (string_literal_expr type="<null>" encoding=utf8 value="You're offline \xE2\x80\x94 reconnect to continue" builtin_initializer="**NULL**" initializer="**NULL**")))))
+  (struct_decl range=[bypasses.swift:41:1 - line:43:1] "Card" inherits="<null>"
+    (pattern_binding_decl range=[bypasses.swift:42:5 - line:42:61]
+      (pattern_typed
+        (pattern_named "description")
+        (type_unqualified_ident id="String" unbound)))
+    (var_decl range=[bypasses.swift:42:9 - line:42:9] "description"
+      (accessor_decl range=[bypasses.swift:42:29 - line:42:61] <anonymous @ 0x61c2d7503560> get for="description"
+        (parameter "self") thrown_type="<null>"
+        (parameter_list)
+        (brace_stmt range=[bypasses.swift:42:29 - line:42:61]
+          (string_literal_expr type="<null>" encoding=utf8 value="a lower-case line on a card" builtin_initializer="**NULL**" initializer="**NULL**"))))))

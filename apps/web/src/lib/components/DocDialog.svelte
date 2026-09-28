@@ -1,4 +1,6 @@
 <script lang="ts">
+  import { DOC_DIALOG_COPY } from "$lib/doc-dialog-copy";
+  import { fill } from "$lib/template";
   // A reference document shown OVER the current page instead of navigating to it.
   //
   // Used where following a link would abandon a decision in progress — the consent banner and the
@@ -54,7 +56,12 @@
 <dialog bind:this={dialog} class="doc" aria-labelledby={titleId} {onclose}>
   <div class="head">
     <h2 id={titleId}>{title}</h2>
-    <button type="button" class="x" onclick={requestClose} aria-label="Close {title}">×</button>
+    <button
+      type="button"
+      class="x"
+      onclick={requestClose}
+      aria-label={fill(DOC_DIALOG_COPY.close, { title })}>×</button
+    >
   </div>
 
   <!-- The document itself, scrollable. `.prose` is the same global class the route uses, so this is
@@ -69,7 +76,7 @@
          inside the native shells, hand the document to the system browser and drop the reader out
          of the app entirely — a stranger outcome than the navigation they asked for. -->
     <a class="full" {href}>Open the full page</a>
-    <button type="button" class="btn" onclick={requestClose}>Done</button>
+    <button type="button" class="btn" onclick={requestClose}>{DOC_DIALOG_COPY.done}</button>
   </div>
 </dialog>
 

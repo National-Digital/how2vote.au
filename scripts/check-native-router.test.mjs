@@ -10,6 +10,7 @@ const COMMITTED = {
   plugin: read("../apps/mobile/ios/App/App/Shell/NativeRouterPlugin.swift"),
   web: read("../apps/web/src/lib/channel.ts"),
   caller: read("../apps/web/src/lib/native-router.svelte.ts"),
+  actions: read("../apps/web/src/lib/native-screen-actions.ts"),
 };
 
 const mutate = (over) => verifyRouterWiring({ ...COMMITTED, ...over }).join(" ");
@@ -93,5 +94,36 @@ describe("verifyRouterWiring", () => {
 
   it("fails closed with no bridge subclass at all", () => {
     expect(mutate({ controller: "" })).toContain("nothing can register an app-target plugin");
+  });
+
+  it("catches an event the web never listens for", () => {
+    expect(
+      mutate({
+        caller: COMMITTED.caller.replace('"nativeScreenAction"', '"x"'),
+      }),
+    ).toContain("emits `nativeScreenAction`, which nothing on the web listens for");
+  });
+
+  it("catches a screen action the web does not know", () => {
+    expect(
+      mutate({
+        plugin: COMMITTED.plugin.replace('= "saved:clear"', '= "saved:wipe"'),
+      }),
+    ).toContain("a request the web does not know does nothing");
+  });
+
+  it("catches a listed screen action the web does not perform", () => {
+    expect(
+      mutate({
+        actions: COMMITTED.actions.replace('case "saved:remove":', 'case "saved:delete":'),
+      }),
+    ).toContain("which performScreenAction does not perform");
+  });
+
+  it("fails closed when either side's actions cannot be read", () => {
+    expect(mutate({ actions: "" })).toContain("the web declares no SCREEN_ACTIONS");
+    expect(mutate({ plugin: COMMITTED.plugin.replace(/enum ScreenAction[\s\S]*$/, "") })).toContain(
+      "declares no ScreenAction cases",
+    );
   });
 });

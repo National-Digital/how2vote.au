@@ -10,8 +10,8 @@ import SwiftUI
 ///
 /// The AEC's derivative-product notice is displayed with the map, not tucked behind a link: the
 /// Spatial Data Download licence requires the prescribed wording wherever the data is shown, and a
-/// bare attribution credit does not satisfy it. The wording is `LegalCopy`, generated from the same
-/// source record the web reads (`docs/legal/native-copy.json`), so it cannot drift.
+/// bare attribution credit does not satisfy it. The wording is the web's, from `states/ballot`, which
+/// renders it from the same source record the web's map reads, so it cannot drift.
 ///
 /// Renders nothing at all when the map is unavailable — withheld by the emergency levers, missing,
 /// or unreadable. The text confirmation above it stands alone, exactly as on the web.
@@ -20,6 +20,11 @@ struct ElectorateMapView: View {
 
     let map: StateMap
     let electorate: String
+    /// The map's accessible name, as the web's map names it.
+    let label: String
+    /// The prescribed licence notice, a paragraph each, and the licence's own link.
+    let licence: [String]
+    let licenceLink: (name: String, url: URL)
 
     private var chosen: StateMap.Division? {
         map.division(named: electorate)
@@ -57,24 +62,24 @@ struct ElectorateMapView: View {
                 // Caps the height so the confirm button stays above the fold on tall states.
                 .frame(maxHeight: 320)
                 .accessibilityElement()
-                .accessibilityLabel("Map of \(map.state) with the \(electorate) electorate marked")
+                .accessibilityLabel(label)
 
-                Text(licence)
-                    .font(.caption2)
+                Text(map.attribution)
+                    .font(.caption2.weight(.semibold))
                     .foregroundStyle(Theme.ink2.resolve(scheme))
                     .fixedSize(horizontal: false, vertical: true)
+
+                ForEach(Array(licence.enumerated()), id: \.offset) { _, paragraph in
+                    Text(paragraph)
+                        .font(.caption2)
+                        .foregroundStyle(Theme.ink2.resolve(scheme))
+                        .fixedSize(horizontal: false, vertical: true)
+                }
+
+                ExternalLinkView(title: licenceLink.name, url: licenceLink.url)
+                    .font(.caption2)
             }
         }
-    }
-
-    /// The prescribed derivative-product notice, in the order the licence sets out.
-    private var licence: String {
-        [
-            LegalCopy.mapLicenceIncorporates,
-            LegalCopy.mapLicencePermission,
-            LegalCopy.mapLicenceNoWarranty,
-            LegalCopy.mapLicencePersonalUse,
-        ].joined(separator: "\n\n")
     }
 
     private func shape(for division: StateMap.Division, scale: CGFloat) -> Path {

@@ -8,9 +8,10 @@
   // and the copy-lint guard can never drift — and it is a CAPACITY declaration (natural person, not
   // an organisation, not a foreign campaigner), so the "who may use the Service" limit is actively
   // affirmed at every gated action.
-  import DocLink from "./DocLink.svelte";
+  import TermsGateIntro from "./TermsGateIntro.svelte";
   import { termsAcceptance } from "$lib/terms.svelte";
-  import { TERMS_ACCEPTANCE_LABEL, TERMS_GATE_INTRO, TERMS_GATE_LABEL } from "$lib/terms/terms";
+  import { TERMS_GATE_COPY } from "$lib/terms-gate-copy";
+  import { TERMS_ACCEPTANCE_LABEL, TERMS_GATE_LABEL } from "$lib/terms/terms";
 
   let { onaccept, oncancel }: { onaccept: () => void; oncancel: () => void } = $props();
 
@@ -24,20 +25,16 @@
 </script>
 
 <div class="terms-gate ui" role="group" aria-label={TERMS_GATE_LABEL}>
-  <p>
-    <!-- Opens over the gate: navigating away to read the terms would discard the pending
-         acceptance and leave no route back to it. -->
-    {TERMS_GATE_INTRO} See our <DocLink href="/terms">Terms of Use</DocLink>.
-  </p>
+  <p><TermsGateIntro /></p>
   <label class="terms-check">
     <input type="checkbox" bind:checked />
     <span>{TERMS_ACCEPTANCE_LABEL}</span>
   </label>
   <div class="terms-actions">
     <button type="button" class="btn" disabled={!checked} onclick={confirm}>
-      Accept and continue
+      {TERMS_GATE_COPY.accept}
     </button>
-    <button type="button" class="btn ghost" onclick={oncancel}> Cancel </button>
+    <button type="button" class="btn ghost" onclick={oncancel}>{TERMS_GATE_COPY.cancel}</button>
   </div>
 </div>
 

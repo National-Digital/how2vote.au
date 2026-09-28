@@ -19,6 +19,10 @@
  *
  * None of that is visible to the compiler, to the simulator launch check, or to a reviewer reading
  * either side on its own. It is four literals agreeing, so it is checkable without running anything.
+ *
+ * The same holds the other way. Every event the plugin emits must have a listener on the web, and
+ * every request a native screen makes of the web (`ScreenAction`) must be one the web performs: an
+ * unheard event is a native control that looks like it works and does nothing.
  */
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
@@ -30,6 +34,7 @@ import { fileURLToPath } from "node:url";
  * @param {string} input.plugin  NativeRouterPlugin.swift
  * @param {string} input.web  the module that looks the plugin up
  * @param {string} input.caller  the module that calls its methods
+ * @param {string} input.actions  the module that performs the native screens' requests
  * @returns {string[]}
  */
 export function verifyRouterWiring(input) {
@@ -124,6 +129,36 @@ export function verifyRouterWiring(input) {
     }
   }
 
+  const events = [...plugin.matchAll(/private static let \w+Event = "(\w+)"/g)].map((m) => m[1]);
+  if (events.length === 0) errors.push("the plugin declares no events (fail closed)");
+  for (const name of events) {
+    if (!new RegExp(`addListener\\(\\s*"${name}"`).test(caller)) {
+      errors.push(
+        `the plugin emits \`${name}\`, which nothing on the web listens for — the native control ` +
+          `that sends it would do nothing`,
+      );
+    }
+  }
+
+  const actionsModule = input?.actions ?? "";
+  const enumBody = /enum ScreenAction\b[^{]*\{([\s\S]*?)\n\}/.exec(plugin)?.[1] ?? "";
+  const native = [...enumBody.matchAll(/case \w+ = "([^"]+)"/g)].map((m) => m[1]).sort();
+  const listed = /export const SCREEN_ACTIONS = \[([^\]]*)\] as const;/.exec(actionsModule)?.[1];
+  const performed = [...(listed ?? "").matchAll(/"([^"]+)"/g)].map((m) => m[1]).sort();
+  if (native.length === 0) errors.push("the plugin declares no ScreenAction cases (fail closed)");
+  if (listed === undefined) errors.push("the web declares no SCREEN_ACTIONS (fail closed)");
+  if (native.join(",") !== performed.join(",")) {
+    errors.push(
+      `the native screens ask for [${native.join(", ")}] and the web performs ` +
+        `[${performed.join(", ")}] — a request the web does not know does nothing`,
+    );
+  }
+  for (const name of performed) {
+    if (!actionsModule.includes(`case "${name}":`)) {
+      errors.push(`SCREEN_ACTIONS lists \`${name}\`, which performScreenAction does not perform`);
+    }
+  }
+
   return errors;
 }
 
@@ -144,6 +179,7 @@ function main() {
     plugin: read("apps/mobile/ios/App/App/Shell/NativeRouterPlugin.swift"),
     web: read("apps/web/src/lib/channel.ts"),
     caller: read("apps/web/src/lib/native-router.svelte.ts"),
+    actions: read("apps/web/src/lib/native-screen-actions.ts"),
   });
 
   if (errors.length > 0) {

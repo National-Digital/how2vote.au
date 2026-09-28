@@ -1,6 +1,11 @@
 import { describe, expect, it } from "vitest";
 import { readFileSync } from "node:fs";
-import { normaliseCopy, renderSwift, verifyNativeCopy } from "./check-native-copy.mjs";
+import {
+  normaliseCopy,
+  renderSwift,
+  verifyNativeCopy,
+  verifyProjected,
+} from "./check-native-copy.mjs";
 
 const url = (p) => new URL(p, import.meta.url);
 const REGISTRY = JSON.parse(readFileSync(url("../docs/legal/native-copy.json"), "utf8"));
@@ -55,7 +60,124 @@ describe("normaliseCopy", () => {
   });
 });
 
+describe("an entry drawn from a projected page", () => {
+  it("is still held verbatim to its web source", () => {
+    const drawn = entry({ drawnFrom: "states/review" });
+    expect(check({ entries: [drawn] }).ok).toBe(true);
+    expect(check({ entries: [drawn], webSources: { "web.svelte": "<p>Reworded.</p>" } }).ok).toBe(
+      false,
+    );
+  });
+
+  it("is drawn from a page the native router offers", () => {
+    const registry = { entries: [entry({ drawnFrom: "states/reveiw" })] };
+    const result = verifyNativeCopy({
+      registry,
+      webSources: { "web.svelte": `<p>${registry.entries[0].text}</p>` },
+      drawnSources: ["states/review", "site-chrome"],
+      generatedPath: "apps/mobile/ios/App/App/Generated/LegalCopy.swift",
+      generated: renderSwift(registry),
+    });
+    expect(result.errors.join(" ")).toContain("is not a page the native router offers");
+  });
+
+  it("may be drawn from the site chrome", () => {
+    const registry = { entries: [entry({ drawnFrom: "site-chrome" })] };
+    const result = verifyNativeCopy({
+      registry,
+      webSources: { "web.svelte": `<p>${registry.entries[0].text}</p>` },
+      drawnSources: ["states/review", "site-chrome"],
+      generatedPath: "apps/mobile/ios/App/App/Generated/LegalCopy.swift",
+      generated: renderSwift(registry),
+    });
+    expect(result.errors).toEqual([]);
+  });
+
+  it("is drawn by its section of the projected page, exactly", () => {
+    const drawn = entry({ drawnFrom: "states/review", section: "review-x" });
+    const registry = { entries: [drawn, entry({ id: "other" })] };
+    const page = (text, extra = []) => ({
+      blocks: [
+        ...extra,
+        { t: "section", id: "review-x", c: [{ t: "paragraph", c: [{ t: "text", s: text }] }] },
+      ],
+    });
+    expect(verifyProjected(registry, { "states/review": page(drawn.text) })).toEqual([]);
+    const reworded = verifyProjected(registry, { "states/review": page("Worded its own way.") });
+    expect(reworded.join(" ")).toContain('not "');
+    const added = verifyProjected(registry, { "states/review": page(`${drawn.text} And more.`) });
+    expect(added.join(" ")).toContain('not "');
+    // Found elsewhere on the page is not found in its own section.
+    const elsewhere = page("Other.", [
+      { t: "section", id: "review-y", c: [{ t: "paragraph", c: [{ t: "text", s: drawn.text }] }] },
+    ]);
+    expect(verifyProjected(registry, { "states/review": elsewhere })).not.toEqual([]);
+    const marked = {
+      blocks: [
+        {
+          t: "section",
+          id: "review-x",
+          c: [{ t: "paragraph", c: [{ t: "strong", c: [{ t: "text", s: drawn.text }] }] }],
+        },
+      ],
+    };
+    expect(verifyProjected(registry, { "states/review": marked }).join(" ")).toContain(
+      "marks the notice up (strong)",
+    );
+    expect(verifyProjected(registry, {}).join(" ")).toContain("fail closed");
+    const unnamed = { entries: [entry({ drawnFrom: "states/review" })] };
+    expect(verifyProjected(unnamed, { "states/review": page(drawn.text) }).join(" ")).toContain(
+      "names no section",
+    );
+  });
+
+  it("is a link's destination when it is one, with the link's cue left aside", () => {
+    const url = entry({
+      drawnFrom: "states/ballot",
+      section: "ballot-link",
+      text: "https://x.org/",
+    });
+    const name = entry({
+      id: "name",
+      drawnFrom: "states/ballot",
+      section: "ballot-link",
+      text: "X",
+    });
+    const link = {
+      t: "link",
+      href: "https://x.org/",
+      c: [
+        { t: "text", s: "X" },
+        { t: "text", s: " " },
+        { t: "glyph", s: "↗" },
+        { t: "hidden", c: [{ t: "text", s: " (opens in an in-app browser)" }] },
+      ],
+    };
+    const page = {
+      blocks: [{ t: "section", id: "ballot-link", c: [{ t: "paragraph", c: [link] }] }],
+    };
+    expect(verifyProjected({ entries: [url, name] }, { "states/ballot": page })).toEqual([]);
+  });
+
+  it("names a states page", () => {
+    expect(check({ entries: [entry({ drawnFrom: "review" })] }).errors.join(" ")).toContain(
+      "is not a states page",
+    );
+  });
+});
+
 describe("renderSwift", () => {
+  it("generates nothing for an entry drawn from a projected page", () => {
+    const swift = renderSwift({
+      entries: [
+        entry({ swiftName: "drawn", drawnFrom: "states/review" }),
+        entry({ swiftName: "kept" }),
+      ],
+    });
+    expect(swift).not.toContain("drawn");
+    expect(swift).toContain("static let kept");
+  });
+
   it("emits a compilable constant per entry", () => {
     const swift = renderSwift({ entries: [entry({ swiftName: "noRecommendation" })] });
     expect(swift).toContain("enum LegalCopy {");

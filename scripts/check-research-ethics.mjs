@@ -229,7 +229,21 @@ export function verdict(input = {}) {
           "prove prefer-not-to-say is on every item",
       );
     }
-    if (!/prefer not to say/i.test(surveyPage)) {
+    // The label is the page's own markup, or the survey wording's that the page renders by name —
+    // never a comment or a style rule that happens to mention it.
+    const markup = surveyPage
+      .replace(/<script[\s\S]*?<\/script>/g, "")
+      .replace(/<style[\s\S]*?<\/style>/g, "")
+      .replace(/<!--[\s\S]*?-->/g, "")
+      .replace(/\/\*[\s\S]*?\*\//g, "")
+      .replace(/\/\/[^\n]*/g, "");
+    const copy = (input.pages?.["apps/web/src/lib/survey-copy.ts"] ?? "")
+      .replace(/\/\*[\s\S]*?\*\//g, "")
+      .replace(/\/\/[^\n]*/g, "");
+    const labelled =
+      /prefer not to say/i.test(markup) ||
+      (/\{SURVEY_COPY\.prefer\}/.test(markup) && /prefer:\s*"Prefer not to say"/i.test(copy));
+    if (!labelled) {
       push('survey page: visible "Prefer not to say" label not found');
     }
     // Structural: the prefer control must sit outside (after) the options {#each} loop.
@@ -429,6 +443,18 @@ export function verdict(input = {}) {
         `${label}: text not found on ${rec.page} (register/page drift): "${normalisePageText(rec.text)}"`,
       );
     }
+    // Wording held in a component or copy module is shown only where a page renders it: the
+    // statement names that page and the token by which the page renders the wording.
+    if (rec.renderedBy !== undefined || rec.via !== undefined) {
+      const route = pages[rec.renderedBy];
+      if (!isNonEmptyString(rec.renderedBy) || !isNonEmptyString(rec.via)) {
+        push(`${label}: renderedBy and via must be given together`);
+      } else if (typeof route !== "string" || !route) {
+        push(`${label}: page "${rec.renderedBy}" not available`);
+      } else if (!route.includes(rec.via)) {
+        push(`${label}: ${rec.renderedBy} does not render ${rec.via}, which holds the text`);
+      }
+    }
   };
 
   const warnings = Array.isArray(register.insightsWarnings) ? register.insightsWarnings : null;
@@ -484,8 +510,12 @@ function safeRead(relPath) {
 // quietest possible way for a disclosure requirement to stop being enforced.
 const PAGE_PATHS = [
   "apps/web/src/routes/insights/+page.svelte",
+  "apps/web/src/lib/components/InsightsLead.svelte",
+  "apps/web/src/lib/insights-copy.ts",
   "apps/web/src/lib/content/PrivacyContent.svelte",
   "apps/web/src/routes/survey/+page.svelte",
+  "apps/web/src/lib/survey-copy.ts",
+  "apps/web/src/lib/components/SurveyNotes.svelte",
   "apps/web/src/lib/content/TermsContent.svelte",
 ];
 

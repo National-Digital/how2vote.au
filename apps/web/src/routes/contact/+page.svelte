@@ -1,7 +1,8 @@
 <script lang="ts">
   import ContentPage from "$lib/components/ContentPage.svelte";
   import Meta from "$lib/components/Meta.svelte";
-  import { ORG } from "$lib/org";
+  import ContactIntro from "$lib/components/ContactIntro.svelte";
+  import { CONTACT_COPY, CONTACT_TITLE } from "$lib/contact-copy";
   import { submitContact, type SubmitResult } from "$lib/forms";
 
   let name = $state("");
@@ -28,81 +29,40 @@
 
 <Meta />
 
-<ContentPage title="Contact">
-  <p>
-    Questions, corrections, or something not working? Send us a message and we'll get back to you.
-    For a quick note on any screen you can also use the <strong>Feedback</strong> button.
-  </p>
-
-  <h2>Answers to common questions</h2>
-  <ul>
-    <li>
-      <a href="/methodology">How it works</a> — where the vote comparisons come from and how a match is
-      calculated.
-    </li>
-    <li>
-      <a href="/glossary">Glossary</a> — the parliamentary and electoral terms the app uses.
-    </li>
-    <li>
-      <a href="/corrections">Corrections</a> — how to report an error in the data, and what has already
-      been corrected.
-    </li>
-    <li>
-      <a href="/accessibility">Accessibility</a> — alternative formats, and help using the app with assistive
-      technology.
-    </li>
-    <li>
-      <a href="/privacy">Privacy policy</a> — what stays on your device and what leaves it.
-    </li>
-  </ul>
-
-  <h2>Contact us directly</h2>
-  <p>
-    Email: <a href="mailto:{ORG.email}">{ORG.email}</a><br />
-    Telephone: {ORG.phone}
-  </p>
-  <p>
-    We read every message and reply to the email address you give us. Telling us which page or step
-    you were on, and what you expected to happen, helps us answer sooner.
-  </p>
-
-  <h2>Send us a message</h2>
+<ContentPage title={CONTACT_TITLE}>
+  <ContactIntro />
 
   {#if status === "ok"}
     <p class="ok" role="status">
-      Thanks for getting in touch — your message has been sent. If you left an email, we'll reply
-      there.
+      {CONTACT_COPY.sent}
     </p>
   {:else}
     <form onsubmit={send} novalidate>
-      <label class="ui" for="c-name">Name</label>
+      <label class="ui" for="c-name">{CONTACT_COPY.name}</label>
       <input id="c-name" type="text" bind:value={name} autocomplete="name" required />
 
-      <label class="ui" for="c-email">Email</label>
+      <label class="ui" for="c-email">{CONTACT_COPY.email}</label>
       <input id="c-email" type="email" bind:value={email} autocomplete="email" required />
 
-      <label class="ui" for="c-message">Message</label>
+      <label class="ui" for="c-message">{CONTACT_COPY.message}</label>
       <textarea id="c-message" bind:value={message} rows="6" required></textarea>
 
       {#if status === "offline"}
         <p class="note warn ui" role="status">
-          You're offline. This site works without a connection, but sending a message needs one —
-          please try again once you're back online.
+          {CONTACT_COPY.offline}
         </p>
       {:else if status === "error"}
         <p class="note warn ui" role="status">
-          Sorry, that didn't send. Please check your connection and try again.
+          {CONTACT_COPY.error}
         </p>
       {/if}
 
       <button type="submit" class="btn ui" disabled={!canSend}>
-        {status === "sending" ? "Sending…" : "Send message"}
+        {status === "sending" ? CONTACT_COPY.sending : CONTACT_COPY.send}
       </button>
 
       <p class="challenge-note">
-        This form is protected by a privacy-preserving anti-spam check computed on your device — no
-        third-party CAPTCHA or tracker is loaded. Your message is sent to us by email through our
-        hosting provider and is not stored by this site.
+        {CONTACT_COPY.challenge}
       </p>
     </form>
   {/if}

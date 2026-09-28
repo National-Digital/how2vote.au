@@ -25,9 +25,17 @@ class ActiveElection {
     return manifestFor(this.id);
   }
 
+  /**
+   * True once the store holds the visitor's choice — restored from storage, or set by the route —
+   * from which point it, not the stored value, is the choice.
+   */
+  settled = false;
+
   /** Switches election. No-op for an unknown id or the current one. */
   set(id: string): void {
-    if (id === this.id || !electionById(id)) return;
+    if (!electionById(id)) return;
+    this.settled = true;
+    if (id === this.id) return;
     this.id = id;
     this.save();
   }
@@ -50,7 +58,22 @@ class ActiveElection {
     } catch {
       // ignore corrupt/blocked storage
     }
+    this.settled = true;
   }
 }
 
 export const election = new ActiveElection();
+
+/**
+ * The election the visitor last chose, as stored — readable before the store has restored it, as it
+ * has not on a direct load when the native router first asks. Null when none is stored.
+ */
+export function savedElectionId(): string | null {
+  if (!browser) return null;
+  try {
+    const saved = localStorage.getItem(KEY);
+    return saved && electionById(saved) ? saved : null;
+  } catch {
+    return null;
+  }
+}

@@ -1,14 +1,14 @@
 {
   "schemaVersion": 1,
-  "updated": "2026-08-26",
-  "note": "Required user-facing notices that the native iOS core renders inline, and which therefore cannot be held in the web sources the path-scoped compliance guards read (ADR 0018 D9). Each entry names the web source that must carry the SAME wording: scripts/check-native-copy.mjs asserts the text is present there verbatim (whitespace- and markup-normalised) and that apps/mobile/ios/App/App/Generated/LegalCopy.swift is the exact rendering of this file. Web-side rewording therefore fails the build until this register and the generated Swift are updated together, so the two channels cannot state different things. Copy that is modal- or print-shaped is NOT registered here: it stays in the WebView islands (D8) where it needs no second rendering.",
+  "updated": "2026-09-25",
+  "note": "Required user-facing notices that the native iOS core renders inline, and which therefore cannot be held in the web sources the path-scoped compliance guards read (ADR 0018 D9). Each entry names the web source that must carry the SAME wording: scripts/check-native-copy.mjs asserts the text is present there verbatim (whitespace- and markup-normalised) and that apps/mobile/ios/App/App/Generated/LegalCopy.swift is the exact rendering of this file. Web-side rewording therefore fails the build until this register and the generated Swift are updated together, so the two channels cannot state different things. Copy that is modal- or print-shaped is NOT registered here: it stays in the WebView islands (D8) where it needs no second rendering. An entry with drawnFrom is drawn natively from that projected states page (ADR 0019 D4b), or from the site chrome handed over with each route, rather than from the generated Swift, so it is not generated; it stays registered so its wording remains held verbatim to its web source, and rewording it still requires this register, and so a legal-review record, to change. An entry drawn from a states page names the section of it that draws the notice; once the iOS build exists, that section must draw exactly the registered text (or, for a destination, link to it).",
   "generated": "apps/mobile/ios/App/App/Generated/LegalCopy.swift",
   "entries": [
     {
       "id": "numbers-are-your-choice",
       "swiftName": "numbersAreYourChoice",
       "text": "These numbers are your choice.",
-      "webSource": "apps/web/src/routes/card/+page.svelte",
+      "webSource": "apps/web/src/lib/components/CardAck.svelte",
       "backingControls": ["control-5", "control-4"],
       "note": "Opens the ballot acknowledgement on the card, live and archived alike."
     },
@@ -16,7 +16,7 @@
       "id": "no-recommendation",
       "swiftName": "noRecommendation",
       "text": "How2Vote does not recommend a candidate or a preference order",
-      "webSource": "apps/web/src/routes/card/+page.svelte",
+      "webSource": "apps/web/src/lib/components/CardAck.svelte",
       "backingControls": ["control-5", "control-4"],
       "note": "The DISC-NO-RECOMMENDATION disclaimer itself (docs/legal/required-checks.json). Registered without terminal punctuation because the live and archived notices continue the sentence differently."
     },
@@ -24,7 +24,7 @@
       "id": "not-a-ballot-paper",
       "swiftName": "notABallotPaper",
       "text": "A voting plan is not a ballot paper: copy your numbers onto the official paper at the polling place and follow the AEC's instructions.",
-      "webSource": "apps/web/src/routes/card/+page.svelte",
+      "webSource": "apps/web/src/lib/components/CardAck.svelte",
       "backingControls": ["control-5"],
       "note": "Distinguishes the plan from an official ballot paper on the live card."
     },
@@ -40,7 +40,7 @@
       "id": "user-authored-order",
       "swiftName": "userAuthoredOrder",
       "text": "You chose every number — How2Vote does not recommend a candidate or a preference order.",
-      "webSource": "apps/web/src/routes/card/+page.svelte",
+      "webSource": "apps/web/src/lib/components/CardWorksheetFoot.svelte",
       "backingControls": ["control-5", "control-4"],
       "note": "The plan foot's user-authorship statement, which carries the s321D authoriser model (ADR 0010)."
     },
@@ -48,31 +48,38 @@
       "id": "external-link-cue",
       "swiftName": "externalLinkCue",
       "text": "opens in an in-app browser",
-      "webSource": "apps/web/src/lib/components/ExternalLink.svelte",
+      "webSource": "apps/web/src/lib/external-link-copy.ts",
       "backingControls": ["control-26"],
-      "note": "Announced as part of a link's accessible name before it is followed (WCAG 3.2.5), so a screen-reader user is not dropped into an unexplained context. The wording is channel-specific: the shells open an in-app browser rather than a new tab, and link-conventions.test.ts already holds the web to this on its side."
+      "note": "Announced as part of a link's accessible name before it is followed (WCAG 3.2.5), so a screen-reader user is not dropped into an unexplained context. The wording is channel-specific: the shells open an in-app browser rather than a new tab, and link-conventions.test.ts already holds the web to this on its side.",
+      "drawnFrom": "site-chrome"
     },
     {
       "id": "importance-weighting",
       "swiftName": "importanceWeighting",
       "text": "Tap a question to change your answer. Star (★) the issues that matter most — only your strongest answers can count ten times as much.",
-      "webSource": "apps/web/src/routes/review/+page.svelte",
+      "webSource": "apps/web/src/lib/review-copy.ts",
       "backingControls": ["control-5"],
-      "note": "States how the ×10 importance lever works and, in the same breath, its limit — that it attaches only to the strongest answers. A native review screen that described the weighting differently would be a second, unreviewed account of the matching method."
+      "note": "States how the ×10 importance lever works and, in the same breath, its limit — that it attaches only to the strongest answers. A native review screen that described the weighting differently would be a second, unreviewed account of the matching method.",
+      "drawnFrom": "states/review",
+      "section": "review-importance"
     },
     {
       "id": "importance-multiplier",
       "swiftName": "importanceMultiplier",
       "text": "Extremely important (×10)",
-      "webSource": "apps/web/src/routes/review/+page.svelte",
+      "webSource": "apps/web/src/lib/review-copy.ts",
       "backingControls": ["control-5"],
-      "note": "The star control's own label, naming the multiplier the scoring model applies."
+      "note": "The star control's own label, naming the multiplier the scoring model applies.",
+      "drawnFrom": "states/review",
+      "section": "review-multiplier"
     },
     {
       "id": "map-licence-1",
       "swiftName": "mapLicenceIncorporates",
       "text": "This product (how2vote.au) incorporates data that is: © Commonwealth of Australia (Australian Electoral Commission) 2026",
       "webSource": "data/aec-spatial/source-record.json",
+      "drawnFrom": "states/ballot",
+      "section": "ballot-licence-1",
       "backingControls": ["control-15"],
       "note": "One paragraph of the AEC Spatial Data Download derivative-product notice, which the licence requires to be DISPLAYED wherever the boundary data is shown — a bare attribution credit does not satisfy it. Registered against the source record itself, not a component, because that record is where the accepted wording lives and where the web reads it from too (apps/web/src/lib/mapLicence.ts re-exports it)."
     },
@@ -81,6 +88,8 @@
       "swiftName": "mapLicencePermission",
       "text": "The Data (Commonwealth Electoral Boundaries (various years)) has been used in how2vote.au with the permission of the Australian Electoral Commission.",
       "webSource": "data/aec-spatial/source-record.json",
+      "drawnFrom": "states/ballot",
+      "section": "ballot-licence-2",
       "backingControls": ["control-15"],
       "note": "One paragraph of the AEC Spatial Data Download derivative-product notice, which the licence requires to be DISPLAYED wherever the boundary data is shown — a bare attribution credit does not satisfy it. Registered against the source record itself, not a component, because that record is where the accepted wording lives and where the web reads it from too (apps/web/src/lib/mapLicence.ts re-exports it)."
     },
@@ -89,6 +98,8 @@
       "swiftName": "mapLicenceNoWarranty",
       "text": "The Australian Electoral Commission has not evaluated the Data as altered and incorporated within how2vote.au, and therefore gives no warranty regarding its accuracy, completeness, currency or suitability for any particular purpose.",
       "webSource": "data/aec-spatial/source-record.json",
+      "drawnFrom": "states/ballot",
+      "section": "ballot-licence-3",
       "backingControls": ["control-15"],
       "note": "One paragraph of the AEC Spatial Data Download derivative-product notice, which the licence requires to be DISPLAYED wherever the boundary data is shown — a bare attribution credit does not satisfy it. Registered against the source record itself, not a component, because that record is where the accepted wording lives and where the web reads it from too (apps/web/src/lib/mapLicence.ts re-exports it)."
     },
@@ -97,64 +108,80 @@
       "swiftName": "mapLicencePersonalUse",
       "text": "You may use how2vote.au to load, display, print and reproduce views obtained from the Data, retaining this notice, for your personal use, or use within your organisation only.",
       "webSource": "data/aec-spatial/source-record.json",
+      "drawnFrom": "states/ballot",
+      "section": "ballot-licence-4",
       "backingControls": ["control-15"],
       "note": "One paragraph of the AEC Spatial Data Download derivative-product notice, which the licence requires to be DISPLAYED wherever the boundary data is shown — a bare attribution credit does not satisfy it. Registered against the source record itself, not a component, because that record is where the accepted wording lives and where the web reads it from too (apps/web/src/lib/mapLicence.ts re-exports it)."
     },
     {
-      "id": "landing-lede-upcoming",
-      "swiftName": "landingLedeUpcoming",
-      "text": "Answer {} real questions the current Parliament has voted on and see how your views compare with the parties' recorded votes.",
-      "webSource": "apps/web/src/lib/components/Landing.svelte",
-      "backingControls": ["control-5"],
-      "note": "What the tool does, on the first screen. The placeholder is the question count. Registered because it states what the comparison IS — the parties' recorded votes, not an opinion of them."
+      "id": "map-licence-name",
+      "swiftName": "mapLicenceName",
+      "text": "AEC Spatial Data Download Data Licence",
+      "webSource": "data/aec-spatial/source-record.json",
+      "drawnFrom": "states/ballot",
+      "section": "ballot-licence-link",
+      "backingControls": ["control-15"],
+      "note": "The licence the derivative-product notice is prescribed by, named and linked beside the notice as the web map does."
     },
     {
-      "id": "landing-lede-election",
-      "swiftName": "landingLedeElection",
-      "text": "Answer {} real questions parliament has voted on and see how your views compare with the parties' recorded votes, for your {} ballot — House and Senate.",
-      "webSource": "apps/web/src/lib/components/Landing.svelte",
-      "backingControls": ["control-5"],
-      "note": "The same claim for an election that has a ballot. Placeholders are the question count and the election year."
+      "id": "map-licence-url",
+      "swiftName": "mapLicenceURL",
+      "text": "https://www.aec.gov.au/Electorates/gis/",
+      "webSource": "data/aec-spatial/source-record.json",
+      "drawnFrom": "states/ballot",
+      "section": "ballot-licence-link",
+      "backingControls": ["control-15"],
+      "note": "The AEC licence page the notice links to."
     },
     {
-      "id": "landing-provisional",
-      "swiftName": "landingProvisional",
-      "text": "The next federal election hasn't been announced yet, so this is a provisional comparison against the current Parliament — the questions may change, and there are no candidates or printable how-to-vote plan yet.",
-      "webSource": "apps/web/src/lib/components/Landing.svelte",
-      "backingControls": ["control-5", "control-12"],
-      "note": "Bounds what a provisional comparison is and is not, before a voter starts one. Without it the first screen would imply a comparison against an election that has not been called."
-    },
-    {
-      "id": "landing-archived",
-      "swiftName": "landingArchived",
-      "text": "This election has already been held — what follows is a historical comparison, scored on the record as it stood then.",
-      "webSource": "apps/web/src/lib/components/Landing.svelte",
-      "backingControls": ["control-5", "control-12"],
-      "note": "Marks a past election as historical, so a comparison against it is not mistaken for current advice."
-    },
-    {
-      "id": "landing-trust-records",
-      "swiftName": "landingTrustRecords",
-      "text": "Built from real parliamentary voting records",
-      "webSource": "apps/web/src/lib/components/Landing.svelte",
-      "backingControls": ["control-5"],
-      "note": "A claim about the basis of the comparison, made on the first screen."
-    },
-    {
-      "id": "landing-trust-even-handed",
-      "swiftName": "landingTrustEvenHanded",
-      "text": "Even-handed — the method is public and deterministic",
-      "webSource": "apps/web/src/lib/components/Landing.svelte",
-      "backingControls": ["control-5"],
-      "note": "A neutrality claim, and one the methodology page has to keep true."
-    },
-    {
-      "id": "landing-trust-no-account",
-      "swiftName": "landingTrustNoAccount",
-      "text": "No account, works offline, analytics off by default",
-      "webSource": "apps/web/src/lib/components/Landing.svelte",
+      "id": "ballot-answers-stay-on-device",
+      "swiftName": "ballotAnswersStayOnDevice",
+      "text": "Your answers stay on this device until you choose to share your card.",
+      "webSource": "apps/web/src/lib/ballot-copy.ts",
       "backingControls": ["control-24", "control-28"],
-      "note": "A privacy claim: no account, on-device, analytics off unless chosen. Registered so the native surface cannot state a weaker or stronger version of it than the web."
+      "note": "A privacy claim on the state picker: nothing leaves the device unless the voter shares their card.",
+      "drawnFrom": "states/ballot",
+      "section": "ballot-device"
+    },
+    {
+      "id": "clear-data-confirm",
+      "swiftName": "clearDataConfirm",
+      "text": "Permanently clear everything on this device?",
+      "webSource": "apps/web/src/lib/clear-data-copy.ts",
+      "backingControls": ["control-24", "control-28"],
+      "note": "The privacy policy's clear-all control, drawn natively on the iOS document screen; the clearing itself stays the web's.",
+      "drawnFrom": "states/clear-data",
+      "section": "clear-ask"
+    },
+    {
+      "id": "clear-data-yes",
+      "swiftName": "clearDataYes",
+      "text": "Yes, clear everything",
+      "webSource": "apps/web/src/lib/clear-data-copy.ts",
+      "backingControls": ["control-24", "control-28"],
+      "note": "The privacy policy's clear-all control, drawn natively on the iOS document screen; the clearing itself stays the web's.",
+      "drawnFrom": "states/clear-data",
+      "section": "clear-confirm"
+    },
+    {
+      "id": "clear-data-clearing",
+      "swiftName": "clearDataClearing",
+      "text": "Clearing…",
+      "webSource": "apps/web/src/lib/clear-data-copy.ts",
+      "backingControls": ["control-24", "control-28"],
+      "note": "The privacy policy's clear-all control, drawn natively on the iOS document screen; the clearing itself stays the web's.",
+      "drawnFrom": "states/clear-data",
+      "section": "clear-clearing"
+    },
+    {
+      "id": "clear-data-cancel",
+      "swiftName": "clearDataCancel",
+      "text": "Cancel",
+      "webSource": "apps/web/src/lib/clear-data-copy.ts",
+      "backingControls": ["control-24", "control-28"],
+      "note": "The privacy policy's clear-all control, drawn natively on the iOS document screen; the clearing itself stays the web's.",
+      "drawnFrom": "states/clear-data",
+      "section": "clear-cancel"
     }
   ]
 }

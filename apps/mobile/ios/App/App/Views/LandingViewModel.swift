@@ -1,131 +1,48 @@
-import Combine
 import Foundation
 
-/// The landing screen's state: which election, what it is, and where the voter left off.
+/// What the native landing needs to choose among the web's wording: the election's stage, as the
+/// shared engine judges it, and how far the voter has got.
+///
+/// It holds no copy. The words are the prerendered landing's and the states page's; this decides
+/// which of them apply (`LandingComposition`).
 @MainActor
-final class LandingViewModel: ObservableObject {
-    /// One election, as the toggle offers it.
-    struct Election: Decodable, Equatable, Identifiable {
+struct LandingViewModel {
+    struct Election: Decodable, Equatable {
         let id: String
-        let year: Int
-        let label: String
-        let shortLabel: String
-        let current: Bool
-        /// `upcoming`, `live` or `archived`, judged by the engine against the AEC timetable.
         let phase: String
     }
 
-    /// Where the voter is in a run they have already started.
-    enum Progress: Equatable {
-        case fresh
-        case partway(answered: Int, total: Int)
-        case complete
-    }
-
-    @Published private(set) var elections: [Election] = []
-    @Published private(set) var progress: Progress = .fresh
-
     let electionID: String
-
-    private let loadElections: () throws -> [Election]
-    private let questionCount: Int
-    private let electorateCount: Int
-    private let restore: () -> QuizState.Persisted?
-
-    init(
-        electionID: String,
-        questionCount: Int,
-        electorateCount: Int,
-        loadElections: @escaping () throws -> [Election],
-        restore: @escaping () -> QuizState.Persisted?
-    ) {
-        self.electionID = electionID
-        self.questionCount = questionCount
-        self.electorateCount = electorateCount
-        self.loadElections = loadElections
-        self.restore = restore
-    }
+    /// The election's stage — "upcoming", "live" or "archived" — or nil when the engine does not
+    /// know the election, in which case the landing keeps the stage it was prerendered at.
+    let phase: String?
+    let progress: LandingComposition.Progress
 
     static func live(electionID: String, engine: JSCEngine) -> LandingViewModel {
         let manifest = ManifestLoader.load(electionID: electionID)
+        // The stage is a date judgement over the AEC timetable, so it is the engine's, never a
+        // second reading here: the two would disagree on precisely the days it matters.
+        let elections = (try? engine.elections())
+            .flatMap { try? JSONDecoder().decode([Election].self, from: Data($0.utf8)) } ?? []
         return LandingViewModel(
             electionID: electionID,
-            questionCount: manifest?.counts["questions"] ?? 0,
-            electorateCount: manifest?.counts["electorates"] ?? 0,
-            loadElections: {
-                let payload = try engine.elections()
-                return try JSONDecoder().decode([Election].self, from: Data(payload.utf8))
-            },
-            restore: { QuizState.load(electionID: electionID) }
+            phase: elections.first { $0.id == electionID }?.phase,
+            progress: progress(
+                stored: QuizState.current(electionID: electionID),
+                questionCount: manifest?.counts["questions"] ?? 0
+            )
         )
     }
 
-    var election: Election? {
-        elections.first { $0.id == electionID }
-    }
-
-    /// A provisional comparison: an election that has not been announced, so there is no ballot,
-    /// no candidates and no printable plan.
-    var isUpcoming: Bool {
-        election?.phase == "upcoming"
-    }
-
-    /// A historical demonstration — the election has been held.
-    var isArchived: Bool {
-        election?.phase == "archived"
-    }
-
-    /// True where the election ships no electorates, so the flow has no ballot step.
-    var isElectorateLess: Bool {
-        electorateCount == 0
-    }
-
-    var questions: Int { questionCount }
-
-    /// What the screen says the comparison is. Registered copy, never composed here.
-    var lede: String {
-        guard let election, !isUpcoming else {
-            return LegalCopy.landingLedeUpcoming(String(questionCount))
-        }
-        return LegalCopy.landingLedeElection(String(questionCount), String(election.year))
-    }
-
-    /// The caveat this election needs, or nil where it needs none.
-    var caveat: String? {
-        if isUpcoming { return LegalCopy.landingProvisional }
-        if isArchived { return LegalCopy.landingArchived }
-        return nil
-    }
-
-    /// The step rail, which loses its ballot step where there is no ballot to pick.
-    var steps: [(name: String, detail: String)] {
-        let compare = isArchived ? "Review the record" : "See how you compare"
-        if isElectorateLess {
-            return [
-                ("1 · Answer", "\(questionCount) questions, ~5 min"),
-                ("2 · Compare", compare),
-            ]
-        }
-        return [
-            ("1 · Ballot", "Find your electorate"),
-            ("2 · Answer", "\(questionCount) questions, ~5 min"),
-            ("3 · Compare", compare),
-        ]
-    }
-
-    func load() async {
-        elections = (try? loadElections()) ?? []
-        progress = readProgress()
-    }
-
-    /// Reads how far a previous run got, so the screen can offer to resume it (WCAG 3.3.7).
-    private func readProgress() -> Progress {
-        guard let stored = restore(), stored.state != nil, stored.electorate != nil else {
-            return .fresh
-        }
-        let answered = stored.answers.count
+    /// A voter with a ballot and some answers is part-way or finished; anyone else is on a first visit.
+    static func progress(stored: QuizState.Persisted?, questionCount: Int) -> LandingComposition.Progress {
+        guard let stored, stored.state != nil, stored.electorate != nil else { return .fresh }
+        // As the web counts: only answers to the recorded questions, once they are known.
+        let answered = stored.questionIds.isEmpty
+            ? stored.answers.count
+            : stored.questionIds.filter { stored.answers[String($0)] != nil }.count
         guard answered > 0 else { return .fresh }
         let total = stored.questionIds.isEmpty ? questionCount : stored.questionIds.count
-        return answered >= total && total > 0 ? .complete : .partway(answered: answered, total: total)
+        return answered >= total && total > 0 ? .complete : .partway(next: answered + 1, total: total)
     }
 }

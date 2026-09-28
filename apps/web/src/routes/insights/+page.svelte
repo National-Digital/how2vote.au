@@ -1,75 +1,35 @@
 <script lang="ts">
   import { goto } from "$app/navigation";
-  import {
-    CURRENT_ELECTION_ID,
-    ELECTIONS,
-    electionById,
-    electionPhase,
-    isPollingDayNoticeWindow,
-  } from "@how2vote/data-schema";
   import Meta from "$lib/components/Meta.svelte";
   import InsightsClosed from "$lib/components/InsightsClosed.svelte";
+  import InsightsLead from "$lib/components/InsightsLead.svelte";
   import ProvenanceNotice from "$lib/components/ProvenanceNotice.svelte";
+  import StructuredData from "$lib/components/StructuredData.svelte";
   import TopBar from "$lib/components/TopBar.svelte";
+  import {
+    DEFAULT_MIN_CELL,
+    count,
+    electionPill,
+    geoFor,
+    initialElection,
+    insightsClosed,
+    listedElections,
+    pct,
+    propParts,
+    readIndex,
+    readStats,
+    updatedOn,
+    type CohortStats,
+    type PartyView,
+    type PropositionView,
+    type StatsFile,
+    type StatsIndex,
+  } from "$lib/insights";
+  import { INSIGHTS_COPY } from "$lib/insights-copy";
   import { now } from "$lib/now.svelte";
-  import { insightsDatasetGraph, serializeJsonLd } from "$lib/structured-data";
-
-  // schema.org Dataset for the published survey aggregates — emitted in the prerendered HTML (not
-  // gated on the client-side fetch below) so crawlers and Google Dataset Search see it. Built and
-  // escaped in $lib/structured-data.
-  const datasetJsonLd = serializeJsonLd(insightsDatasetGraph());
-
-  // Shape of the static /stats/* assets, generated at build time by the data pipeline
-  // (packages/data-pipeline generate-stats). Defined locally because it is the shape of fetched
-  // assets, not a runtime module import. Mirrors StatsFile (schemaVersion 3) / StatsIndex
-  // (schemaVersion 2) in stats.ts.
-  type StatCell = { key: string; label: string; count: number };
-  type StatBucket = { key: string; label: string; shown: number; cells: StatCell[] };
-  type StatGeo = {
-    scope: "national" | "state";
-    code: string | null;
-    label: string;
-    buckets: StatBucket[];
-  };
-  type PartyView = {
-    kind: "party";
-    id: string;
-    title: string;
-    dimension: string;
-    sensitive: boolean;
-    geos: StatGeo[];
-  };
-  type PropositionView = {
-    kind: "proposition";
-    id: string;
-    title: string;
-    propositionId: number;
-    geos: StatGeo[];
-  };
-  type StatView = PartyView | PropositionView;
-  // A collection-context cohort: responses collected at one stage of the AEC timetable,
-  // independently k-anonymised by the generator so switching to it can never reveal a sub-k cell.
-  type CohortStats = {
-    key: string;
-    label: string;
-    disclosure: string;
-    totalResponses: number;
-    published: boolean;
-    views: StatView[];
-  };
-  type StatsFile = {
-    schemaVersion: number;
-    generatedAt: string;
-    electionId: string;
-    electionLabel: string;
-    minCell: number;
-    totalResponses: number;
-    published: boolean;
-    views: StatView[];
-    cohorts: CohortStats[];
-  };
-  type IndexEntry = { id: string; label: string; published: boolean; totalResponses: number };
-  type StatsIndex = { schemaVersion: number; generatedAt: string; elections: IndexEntry[] };
+  import { insightsDatasetGraph } from "$lib/structured-data";
+  import { fill } from "$lib/template";
+  import { electionById, electionPhase } from "@how2vote/data-schema";
 
   let index = $state<StatsIndex | null>(null);
   let stats = $state<StatsFile | null>(null);
@@ -81,19 +41,7 @@
   // Per party-view selected geography code; null / absent = national.
   let geoByView = $state<Record<string, string | null>>({});
 
-  // Pills to offer: every registry election, with its index stats when present. A registry election
-  // the (stale) index omits — e.g. the upcoming "next" comparison — still shows, so it's acknowledged.
-  const listed = $derived(
-    ELECTIONS.map(
-      (m) =>
-        index?.elections.find((e) => e.id === m.id) ?? {
-          id: m.id,
-          label: m.label,
-          published: false,
-          totalResponses: 0,
-        },
-    ),
-  );
+  const listed = $derived(listedElections(index));
   const selectedMeta = $derived(selectedId ? electionById(selectedId) : undefined);
   const selectedUpcoming = $derived(
     selectedMeta ? electionPhase(selectedMeta) === "upcoming" : false,
@@ -114,25 +62,18 @@
       []) as PropositionView[],
   );
 
-  // Insights are closed on election day, from 00:00 until the last national poll close (8 pm AEST),
-  // so live analysis isn't published while people are still voting. Keyed off the ticking `now` vs
-  // each registered election's fixed polling day — not the toggled-to view, and not the `current`
-  // flag (which is now an as-yet-undated upcoming placeholder with no polling day). A past election's
-  // window is always in the past, so only a genuinely live polling day can match; a tab left open
-  // flips at the boundary without a reload. See docs/adr/0014-election-day-notice.md.
-  const closed = $derived(ELECTIONS.some((m) => isPollingDayNoticeWindow(m, now.current)));
+  // Closed on election day (`insightsClosed`), off the ticking `now`, so a tab left open flips at
+  // the boundary without a reload.
+  const closed = $derived(insightsClosed(now.current));
 
   async function loadIndex(): Promise<void> {
     try {
       const res = await fetch("/stats/index.json", { cache: "no-cache" });
       if (!res.ok) throw new Error("index unavailable");
-      const file = (await res.json()) as StatsIndex;
-      if (file.schemaVersion !== 2) throw new Error("unknown stats schema");
+      const file = readIndex(await res.json());
+      if (!file) throw new Error("unknown stats schema");
       index = file;
-      // Prefer an election with published results; otherwise open on the current one so an
-      // as-yet-empty upcoming election is acknowledged rather than leaving the page blank.
-      const first = file.elections.find((e) => e.published);
-      await selectElection(first ? first.id : CURRENT_ELECTION_ID);
+      await selectElection(initialElection(file));
     } catch {
       failed = true;
       loading = false;
@@ -163,23 +104,8 @@
     try {
       const res = await fetch(`/stats/${id}.json`, { cache: "no-cache" });
       if (!res.ok) throw new Error("election stats unavailable");
-      const file = (await res.json()) as StatsFile;
-      if (file.schemaVersion !== 3) throw new Error("unknown stats schema");
-      // Defensive: an older file without cohorts is treated as a single "all" cohort.
-      if (!file.cohorts || file.cohorts.length === 0) {
-        file.cohorts = file.published
-          ? [
-              {
-                key: "all",
-                label: "All responses",
-                disclosure: "",
-                totalResponses: file.totalResponses,
-                published: file.published,
-                views: file.views,
-              },
-            ]
-          : [];
-      }
+      const file = readStats(await res.json());
+      if (!file) throw new Error("unknown stats schema");
       stats = file;
       selectedCohort = file.cohorts[0]?.key ?? "all";
     } catch {
@@ -189,65 +115,26 @@
     }
   }
 
-  const updated = $derived(
-    stats
-      ? new Date(stats.generatedAt).toLocaleDateString("en-AU", {
-          day: "numeric",
-          month: "short",
-          year: "numeric",
-        })
-      : "",
-  );
-
-  const pct = (n: number, total: number): number => (total > 0 ? Math.round((n / total) * 100) : 0);
-
-  /** The geography currently shown for a party view (selected state, else national). */
-  const geoFor = (view: PartyView): StatGeo =>
-    view.geos.find((g) => g.code === (geoByView[view.id] ?? null)) ?? view.geos[0];
-
-  /** Ordered agree/neutral/disagree cells for a proposition's overall bucket. */
-  function propParts(view: PropositionView): {
-    agree: number;
-    neutral: number;
-    disagree: number;
-    shown: number;
-  } {
-    const bucket = view.geos[0]?.buckets[0];
-    const get = (k: string): number => bucket?.cells.find((c) => c.key === k)?.count ?? 0;
-    return {
-      agree: get("agree"),
-      neutral: get("neutral"),
-      disagree: get("disagree"),
-      shown: bucket?.shown ?? 0,
-    };
-  }
+  const updated = $derived(stats ? updatedOn(stats.generatedAt) : "");
 </script>
 
 <Meta />
 
-<svelte:head>
-  {@html `<script type="application/ld+json">${datasetJsonLd}</script>`}
-</svelte:head>
+<!-- schema.org Dataset for the published survey aggregates, in the prerendered HTML (not gated on
+     the figures' fetch) so crawlers and Google Dataset Search see it. -->
+<StructuredData node={insightsDatasetGraph()} />
 
-<TopBar label="Insights" onback={() => goto("/")} backLabel="Back to start" />
+<TopBar label={INSIGHTS_COPY.top} onback={() => goto("/")} backLabel={INSIGHTS_COPY.back} />
 
 <article class="insights">
-  <h1>What the numbers say</h1>
+  <h1>{INSIGHTS_COPY.title}</h1>
   {#if closed}
     <InsightsClosed />
   {:else}
-    <p class="lead">
-      These figures come from the optional survey people answer after building a comparison.
-      Everything here is aggregate only, and descriptive — never a prediction. A figure is shown
-      only when its group is large enough that a single response cannot be singled out (at least {stats?.minCell ??
-        10} responses); smaller groups are withheld entirely. You can filter by when responses were collected,
-      and groups are never combined across those periods without saying so. See
-      <a href="/research">how these figures are made</a> and
-      <a href="/privacy">how we handle survey data</a>.
-    </p>
+    <InsightsLead min={stats?.minCell ?? DEFAULT_MIN_CELL} />
 
     {#if index && listed.length > 1}
-      <div class="elections" role="group" aria-label="Choose an election">
+      <div class="elections" role="group" aria-label={INSIGHTS_COPY.elections}>
         {#each listed as e (e.id)}
           <button
             type="button"
@@ -257,23 +144,23 @@
             aria-pressed={e.id === selectedId}
             onclick={() => selectElection(e.id)}
           >
-            {e.label.replace(" Federal Election", "")}
+            {electionPill(e.label)}
           </button>
         {/each}
       </div>
     {/if}
 
     {#if failed}
-      <p class="empty">Insights aren't available right now. Please try again later.</p>
+      <p class="empty">{INSIGHTS_COPY.failed}</p>
     {:else if loading && !stats}
-      <p class="empty">Loading…</p>
+      <p class="empty">{INSIGHTS_COPY.loading}</p>
     {:else if stats && stats.published}
       {#if selectedId}
         <ProvenanceNotice electionId={selectedId} />
       {/if}
 
       {#if cohorts.length > 1}
-        <div class="cohorts" role="group" aria-label="Show responses by when they were collected">
+        <div class="cohorts" role="group" aria-label={INSIGHTS_COPY.cohorts}>
           {#each cohorts as c (c.key)}
             <button
               type="button"
@@ -289,28 +176,27 @@
       {/if}
 
       <p class="updated ui">
-        {stats.electionLabel} · updated {updated} · {(
-          activeCohort?.totalResponses ?? 0
-        ).toLocaleString("en-AU")} responses
+        {fill(INSIGHTS_COPY.updated, {
+          election: stats.electionLabel,
+          date: updated,
+          count: count(activeCohort?.totalResponses ?? 0),
+        })}
       </p>
       {#if activeCohort?.disclosure}
         <p class="cohort-note ui">{activeCohort.disclosure}</p>
       {/if}
       {#if activeCohort && !activeCohort.published}
-        <p class="empty">
-          Not enough responses in this group yet to show without identifying individuals — try “All
-          responses”, or check back later.
-        </p>
+        <p class="empty">{INSIGHTS_COPY.withheld}</p>
       {/if}
 
       {#if partyViews.length > 0}
-        <h2 class="section-head">How party match lines up with who people are</h2>
+        <h2 class="section-head">{INSIGHTS_COPY.parties}</h2>
         {#each partyViews as view (view.id)}
-          {@const geo = geoFor(view)}
+          {@const geo = geoFor(view, geoByView[view.id] ?? null)}
           <section class="view">
             <h3 class="view-title">{view.title}</h3>
             {#if view.geos.length > 1}
-              <div class="geos" role="group" aria-label="Choose a region">
+              <div class="geos" role="group" aria-label={INSIGHTS_COPY.regions}>
                 {#each view.geos as g (g.code ?? "national")}
                   <button
                     type="button"
@@ -319,7 +205,7 @@
                     aria-pressed={g.code === (geoByView[view.id] ?? null)}
                     onclick={() => (geoByView = { ...geoByView, [view.id]: g.code })}
                   >
-                    {g.scope === "national" ? "Australia" : (g.code ?? g.label)}
+                    {g.scope === "national" ? INSIGHTS_COPY.national : (g.code ?? g.label)}
                   </button>
                 {/each}
               </div>
@@ -338,14 +224,18 @@
                       <div
                         class="bar"
                         role="img"
-                        aria-label={`${cell.label}: ${p}% of ${bucket.shown} shown responses`}
+                        aria-label={fill(INSIGHTS_COPY.bar, {
+                          label: cell.label,
+                          pct: p,
+                          shown: bucket.shown,
+                        })}
                       >
                         <span class="fill" style:width={`${p}%`}></span>
                       </div>
                     </li>
                   {/each}
                 </ul>
-                <p class="note ui">of {bucket.shown.toLocaleString("en-AU")} shown responses</p>
+                <p class="note ui">{fill(INSIGHTS_COPY.of, { shown: count(bucket.shown) })}</p>
               </div>
             {/each}
           </section>
@@ -353,11 +243,11 @@
       {/if}
 
       {#if propositionViews.length > 0}
-        <h2 class="section-head">How respondents answered each issue</h2>
+        <h2 class="section-head">{INSIGHTS_COPY.propositions}</h2>
         <div class="legend ui" aria-hidden="true">
-          <span class="key"><span class="sw agree"></span>Agree</span>
-          <span class="key"><span class="sw neutral"></span>Neutral</span>
-          <span class="key"><span class="sw disagree"></span>Disagree</span>
+          <span class="key"><span class="sw agree"></span>{INSIGHTS_COPY.agree}</span>
+          <span class="key"><span class="sw neutral"></span>{INSIGHTS_COPY.neutral}</span>
+          <span class="key"><span class="sw disagree"></span>{INSIGHTS_COPY.disagree}</span>
         </div>
         <ul class="props">
           {#each propositionViews as view (view.id)}
@@ -370,14 +260,24 @@
               <div
                 class="seg"
                 role="img"
-                aria-label={`Agree ${a}%, neutral ${n}%, disagree ${d}%, of ${p.shown} shown responses`}
+                aria-label={fill(INSIGHTS_COPY.split, {
+                  agree: a,
+                  neutral: n,
+                  disagree: d,
+                  shown: p.shown,
+                })}
               >
                 {#if a > 0}<span class="seg-a agree" style:width={`${a}%`}></span>{/if}
                 {#if n > 0}<span class="seg-a neutral" style:width={`${n}%`}></span>{/if}
                 {#if d > 0}<span class="seg-a disagree" style:width={`${d}%`}></span>{/if}
               </div>
               <p class="note ui">
-                Agree {a}% · Neutral {n}% · Disagree {d}% · of {p.shown.toLocaleString("en-AU")} shown
+                {fill(INSIGHTS_COPY.tally, {
+                  agree: a,
+                  neutral: n,
+                  disagree: d,
+                  shown: count(p.shown),
+                })}
               </p>
             </li>
           {/each}
@@ -385,21 +285,14 @@
       {/if}
 
       {#if partyViews.length > 0 || propositionViews.length > 0}
-        <p class="footnote ui">
-          Percentages are of responses shown in each group, after small groups are withheld, so they
-          may not cover every response received. Because the sample is people who chose to use this
-          tool, it is not a representative poll. Responses are grouped by when they were collected
-          and never combined across those groups without saying so.
-        </p>
+        <p class="footnote ui">{INSIGHTS_COPY.footnote}</p>
       {/if}
     {:else}
       <p class="empty">
         {#if selectedUpcoming}
-          The {selectedLabel} is newly open for comparisons — no survey responses have been collected
-          yet. Results appear here, as privacy-protected aggregates, once enough people contribute.
+          {fill(INSIGHTS_COPY.upcoming, { election: selectedLabel })}
         {:else}
-          Not enough responses yet to show anything without identifying individuals. Check back
-          after more people have built their comparisons.
+          {INSIGHTS_COPY.empty}
         {/if}
       </p>
     {/if}
@@ -415,15 +308,6 @@
   h1 {
     font-size: 28px;
     margin: 8px 0 12px;
-  }
-  .lead {
-    color: var(--ink2);
-    margin: 0 0 8px;
-  }
-  .lead a {
-    color: var(--ink);
-    text-decoration: underline;
-    text-underline-offset: 3px;
   }
   .elections {
     display: flex;

@@ -137,6 +137,13 @@ already right — the cover is taken down with `dismiss(animated: false)` onto a
 already rendered the route underneath, so there is no load flash — leaving the native top bar and
 the web's sticky chrome to line up closely enough that the cut is not the thing the voter notices.
 
+**D1b — The card is native too.** *(Supersedes D1a, 2026-09-28.)* D1a kept the card in the WebView
+because a native card would have held electoral-law wording in a second rendering, outside the files
+the path-scoped guards read. ADR 0019 removed that premise: every native screen now draws the web's own
+rendering of its wording, and the card does the same (ADR 0019 D4k). The card's state and gates stay the
+web's, in `$lib/card-flow.svelte.ts`, which the page renders; the guards read that module and the
+card's components, not a native copy. Printing remains web-only.
+
 **D2 — One engine, never two.** `@how2vote/engine` (`answers`, `scoring`, `ballot`, `card`,
 `share`) is the single source of every result. The native layer runs the same compiled engine in
 **JavaScriptCore** — a system framework, no new dependency and no network — behind a single-file
@@ -160,8 +167,10 @@ was written.
 
 So ownership is declared at runtime and each key has exactly one writer. The native core writes
 `how2vote:native-core:v1` to Preferences at launch, and the mirror stands down for the prefixes it
-names (`quiz:`, `saved:`, `election:`) only when it finds that marker — restoring them into
-`localStorage` so the WebView can READ native state, never mirroring them back. Everything else
+names (`quiz:`, `election:`) only when it finds that marker — restoring them into
+`localStorage` so the WebView can READ native state, never mirroring them back. The saved cards
+(`saved:`) are the WebView's: a card is saved by the web's card flow, whether the card page or the
+native card asks (D1b), so the WebView is their one writer and the native saved-cards screen asks it to delete them. Everything else
 (terms acceptance, consent, the eligibility bit, theme) stays the WebView's, which lines up with the
 compliance chrome living in the D8 islands.
 

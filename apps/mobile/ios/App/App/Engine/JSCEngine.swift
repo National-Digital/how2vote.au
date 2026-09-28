@@ -82,14 +82,14 @@ final class JSCEngine {
 
         // A JSContext reports a thrown exception through this handler rather than by returning nil,
         // so without it an engine error becomes a silently undefined result.
-        var thrown: String?
+        var thrown: String??
         context.exceptionHandler = { _, exception in
-            thrown = exception?.toString() ?? "unknown JavaScript exception"
+            thrown = .some(exception?.toString())
         }
 
         context.evaluateScript(source, withSourceURL: scriptURL)
         if let thrown {
-            throw JSCEngineError.evaluationFailed(thrown)
+            throw JSCEngineError.evaluationFailed(thrown ?? "unknown JavaScript exception")
         }
 
         guard let engine = context.objectForKeyedSubscript("How2VoteEngine"),
@@ -171,9 +171,9 @@ final class JSCEngine {
 
     /// Invokes an engine function, turning a JavaScript throw into a Swift error.
     private func call(_ function: String, _ arguments: [String]) throws -> String {
-        var thrown: String?
+        var thrown: String??
         context.exceptionHandler = { _, exception in
-            thrown = exception?.toString() ?? "unknown JavaScript exception"
+            thrown = .some(exception?.toString())
         }
 
         guard let target = engine.objectForKeyedSubscript(function), !target.isUndefined else {
@@ -182,7 +182,7 @@ final class JSCEngine {
 
         let result = target.call(withArguments: arguments)
         if let thrown {
-            throw JSCEngineError.callFailed(function: function, message: thrown)
+            throw JSCEngineError.callFailed(function: function, message: thrown ?? "unknown JavaScript exception")
         }
         guard let string = result?.toString(), result?.isString == true else {
             throw JSCEngineError.callFailed(function: function, message: "did not return a string")

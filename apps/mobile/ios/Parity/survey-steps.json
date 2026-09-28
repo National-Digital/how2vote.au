@@ -1,0 +1,29 @@
+[
+  {
+    "step": "gate",
+    "key": "gate",
+    "archived": true,
+    "year": "2022",
+    "inFlight": false,
+    "consented": true,
+    "sensitive": false,
+    "termsNeeded": true,
+    "terms": false,
+    "canContribute": false
+  },
+  {
+    "step": "question",
+    "key": "age",
+    "label": "How old are you?",
+    "note": "",
+    "options": [
+      "18–24",
+      "25–34",
+      "35–49",
+      "50–64",
+      "65 or over"
+    ],
+    "position": 1,
+    "total": 12
+  }
+]

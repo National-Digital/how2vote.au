@@ -351,9 +351,100 @@ export function verdict(input = {}) {
         `${src.path}: does not gate on termsAcceptance.accepted — a consequential action must fail closed without a current-version acceptance`,
       );
     }
+    // The survey's own state holds its contribution: a mention of the acceptance anywhere is not
+    // enough there — the contribution, its recording and the upload must each depend on it.
+    if (src.path.endsWith("survey-flow.svelte.ts")) {
+      const gates = [
+        [
+          /canContribute\s*=\s*\$derived\([^;]*termsAcceptance\.accepted/,
+          "allows a contribution without the acceptance (canContribute)",
+        ],
+        [
+          /if\s*\(!termsAcceptance\.accepted\)\s*termsAcceptance\.accept\(\)/,
+          "does not record the acceptance when the voter contributes",
+        ],
+        [
+          /if\s*\([^)]*!termsAcceptance\.accepted\)\s*return;/,
+          "can upload without the acceptance (the fail-closed guard before the upload)",
+        ],
+      ];
+      // Read as code: a gate that survives only in a comment gates nothing.
+      const code = src.text.replace(/\/\*[\s\S]*?\*\//g, "").replace(/\/\/[^\n]*/g, "");
+      for (const [pattern, fault] of gates) {
+        if (!pattern.test(code)) push(`${src.path}: ${fault}`);
+      }
+    }
+    // The card's own state holds its plan and its share link: each step that builds the plan, shows
+    // or confirms the share warning, or opens the print acknowledgement must itself refuse without
+    // the acceptance, whatever asked for it — the page, or the iOS app.
+    if (src.path.endsWith("card-flow.svelte.ts")) {
+      const code = src.text.replace(/\/\*[\s\S]*?\*\//g, "").replace(/\/\/[^\n]*/g, "");
+      for (const method of CARD_GATED_METHODS) {
+        const body = methodBody(code, method);
+        if (body === null) {
+          push(`${src.path}: has no ${method}() to hold its Terms gate (fail closed)`);
+        } else if (!leadingGuards(body).some(refusesWithoutAcceptance)) {
+          push(
+            `${src.path}: ${method}() does not refuse without a current-version Terms acceptance`,
+          );
+        }
+      }
+    }
   }
 
   return { ok: errors.length === 0, errors };
+}
+
+/** The card's steps that must each refuse without the acceptance (see `checkTerms`). */
+export const CARD_GATED_METHODS = ["share", "confirmShare", "startBuild", "openPrintAuthorisation"];
+
+/**
+ * The conditions of the guard clauses a method body opens with — each `if (…) return …;` before
+ * anything else runs — so a guard that comes after the method has acted is not one of them.
+ */
+function leadingGuards(body) {
+  const conditions = [];
+  let rest = body;
+  for (;;) {
+    const head = /^\s*if\s*\(/.exec(rest);
+    if (!head) return conditions;
+    let depth = 1;
+    let i = head[0].length;
+    while (i < rest.length && depth > 0) {
+      if (rest[i] === "(") depth += 1;
+      else if (rest[i] === ")") depth -= 1;
+      i += 1;
+    }
+    const condition = rest.slice(head[0].length, i - 1);
+    const tail = /^\s*return\b[^;]*;/.exec(rest.slice(i));
+    if (!tail) return conditions;
+    conditions.push(condition);
+    rest = rest.slice(i + tail[0].length);
+  }
+}
+
+/**
+ * Whether a guard refuses whenever the current Terms are not accepted: one of the conditions it
+ * joins with `||` is exactly the acceptance's negation, and nothing is joined to it with `&&`.
+ */
+function refusesWithoutAcceptance(condition) {
+  if (condition.includes("&&")) return false;
+  return condition.split("||").some((term) => term.trim() === "!termsAcceptance.accepted");
+}
+
+/** A class method's body, by its name, or null when it has none. Braces are counted, not parsed. */
+function methodBody(code, name) {
+  const m = new RegExp(`\\n\\s*${name}\\([^)]*\\)[^{;]*\\{`).exec(code);
+  if (!m) return null;
+  let depth = 1;
+  let i = m.index + m[0].length;
+  const start = i;
+  while (i < code.length && depth > 0) {
+    if (code[i] === "{") depth += 1;
+    else if (code[i] === "}") depth -= 1;
+    i += 1;
+  }
+  return code.slice(start, i - 1);
 }
 
 /* c8 ignore start -- CLI/fs plumbing, exercised via CI not unit tests */
@@ -368,7 +459,13 @@ const TERMS_PAGE = "apps/web/src/lib/content/TermsContent.svelte";
 const LEAF = "apps/web/src/lib/terms/terms.ts";
 const STORE = "apps/web/src/lib/terms.svelte.ts";
 const REGISTRY = "docs/legal/terms-registry.json";
-const WIRING = ["apps/web/src/routes/card/+page.svelte", "apps/web/src/routes/survey/+page.svelte"];
+const WIRING = [
+  // Where the card's build, share and print are gated, for the page and the iOS app alike.
+  "apps/web/src/lib/card-flow.svelte.ts",
+  "apps/web/src/routes/survey/+page.svelte",
+  // Where the survey's contribution is gated, for the page and the iOS app alike.
+  "apps/web/src/lib/survey-flow.svelte.ts",
+];
 
 function read(relPath) {
   return readFileSync(rel(relPath), "utf8");

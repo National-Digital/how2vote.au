@@ -1,6 +1,11 @@
 import { describe, expect, it } from "vitest";
 import { readFileSync } from "node:fs";
-import { verdict, showsAlignment } from "./check-candidate-distinction.mjs";
+import {
+  ROW_SOURCES,
+  verdict,
+  showsAlignment,
+  withoutComments,
+} from "./check-candidate-distinction.mjs";
 
 const root = new URL("../", import.meta.url);
 const read = (rel) => readFileSync(new URL(rel, root), "utf8");
@@ -49,8 +54,72 @@ describe("verdict — real committed sources", () => {
           text: read("apps/web/src/routes/card/+page.svelte"),
         },
       ],
+      rowSources: ROW_SOURCES.map((source) => ({ ...source, text: read(source.path) })),
     });
     expect(res.errors).toEqual([]);
+  });
+});
+
+describe("panel rows taken from the card's flow", () => {
+  const PAGE = read("apps/web/src/routes/card/+page.svelte");
+  const FLOW_PATH = "apps/web/src/lib/card-flow.svelte.ts";
+  const FLOW = read(FLOW_PATH);
+  const real = (flow = FLOW, page = PAGE) =>
+    verdict({
+      ...good(),
+      alignmentSurfaces: [{ path: "apps/web/src/routes/card/+page.svelte", text: page }],
+      rowSources: [{ ...ROW_SOURCES[0], text: flow }],
+    });
+
+  it("holds each row set the page's panels name to both props", () => {
+    for (const name of ["houseParties", "senateParties"]) {
+      const start = FLOW.indexOf(`${name} = $derived(`);
+      const end = FLOW.indexOf("\n  );", start);
+      const block = FLOW.slice(start, end);
+      for (const prop of ["partyKey", "suspended"]) {
+        const mutated =
+          FLOW.slice(0, start) +
+          block.replace(new RegExp(`\\n\\s*${prop}: r\\.${prop},`), "") +
+          FLOW.slice(end);
+        expect(mutated).not.toBe(FLOW);
+        expect(hasError(real(mutated), `${name} never passes ${prop}`)).toBe(true);
+      }
+    }
+  });
+
+  it("holds the ballot-less panel's rows to both props, not to a name its code mentions", () => {
+    for (const prop of ["suspended: isSusp,", "partyKey: key,"]) {
+      const mutated = FLOW.replace(`\n        ${prop}`, "");
+      expect(mutated).not.toBe(FLOW);
+      const name = prop.split(":")[0];
+      expect(hasError(real(mutated), `allPartyAlignments never passes ${name}`)).toBe(true);
+    }
+  });
+
+  it("keeps a // inside a string as code", () => {
+    expect(withoutComments('const u = "a//b"; // gone')).toBe('const u = "a//b"; \n');
+    expect(withoutComments("const t = `x//${y}`;")).toBe("const t = `x//${y}`;");
+  });
+
+  it("does not take a prop named only in a comment", () => {
+    const start = FLOW.indexOf("houseParties = $derived(");
+    const end = FLOW.indexOf("\n  );", start);
+    const block = FLOW.slice(start, end).replace(
+      /\n\s*suspended: r\.suspended,/,
+      "\n // suspended",
+    );
+    expect(
+      hasError(
+        real(FLOW.slice(0, start) + block + FLOW.slice(end)),
+        "houseParties never passes suspended",
+      ),
+    ).toBe(true);
+  });
+
+  it("does not take a panel whose rows come from elsewhere", () => {
+    const page = PAGE.replace("parties={flow.houseParties}", "parties={rows}");
+    expect(page).not.toBe(PAGE);
+    expect(hasError(real(FLOW, page), "never passes partyKey")).toBe(true);
   });
 });
 

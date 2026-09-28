@@ -77,3 +77,10 @@ runs:
           cp "data/dist/$id/manifest.json" "apps/web/build/data/dist/$id/manifest.json"
         done
         echo "✓ $(ls -d apps/web/build/data/dist/*/ | wc -l) dataset(s) placed for the native core"
+    # The native core draws the document pages from the web's own prerendered HTML, projected into
+    # a closed structure that conserves every character (ADR 0019). Projected from THIS build, so the
+    # wording is exactly the iOS channel's. iOS only, for the same reason as the datasets.
+    - name: Project the documents for the native core (iOS)
+      if: inputs.channel == 'ios'
+      shell: bash
+      run: node scripts/build-native-documents.mjs

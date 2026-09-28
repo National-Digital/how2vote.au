@@ -15,7 +15,10 @@ final class QuizViewModel: ObservableObject {
     enum Phase: Equatable {
         case loading
         case ready(Question)
-        case failed(String)
+        /// The questions did not load, or there are none. The web has no wording for an election
+        /// without questions — it stays on its loader — so both say the load failed, in its words,
+        /// rather than leaving the screen loading for good.
+        case failed
     }
 
     @Published private(set) var phase: Phase = .loading
@@ -62,19 +65,14 @@ final class QuizViewModel: ObservableObject {
             isEditing: isEditing,
             provenanceStatement: ManifestLoader.load(electionID: electionID)?.provenance?.statement,
             loadQuestions: { try QuestionLoader.load(electionID: electionID, engine: engine) },
-            persist: { try QuizState.save($0, electionID: electionID) },
-            restore: { QuizState.load(electionID: electionID) }
+            persist: { try QuizState.record($0, electionID: electionID) },
+            restore: { QuizState.current(electionID: electionID) }
         )
     }
 
     var total: Int { questions?.total ?? 0 }
 
     var provenance: String? { provenanceStatement }
-
-    /// The header's position label. Reads as 1-based, as the web's does.
-    var positionLabel: String {
-        total > 0 ? "Question \(cursor + 1) of \(total)" : "Quiz"
-    }
 
     /// The current question's recorded points, or `nil` when it is unanswered.
     var currentPoints: Int? {
@@ -105,12 +103,12 @@ final class QuizViewModel: ObservableObject {
             cursor = min(max(0, stored?.cursor ?? 0), max(0, set.total - 1))
 
             guard let question = set.question(at: cursor) else {
-                phase = .failed("There are no questions to show for this election.")
+                phase = .failed
                 return
             }
             phase = .ready(question)
         } catch {
-            phase = .failed("Couldn't load this election's questions.")
+            phase = .failed
         }
     }
 

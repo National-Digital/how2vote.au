@@ -13,8 +13,11 @@ const REGISTRY = JSON.parse(readFileSync(url("../docs/legal/terms-registry.json"
 const TERMS_PAGE = readFileSync(url("../apps/web/src/lib/content/TermsContent.svelte"), "utf8");
 const LEAF = readFileSync(url("../apps/web/src/lib/terms/terms.ts"), "utf8");
 const STORE = readFileSync(url("../apps/web/src/lib/terms.svelte.ts"), "utf8");
-const CARD = readFileSync(url("../apps/web/src/routes/card/+page.svelte"), "utf8");
+const CARD_PATH = "apps/web/src/lib/card-flow.svelte.ts";
+const CARD = readFileSync(url(`../${CARD_PATH}`), "utf8");
 const SURVEY = readFileSync(url("../apps/web/src/routes/survey/+page.svelte"), "utf8");
+const FLOW_PATH = "apps/web/src/lib/survey-flow.svelte.ts";
+const FLOW = readFileSync(url(`../${FLOW_PATH}`), "utf8");
 
 const leafConst = (name) => {
   const m = new RegExp(`export\\s+const\\s+${name}\\s*=\\s*([\\s\\S]*?);`).exec(LEAF);
@@ -33,8 +36,9 @@ const baseInput = () => ({
   acceptanceLabel: TERMS_ACCEPTANCE_LABEL,
   storeSource: STORE,
   wiringSources: [
-    { path: "card", text: CARD },
+    { path: CARD_PATH, text: CARD },
     { path: "survey", text: SURVEY },
+    { path: FLOW_PATH, text: FLOW },
   ],
 });
 
@@ -181,5 +185,119 @@ describe("helpers", () => {
   });
   it("normalisePageText collapses whitespace and entities", () => {
     expect(normalisePageText("<p>a\n  &amp; b</p>")).toBe("a & b");
+  });
+});
+
+describe("the survey's contribution gates", () => {
+  const withFlow = (text) => ({
+    ...baseInput(),
+    wiringSources: [
+      ...baseInput().wiringSources.filter((w) => w.path !== FLOW_PATH),
+      { path: FLOW_PATH, text },
+    ],
+  });
+
+  it("holds each of the survey state's gates on the acceptance, not a mention of it", () => {
+    for (const [mutated, needle] of [
+      [
+        FLOW.replace(
+          "this.consented && (termsAcceptance.accepted || this.termsChecked)",
+          "this.consented",
+        ),
+        "canContribute",
+      ],
+      [
+        FLOW.replace("if (!termsAcceptance.accepted) termsAcceptance.accept();", ""),
+        "does not record the acceptance",
+      ],
+      [
+        FLOW.replace(" || !termsAcceptance.accepted) return;", ") return;"),
+        "can upload without the acceptance",
+      ],
+    ]) {
+      expect(mutated).not.toBe(FLOW);
+      expect(hasError(verdict(withFlow(mutated)), needle)).toBe(true);
+    }
+  });
+});
+
+describe("the card's gates", () => {
+  const withCard = (text) => ({
+    ...baseInput(),
+    wiringSources: [
+      ...baseInput().wiringSources.filter((w) => w.path !== CARD_PATH),
+      { path: CARD_PATH, text },
+    ],
+  });
+
+  it("holds each of the card's steps on the acceptance, whoever asks for it", () => {
+    for (const [mutated, method] of [
+      [
+        CARD.replace(/(share\(\): void \{\n\s*)if \(!termsAcceptance\.accepted\) return;/, "$1"),
+        "share",
+      ],
+      [
+        CARD.replace(
+          "if (!this.showShareWarning || !ageGate.canVote || !termsAcceptance.accepted) return false;",
+          "if (!this.showShareWarning || !ageGate.canVote) return false;",
+        ),
+        "confirmShare",
+      ],
+      [
+        CARD.replace(
+          "if (!termsAcceptance.accepted || !this.plansEnabled || !this.data || this.data.shared) return;",
+          "if (!this.plansEnabled || !this.data || this.data.shared) return;",
+        ),
+        "startBuild",
+      ],
+      [
+        CARD.replace(
+          'if (this.session !== "owner-session" || !printAuth.isOwner || !termsAcceptance.accepted) return;',
+          'if (this.session !== "owner-session" || !printAuth.isOwner) return;',
+        ),
+        "openPrintAuthorisation",
+      ],
+    ]) {
+      expect(mutated).not.toBe(CARD);
+      expect(hasError(verdict(withCard(mutated)), `${method}() does not refuse`)).toBe(true);
+    }
+  });
+
+  it("does not take a gate that checks something else, comes too late, or only sometimes holds", () => {
+    const share = /(share\(\): void \{\n\s*)if \(!termsAcceptance\.accepted\) return;/;
+    for (const [mutated, why] of [
+      [
+        CARD.replace(share, "$1if (!termsAcceptance.acceptedVersion) return;"),
+        "another field of the store",
+      ],
+      [
+        CARD.replace(
+          share,
+          "$1this.#showShareWarning = true;\n    if (!termsAcceptance.accepted) return;",
+        ),
+        "after the method has acted",
+      ],
+      [
+        CARD.replace(share, "$1if (isNativeShell && !termsAcceptance.accepted) return;"),
+        "only in one shell",
+      ],
+    ]) {
+      expect(mutated, why).not.toBe(CARD);
+      expect(hasError(verdict(withCard(mutated)), "share() does not refuse"), why).toBe(true);
+    }
+  });
+
+  it("does not take a gate that survives only in a comment", () => {
+    const commented = CARD.replace(
+      /(share\(\): void \{\n\s*)if \(!termsAcceptance\.accepted\) return;/,
+      "$1// if (!termsAcceptance.accepted) return;",
+    );
+    expect(commented).not.toBe(CARD);
+    expect(hasError(verdict(withCard(commented)), "share() does not refuse")).toBe(true);
+  });
+
+  it("fails closed when a gated step is missing", () => {
+    const res = verdict(withCard(CARD.replace(/\n\s*confirmShare\(\)/, "\n  confirmed()")));
+    expect(hasError(res, "has no confirmShare()")).toBe(true);
   });
 });

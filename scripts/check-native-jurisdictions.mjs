@@ -7,7 +7,8 @@
  * list, and the picker appears broken for everyone who lives there. A missing entry is worse still:
  * a whole state with no way to reach the questionnaire, on one channel only.
  *
- * Both sides are plain literals, so agreement is checkable without running either.
+ * The native picker reads its states from the projected `states/ballot` page (ADR 0019 D4b), so
+ * this holds that projection to `STATES` in the picker's order: alphabetical by code.
  */
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
@@ -29,30 +30,41 @@ export function webJurisdictions(source) {
 }
 
 /**
- * @param {string} source  Jurisdictions.swift
+ * @param {object} doc  the projected states/ballot page
  * @returns {{code: string, name: string}[]}
  */
-export function nativeJurisdictions(source) {
-  const block = /static let all: \[Jurisdiction\] = \[([\s\S]*?)\n {4}\]/.exec(source ?? "")?.[1];
-  if (block === undefined) return [];
-  return [...block.matchAll(/Jurisdiction\(code: "([^"]+)", name: "([^"]+)"\)/g)].map((m) => ({
-    code: m[1],
-    name: m[2],
-  }));
+export function pageJurisdictions(doc) {
+  let found = [];
+  const walk = (blocks) => {
+    for (const b of blocks ?? []) {
+      if (b.t === "section" && b.id === "ballot-states") {
+        const list = b.c?.find((c) => c.t === "definitions");
+        found = (list?.items ?? []).map((item) => ({
+          code: item.term.map((i) => i.s ?? "").join(""),
+          name: item.detail
+            .flatMap((d) => d.c ?? [])
+            .map((i) => i.s ?? "")
+            .join(""),
+        }));
+      } else if (b.t === "section") walk(b.c);
+    }
+  };
+  walk(doc?.blocks);
+  return found;
 }
 
 /**
  * @param {string} web  apps/web/src/lib/data.ts
- * @param {string} native  Jurisdictions.swift
+ * @param {object} page  the projected states/ballot page
  * @returns {string[]}
  */
-export function verifyJurisdictions(web, native) {
+export function verifyJurisdictions(web, page) {
   const errors = [];
-  const a = webJurisdictions(web);
-  const b = nativeJurisdictions(native);
+  const a = webJurisdictions(web).sort((x, y) => x.code.localeCompare(y.code));
+  const b = pageJurisdictions(page);
 
   if (a.length === 0) errors.push("the web declares no STATES (fail closed)");
-  if (b.length === 0) errors.push("Jurisdictions.swift declares none (fail closed)");
+  if (b.length === 0) errors.push("the ballot states page offers none (fail closed)");
   if (a.length === 0 || b.length === 0) return errors;
 
   if (a.length !== b.length) {
@@ -62,8 +74,8 @@ export function verifyJurisdictions(web, native) {
     );
   }
 
-  // Order matters as well as membership: this is the list the ballot paper is ordered by, and the
-  // two are compared line for line so a reordering is visible rather than silently equivalent.
+  // Order matters as well as membership: the two pickers are compared entry by entry, so a
+  // reordering is visible rather than silently equivalent.
   for (let i = 0; i < Math.min(a.length, b.length); i += 1) {
     if (a[i].code !== b[i].code || a[i].name !== b[i].name) {
       errors.push(
@@ -87,10 +99,13 @@ const read = (p) => {
 };
 
 function main() {
-  const errors = verifyJurisdictions(
-    read("apps/web/src/lib/data.ts"),
-    read("apps/mobile/ios/App/App/Model/Jurisdictions.swift"),
-  );
+  let page;
+  try {
+    page = JSON.parse(read("apps/web/build/native-documents/states/ballot.json"));
+  } catch {
+    page = null; // fails closed below
+  }
+  const errors = verifyJurisdictions(read("apps/web/src/lib/data.ts"), page);
 
   if (errors.length > 0) {
     for (const e of errors) console.error(`::error::jurisdictions: ${e}`);

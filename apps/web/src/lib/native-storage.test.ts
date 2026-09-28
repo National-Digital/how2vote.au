@@ -279,13 +279,26 @@ describe("a native core that owns the core's state", () => {
 
   // Preferences is authoritative for these keys, so a restore must overwrite rather than only heal.
   it("overwrites a stale WebView copy on restore, so the WebView reads native state", async () => {
-    installBridge({ [MARKER]: "1", [SAVED_KEY]: "native-fresh" });
-    const local = installLocalStorage({ [SAVED_KEY]: "webview-stale" });
+    installBridge({ [MARKER]: "1", [QUIZ_KEY]: "native-fresh" });
+    const local = installLocalStorage({ [QUIZ_KEY]: "webview-stale" });
     const { restoreFromNative } = await load();
 
     await restoreFromNative();
 
-    expect(local.get(SAVED_KEY)).toBe("native-fresh");
+    expect(local.get(QUIZ_KEY)).toBe("native-fresh");
+  });
+
+  // A card is saved by the web's card flow, whichever screen asks: the WebView writes the saved
+  // cards, so their durable copy must follow it rather than be left to the native core.
+  it("mirrors the saved cards, which the WebView writes, and restores none over them", async () => {
+    const { store } = installBridge({ [MARKER]: "1", [SAVED_KEY]: "durable-older" });
+    const local = installLocalStorage({ [SAVED_KEY]: "saved-on-the-card" });
+    const { backupToNative, restoreFromNative } = await load();
+
+    await restoreFromNative();
+    expect(local.get(SAVED_KEY)).toBe("saved-on-the-card");
+    await backupToNative();
+    expect(store.get(SAVED_KEY)).toBe("saved-on-the-card");
   });
 
   it("leaves a non-owned key's live value alone on restore", async () => {

@@ -38,7 +38,12 @@ if (teamId) {
       details: [
         {
           appIDs: [`${teamId}.${APP_ID}`],
-          components: [{ "/": "/api/*", exclude: true }, { "/": "/*" }],
+          // `/states/*` are build-time files the iOS app projects, never a page to open from a link.
+          components: [
+            { "/": "/api/*", exclude: true },
+            { "/": "/states/*", exclude: true },
+            { "/": "/*" },
+          ],
         },
       ],
     },

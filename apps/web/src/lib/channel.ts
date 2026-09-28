@@ -186,16 +186,35 @@ type NativeRouterPlugin = {
     eligible?: boolean;
     canExplore?: boolean;
     allowedMapIds?: string[];
+    chrome?: string;
+    session?: string;
+    document?: string;
+    anchor?: string;
+    theme?: string;
+    data?: string;
   }): Promise<{ presented: boolean }>;
   dismiss(): Promise<void>;
   themeChanged(options: { theme: string }): Promise<void>;
+  answer(options: { request: string; answer: string }): Promise<void>;
   addListener(
     event: "nativeRouteExit",
-    handler: (data: { route: string }) => void,
+    handler: (data: { route: string; session?: string; electionId?: string }) => void,
+  ): Promise<{ remove: () => Promise<void> }> | { remove: () => void };
+  addListener(
+    event: "nativeStaleDismiss",
+    handler: (data: { dataVersion: string }) => void,
   ): Promise<{ remove: () => Promise<void> }> | { remove: () => void };
   addListener(
     event: "nativeThemeRequest",
     handler: () => void,
+  ): Promise<{ remove: () => Promise<void> }> | { remove: () => void };
+  addListener(
+    event: "nativeSlotAction",
+    handler: (data: { slot: string; action: string }) => void,
+  ): Promise<{ remove: () => Promise<void> }> | { remove: () => void };
+  addListener(
+    event: "nativeScreenAction",
+    handler: (data: { screen: string; action: string; value?: string; request?: string }) => void,
   ): Promise<{ remove: () => Promise<void> }> | { remove: () => void };
 };
 
