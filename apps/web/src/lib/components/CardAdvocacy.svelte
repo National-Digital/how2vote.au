@@ -25,7 +25,7 @@
 {#snippet e()}{#if marked}<data value="electorate">{electorate}</data
     >{:else}{electorate}{/if}{/snippet}
 
-<p class="adv-head">
+<p>
   <b>This comparison is yours to explore — How2Vote won't build you a how-to-vote plan.</b>
 </p>
 <p>
@@ -34,7 +34,7 @@
   line up with the parties' recorded votes. When you're old enough to vote, come back and build your
   plan.
 </p>
-<p class="adv-sub"><b>Want your voice heard now?</b></p>
+<p><b>Want your voice heard now?</b></p>
 <ul>
   <li>
     <ExternalLink href={CIVIC_LINKS.enrol}>Enrol early with the AEC</ExternalLink>

@@ -49,7 +49,7 @@
 </p>
 <!-- Data attribution travels with the printed worksheet (ODbL/AEC obligation): the worksheet
      footer is NOT hidden in print, so the required credits appear on the printed output too. -->
-<p class="worksheet-attribution">
+<p>
   Vote data © {@render value("attribution", attribution)}. Candidates and ballot: Australian
   Electoral Commission.
 </p>

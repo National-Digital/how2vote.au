@@ -14,7 +14,7 @@
  */
 import { browser } from "$app/environment";
 import { routePath } from "$lib/native-route-path";
-import { afterNavigate } from "$app/navigation";
+import { afterNavigate, goto } from "$app/navigation";
 import { onDestroy, onMount } from "svelte";
 import { ageGate } from "$lib/age.svelte";
 import { nativeRouterPlugin, storeListingUrl } from "$lib/channel";
@@ -22,7 +22,7 @@ import { CURRENT_ELECTION_ID, ELECTIONS, ELECTION_IDS } from "@how2vote/data-sch
 import { STATES } from "$lib/data";
 import { isMapAvailable } from "$lib/governance";
 import { backupToNative, restoreFromNative } from "$lib/native-storage";
-import { handleScreenAction } from "$lib/native-screen-actions";
+import { handleScreenAction, loadCardFlow } from "$lib/native-screen-actions";
 import { performSlotAction } from "$lib/native-slot-actions";
 import { election as activeElection, savedElectionId } from "$lib/election.svelte";
 import { now } from "$lib/now.svelte";
@@ -70,6 +70,7 @@ const NATIVE_ROUTES = new Set([
   "/contact",
   "/insights",
   "/survey",
+  "/card",
   // The landing renders for a past election too (`/2019`, `/2022`), and the election toggle moves
   // between them. Without these the toggle would drop out of the native surface mid-tap.
   ...ELECTION_IDS.map((id) => `/${id}`),
@@ -105,6 +106,7 @@ export const STATE_DOCUMENTS = [
   "states/contact-form",
   "states/insights",
   "states/survey",
+  "states/card",
 ] as const;
 
 /**
@@ -217,11 +219,18 @@ async function statsFile(name: string): Promise<unknown> {
 
 /**
  * What a screen draws that is the web's to hold, handed over with the route: the saved cards, as the
- * saved page lists them, the Insights page's figures, and the survey's step. Undefined for a screen with none, and null
+ * saved page lists them, the Insights page's figures, the survey's step, and the card. Undefined for a screen with none, and null
  * for one whose data the web has not read yet, which the native core cannot draw.
  */
-async function screenData(route: string): Promise<string | null | undefined> {
+async function screenData(route: string, url: URL): Promise<string | null | undefined> {
   if (route === "insights") return JSON.stringify(await readInsights(statsFile));
+  if (route === "card") {
+    // The card the page opens, or is opening: the same one, so the page and the screen agree.
+    const cardFlow = await loadCardFlow();
+    await cardFlow.open(url, (path) => void goto(path));
+    const card = cardFlow.nativeCard();
+    return card ? JSON.stringify(card) : null;
+  }
   if (route === "survey") {
     // Whether the current Terms still need accepting decides whether their checkbox is shown.
     if (!termsAcceptance.ready) termsAcceptance.hydrate();
@@ -319,9 +328,10 @@ class NativeRoute {
     const route = document !== null ? "document" : routeName(path, electionId);
     const navigation = ++this.#navigations;
     const candidate = NATIVE_ROUTES.has(path) || document !== null;
-    // Read before the route is offered. Only the Insights page's data is read asynchronously, and
-    // that page writes nothing, so it may render while its figures are read.
-    const data = candidate ? await screenData(route) : undefined;
+    // Read before the route is offered. The Insights page's figures and the card are read
+    // asynchronously; neither writes a key the native core owns, so each may render while it is read.
+    // A read that fails is data the screen cannot draw: the route is declined, not left pending.
+    const data = candidate ? await screenData(route, url).catch(() => null) : undefined;
     // A later navigation is being handled; this one's answer is no longer wanted.
     if (navigation !== this.#navigations) return;
     const offered =

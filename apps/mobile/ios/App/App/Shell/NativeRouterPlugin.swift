@@ -235,6 +235,21 @@ enum ScreenAction: String, CaseIterable {
     case surveyContribute = "survey:contribute"
     case surveyChoose = "survey:choose"
     case surveyBack = "survey:back"
+    case cardBuild = "card:build"
+    case cardCompare = "card:compare"
+    case cardShare = "card:share"
+    case cardShareConfirm = "card:share-confirm"
+    case cardShareCancel = "card:share-cancel"
+    case cardTermsTick = "card:terms-tick"
+    case cardTermsAccept = "card:terms-accept"
+    case cardTermsCancel = "card:terms-cancel"
+    case cardSave = "card:save"
+    case cardWhy = "card:why"
+    case cardFresh = "card:fresh"
+    case cardSenate = "card:senate"
+    case cardRank = "card:rank"
+    case cardUp = "card:up"
+    case cardDown = "card:down"
 
     /// The screen that asks.
     var screen: String { String(rawValue.prefix { $0 != ":" }) }

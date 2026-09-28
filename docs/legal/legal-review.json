@@ -334,6 +334,20 @@
       "disposition": "no-review-required",
       "reviewer": "cameron-young",
       "affectedControls": ["control-4", "control-5", "control-6", "control-24", "control-25"]
+    },
+    {
+      "date": "2026-09-28",
+      "change": "On iOS, the comparison card is drawn natively (ADR 0019 D4k), superseding the decision that it stay in the WebView (ADR 0018 D1a, now D1b). Every rule stays the web's: the app draws the card the web's flow (apps/web/src/lib/card-flow.svelte.ts) hands over with the route, and asks the web to take each step the page's controls take — the Terms tick and acceptance, building the plan, sharing and its non-revocable-link warning, saving, the evidence, each number typed or moved, the Senate method and the way back — through the flow's own methods, refused on a stage the card has moved on from. The alignment panels show a party's figure only where alignmentPresentation shows one, and the app refuses a card that would show one elsewhere, a plan on a shared card or for an under-18, or a way to save or share a card that may not be. A share link leaves the device only as the web's answer to a confirmed warning, the canonical https link, which the app hands to the system share sheet. The card's wording is drawn from states/card.html, a build-time file that exists only in the iOS build, rendered from $lib/card-copy.ts, the party panel's and the Terms gate's copy and the card's paragraphs as the page renders them; the plan's s321D authorisation and, for a past election, its historical marker are pinned to the screen for as long as the plan is shown, as the web's band is. The app prints nothing. The card's five registered notices stay generated as a lock on its wording, and CI requires the paragraphs the native card draws to carry each of them. The plan authorisation band's two labels move unchanged into $lib/card-copy.ts. No wording is changed, and no register content, legal position, obligation, permitted use, or collection, use, disclosure, retention or overseas-processing practice is altered; no consent or Terms version is affected; no legal review was sought or is required.",
+      "disposition": "no-review-required",
+      "reviewer": "cameron-young",
+      "affectedControls": [
+        "control-4",
+        "control-5",
+        "control-6",
+        "control-9",
+        "control-24",
+        "control-25"
+      ]
     }
   ],
   "nextMandatoryReviewDate": "2027-07-15",

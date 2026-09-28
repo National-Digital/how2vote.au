@@ -6,6 +6,7 @@
  * It is opened afresh each time the card is entered (`open`) and closed when the card is left
  * (`close`), as the page's own state once was.
  */
+import { version } from "$app/environment";
 import { electionPhase } from "@how2vote/data-schema";
 import {
   bandFor,
@@ -23,7 +24,15 @@ import {
   type SenateGroupRow,
 } from "@how2vote/engine";
 import { ageGate } from "$lib/age.svelte";
-import { distinctPartyAlignments, type PartyAlignmentRow } from "$lib/candidate-alignment";
+import {
+  alignmentPresentation,
+  distinctPartyAlignments,
+  groupByFederalGroup,
+  type PartyAlignmentRow,
+} from "$lib/candidate-alignment";
+import { CARD_COPY } from "$lib/card-copy";
+import { PARTY_PANEL_COPY } from "$lib/party-panel-copy";
+import { fill } from "$lib/template";
 import { suspendedPartyKeys } from "$lib/corrections";
 import {
   hasCorrectionNotice,
@@ -35,9 +44,9 @@ import {
   isPrintingAllowed,
   suspendedPropositionIds,
 } from "$lib/governance";
-import { NATIONAL_BALLOT, isElectorateLess, loadData, type Data } from "$lib/data";
+import { NATIONAL_BALLOT, isElectorateLess, loadData, stateName, type Data } from "$lib/data";
 import { election } from "$lib/election.svelte";
-import { moveDown, moveUp, planStatus, setRank } from "$lib/plan";
+import { moveDown, moveUp, planStatus, prefOf, setRank, type PlanStatus } from "$lib/plan";
 import { printAuth } from "$lib/print-auth.svelte";
 import { quiz } from "$lib/quiz.svelte";
 import { saved } from "$lib/saved.svelte";
@@ -59,6 +68,102 @@ export type PlanBallot = "house" | "above" | "below";
 // cannot print) rather than to owner-session. The actual print permission is the in-memory
 // `printAuth.isOwner` capability (never persisted, never in a URL), asserted again at print time.
 export type CardSession = "shared-readonly" | "owner-session" | "print-authorisation";
+
+/** A party's row in an alignment panel, as the panel shows and speaks it. */
+export type NativePanelRow = {
+  /** The party as the panel names it: with its state branch, where it has one. */
+  name: string;
+  kind: "suspended" | "independent" | "no-party-record" | "aligned";
+  showScore: boolean;
+  /** The figure as the panel prints it, or null where none may be shown. */
+  figure: string | null;
+  badge: string;
+  spoken: string;
+};
+
+/** An alignment panel: its chamber's heading, and its parties, a registered family together. */
+export type NativePanel = {
+  title: string;
+  subtitle: string;
+  caption: string;
+  ballotOrdered: boolean;
+  blocks: (
+    | { kind: "single"; row: NativePanelRow }
+    | { kind: "group"; label: string; note: string; rows: NativePanelRow[] }
+  )[];
+};
+
+/** A row of the plan's ballot, with the name its controls are called by. */
+export type NativePlanRow = {
+  id: string;
+  candidate: string;
+  party: string;
+  name: string;
+  pref: number;
+};
+
+/**
+ * The card as the iOS app draws it: what the page would show, its values and every label the page
+ * computes, filled; the card's fixed wording is its states page. Only a card that is ready, or one
+ * the page explains instead, is drawn.
+ */
+export type NativeCard =
+  | { status: "error" | "unavailable" | "archived-link" }
+  | {
+      status: "ready";
+      stage: "compare" | "build";
+      stageLabel: string;
+      heading: string;
+      /** What follows the heading, as the page sets it smaller: the state, for a ballot. */
+      stateSuffix: string;
+      shared: boolean;
+      canVote: boolean;
+      archived: boolean;
+      electorateLess: boolean;
+      correction: boolean;
+      electorate: string;
+      label: string;
+      year: string;
+      vintage: string;
+      withdrawn: number;
+      panels: NativePanel[];
+      plansEnabled: boolean;
+      build: string;
+      saveable: boolean;
+      saved: boolean;
+      /** Whether the Terms gate is showing, and whether its acceptance is ticked. */
+      terms: { shown: boolean; ticked: boolean };
+      shareWarning: boolean;
+      why: boolean;
+      evidence: {
+        key: string;
+        summary: string;
+        lines: { id: number; question: string; agreement: string; href: string; label: string }[];
+      }[];
+      plan: {
+        house: { title: string; subtitle: string; rows: NativePlanRow[]; status: string };
+        senate: {
+          title: string;
+          subtitle: string;
+          view: "above" | "below";
+          above: NativePlanRow[];
+          aboveStatus: string;
+          below: { label: string; rows: NativePlanRow[] }[];
+          belowStatus: string;
+        };
+        built: string;
+        dataVersion: string;
+        version: string;
+        attribution: string;
+      } | null;
+    };
+
+/** The name a plan row's controls are called by: its candidate, then their party. */
+export const planRowName = (candidate: string, party: string): string =>
+  `${candidate}, ${party || CARD_COPY.independent}`;
+
+/** Where a question's parliamentary voting record is, on They Vote For You. */
+export const TVFY_POLICY = "https://theyvoteforyou.org.au/policies";
 
 /** Stable per-row id (candidate + printed position), used as the plan-order key. */
 export const rowId = (candidate: string, position: number): string => `${candidate}|${position}`;
@@ -89,6 +194,63 @@ function applyChamberSuspensions(card: Card, electionId: string, electorateSlug:
     senateAboveLine: senateOk ? card.senateAboveLine : [],
   };
 }
+
+/** A Senate plan's check: how many are numbered, and the minimum where the paper has one. */
+function senateStatus(status: PlanStatus, territory: boolean, line: "above" | "below"): string {
+  const template = territory
+    ? CARD_COPY.territoryProgress
+    : line === "above"
+      ? CARD_COPY.aboveProgress
+      : CARD_COPY.belowProgress;
+  return fill(template, { ranked: status.ranked });
+}
+
+/** An alignment panel as the iOS app draws it: each row as `PartyAlignmentPanel` presents it. */
+function nativePanel(
+  title: string,
+  subtitle: string,
+  caption: string,
+  parties: readonly PartyAlignmentRow[],
+  ballotOrdered: boolean,
+): NativePanel {
+  const rows = parties.map((p) => {
+    const presentation = alignmentPresentation({
+      partyKey: p.partyKey,
+      party: p.party,
+      score: p.score,
+      band: p.band,
+      suspended: p.suspended,
+    });
+    const party = p.party || PARTY_PANEL_COPY.unnamed;
+    const row: NativePanelRow = {
+      name: p.region ? `${party}\u00a0(${p.region})` : party,
+      kind: presentation.kind,
+      showScore: presentation.showScore,
+      figure: presentation.showScore ? `${presentation.score}%` : null,
+      badge: presentation.badge,
+      spoken: fill(PARTY_PANEL_COPY.spoken, { party: p.party, detail: presentation.detail }),
+    };
+    return { ...row, federalGroup: p.federalGroup };
+  });
+  return {
+    title,
+    subtitle,
+    caption,
+    ballotOrdered,
+    blocks: groupByFederalGroup(rows).map((block) =>
+      block.kind === "single"
+        ? { kind: "single", row: strip(block.row) }
+        : {
+            kind: "group",
+            label: block.label,
+            note: fill(PARTY_PANEL_COPY.groupNote, { group: block.label }),
+            rows: block.rows.map(strip),
+          },
+    ),
+  };
+}
+
+const strip = ({ federalGroup: _group, ...row }: NativePanelRow & { federalGroup?: string }) => row;
 
 class CardFlow {
   // "unavailable" is the fail-closed governance state: the runtime kill-switch control
@@ -140,6 +302,9 @@ class CardFlow {
   get showShareWarning(): boolean {
     return this.#showShareWarning;
   }
+  // The Terms gate's acceptance box as the iOS app ticks it: the web's page holds its own. Only a
+  // ticked box can accept.
+  termsTicked = $state(false);
   // The shareable path (with fragment) for this comparison — the key it's saved under on-device.
   cardUrl = $state("");
 
@@ -293,6 +458,165 @@ class CardFlow {
       : 0,
   );
 
+  // Date the plan is built/printed — recorded on the worksheet so a stale printout is obvious.
+  // Set as the card opens, as the page once set it on each visit: a module's $derived of the clock
+  // would never recompute, and a long-lived app would print the day it was first opened.
+  builtOn = $state("");
+
+  /** What the card's head calls the stage it is on. */
+  stageLabel = $derived(
+    this.stage === "build"
+      ? this.isArchived
+        ? CARD_COPY.demonstrationStage
+        : CARD_COPY.buildStage
+      : CARD_COPY.compareStage,
+  );
+
+  /** The House plan's check, as the page reports it under the ballot. */
+  houseStatusText = $derived(
+    this.houseStatus.complete
+      ? fill(CARD_COPY.houseComplete, { total: this.houseStatus.total })
+      : fill(CARD_COPY.houseProgress, {
+          ranked: this.houseStatus.ranked,
+          total: this.houseStatus.total,
+        }),
+  );
+  aboveStatusText = $derived(senateStatus(this.senateAboveStatus, this.isTerritory, "above"));
+  belowStatusText = $derived(senateStatus(this.senateBelowStatus, this.isTerritory, "below"));
+
+  /** The above-the-line rows as the plan lists them: the group, and its column and size. */
+  aboveRows = $derived(
+    this.senateAtl.map((r) => ({
+      id: r.group,
+      candidate: r.party || fill(CARD_COPY.group, { group: r.group }),
+      party: fill(r.candidates === 1 ? CARD_COPY.columnOne : CARD_COPY.columnMany, {
+        group: r.group,
+        n: r.candidates,
+      }),
+    })),
+  );
+
+  /** The card as the iOS app draws it, or null while there is nothing yet to draw. */
+  nativeCard(): NativeCard | null {
+    if (this.status === "loading") return null;
+    if (this.status !== "ready") return { status: this.status };
+    const data = this.data;
+    if (!data) return null;
+    const card = data.card;
+    const state = stateName(card.state);
+    const panels: NativePanel[] = this.electorateLess
+      ? [
+          nativePanel(
+            CARD_COPY.parliamentPanel,
+            CARD_COPY.parliamentPanelNote,
+            CARD_COPY.parliamentCaption,
+            this.allPartyAlignments,
+            false,
+          ),
+        ]
+      : [
+          nativePanel(
+            CARD_COPY.house,
+            CARD_COPY.houseCompare,
+            CARD_COPY.houseCaption,
+            this.houseParties,
+            true,
+          ),
+          nativePanel(
+            CARD_COPY.senate,
+            fill(CARD_COPY.senatePaper, { state }),
+            CARD_COPY.senateCaption,
+            this.senateParties,
+            true,
+          ),
+        ];
+    const row = (id: string, candidate: string, party: string, order: readonly string[]) => ({
+      id,
+      candidate,
+      party: party || CARD_COPY.independent,
+      name: planRowName(candidate, party),
+      pref: prefOf(order, id),
+    });
+    const building = this.stage === "build";
+    return {
+      status: "ready",
+      stage: this.stage,
+      stageLabel: this.stageLabel,
+      heading: this.electorateLess ? CARD_COPY.parliament : card.electorate,
+      stateSuffix: this.electorateLess ? "" : ` · ${state}`,
+      shared: data.shared,
+      canVote: ageGate.canVote,
+      archived: this.isArchived,
+      electorateLess: this.electorateLess,
+      correction: this.correctionNotice,
+      electorate: card.electorate,
+      label: election.meta.label,
+      year: String(election.meta.year),
+      vintage: this.vintage,
+      withdrawn: this.withdrawnCount,
+      panels,
+      plansEnabled: this.plansEnabled,
+      build: this.isArchived ? CARD_COPY.buildDemonstration : CARD_COPY.build,
+      saveable: this.cardUrl !== "" && ageGate.canVote && !data.shared,
+      saved: this.isSaved,
+      terms: { shown: this.pendingAction !== null, ticked: this.termsTicked },
+      shareWarning: this.showShareWarning,
+      why: this.showWhy,
+      evidence: this.showWhy
+        ? this.evidenceParties
+            .filter((p) => !p.suspended && p.partyKey)
+            .map((p) => ({
+              key: p.partyKey!,
+              summary: `${p.party} — ${
+                p.score < 0
+                  ? CARD_COPY.noPartyVotes
+                  : fill(CARD_COPY.partyScore, { score: p.score })
+              }`,
+              lines: this.evidence(p.partyKey).map((line) => ({
+                id: line.questionId,
+                question: line.question,
+                agreement: line.agreement,
+                href: `${TVFY_POLICY}/${line.questionId}`,
+                label: fill(CARD_COPY.recordLabel, { question: line.question }),
+              })),
+            }))
+        : [],
+      plan: building
+        ? {
+            house: {
+              title: CARD_COPY.house,
+              subtitle: CARD_COPY.houseBuild,
+              rows: this.house.map((r) =>
+                row(rowId(r.candidate, r.position), r.candidate, r.party, this.houseOrder),
+              ),
+              status: this.houseStatusText,
+            },
+            senate: {
+              title: CARD_COPY.senate,
+              subtitle: fill(CARD_COPY.senatePaper, { state }),
+              view: this.senateView,
+              above: this.aboveRows.map((r) => ({
+                ...row(r.id, r.candidate, r.party, this.senateAboveOrder),
+                party: r.party,
+              })),
+              aboveStatus: this.aboveStatusText,
+              below: this.senateGroups.map(([group, rows]) => ({
+                label: fill(CARD_COPY.column, { group }),
+                rows: rows.map((r) =>
+                  row(rowId(r.candidate, r.position), r.candidate, r.party, this.senateBelowOrder),
+                ),
+              })),
+              belowStatus: this.belowStatusText,
+            },
+            built: this.builtOn,
+            dataVersion: election.manifest.dataVersion,
+            version,
+            attribution: card.attribution,
+          }
+        : null,
+    };
+  }
+
   /**
    * Opens the card the URL names: a shared comparison from its fragment, or the visitor's own from
    * their in-progress quiz. A second call before the card is closed is the same opening.
@@ -319,6 +643,7 @@ class CardFlow {
     this.copied = false;
     this.#pendingAction = null;
     this.#showShareWarning = false;
+    this.termsTicked = false;
     this.cardUrl = "";
     this.houseOrder = [];
     this.senateAboveOrder = [];
@@ -327,6 +652,21 @@ class CardFlow {
 
   async #open(url: URL, goto: (path: string) => void): Promise<void> {
     const opening = ++this.#opened;
+    try {
+      await this.#load(url, goto, opening);
+    } catch {
+      // A card that cannot be built is explained, never left loading: the page shows its error, and
+      // the app's route is declined rather than left covering whatever came before.
+      if (opening === this.#opened) this.status = "error";
+    }
+  }
+
+  async #load(url: URL, goto: (path: string) => void, opening: number): Promise<void> {
+    this.builtOn = new Date().toLocaleDateString("en-AU", {
+      day: "numeric",
+      month: "short",
+      year: "numeric",
+    });
     termsAcceptance.hydrate();
     // Old how2vote.com.au share links (?res=<id>) pointed at cards stored in that site's database,
     // which is gone — they can only be explained, not resolved.
@@ -473,7 +813,7 @@ class CardFlow {
     // Saving a comparison on-device is a vote-capable capability (ADR 0012): an under-18 explorer
     // gets a session-only result, nothing persisted. Fail closed — the UI already hides the control.
     if (!ageGate.canVote) return;
-    if (!this.data || !this.cardUrl) return;
+    if (!this.data || this.data.shared || !this.cardUrl) return;
     if (saved.has(this.cardUrl)) saved.remove(this.cardUrl);
     else
       saved.save({
@@ -563,6 +903,25 @@ class CardFlow {
 
   cancelTerms(): void {
     this.#pendingAction = null;
+    this.termsTicked = false;
+  }
+
+  /** Ticks or clears the Terms gate's acceptance, as the iOS app's box does. */
+  tickTerms(on: boolean): void {
+    if (this.#pendingAction === null) return;
+    this.termsTicked = on;
+  }
+
+  /**
+   * Accepts the Terms from the iOS app's gate: only a gate that is showing, with its box ticked,
+   * records the acceptance, as the page's gate does, and then runs the action it was holding.
+   */
+  acceptTerms(): boolean {
+    if (this.#pendingAction === null || !this.termsTicked) return false;
+    this.termsTicked = false;
+    termsAcceptance.accept();
+    this.onTermsAccepted();
+    return true;
   }
 
   startBuild(): void {

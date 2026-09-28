@@ -402,6 +402,34 @@ final class NativeCoreHost {
                 NSLog("How2Vote: declined survey — \(error)")
                 return nil
             }
+        case "card":
+            // The card is the web's, handed over with the route as its flow holds it; its words are
+            // the web's card page, and the documents it opens over itself are the web's own pages.
+            // Any of them missing declines the route, and the WebView shows the card.
+            do {
+                let wording = try CardWording(NativeDocument.load(name: "states/card").0)
+                let card = try CardData.decode(data)
+                let (terms, termsLayout) = try NativeDocument.load(name: "terms")
+                let (corrections, correctionsLayout) = try NativeDocument.load(name: "corrections")
+                return themed(
+                    CardView(
+                        wording: wording,
+                        card: card,
+                        // By the route each page is served at, which is the route the card links.
+                        documents: [terms.route: termsLayout, corrections.route: correctionsLayout],
+                        onAction: { onScreenAction($0, $1, nil) },
+                        onShare: {
+                            await withCheckedContinuation { answered in
+                                onScreenAction(.cardShareConfirm, nil) { answered.resume(returning: $0) }
+                            }
+                        },
+                        onExit: onExit
+                    )
+                )
+            } catch {
+                NSLog("How2Vote: declined card — \(error)")
+                return nil
+            }
         default:
             return nil
         }
@@ -410,7 +438,7 @@ final class NativeCoreHost {
     /// Whether a route's screen runs the engine. A page drawn from its projection, and a list the web
     /// hands over, need none.
     private static func needsEngine(_ route: String) -> Bool {
-        !["document", "saved", "contact", "insights", "survey"].contains(route)
+        !["document", "saved", "contact", "insights", "survey", "card"].contains(route)
     }
 
     private func loadedEngine() -> JSCEngine? {

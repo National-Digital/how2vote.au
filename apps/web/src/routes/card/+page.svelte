@@ -22,7 +22,7 @@
   import PlanRow from "$lib/components/PlanRow.svelte";
   import PrintAuthorisationDialog from "$lib/components/PrintAuthorisationDialog.svelte";
   import TermsGate from "$lib/components/TermsGate.svelte";
-  import { cardFlow as flow, rowId } from "$lib/card-flow.svelte";
+  import { cardFlow as flow, rowId, TVFY_POLICY } from "$lib/card-flow.svelte";
   import { CARD_COPY } from "$lib/card-copy";
   import { stateName } from "$lib/data";
   import { election } from "$lib/election.svelte";
@@ -134,15 +134,6 @@
     if (building && flow.stage === "build") window.scrollTo({ top: 0 });
   }
 
-  // "Why do I align with these candidates?" — evidence for each scored party (the receipts). Each
-  // question's id is its They Vote For You policy id, so it links to the record.
-  const TVFY_POLICY = "https://theyvoteforyou.org.au/policies";
-
-  // Date the plan is built/printed — recorded on the worksheet so a stale printout is obvious.
-  const builtOn = $derived(
-    new Date().toLocaleDateString("en-AU", { day: "numeric", month: "short", year: "numeric" }),
-  );
-
   // The stamp actually PRINTED on the plan — National Digital's authorisation plus the "preference
   // order selected by the user" notice — non-empty ONLY once the voter has acknowledged the print,
   // so a mid-form native (Ctrl+P) print never carries an un-acknowledged authorisation stamp.
@@ -196,13 +187,7 @@
   <div class="card-head">
     <div class="ch-top ui">
       <a class="home" href="/" aria-label={CARD_COPY.home}><Logo size="sm" /></a>
-      <span
-        >{flow.stage === "build"
-          ? flow.isArchived
-            ? CARD_COPY.demonstrationStage
-            : CARD_COPY.buildStage
-          : CARD_COPY.compareStage}</span
-      >
+      <span>{flow.stageLabel}</span>
     </div>
     <h1>
       {#if flow.electorateLess}{CARD_COPY.parliament}{:else}{data.card.electorate}<span
@@ -474,16 +459,7 @@
               />
             {/each}
           </ol>
-          <p class="check ui" role="status">
-            {#if flow.houseStatus.complete}
-              {fill(CARD_COPY.houseComplete, { total: flow.houseStatus.total })}
-            {:else}
-              {fill(CARD_COPY.houseProgress, {
-                ranked: flow.houseStatus.ranked,
-                total: flow.houseStatus.total,
-              })}
-            {/if}
-          </p>
+          <p class="check ui" role="status">{flow.houseStatusText}</p>
         </div>
 
         <div class="chamber">
@@ -517,27 +493,20 @@
 
           {#if flow.senateView === "above"}
             <ol class="rows">
-              {#each flow.senateAtl as r (r.group)}
+              {#each flow.aboveRows as r (r.id)}
                 <PlanRow
-                  uid={`sa-${r.group}`}
-                  candidate={r.party || fill(CARD_COPY.group, { group: r.group })}
-                  party={fill(r.candidates === 1 ? CARD_COPY.columnOne : CARD_COPY.columnMany, {
-                    group: r.group,
-                    n: r.candidates,
-                  })}
-                  pref={prefOf(flow.senateAboveOrder, r.group)}
+                  uid={`sa-${r.id}`}
+                  candidate={r.candidate}
+                  party={r.party}
+                  pref={prefOf(flow.senateAboveOrder, r.id)}
                   total={flow.senateAboveIds.length}
-                  onset={(n) => flow.setRank("above", r.group, n)}
-                  onup={() => flow.moveUp("above", r.group)}
-                  ondown={() => flow.moveDown("above", r.group)}
+                  onset={(n) => flow.setRank("above", r.id, n)}
+                  onup={() => flow.moveUp("above", r.id)}
+                  ondown={() => flow.moveDown("above", r.id)}
                 />
               {/each}
             </ol>
-            <p class="check ui" role="status">
-              {fill(flow.isTerritory ? CARD_COPY.territoryProgress : CARD_COPY.aboveProgress, {
-                ranked: flow.senateAboveStatus.ranked,
-              })}
-            </p>
+            <p class="check ui" role="status">{flow.aboveStatusText}</p>
           {:else}
             {#each flow.senateGroups as [group, rows] (group)}
               <p class="col ui">{fill(CARD_COPY.column, { group })}</p>
@@ -557,11 +526,7 @@
                 {/each}
               </ol>
             {/each}
-            <p class="check ui" role="status">
-              {fill(flow.isTerritory ? CARD_COPY.territoryProgress : CARD_COPY.belowProgress, {
-                ranked: flow.senateBelowStatus.ranked,
-              })}
-            </p>
+            <p class="check ui" role="status">{flow.belowStatusText}</p>
           {/if}
         </div>
       </section>
@@ -572,7 +537,7 @@
          once at the end of the document (National Digital authoriser model; docs/adr/0010). -->
       <div class="worksheet-foot ui">
         <CardWorksheetFoot
-          built={builtOn}
+          built={flow.builtOn}
           label={election.meta.label}
           dataVersion={election.manifest.dataVersion}
           {version}
@@ -883,11 +848,12 @@
   .advocacy :global(p) {
     margin: 0 0 10px;
   }
-  .advocacy :global(.adv-head) {
+  /* The note's heading and its sub-heading, first and third of its paragraphs (CardAdvocacy). */
+  .advocacy :global(p:first-child) {
     color: var(--ink);
     font-size: 15px;
   }
-  .advocacy :global(.adv-sub) {
+  .advocacy :global(p:nth-of-type(3)) {
     color: var(--ink);
     margin-top: 4px;
   }

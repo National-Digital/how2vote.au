@@ -49,6 +49,7 @@ enum DocumentLogic {
         failures += readsTheContactWording(root)
         failures += readsTheInsights(root)
         failures += readsTheSurvey(root)
+        failures += readsTheCard(root)
 
         var ran = 0
         let sample = try? Data(contentsOf: files[0])
@@ -659,6 +660,128 @@ enum DocumentLogic {
         }
         if (try? InsightsData.decode(nil)) != nil {
             failures.append("an insights screen with no figures handed over was accepted")
+        }
+        return failures
+    }
+
+    /// The card's wording is the web's: every piece worded, each paragraph marking the values the
+    /// card fills and naming them where it is given them, and the pages its paragraphs open over it
+    /// being pages the app draws. The cards the web hands over (`card-model.json`, which the web's
+    /// test holds to its card type) decode, and cards the screen could only draw wrongly are refused.
+    private static func readsTheCard(_ root: URL) -> [String] {
+        guard let data = try? Data(contentsOf: root.appendingPathComponent("states/card.json")),
+              let (page, _) = try? NativeDocument.decodeChecked(data)
+        else { return ["the card states page is missing or does not lay out"] }
+        var failures: [String] = []
+        do {
+            let wording = try CardWording(page)
+            let texts = CardWording.Piece.allCases.map { wording.text($0, ["name": "Zed", "title": "Zed"]) }
+            if texts.contains(where: \.isEmpty) {
+                failures.append("a card piece is not worded")
+            }
+            if texts.contains(where: { $0.contains("{") }) {
+                failures.append("a card piece is drawn with a value unfilled")
+            }
+            for piece in [CardWording.Piece.preferenceFor, .higher, .lower, .close]
+            where !wording.text(piece, ["name": "Zed", "title": "Zed"]).contains("Zed") {
+                failures.append("the card's \(piece) does not name what it is for")
+            }
+            let values = ["label": "Zed election", "year": "1901", "vintage": "1 Jan 1901", "n": "7", "age": "99",
+                          "electorate": "Zedland", "built": "2 Jan 1901", "data": "1901-01-01", "version": "9.9.9",
+                          "attribution": "Zed data"]
+            for paragraph in CardWording.Paragraph.allCases {
+                let text = wording.layout(paragraph, values).blocks.map(Self.visible).joined()
+                if text.isEmpty {
+                    failures.append("the card's \(paragraph.id) is not worded")
+                }
+                for name in paragraph.values where !text.contains(values[name] ?? "") {
+                    failures.append("the card's \(paragraph.id) does not name the \(name) it is given")
+                }
+                for href in wording.layout(paragraph).links.map(\.href) where href.hasPrefix("/") && href != "/saved" {
+                    let file = root.appendingPathComponent("\(href.dropFirst()).json")
+                    if (try? NativeDocument.decodeChecked(Data(contentsOf: file)))?.0.route != href {
+                        failures.append("the card's \(paragraph.id) links \(href), which is not a page the app draws")
+                    }
+                }
+            }
+            // The card's registered notices (docs/legal/native-copy.json) are drawn in the paragraphs
+            // that carry them: the plan's acknowledgement, its footer and its authorisation band.
+            func drawn(_ paragraph: CardWording.Paragraph) -> String {
+                wording.layout(paragraph, values).blocks.map(Self.visible).joined()
+            }
+            for (notice, drawnIn) in [
+                (LegalCopy.numbersAreYourChoice, [drawn(.ack(archived: false)), drawn(.ack(archived: true))]),
+                (LegalCopy.noRecommendation, [drawn(.ack(archived: false)), drawn(.ack(archived: true))]),
+                (LegalCopy.notABallotPaper, [drawn(.ack(archived: false))]),
+                (LegalCopy.userAuthoredOrder, [drawn(.foot(archived: false)), drawn(.foot(archived: true))]),
+                (LegalCopy.preferenceSource, [drawn(.foot(archived: false)), drawn(.foot(archived: true)), wording.text(.bandAuthorisation)]),
+            ] where drawnIn.contains(where: { !$0.contains(notice) }) {
+                failures.append("the card does not draw its registered notice \"\(notice)\" where the page does")
+            }
+            if wording.layout(.vintage(archived: false, withdrawn: .none)).terms.isEmpty {
+                failures.append("the card's vintage does not define the divisions it is compared against")
+            }
+        } catch {
+            failures.append("the card wording: \(error)")
+        }
+        func without(_ id: String) -> NativeDocument {
+            NativeDocument(
+                route: page.route, title: page.title, crumbs: nil, crumbsLabel: nil, top: page.top, brand: nil,
+                blocks: page.blocks.filter {
+                    if case .section(.template, id, _) = $0 { return false }
+                    return true
+                },
+                digest: "", spoken: "", drawn: ""
+            )
+        }
+        for id in ["card-bandAuthorisation", "card-ack-live", "card-foot-archived", "terms-intro", "card-qualifier"]
+        where (try? CardWording(without(id))) != nil {
+            failures.append("a card wording missing \(id) was accepted")
+        }
+
+        guard let fixture = try? String(contentsOf: URL(fileURLWithPath: "apps/mobile/ios/Parity/card-model.json"), encoding: .utf8),
+              let cards = try? JSONSerialization.jsonObject(with: Data(fixture.utf8)) as? [[String: Any]]
+        else { return failures + ["the card fixture is missing"] }
+        let json = { (object: [String: Any]) in String(decoding: try! JSONSerialization.data(withJSONObject: object), as: UTF8.self) }
+        var kinds: [String] = []
+        for card in cards {
+            do {
+                switch try CardData.decode(json(card)) {
+                case let .ready(ready): kinds.append(ready.stage.rawValue)
+                case .error, .unavailable, .archivedLink: kinds.append("explained")
+                }
+            } catch {
+                failures.append("a card the web hands over does not decode: \(error)")
+            }
+        }
+        if kinds != ["compare", "build", "explained"] {
+            failures.append("the card fixture does not hold a comparison, a plan and an explained card: \(kinds)")
+        }
+        let compare = cards.first { $0["stage"] as? String == "compare" } ?? [:]
+        let build = cards.first { $0["stage"] as? String == "build" } ?? [:]
+        let panels = (compare["panels"] as? [[String: Any]]) ?? []
+        var figureless = panels
+        if var first = figureless.first, var blocks = first["blocks"] as? [[String: Any]], var single = blocks.first,
+           var row = single["row"] as? [String: Any] {
+            row["kind"] = "independent"
+            single["row"] = row
+            blocks[0] = single
+            first["blocks"] = blocks
+            figureless[0] = first
+        }
+        for (what, mutated) in [
+            ("a figure for a party the panel shows none for", compare.merging(["panels": figureless]) { _, b in b }),
+            ("a plan on the comparison", compare.merging(["plan": build["plan"] ?? [:]]) { _, b in b }),
+            ("a plan on a shared card", build.merging(["shared": true]) { _, b in b }),
+            ("a plan for an under-18", build.merging(["canVote": false]) { _, b in b }),
+            ("a way to save a shared card", compare.merging(["shared": true]) { _, b in b }),
+            ("a share warning for an under-18", compare.merging(["canVote": false, "saveable": false, "shareWarning": true]) { _, b in b }),
+            ("a card of no status the screen draws", compare.merging(["status": "loading"]) { _, b in b }),
+        ] where (try? CardData.decode(json(mutated))) != nil {
+            failures.append("a card with \(what) was accepted")
+        }
+        if (try? CardData.decode(nil)) != nil {
+            failures.append("a card screen with no card handed over was accepted")
         }
         return failures
     }

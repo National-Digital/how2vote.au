@@ -81,4 +81,6 @@ export const CARD_COPY = {
   higher: "Give {name} a higher preference",
   lower: "Give {name} a lower preference",
   independent: "Independent",
+  bandLabel: "Authorisation for this voting plan",
+  bandMarker: "Historical example — not valid for voting",
 } as const;

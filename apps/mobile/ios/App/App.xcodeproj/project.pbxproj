@@ -63,6 +63,8 @@
 		81AD510C2AADA487D9939099 /* InsightsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E562E3C5C08013F020A12282 /* InsightsView.swift */; };
 		DEA34ACB2F685C702C828DDC /* SurveyWording.swift in Sources */ = {isa = PBXBuildFile; fileRef = 08E496FE03E5E08F4493A1CA /* SurveyWording.swift */; };
 		86AE8FE902182CBAD79058AA /* SurveyView.swift in Sources */ = {isa = PBXBuildFile; fileRef = DFFB42FD6E27B88837136241 /* SurveyView.swift */; };
+		3BE20236C404009812746A38 /* CardWording.swift in Sources */ = {isa = PBXBuildFile; fileRef = D04E8945C2F52C7753C73F3E /* CardWording.swift */; };
+		DF71FD1C9CE5454438FC6C00 /* CardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = CB7D8C30C1C0D0096D9B426C /* CardView.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -135,6 +137,8 @@
 		E562E3C5C08013F020A12282 /* InsightsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = InsightsView.swift; path = Views/InsightsView.swift; sourceTree = "<group>"; };
 		08E496FE03E5E08F4493A1CA /* SurveyWording.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = SurveyWording.swift; path = Model/SurveyWording.swift; sourceTree = "<group>"; };
 		DFFB42FD6E27B88837136241 /* SurveyView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = SurveyView.swift; path = Views/SurveyView.swift; sourceTree = "<group>"; };
+		D04E8945C2F52C7753C73F3E /* CardWording.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = CardWording.swift; path = Model/CardWording.swift; sourceTree = "<group>"; };
+		CB7D8C30C1C0D0096D9B426C /* CardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = CardView.swift; path = Views/CardView.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -178,6 +182,8 @@
 		504EC3061FED79650016851F /* App */ = {
 			isa = PBXGroup;
 			children = (
+				CB7D8C30C1C0D0096D9B426C /* CardView.swift */,
+				D04E8945C2F52C7753C73F3E /* CardWording.swift */,
 				DFFB42FD6E27B88837136241 /* SurveyView.swift */,
 				08E496FE03E5E08F4493A1CA /* SurveyWording.swift */,
 				E562E3C5C08013F020A12282 /* InsightsView.swift */,
@@ -357,6 +363,8 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				DF71FD1C9CE5454438FC6C00 /* CardView.swift in Sources */,
+				3BE20236C404009812746A38 /* CardWording.swift in Sources */,
 				86AE8FE902182CBAD79058AA /* SurveyView.swift in Sources */,
 				DEA34ACB2F685C702C828DDC /* SurveyWording.swift in Sources */,
 				81AD510C2AADA487D9939099 /* InsightsView.swift in Sources */,

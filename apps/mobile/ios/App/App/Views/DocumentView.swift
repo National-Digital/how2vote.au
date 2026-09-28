@@ -174,15 +174,29 @@ struct ProjectedBlocks: View {
     let layout: DocumentLayout
     var onLink: (String) -> Void = { _ in }
 
+    /// A glossary term's definition, opened from the term as the page's popover opens it.
+    @State private var term: TermSelection?
+
     var body: some View {
         DocumentBlocks(blocks: layout.blocks, layout: layout, onExit: onLink)
             .environment(\.openURL, OpenURLAction { url in
-                guard case let .link(index)? = DocumentURL(url), layout.links.indices.contains(index) else {
+                switch DocumentURL(url) {
+                case let .link(index)? where layout.links.indices.contains(index):
+                    onLink(layout.links[index].href)
+                    return .handled
+                case let .term(index)? where layout.terms.indices.contains(index):
+                    term = TermSelection(index: index)
+                    return .handled
+                default:
                     return .discarded
                 }
-                onLink(layout.links[index].href)
-                return .handled
             })
+            .sheet(item: $term) { selection in
+                TermSheet(term: layout.terms[selection.index], layout: layout) { href in
+                    term = nil
+                    onLink(href)
+                }
+            }
     }
 }
 

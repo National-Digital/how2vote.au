@@ -50,6 +50,7 @@ describe("verifyNativeChrome", () => {
       contact: "DocumentView",
       insights: "InsightsView",
       survey: "SurveyView",
+      card: "CardView",
     });
   });
 

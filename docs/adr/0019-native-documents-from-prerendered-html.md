@@ -138,7 +138,7 @@ page reads it, and ends with the clear-all-data section that page renders. Delet
 clearing them all is a `ScreenAction`, a request by name that the web performs through the saved
 page's own store calls, and the web then offers the route again with what it holds, which updates
 the screen in place. The saved cards are the WebView's keys, not the native core's (ADR 0018 D3):
-a card is saved from the card page, which the WebView serves.
+a card is saved by the web's card flow, whether the card page or the native card asks (D4k).
 `check-native-router.mjs` requires every action the native screens send to be one the web
 performs, and every event the plugin emits to have a listener on the web. The screen is offered
 only to a visitor the layout lets reach the page (18+), and only once the web has read the cards.
@@ -177,6 +177,28 @@ renders `$lib/survey-copy.ts`, the collection notice and the Terms acceptance as
 them. The privacy policy and the terms open over the gate, as `DocLink` opens them. Skipping leaves
 for the plan and uploads nothing. `survey-steps.json` is a step of each kind, typed as the web's own
 step, and `DocumentLogic` holds the app's decoder to it.
+
+**D4k — The card is the web's, drawn natively.** *(Supersedes ADR 0018 D1a, 2026-09-28.)* The card
+carries the s321D authorisation, the Terms gate, the non-revocable-link warning and the fail-closed
+governance suspensions, so none of it is re-implemented natively. Its state, rules and gates are
+`$lib/card-flow.svelte.ts`, which the card page renders; each step that builds the plan, shows or
+confirms the share warning, or opens the print acknowledgement refuses by itself without a
+current-version Terms acceptance, whoever asks for it. With the route, the web hands the app the card
+as it stands (`nativeCard`): the comparison's panels with each figure only where
+`alignmentPresentation` shows one, the evidence, and on the plan each ballot's rows, numbers and
+checks, every label the page computes already filled. Each step — the Terms tick and acceptance, the
+build, the share and its warning, the save, the evidence, a number typed or moved, the Senate method
+and the way back — is a `ScreenAction` taken through the flow's own methods, refused on a stage the
+card has moved on from, and the route is offered again with what the web then holds. A share link is
+the web's answer to a confirmed warning: the canonical https link, which the app hands to the system
+share sheet. The app draws the card in the words of `states/card.html`, which renders
+`$lib/card-copy.ts`, the party panel's and the Terms gate's copy, and each of the card's paragraphs
+that carry emphasis or links, once for each case the card renders. The plan's authorisation is pinned
+to the screen for as long as the plan is shown, as `PlanAuthorisationBand` is on the web. The app
+prints nothing, as the shells never have. The corrections and the terms open over the card, as
+`DocLink` opens them. `card-model.json` is a card of each kind, typed as the web's own card, and
+`DocumentLogic` holds the app's decoder to it and the card's registered notices to the paragraphs that
+carry them.
 
 **D6 — The iOS app is a skeleton, and it has a contract with the web build.** The goal is that no
 iOS screen shows hand-written copy. Every word comes from the web build: projected pages, the

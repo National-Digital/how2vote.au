@@ -288,7 +288,7 @@ describe("a native core that owns the core's state", () => {
     expect(local.get(QUIZ_KEY)).toBe("native-fresh");
   });
 
-  // A card is saved from the card page, which the WebView serves: the WebView writes the saved
+  // A card is saved by the web's card flow, whichever screen asks: the WebView writes the saved
   // cards, so their durable copy must follow it rather than be left to the native core.
   it("mirrors the saved cards, which the WebView writes, and restores none over them", async () => {
     const { store } = installBridge({ [MARKER]: "1", [SAVED_KEY]: "durable-older" });

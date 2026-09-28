@@ -598,6 +598,91 @@ final class DocumentConservationTests: XCTestCase {
         }
         XCTAssertTrue(contribute.isEnabled, "survey: a contribution is refused with every decision made")
         try checkTheSurveySteps(in: app, wording: wording)
+
+        // On to the card, skipping the research: nothing is contributed.
+        let skip = skips.map { app.buttons[$0] }.first { $0.exists }
+        try XCTUnwrap(skip, "survey: no way to skip to the card").tap()
+        try checkTheCard(in: app)
+    }
+
+    /// The card, in the web's words: the comparison and its evidence, the share warning (cancelled —
+    /// nothing is shared), and the plan the voter numbers under its pinned authorisation, each step
+    /// asked of the web and drawn from what it then holds.
+    private func checkTheCard(in app: XCUIApplication) throws {
+        let wording = try json("states/card")
+        func piece(_ id: String, _ values: [String: String] = [:]) throws -> String {
+            try self.piece(id, of: wording, values)
+        }
+        // The 2025 election has been held, so its plan is a demonstration.
+        let build = app.buttons[try piece("card-buildDemonstration")]
+        XCTAssertTrue(build.waitForExistence(timeout: 30), "card: not drawn natively")
+        XCTAssertEqual(app.buttons["top-back"].label, try piece("card-home"), "card: the way home is not the page's")
+        XCTAssertTrue(
+            app.staticTexts.matching(NSPredicate(format: "label == %@", try piece("card-qualifier"))).firstMatch.exists,
+            "card: the party-not-candidate qualifier is not the page's"
+        )
+
+        // The evidence, opened and closed.
+        let why = app.buttons[try piece("card-whyShow")]
+        tapUntilShown(why, in: app)
+        XCTAssertTrue(app.buttons[try piece("card-whyHide")].waitForExistence(timeout: 10), "card: the evidence did not open")
+        app.buttons[try piece("card-whyHide")].tap()
+        XCTAssertTrue(why.waitForExistence(timeout: 10), "card: the evidence did not close")
+
+        // The share warning comes before any link, and cancelling it shares nothing.
+        tapUntilShown(app.buttons[try piece("card-share")], in: app)
+        let warning = app.staticTexts[try piece("card-shareWarningTitle")]
+        XCTAssertTrue(warning.waitForExistence(timeout: 10), "card: sharing did not warn that the link cannot be recalled")
+        XCTAssertTrue(app.buttons[try piece("card-copyLink")].exists, "card: the warning's way on is not the page's")
+        app.buttons[try piece("card-cancel")].tap()
+        let gone = XCTNSPredicateExpectation(predicate: NSPredicate(format: "exists == false"), object: warning)
+        XCTAssertEqual(XCTWaiter.wait(for: [gone], timeout: 10), .completed, "card: cancelling did not close the warning")
+
+        // The plan: its authorisation pinned while it is on screen, and a box the voter numbers.
+        app.swipeDown(velocity: .fast)
+        tapUntilShown(build, in: app)
+        let band = app.otherElements["card-band"]
+        XCTAssertTrue(band.waitForExistence(timeout: 20), "card: the plan did not open under its authorisation")
+        XCTAssertEqual(band.label, try piece("card-bandLabel"), "card: the authorisation band is not named as the page names it")
+        XCTAssertTrue(
+            app.staticTexts.matching(NSPredicate(format: "label == %@", try piece("card-bandAuthorisation"))).firstMatch.exists,
+            "card: the plan's authorisation is not the page's"
+        )
+        // Drawn in capitals, as the page's band sets it.
+        XCTAssertTrue(
+            app.staticTexts.matching(NSPredicate(format: "label ==[c] %@", try piece("card-bandMarker"))).firstMatch.exists,
+            "card: a demonstration plan is not marked as one"
+        )
+        let box = app.textFields.matching(framed(try piece("card-preferenceFor", ["name": "\u{0}"]).components(separatedBy: "\u{0}"))).firstMatch
+        XCTAssertTrue(box.waitForExistence(timeout: 10), "card: the plan's boxes are not named as the page names them")
+        box.tap()
+        box.typeText("1")
+        // The number pad has no return key: the box commits as it loses focus, as the page's does.
+        // Scrolling lets it go; the drag is made above the keyboard, which covers the lower screen.
+        let top = app.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.35))
+        top.press(forDuration: 0.05, thenDragTo: app.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.2)))
+        let released = XCTNSPredicateExpectation(predicate: NSPredicate(format: "exists == false"), object: app.keyboards.firstMatch)
+        XCTAssertEqual(XCTWaiter.wait(for: [released], timeout: 5), .completed, "card: scrolling the plan did not let the box go")
+        let numbered = try piece("card-houseProgress", ["ranked": "1", "total": "\u{0}"]).components(separatedBy: "\u{0}")
+        XCTAssertTrue(
+            app.staticTexts.matching(framed(numbered)).firstMatch.waitForExistence(timeout: 10),
+            "card: the number typed did not reach the web's plan"
+        )
+        XCTAssertEqual(box.value as? String, "1", "card: the box does not show the number the web holds")
+
+        // Below the line, in its columns.
+        app.buttons[try piece("card-below")].tap()
+        // Each column is headed in capitals, as the page sets it.
+        let column = try piece("card-column", ["group": "\u{0}"]).components(separatedBy: "\u{0}")
+        XCTAssertTrue(
+            app.staticTexts.matching(NSPredicate(format: "label BEGINSWITH[c] %@", column[0])).firstMatch.waitForExistence(timeout: 10),
+            "card: below the line is not listed by column"
+        )
+
+        // And back to the comparison, with the band gone.
+        tapUntilShown(app.buttons[try piece("card-backToCompare")], in: app)
+        XCTAssertTrue(build.waitForExistence(timeout: 20), "card: the way back did not return to the comparison")
+        XCTAssertFalse(band.exists, "card: the plan's authorisation stays on the comparison")
     }
 
     /// The Terms, opened from their acceptance over the gate as the page's dialog opens them, and

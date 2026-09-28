@@ -12,6 +12,7 @@
   // Both strings are single-sourced with the printed stamp and the site footer (org.ts /
   // print-auth.ts), so the screen, the page and the store listing can never state different
   // particulars — the golden-output test pins the wording.
+  import { CARD_COPY } from "$lib/card-copy";
   import { AUTHORISATION } from "$lib/org";
   import { PREFERENCE_SOURCE_NOTICE } from "$lib/print-auth";
 
@@ -43,14 +44,14 @@
   });
 </script>
 
-<div bind:this={el} class="band ui" role="note" aria-label="Authorisation for this voting plan">
+<div bind:this={el} class="band ui" role="note" aria-label={CARD_COPY.bandLabel}>
   {#if archived}
     <!-- The print watermark's on-screen counterpart. Deliberately NOT the rotated diagonal overlay
          used on paper: over a live, interactive ballot that would sit across the very numbers the
          voter is reading and typing, and it would have to be faint enough to see through — which
          is exactly when it stops being legible in a screenshot. A solid line at the top of the
          band is unmissable in a capture and costs the voter nothing. -->
-    <p class="marker">Historical example — not valid for voting</p>
+    <p class="marker">{CARD_COPY.bandMarker}</p>
   {/if}
   <p class="auth">{AUTHORISATION} {PREFERENCE_SOURCE_NOTICE}</p>
 </div>

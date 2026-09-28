@@ -27,7 +27,7 @@
     numbers onto the official paper at the polling place and follow the AEC's instructions.
   </p>
 {/if}
-<p class="ack-order">
+<p>
   The candidates below are listed in the same order as the official ballot paper — so you can match
   each one box for box. That order is the ballot's, not a ranking by How2Vote.
 </p>

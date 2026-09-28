@@ -173,6 +173,7 @@ extension StatesPage {
             switch block {
             case let .heading(_, _, c), let .paragraph(_, _, c): return c.flatMap(inline)
             case let .section(_, _, c), let .quote(c): return links(in: c)
+            case let .list(_, _, items): return items.flatMap { links(in: $0) }
             default: return []
             }
         }

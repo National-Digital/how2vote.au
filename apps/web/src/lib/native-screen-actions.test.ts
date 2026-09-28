@@ -22,8 +22,41 @@ const flow = vi.hoisted(() => ({
   },
 }));
 vi.mock("$lib/survey-flow.svelte", () => ({ ...flow, GATE: "gate" }));
+const cards = vi.hoisted(() => ({
+  cardFlow: {
+    status: "ready",
+    data: { shared: false } as null | { shared: boolean },
+    stage: "compare",
+    pendingAction: null as null | string,
+    showShareWarning: false,
+    showWhy: false,
+    senateView: "above",
+    cardUrl: "/card#v1.2025.a.b",
+    houseIds: ["Jane Citizen|1", "Sam Voter|2"],
+    senateAboveIds: ["A"],
+    senateBelowIds: ["Alex Doe|1"],
+    requestBuild: vi.fn(),
+    requestShare: vi.fn(),
+    confirmShare: vi.fn(() => true),
+    cancelShare: vi.fn(),
+    toggleSave: vi.fn(),
+    startFresh: vi.fn(),
+    backToCompare: vi.fn(),
+    tickTerms: vi.fn(),
+    acceptTerms: vi.fn(() => true),
+    cancelTerms: vi.fn(),
+    setRank: vi.fn(),
+    moveUp: vi.fn(),
+    moveDown: vi.fn(),
+  },
+}));
+vi.mock("$lib/card-flow.svelte", () => cards);
+vi.mock("$lib/seo", () => ({
+  shareUrl: (path: string, hash: string) => `https://how2vote.au${path}${hash}`,
+}));
 
-const { handleScreenAction, performScreenAction } = await import("./native-screen-actions");
+const { handleScreenAction, loadCardFlow, performScreenAction } =
+  await import("./native-screen-actions");
 
 const resync = vi.fn();
 const navigate = vi.fn();
@@ -31,6 +64,17 @@ const context = { resync, navigate };
 
 beforeEach(() => {
   vi.clearAllMocks();
+  Object.assign(cards.cardFlow, {
+    status: "ready",
+    data: { shared: false },
+    stage: "compare",
+    pendingAction: null,
+    showShareWarning: false,
+    showWhy: false,
+    senateView: "above",
+  });
+  cards.cardFlow.confirmShare.mockImplementation(() => true);
+  cards.cardFlow.acceptTerms.mockImplementation(() => true);
   Object.assign(flow.survey, {
     step: -1,
     consented: false,
@@ -238,5 +282,108 @@ describe("handleScreenAction", () => {
     handleScreenAction({ screen: "saved", action: "wipe" }, context, answer);
     expect(answer).not.toHaveBeenCalled();
     expect(store.clear).toHaveBeenCalledOnce();
+  });
+});
+
+describe("the card's actions", () => {
+  const card = cards.cardFlow;
+
+  it("takes nothing before a card has been opened", async () => {
+    expect(act("build")).toBe(false);
+    await loadCardFlow();
+    expect(act("build")).toBe(true);
+  });
+  const act = (action: string, value?: string, reply = vi.fn()) =>
+    performScreenAction("card", action, value, { ...context, reply });
+
+  it("takes nothing from a card that is not ready", () => {
+    card.status = "loading";
+    for (const action of ["build", "share", "save", "why", "terms-accept"]) {
+      expect(act(action)).toBe(false);
+    }
+    expect(card.requestBuild).not.toHaveBeenCalled();
+    expect(resync).not.toHaveBeenCalled();
+  });
+
+  it("takes the comparison's steps only on the comparison, and redraws it", () => {
+    expect(act("build")).toBe(true);
+    expect(card.requestBuild).toHaveBeenCalledOnce();
+    expect(resync).toHaveBeenCalledOnce();
+    card.stage = "build";
+    for (const action of ["build", "share", "save", "why", "share-confirm"]) {
+      expect(act(action)).toBe(false);
+    }
+    expect(card.requestShare).not.toHaveBeenCalled();
+    expect(card.toggleSave).not.toHaveBeenCalled();
+  });
+
+  it("takes the plan's steps only on the plan", () => {
+    const row = JSON.stringify({ ballot: "house", id: "Jane Citizen|1", n: 2 });
+    for (const [action, value] of [
+      ["rank", row],
+      ["up", row],
+      ["down", row],
+      ["senate", "below"],
+      ["compare", undefined],
+    ] as const) {
+      expect(act(action, value)).toBe(false);
+    }
+    card.stage = "build";
+    expect(act("rank", row)).toBe(true);
+    expect(card.setRank).toHaveBeenCalledWith("house", "Jane Citizen|1", 2);
+    expect(act("senate", "below")).toBe(true);
+    expect(card.senateView).toBe("below");
+    expect(act("compare")).toBe(true);
+    expect(card.backToCompare).toHaveBeenCalledOnce();
+  });
+
+  it("numbers only a row the ballot holds, with a whole number or none", () => {
+    card.stage = "build";
+    for (const value of [
+      JSON.stringify({ ballot: "house", id: "Nobody|9", n: 1 }),
+      JSON.stringify({ ballot: "above", id: "Jane Citizen|1", n: 1 }),
+      JSON.stringify({ ballot: "house", id: "Jane Citizen|1", n: 1.5 }),
+      JSON.stringify({ ballot: "house", id: "Jane Citizen|1", n: "1" }),
+      JSON.stringify({ ballot: "lords", id: "Jane Citizen|1", n: 1 }),
+      "not json",
+    ]) {
+      expect(act("rank", value)).toBe(false);
+    }
+    expect(card.setRank).not.toHaveBeenCalled();
+    expect(act("rank", JSON.stringify({ ballot: "house", id: "Jane Citizen|1", n: null }))).toBe(
+      true,
+    );
+    expect(card.setRank).toHaveBeenCalledWith("house", "Jane Citizen|1", NaN);
+    expect(act("senate", "sideways")).toBe(false);
+  });
+
+  it("ticks, accepts and cancels the Terms only while the gate is showing", () => {
+    for (const action of ["terms-tick", "terms-cancel"]) expect(act(action, "1")).toBe(false);
+    card.pendingAction = "build";
+    expect(act("terms-tick", "1")).toBe(true);
+    expect(card.tickTerms).toHaveBeenCalledWith(true);
+    expect(act("terms-tick", "yes")).toBe(false);
+    card.acceptTerms.mockImplementation(() => false);
+    expect(act("terms-accept")).toBe(false);
+    card.acceptTerms.mockImplementation(() => true);
+    expect(act("terms-accept")).toBe(true);
+    expect(act("terms-cancel")).toBe(true);
+    expect(card.cancelTerms).toHaveBeenCalledOnce();
+  });
+
+  it("answers a confirmed warning with the canonical link, and a refused one with none", () => {
+    const answer = vi.fn(async () => undefined);
+    handleScreenAction({ screen: "card", action: "share-confirm", request: "s1" }, context, answer);
+    expect(answer).toHaveBeenCalledWith("s1", "https://how2vote.au/card#v1.2025.a.b");
+    card.confirmShare.mockImplementation(() => false);
+    handleScreenAction({ screen: "card", action: "share-confirm", request: "s2" }, context, answer);
+    expect(answer).toHaveBeenCalledWith("s2", "");
+  });
+
+  it("starts afresh only from a shared card", () => {
+    expect(act("fresh")).toBe(false);
+    card.data = { shared: true };
+    expect(act("fresh")).toBe(true);
+    expect(card.startFresh).toHaveBeenCalledWith(navigate);
   });
 });
