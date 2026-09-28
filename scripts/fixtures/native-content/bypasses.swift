@@ -1,4 +1,4 @@
-// Each way round the guard the review found, and the parse's own blind spots.
+// Each known way round the guard, and the parse's own blind spots.
 enum Tab: String {
     case help = "Get help now"
     case key = "tab-key"

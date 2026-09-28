@@ -326,7 +326,7 @@
       "change": "On iOS, the optional research survey is drawn natively (ADR 0019 D4j), and its web page is restructured without any change to what it shows or does. The survey's state and steps move unchanged from apps/web/src/routes/survey/+page.svelte into apps/web/src/lib/survey-flow.svelte.ts, which the page renders and which alone holds the consent rules, the question order and the one upload path: a contribution still requires the research consent and a current-version Terms acceptance, recorded when the voter contributes; the particularly-sensitive questions are still asked, and their answers still uploaded, only under their separate consent; skipping still uploads nothing and goes straight to the plan; and prefer-not-to-say is still offered after every question. The collection notice moves unchanged into SurveyNotes.svelte, the Terms acceptance into SurveyTermsLabel.svelte and the other wording into $lib/survey-copy.ts, from which states/survey.html renders it for the iOS app. The native screen draws the step the web's survey is on and asks the web to take each step the page's controls take — each tick, the contribution, each answer and the way back — so it holds no consent and uploads nothing itself; the privacy policy and the terms open over the gate, as on the web. scripts/check-age-gate.mjs keeps the survey's state isolated from the age gate, scripts/check-terms.mjs requires the survey's state to gate on the current Terms acceptance, and docs/research/standards-register.json binds each moved statement to the file that holds it and to the page that renders it. No wording is changed, and no register content, legal position, obligation, permitted use, or collection, use, disclosure, retention or overseas-processing practice is altered; no consent or Terms version is affected; no legal review was sought or is required.",
       "disposition": "no-review-required",
       "reviewer": "cameron-young",
-      "affectedControls": ["control-19", "control-25"]
+      "affectedControls": ["control-18", "control-19", "control-23", "control-25"]
     },
     {
       "date": "2026-09-28",
@@ -348,6 +348,13 @@
         "control-24",
         "control-25"
       ]
+    },
+    {
+      "date": "2026-09-28",
+      "change": "On iOS, the About page is drawn natively for every election, from pages the build renders for each past election (states/about/<election>.html) with the component /about renders (AboutPage.svelte); this supersedes the notes of 2026-09-24 that About is not native, or is native only while the current election is selected. The contact page is drawn natively from its prerendered text, with a native form whose message is sent by the web's existing submission (submitContact), anti-spam check included; the app reports a message as sent only on the web's reply. The Insights page is drawn natively from the figures the web reads and computes from the published, k-thresholded statistics files, exactly as the page does; the app computes none, and none are shown during the election-day close. No wording is changed, and no register content, legal position, obligation, permitted use, or collection, use, disclosure, retention or overseas-processing practice is altered; no consent or Terms version is affected; no legal review was sought or is required.",
+      "disposition": "no-review-required",
+      "reviewer": "cameron-young",
+      "affectedControls": ["control-5", "control-12", "control-20", "control-22"]
     }
   ],
   "nextMandatoryReviewDate": "2027-07-15",
