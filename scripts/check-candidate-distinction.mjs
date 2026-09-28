@@ -48,6 +48,104 @@ export const ALIGNMENT_MARKER = /<PartyAlignmentPanel\b/;
 /** A numeric alignment figure: a template expression immediately followed by a percent sign. */
 const NUMERIC_FIGURE = /\}\s*%/;
 
+/** The modules a surface may take its panel rows from, by the specifier it imports them with. */
+export const ROW_SOURCES = [
+  { path: "apps/web/src/lib/card-flow.svelte.ts", specifier: "$lib/card-flow.svelte" },
+];
+
+/**
+ * Source with its JS and HTML comments removed. Strings and template literals are stepped over, so a
+ * `//` inside one (a URL, a path) is kept, as the code it is part of.
+ */
+export function withoutComments(text) {
+  const html = text.replace(/<!--[\s\S]*?-->/g, "");
+  let out = "";
+  let quote = null;
+  for (let i = 0; i < html.length; i += 1) {
+    const c = html[i];
+    if (quote) {
+      out += c;
+      if (c === "\\") {
+        out += html[i + 1] ?? "";
+        i += 1;
+      } else if (c === quote) {
+        quote = null;
+      }
+    } else if (c === '"' || c === "'" || c === "`") {
+      quote = c;
+      out += c;
+    } else if (c === "/" && html[i + 1] === "/") {
+      while (i < html.length && html[i] !== "\n") i += 1;
+      out += "\n";
+    } else if (c === "/" && html[i + 1] === "*") {
+      const end = html.indexOf("*/", i + 2);
+      i = end < 0 ? html.length : end + 1;
+    } else {
+      out += c;
+    }
+  }
+  return out;
+}
+
+/**
+ * The row set a panel's `parties` expression names in a registered row source — `flow.houseParties`
+ * where `flow` is imported from it — or null for any other expression.
+ */
+function rowSetOf(expr, code, rowSources) {
+  const m = /^([A-Za-z_$][\w$]*)\.([A-Za-z_$][\w$]*)$/.exec(expr);
+  if (!m) return null;
+  const [, local, name] = m;
+  for (const source of rowSources) {
+    const escaped = source.specifier.replace(/[$.]/g, "\\$&");
+    const imported = new RegExp(
+      `import\\s*\\{[^}]*\\b\\w+\\s+as\\s+${local}\\b[^}]*\\}\\s*from\\s*"${escaped}"`,
+    );
+    const direct = new RegExp(`import\\s*\\{[^}]*\\b${local}\\b[^}]*\\}\\s*from\\s*"${escaped}"`);
+    if (imported.test(code) || direct.test(code)) return { source, name };
+  }
+  return null;
+}
+
+/** Whether rows are given a property: `name: …`, or `name` in an object's shorthand. */
+function carries(rows, name) {
+  return new RegExp(`(?:^|[{,\\s])${name}\\s*:|[{,]\\s*${name}\\s*[,}]`).test(rows);
+}
+
+/** Each `<PartyAlignmentPanel>`'s `parties={…}` expression, braces counted. */
+function panelRows(code) {
+  const found = [];
+  for (const m of code.matchAll(/<PartyAlignmentPanel\b/g)) {
+    const at = code.indexOf("parties={", m.index);
+    const close = code.indexOf("/>", m.index);
+    if (at < 0 || (close >= 0 && at > close)) continue;
+    let depth = 1;
+    let i = at + "parties={".length;
+    const start = i;
+    while (i < code.length && depth > 0) {
+      if (code[i] === "{") depth += 1;
+      else if (code[i] === "}") depth -= 1;
+      i += 1;
+    }
+    found.push(code.slice(start, i - 1).trim());
+  }
+  return found;
+}
+
+/** The body of a `name = $derived(…)` or `$derived.by(…)` field, brackets counted, or null. */
+function derivedBody(code, name) {
+  const m = new RegExp(`\\b${name}\\s*=\\s*\\$derived(?:\\.by)?\\(`).exec(code);
+  if (!m) return null;
+  let depth = 1;
+  let i = m.index + m[0].length;
+  const start = i;
+  while (i < code.length && depth > 0) {
+    if (code[i] === "(") depth += 1;
+    else if (code[i] === ")") depth -= 1;
+    i += 1;
+  }
+  return code.slice(start, i - 1);
+}
+
 /** @param {string} text */
 export const showsAlignment = (text) => typeof text === "string" && ALIGNMENT_MARKER.test(text);
 
@@ -57,9 +155,10 @@ export const showsAlignment = (text) => typeof text === "string" && ALIGNMENT_MA
  * @param {string} input.planRow       source of PlanRow.svelte
  * @param {string} input.panel         source of PartyAlignmentPanel.svelte
  * @param {{ path: string, text: string }[]} input.alignmentSurfaces  components rendering <PartyAlignmentPanel>
+ * @param {{ path: string, specifier: string, text: string }[]} [input.rowSources]  modules a surface may take its panel rows from
  * @returns {{ ok: boolean, errors: string[] }}
  */
-export function verdict({ alignModule, planRow, panel, alignmentSurfaces }) {
+export function verdict({ alignModule, planRow, panel, alignmentSurfaces, rowSources = [] }) {
   const errors = [];
   const push = (m) => errors.push(m);
 
@@ -131,22 +230,44 @@ export function verdict({ alignModule, planRow, panel, alignmentSurfaces }) {
     }
   }
 
-  // 4 — every alignment surface wires the distinction props; there must be at least one.
+  // 4 — every alignment surface wires the distinction props; there must be at least one. Read as
+  // code: a prop named only in a comment wires nothing. A surface may instead take a panel's rows
+  // from a registered row source (the card's flow, which the iOS app draws from too), whose rows
+  // must then carry both, row set by row set.
   if (!Array.isArray(alignmentSurfaces) || alignmentSurfaces.length === 0) {
     push(
       "no component renders <PartyAlignmentPanel> — refusing to pass the distinction guard vacuously",
     );
   } else {
     for (const { path, text } of alignmentSurfaces) {
-      if (!text.includes("partyKey")) {
-        push(
-          `${path}: renders <PartyAlignmentPanel> but never passes partyKey (independent treatment lost)`,
-        );
+      const code = withoutComments(text);
+      const panels = panelRows(code);
+      if (panels.length === 0) {
+        push(`${path}: renders <PartyAlignmentPanel> without a parties prop it can check`);
+        continue;
       }
-      if (!text.includes("suspended")) {
-        push(
-          `${path}: renders <PartyAlignmentPanel> but never passes suspended (correction suspension lost)`,
-        );
+      for (const expr of panels) {
+        // The rows a panel is given: a registered row source's row set, a row set derived on the
+        // surface itself, or the expression written in the prop.
+        const sourced = rowSetOf(expr, code, rowSources);
+        const local = /^[A-Za-z_$][\w$]*$/.test(expr) ? derivedBody(code, expr) : null;
+        const rows = sourced
+          ? derivedBody(withoutComments(sourced.source.text), sourced.name)
+          : (local ?? expr);
+        const where = sourced ? `${sourced.source.path}: ${sourced.name}` : `${path}: ${expr}`;
+        if (rows === null) {
+          push(
+            `${path}: takes its panel rows from ${sourced.source.path}, which has no ${sourced.name}`,
+          );
+          continue;
+        }
+        // As a property each row is given, not merely a name the rows' code mentions.
+        if (!carries(rows, "partyKey")) {
+          push(`${where} never passes partyKey (independent treatment lost)`);
+        }
+        if (!carries(rows, "suspended")) {
+          push(`${where} never passes suspended (correction suspension lost)`);
+        }
       }
     }
   }
@@ -185,7 +306,8 @@ function main() {
     if (showsAlignment(text)) alignmentSurfaces.push({ path: rel, text });
   }
 
-  const result = verdict({ alignModule, planRow, panel, alignmentSurfaces });
+  const rowSources = ROW_SOURCES.map((source) => ({ ...source, text: safeRead(source.path) }));
+  const result = verdict({ alignModule, planRow, panel, alignmentSurfaces, rowSources });
   if (!result.ok) {
     for (const e of result.errors) console.error(`::error::candidate-distinction: ${e}`);
     console.error(`candidate/party distinction: ${result.errors.length} problem(s)`);

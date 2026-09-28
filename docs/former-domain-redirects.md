@@ -14,7 +14,7 @@ card's answers in the URL fragment instead (`/card#v1.<election>.<electorate>.<p
 
 ## What the app already handles
 
-`apps/web/src/routes/card/+page.svelte` detects a `?res=` query parameter and renders a
+The card (`apps/web/src/lib/card-flow.svelte.ts`, rendered by `routes/card/+page.svelte`) detects a `?res=` query parameter and renders a
 dedicated explanation: why the old card can't be shown (retired server, stale election
 data) and a CTA to build a fresh card at `/ballot`. Covered by an e2e test in
 `apps/web/e2e/flow.spec.ts`.

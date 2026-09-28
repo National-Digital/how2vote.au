@@ -3,6 +3,9 @@
   // entered by typing a number directly OR with the labelled move-up / move-down buttons — never by
   // dragging (WCAG 2.5.7). Nothing is pre-filled: an unranked row shows an empty box. The
   // candidate/group name stays in official ballot order.
+  import { CARD_COPY } from "$lib/card-copy";
+  import { fill } from "$lib/template";
+
   let {
     uid,
     candidate,
@@ -25,7 +28,7 @@
     ondown: () => void;
   } = $props();
 
-  const name = $derived(`${candidate}, ${party || "Independent"}`);
+  const name = $derived(`${candidate}, ${party || CARD_COPY.independent}`);
   // Candidate names carry spaces/commas/apostrophes — never valid in a DOM id — so derive a safe one.
   const inputId = $derived(`pref-${uid.replace(/[^a-zA-Z0-9]+/g, "-")}`);
 
@@ -41,7 +44,7 @@
 <li class="row">
   <div class="pref">
     <label class="visually-hidden" for={inputId}>
-      Preference number for {name}
+      {fill(CARD_COPY.preferenceFor, { name })}
     </label>
     <input
       id={inputId}
@@ -57,18 +60,13 @@
   </div>
   <div class="who">
     <b>{candidate}</b>
-    <span class="party">{party || "Independent"}</span>
+    <span class="party">{party || CARD_COPY.independent}</span>
   </div>
   <div class="moves">
-    <button type="button" class="mv" onclick={onup} aria-label={`Give ${name} a higher preference`}>
+    <button type="button" class="mv" onclick={onup} aria-label={fill(CARD_COPY.higher, { name })}>
       ↑
     </button>
-    <button
-      type="button"
-      class="mv"
-      onclick={ondown}
-      aria-label={`Give ${name} a lower preference`}
-    >
+    <button type="button" class="mv" onclick={ondown} aria-label={fill(CARD_COPY.lower, { name })}>
       ↓
     </button>
   </div>

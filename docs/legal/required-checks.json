@@ -47,12 +47,13 @@
       "id": "DISC-NO-RECOMMENDATION",
       "patternId": "no-recommendation",
       "files": [
-        "apps/web/src/routes/card/+page.svelte",
+        "apps/web/src/lib/components/CardAck.svelte",
+        "apps/web/src/lib/components/CardWorksheetFoot.svelte",
         "apps/web/src/lib/content.server.ts",
         "apps/web/src/lib/content/glossary.ts"
       ],
       "backingControls": ["control-5", "control-4"],
-      "note": "The card notice 'How2Vote does not recommend a candidate or a preference order', the generated-page prose 'How2Vote does not recommend a candidate or party' (content.server.ts — replacing the earlier absolute 'non-partisan' self-label per the 2026-07-19 deep review), and the glossary's 'Alignment' definition (now in lib/content/glossary.ts, the single term list rendered by both the /glossary page and the in-place definition popover) ('background information, not a recommendation — How2Vote never tells you who to put first') are backed by real controls, not merely asserted: the neutrality / non-recommendation claims register + methodology binding (scripts/check-neutrality-claims.mjs) bans absolute / recommendation / preselection copy, and the user-authored blank-ballot design means every preference box starts empty and the voter authors the order themselves."
+      "note": "The card notice 'How2Vote does not recommend a candidate or a preference order' (the plan's acknowledgement and its worksheet footer, CardAck.svelte and CardWorksheetFoot.svelte, which the card renders), the generated-page prose 'How2Vote does not recommend a candidate or party' (content.server.ts — replacing the earlier absolute 'non-partisan' self-label per the 2026-07-19 deep review), and the glossary's 'Alignment' definition (now in lib/content/glossary.ts, the single term list rendered by both the /glossary page and the in-place definition popover) ('background information, not a recommendation — How2Vote never tells you who to put first') are backed by real controls, not merely asserted: the neutrality / non-recommendation claims register + methodology binding (scripts/check-neutrality-claims.mjs) bans absolute / recommendation / preselection copy, and the user-authored blank-ballot design means every preference box starts empty and the voter authors the order themselves."
     }
   ]
 }

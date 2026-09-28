@@ -121,7 +121,7 @@ const steps: StepDef[] = [
     pattern: /^another person opens the shared URL$/,
     run(world) {
       // A FRESH context — a decoder that knows only this election's ordering, exactly as the card
-      // route does (apps/web/src/routes/card/+page.svelte, shared branch): reconstruct from the
+      // does (apps/web/src/lib/card-flow.svelte.ts, shared branch): reconstruct from the
       // fragment alone. A leading "#" is tolerated, just like a real location.hash.
       const resolver = (id: string): readonly number[] | undefined =>
         id === world.electionId ? world.orderedIds : undefined;

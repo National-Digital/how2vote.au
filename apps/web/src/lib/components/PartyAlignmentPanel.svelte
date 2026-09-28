@@ -5,6 +5,9 @@
     groupByFederalGroup,
     PARTY_ALIGNMENT_QUALIFIER,
   } from "$lib/candidate-alignment";
+  import PartyPanelLabel from "$lib/components/PartyPanelLabel.svelte";
+  import { PARTY_PANEL_COPY } from "$lib/party-panel-copy";
+  import { fill } from "$lib/template";
 
   // THE alignment surface. Alignment figures live here — at PARTY level, in their own panel — and
   // NOT on individual candidate rows: a party's recorded parliamentary voting is not evidence of an
@@ -63,19 +66,12 @@
 
 <section class="party-panel ui" aria-labelledby="pp-{caption.replace(/\s+/g, '-').toLowerCase()}">
   <h4 class="pp-caption" id="pp-{caption.replace(/\s+/g, '-').toLowerCase()}">{caption}</h4>
-  <p class="pp-label">
-    <b>Party voting record — not the candidate's personal position.</b> Each figure is how often a
-    party's recorded parliamentary votes align with your answers, as evidence only. Parties are
-    listed {ballotOrdered
-      ? "in the order they appear on the ballot paper"
-      : "in registration order, with any registered family shown together"}, <b>not</b> ranked by alignment
-    — nothing here is ranked or recommended.
-  </p>
+  <p class="pp-label"><PartyPanelLabel {ballotOrdered} /></p>
 
   {#snippet partyRow(row: (typeof rows)[number])}
     <li class="pp-row">
       <span class="pp-party"
-        >{row.party || "Unnamed group"}{#if row.region}<span class="pp-region">
+        >{row.party || PARTY_PANEL_COPY.unnamed}{#if row.region}<span class="pp-region">
             &nbsp;({row.region})</span
           >{/if}</span
       >
@@ -92,8 +88,7 @@
         {/if}
       </span>
       <span class="visually-hidden">
-        {row.party}: {row.presentation.detail} This is the party's recorded voting, not this candidate's
-        personal position — evidence only, not a recommended preference.
+        {fill(PARTY_PANEL_COPY.spoken, { party: row.party, detail: row.presentation.detail })}
       </span>
     </li>
   {/snippet}
@@ -110,7 +105,7 @@
             <p class="pp-group-head">
               <span class="pp-group-name">{block.label}</span>
               <span class="pp-group-note">
-                Registered {block.label} parties — shown together, each with its own record. Not ranked.
+                {fill(PARTY_PANEL_COPY.groupNote, { group: block.label })}
               </span>
             </p>
             <ul class="pp-list pp-group-list">
@@ -123,7 +118,7 @@
       {/each}
     </ul>
   {:else}
-    <p class="pp-empty">No party voting records are available to compare for this ballot.</p>
+    <p class="pp-empty">{PARTY_PANEL_COPY.empty}</p>
   {/if}
 
   <p class="pp-qualifier">{PARTY_ALIGNMENT_QUALIFIER}</p>
@@ -153,7 +148,7 @@
     line-height: 1.5;
     margin: 0 0 10px;
   }
-  .pp-label b {
+  .pp-label :global(b) {
     color: var(--ink);
   }
   .pp-list {

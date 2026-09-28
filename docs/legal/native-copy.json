@@ -8,7 +8,7 @@
       "id": "numbers-are-your-choice",
       "swiftName": "numbersAreYourChoice",
       "text": "These numbers are your choice.",
-      "webSource": "apps/web/src/routes/card/+page.svelte",
+      "webSource": "apps/web/src/lib/components/CardAck.svelte",
       "backingControls": ["control-5", "control-4"],
       "note": "Opens the ballot acknowledgement on the card, live and archived alike."
     },
@@ -16,7 +16,7 @@
       "id": "no-recommendation",
       "swiftName": "noRecommendation",
       "text": "How2Vote does not recommend a candidate or a preference order",
-      "webSource": "apps/web/src/routes/card/+page.svelte",
+      "webSource": "apps/web/src/lib/components/CardAck.svelte",
       "backingControls": ["control-5", "control-4"],
       "note": "The DISC-NO-RECOMMENDATION disclaimer itself (docs/legal/required-checks.json). Registered without terminal punctuation because the live and archived notices continue the sentence differently."
     },
@@ -24,7 +24,7 @@
       "id": "not-a-ballot-paper",
       "swiftName": "notABallotPaper",
       "text": "A voting plan is not a ballot paper: copy your numbers onto the official paper at the polling place and follow the AEC's instructions.",
-      "webSource": "apps/web/src/routes/card/+page.svelte",
+      "webSource": "apps/web/src/lib/components/CardAck.svelte",
       "backingControls": ["control-5"],
       "note": "Distinguishes the plan from an official ballot paper on the live card."
     },
@@ -40,7 +40,7 @@
       "id": "user-authored-order",
       "swiftName": "userAuthoredOrder",
       "text": "You chose every number — How2Vote does not recommend a candidate or a preference order.",
-      "webSource": "apps/web/src/routes/card/+page.svelte",
+      "webSource": "apps/web/src/lib/components/CardWorksheetFoot.svelte",
       "backingControls": ["control-5", "control-4"],
       "note": "The plan foot's user-authorship statement, which carries the s321D authoriser model (ADR 0010)."
     },
