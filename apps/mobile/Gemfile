@@ -4,4 +4,4 @@
 # linux + darwin platforms) so the tree is fully reproducible; bump deliberately with `bundle update`.
 source "https://rubygems.org"
 
-gem "fastlane", "2.237.0"
+gem "fastlane", "2.240.1"

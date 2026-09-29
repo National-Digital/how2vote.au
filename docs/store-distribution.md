@@ -631,7 +631,7 @@ steps).
   console), complete the console declarations, then roll that release out in the console — after
   which the app is out of draft and the automated `completed` pipeline works.
 - `apps/mobile/Gemfile.lock` is **committed** (covers the ruby + linux + darwin platforms, fastlane
-  2.237.0, bundler pinned via `apps/mobile/.ruby-version` = 4.0.6). The `fastlane toolchain (Ruby 4)`
+  2.240.1, bundler pinned via `apps/mobile/.ruby-version` = 4.0.6). The `fastlane toolchain (Ruby 4)`
   mobile-ci job installs it **frozen** and drift-guards its platform coverage on every PR, also
   proving the whole fastlane tree loads on Ruby 4. Regenerate with `cd apps/mobile && bundle lock
   --add-platform x86_64-linux arm64-darwin x86_64-darwin` when the Gemfile changes.
