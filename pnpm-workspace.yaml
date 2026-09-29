@@ -49,10 +49,11 @@ overrides:
   # fast-uri 3.x < 3.1.6 confuses the host when a backslash introduces the authority, a flaw that
   # has resurfaced after each partial fix (GHSA-v2hh-gcrm-f6hx, GHSA-7p8r-x3mc-p8w7,
   # GHSA-f65p-4m7j-42xc, GHSA-jqff-g426-hqxp, GHSA-fph4-wmhf-6fwf, GHSA-5jgf-p345-68v8, all high;
-  # the last three name 3.1.5 itself). Only reached transitively via eslint-plugin-tsdoc ->
+  # the last three name 3.1.5 itself); 3.1.6 serialises an unvalidated port and misreads an
+  # unclosed bracket in the authority (GHSA-qw65-cvwx-89v3, GHSA-58mr-gqgx-xq4g). Only reached transitively via eslint-plugin-tsdoc ->
   # @microsoft/tsdoc-config -> ajv in the dev-only lint toolchain; forced to the patched line, and
   # held on 3.x because ajv requires it.
-  fast-uri@>=3.0.0 <3.1.6: "3.1.6"
+  fast-uri@>=3.0.0 <3.1.7: "3.1.7"
   # sharp < 0.35.4 inherits libvips CVEs (GHSA-f88m-g3jw-g9cj, GHSA-rgj7-g3m4-5g8c, both high).
   # The direct dependency is declared at ^0.35.4 in apps/web and apps/mobile; this forces the
   # instance pulled in via wrangler -> miniflare (dev-only Workers emulation) onto the same line.
