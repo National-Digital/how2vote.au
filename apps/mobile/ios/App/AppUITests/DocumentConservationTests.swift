@@ -808,8 +808,9 @@ final class DocumentConservationTests: XCTestCase {
 
         XCTAssertFalse(app.webViews.firstMatch.exists, "contact: the WebView under the screen can be reached")
 
-        // The web answers well inside the time the app waits for an answer, and only while the
-        // WebView under the screen keeps running.
+        // The web answers well inside the time the app waits for an answer. The simulator keeps a
+        // covered WebView running whatever the presentation, so `check-native-router` holds the
+        // presentation that keeps it running on a device.
         tapUntilShown(send, in: app)
         XCTAssertTrue(send.isHittable, "contact: the send button could not be reached")
         let failed = app.staticTexts.matching(NSPredicate(format: "label == %@", try piece("error"))).firstMatch

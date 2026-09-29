@@ -7,6 +7,7 @@ const read = (p) => readFileSync(url(p), "utf8");
 const COMMITTED = {
   storyboard: read("../apps/mobile/ios/App/App/Base.lproj/Main.storyboard"),
   controller: read("../apps/mobile/ios/App/App/Shell/MainViewController.swift"),
+  host: read("../apps/mobile/ios/App/App/Shell/NativeCoreHost.swift"),
   plugin: read("../apps/mobile/ios/App/App/Shell/NativeRouterPlugin.swift"),
   web: read("../apps/web/src/lib/channel.ts"),
   caller: read("../apps/web/src/lib/native-router.svelte.ts"),
@@ -90,6 +91,34 @@ describe("verifyRouterWiring", () => {
     expect(mutate({ web: COMMITTED.web.replace(/registerPlugin/g, "getPlugin") })).toContain(
       "never calls Capacitor.registerPlugin",
     );
+  });
+
+  it("catches a presentation that takes the WebView out of the window", () => {
+    const style = "controller.modalPresentationStyle = .overFullScreen";
+    expect(COMMITTED.host).toContain(style);
+    for (const host of [
+      COMMITTED.host.replace(style, style.replace(".overFullScreen", ".fullScreen")),
+      COMMITTED.host.replace(style, style.replace(".overFullScreen", ".automatic")),
+      COMMITTED.host.replace(style, ""),
+      COMMITTED.host.replace(
+        style,
+        `${style}\n        controller.modalPresentationStyle = .fullScreen`,
+      ),
+      "",
+    ]) {
+      expect(mutate({ host })).toContain("not .overFullScreen");
+    }
+  });
+
+  it("catches a screen that leaves the status bar to the WebView's controller", () => {
+    const capture = "controller.modalPresentationCapturesStatusBarAppearance = true";
+    expect(COMMITTED.host).toContain(capture);
+    for (const host of [
+      COMMITTED.host.replace(capture, ""),
+      COMMITTED.host.replace(capture, capture.replace("true", "false")),
+    ]) {
+      expect(mutate({ host })).toContain("capture the status bar");
+    }
   });
 
   it("fails closed with no bridge subclass at all", () => {

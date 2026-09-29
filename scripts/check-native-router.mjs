@@ -23,6 +23,11 @@
  * The same holds the other way. Every event the plugin emits must have a listener on the web, and
  * every request a native screen makes of the web (`ScreenAction`) must be one the web performs: an
  * unheard event is a native control that looks like it works and does nothing.
+ *
+ * And the WebView must stay in the window under a native screen. A `.fullScreen` presentation
+ * removes the presenting controller's views, and WebKit suspends a web view out of the window, so
+ * work the web finishes after answering a request (a contact message sent, a survey uploaded)
+ * never finishes, while everything answered at once goes on working.
  */
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
@@ -31,6 +36,7 @@ import { fileURLToPath } from "node:url";
  * @param {object} input
  * @param {string} input.storyboard  Main.storyboard
  * @param {string} input.controller  MainViewController.swift
+ * @param {string} input.host  NativeCoreHost.swift
  * @param {string} input.plugin  NativeRouterPlugin.swift
  * @param {string} input.web  the module that looks the plugin up
  * @param {string} input.caller  the module that calls its methods
@@ -54,6 +60,22 @@ export function verifyRouterWiring(input) {
       `Main.storyboard instantiates ${JSON.stringify(rooted)}, not ${JSON.stringify(subclass)} — ` +
         `capacitorDidLoad would never run, so the native router would never be registered and the ` +
         `app would silently serve the web screen for every route`,
+    );
+  }
+
+  const host = input?.host ?? "";
+  const styles = [...host.matchAll(/\.modalPresentationStyle = \.(\w+)/g)].map((m) => m[1]);
+  if (styles.length === 0 || styles.some((style) => style !== "overFullScreen")) {
+    errors.push(
+      `native screens are presented ${styles.length ? `.${styles.join(", .")}` : "with no set style"}, ` +
+        `not .overFullScreen — a presentation that removes the WebView from the window gets it ` +
+        `suspended, and a contact message or survey upload started under the screen never finishes`,
+    );
+  }
+  if (!/\.modalPresentationCapturesStatusBarAppearance = true\b/.test(host)) {
+    errors.push(
+      "native screens do not capture the status bar's appearance — presented over the WebView, " +
+        "the status bar would follow the WebView's controller instead of the screen",
     );
   }
 
@@ -176,6 +198,7 @@ function main() {
   const errors = verifyRouterWiring({
     storyboard: read("apps/mobile/ios/App/App/Base.lproj/Main.storyboard"),
     controller: read("apps/mobile/ios/App/App/Shell/MainViewController.swift"),
+    host: read("apps/mobile/ios/App/App/Shell/NativeCoreHost.swift"),
     plugin: read("apps/mobile/ios/App/App/Shell/NativeRouterPlugin.swift"),
     web: read("apps/web/src/lib/channel.ts"),
     caller: read("apps/web/src/lib/native-router.svelte.ts"),
