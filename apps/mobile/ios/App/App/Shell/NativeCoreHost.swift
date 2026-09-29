@@ -31,6 +31,11 @@ struct DocumentRequest: Equatable {
 /// what they were; the native screen simply covers it. Re-rooting would buy nothing a voter can see
 /// and would put every Capacitor assumption about its own view controller in play at once.
 ///
+/// Over the WebView, not in place of it: the presentation keeps the WebView in the window. WebKit
+/// suspends a web view that leaves the window, and the web goes on working for the screen after the
+/// request that started the work has been answered — sending a contact message, uploading a survey.
+/// The WebView is hidden from assistive technologies instead, so only the screen is read.
+///
 /// Moving between two native screens SWAPS the presented content rather than dismissing and
 /// presenting again. Dismissing first would show the WebView for the width of the transition —
 /// mid-route, on a page the voter has already left — so every native-to-native step would flash the
@@ -45,6 +50,8 @@ final class NativeCoreHost {
 
     private var engine: JSCEngine?
     private var hosting: UIHostingController<AnyView>?
+    /// The WebView's controller's view, left in the window under the screen.
+    private weak var covered: UIView?
     /// The route currently on screen, so a repeated request for it is a no-op rather than a rebuild
     /// that would throw away the voter's place on it. Edit mode and the election are part of the
     /// identity: the landing serves every election, and the toggle between them is the same route.
@@ -144,13 +151,23 @@ final class NativeCoreHost {
         }
 
         let controller = UIHostingController(rootView: screen)
-        controller.modalPresentationStyle = .fullScreen
+        controller.modalPresentationStyle = .overFullScreen
+        controller.modalPresentationCapturesStatusBarAppearance = true
         // The native core is the app here, not a sheet over it: an interactive dismiss would drop a
         // voter back into a WebView showing a route they had already left.
         controller.isModalInPresentation = true
 
         hosting = controller
-        presenter.present(controller, animated: false)
+        // The WebView keeps the keyboard's focus while it stays in the window, and a hardware key
+        // would reach the page under the screen rather than the screen.
+        presenter.view.endEditing(true)
+        _ = presenter.view.resignFirstResponder()
+        let covering = presenter.view
+        presenter.present(controller, animated: false) { [weak self] in
+            guard self?.hosting === controller else { return }
+            self?.covered = covering
+            covering?.accessibilityElementsHidden = true
+        }
         return true
     }
 
@@ -172,7 +189,11 @@ final class NativeCoreHost {
         currentData = nil
         guard let hosting else { return }
         self.hosting = nil
-        hosting.dismiss(animated: false)
+        let covering = covered
+        covered = nil
+        (hosting.presentingViewController ?? hosting).dismiss(animated: false)
+        covering?.accessibilityElementsHidden = false
+        _ = covering?.becomeFirstResponder()
     }
 
     /// The screen for a route, or nil when there is none — which is what makes D4's fallback a

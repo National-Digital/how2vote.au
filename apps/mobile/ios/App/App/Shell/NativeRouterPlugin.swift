@@ -53,9 +53,10 @@ public class NativeRouterPlugin: CAPPlugin, CAPBridgedPlugin {
     private var waiting: [String: (String) -> Void] = [:]
 
     /// How long a screen waits for the web's answer before it is answered empty, as a failure. Longer
-    /// than the web's own bound on a submission (a 20-second request after its anti-spam check), so
-    /// only an answer that is never coming — a WebView reloaded mid-request — is cut short.
-    private static let answerTimeout: TimeInterval = 60
+    /// than the web's own bounds on a submission (15 seconds to fetch the anti-spam check, 30 to solve
+    /// it, 20 to post), so only an answer that is never coming — a WebView reloaded mid-request — is
+    /// cut short.
+    private static let answerTimeout: TimeInterval = 75
 
     @objc func present(_ call: CAPPluginCall) {
         guard let route = call.getString("route") else {
