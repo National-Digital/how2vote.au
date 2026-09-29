@@ -66,6 +66,15 @@ describe("forms endpoint — self-hosted intake, challenge-gated, relay-only", (
     ).toBe(400);
   });
 
+  it("refuses an over-long name before the challenge or the relay, as the iOS UI test's send relies on", async () => {
+    const relay = vi.spyOn(globalThis, "fetch");
+    const name = "A voter ".repeat(26);
+    expect((await post({ ...validContact(), name, challenge: undefined }, RELAY_ENV)).status).toBe(
+      400,
+    );
+    expect(relay).not.toHaveBeenCalled();
+  });
+
   it("enforces the challenge, purpose-bound per form kind", async () => {
     const fetchMock = vi.spyOn(globalThis, "fetch");
     // Missing / garbage challenge → refused.

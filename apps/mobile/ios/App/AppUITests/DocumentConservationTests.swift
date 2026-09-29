@@ -771,8 +771,8 @@ final class DocumentConservationTests: XCTestCase {
     }
 
     /// The contact page, from the footer: the page's text above the form as the page reads it, and
-    /// the form in the web's words, which will not send until every field is filled. Never sent: a
-    /// message from here would reach the real inbox.
+    /// the form in the web's words, which will not send until every field is filled, and a send the
+    /// web answers. Never delivered: a message from here would reach the real inbox.
     func testTheContactFormIsInTheWebsWords() throws {
         let form = try json("states/contact-form")
         func piece(_ id: String) throws -> String { try self.piece("contact-\(id)", of: form) }
@@ -794,13 +794,28 @@ final class DocumentConservationTests: XCTestCase {
         tapUntilShown(app.staticTexts.matching(NSPredicate(format: "label == %@", try piece("challenge"))).firstMatch, in: app)
         XCTAssertTrue(send.exists, "contact: the send button is not the page's")
         XCTAssertFalse(send.isEnabled, "contact: the form would send with its fields empty")
-        for (id, text) in [("name", "A voter"), ("email", "voter@example.com"), ("message", "Hello")] {
+        // A name longer than the endpoint accepts, which it refuses before it relays anything
+        // (`functions/api/forms.test.ts` holds it to that).
+        let name = String(repeating: "A voter ", count: 26)
+        // The message first: a single-line field's return puts the keyboard away, clear of the button.
+        for (id, text) in [("message", "Hello"), ("name", name), ("email", "voter@example.com\n")] {
             let field = app.textFields[try piece(id)].exists ? app.textFields[try piece(id)] : app.textViews[try piece(id)]
             XCTAssertTrue(field.exists, "contact: the \(id) field is not labelled as the page labels it")
             field.tap()
             field.typeText(text)
         }
         XCTAssertTrue(send.isEnabled, "contact: the form will not send with every field filled")
+
+        XCTAssertFalse(app.webViews.firstMatch.exists, "contact: the WebView under the screen can be reached")
+
+        // The web answers well inside the time the app waits for an answer. The simulator keeps a
+        // covered WebView running whatever the presentation, so `check-native-router` holds the
+        // presentation that keeps it running on a device.
+        tapUntilShown(send, in: app)
+        XCTAssertTrue(send.isHittable, "contact: the send button could not be reached")
+        let failed = app.staticTexts.matching(NSPredicate(format: "label == %@", try piece("error"))).firstMatch
+        XCTAssertTrue(failed.waitForExistence(timeout: 40), "contact: the web never answered the send")
+        XCTAssertTrue(app.buttons[try piece("send")].isEnabled, "contact: the form stayed sending after the web answered")
     }
 
     /// Insights, from the footer, as the build ships it — no election's figures published yet: the
