@@ -66,7 +66,7 @@ jobs:
     outputs:
       android: ${{ steps.play.outputs.android }}
       fdroid: ${{ steps.fdroid.outputs.fdroid }}
-    if: github.event_name != 'pull_request'
+    if: github.event_name != 'pull_request' && github.event.repository.visibility == 'public'
     steps:
       - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7
       - uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e # v6
@@ -101,9 +101,12 @@ jobs:
     # `!cancelled()` so a skipped live-versions (every pull_request run) does not cascade into
     # skipping the deploy itself, while a cancelled workflow still stops here.
     needs: live-versions
-    # Everything except a PR close — those go to the cleanup job below.
+    # PR previews (closes go to the cleanup job below), and production promotions from the public
+    # repository only.
     if: |
-      !cancelled() && (github.event_name != 'pull_request' || github.event.action != 'closed')
+      !cancelled() && (
+        (github.event_name == 'pull_request' && github.event.action != 'closed') ||
+        (github.event_name != 'pull_request' && github.event.repository.visibility == 'public'))
     steps:
       # Presence check only; the value is never printed. Passed via env so the
       # secret is never interpolated into the rendered shell script.
