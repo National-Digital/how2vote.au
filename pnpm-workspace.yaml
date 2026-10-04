@@ -60,15 +60,18 @@ overrides:
   sharp@<0.35.4: "0.35.4"
   # brace-expansion <= 5.0.8 has an unbounded-expansion DoS — a crafted brace pattern can OOM the
   # process (GHSA-mh99-v99m-4gvg), and 5.0.9 closes the bypass of that mitigation via unbounded
-  # intermediate arrays (GHSA-rgw5-rvv9-x895, both high). Reached only in dev tooling glob matching
-  # (single 5.x instance in the tree), never on user input, but forced to the patched line to keep
-  # the gate clean.
-  brace-expansion@<5.0.9: ">=5.0.9"
+  # intermediate arrays (GHSA-rgw5-rvv9-x895, both high); 5.0.11 bounds the recursion on nested
+  # groups and comma parts (GHSA-6j4f-fj2g-mc7p, GHSA-qhr7-859c-m2p7, both high). Reached only in
+  # dev tooling glob matching (single 5.x instance in the tree), never on user input, but forced to
+  # the patched line to keep the gate clean.
+  brace-expansion@<5.0.11: ">=5.0.11"
   # undici 7.x < 7.29.0 can disclose one user's response to another (and crash at parse time) on
-  # degenerate private cache directives (GHSA-4cwx-7wf7-3272, high). Only reached via wrangler ->
-  # miniflare (dev-only Workers emulation in tools/deploy) and never in anything that ships;
-  # forced to the patched line to keep the gate clean.
-  undici@>=7.0.0 <7.29.0: ">=7.29.0 <8.0.0"
+  # degenerate private cache directives (GHSA-4cwx-7wf7-3272, high); 7.29.1 fixes a WebSocket
+  # subprotocol DoS and a BalancedPool TLS validation bypass (GHSA-rfgv-xxqx-mfg5,
+  # GHSA-w293-vg96-wgc3, both high). Only reached via wrangler -> miniflare (dev-only Workers
+  # emulation in tools/deploy) and never in anything that ships; forced to the patched line to keep
+  # the gate clean.
+  undici@>=7.0.0 <7.29.1: ">=7.29.1 <8.0.0"
   # @xmldom/xmldom mishandles crafted markup — entity expansion, namespace and mutation-XSS flaws
   # that let a document parse differently than it reads (GHSA-c7q8-3ch8-vqpv, GHSA-27p8-2357-5qqv,
   # GHSA-8344-3jmq-59r6, GHSA-965w-775f-mr7g, GHSA-93r5-fhx6-vmg9, GHSA-w2rr-34g9-rvrj,
