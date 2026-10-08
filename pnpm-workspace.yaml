@@ -54,10 +54,15 @@ overrides:
   # @microsoft/tsdoc-config -> ajv in the dev-only lint toolchain; forced to the patched line, and
   # held on 3.x because ajv requires it.
   fast-uri@>=3.0.0 <3.1.7: "3.1.7"
-  # sharp < 0.35.4 inherits libvips CVEs (GHSA-f88m-g3jw-g9cj, GHSA-rgj7-g3m4-5g8c, both high).
-  # The direct dependency is declared at ^0.35.4 in apps/web and apps/mobile; this forces the
-  # instance pulled in via wrangler -> miniflare (dev-only Workers emulation) onto the same line.
-  sharp@<0.35.4: "0.35.4"
+  # sharp < 0.35.4 inherits libvips CVEs (GHSA-f88m-g3jw-g9cj, GHSA-rgj7-g3m4-5g8c, both high);
+  # 0.35.5 takes the patched librsvg (GHSA-wq5f-xc86-pv6w, high). The direct dependency is declared
+  # at ^0.35.5 in apps/web and apps/mobile; this forces the instance pulled in via wrangler ->
+  # miniflare (dev-only Workers emulation) onto the same line.
+  sharp@<0.35.5: "0.35.5"
+  # source-map-js < 1.2.2 can be driven into an event-loop DoS by indexed source-map section
+  # offsets (GHSA-68fv-2mgg-jv7q, high). Reached only through build tooling reading our own
+  # source maps, never user input; forced to the patched line to keep the gate clean.
+  source-map-js@>=1.0.0 <1.2.2: "1.2.2"
   # brace-expansion <= 5.0.8 has an unbounded-expansion DoS — a crafted brace pattern can OOM the
   # process (GHSA-mh99-v99m-4gvg), and 5.0.9 closes the bypass of that mitigation via unbounded
   # intermediate arrays (GHSA-rgw5-rvv9-x895, both high); 5.0.11 bounds the recursion on nested
