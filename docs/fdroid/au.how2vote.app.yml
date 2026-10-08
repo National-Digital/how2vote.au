@@ -66,7 +66,7 @@ Builds:
       - esbuild@v0.28.1
       - rollup@v4.62.4
     scandelete:
-      - node_modules/.pnpm/@capacitor+cli@8.4.2/node_modules/@capacitor/cli/assets
+      - node_modules/.pnpm/@capacitor+cli@8.4.3/node_modules/@capacitor/cli/assets
     prebuild:
       - printf 'versionCode=$$VERCODE$$\nversionName=$$VERSION$$\n' >> ../gradle.properties
       - cargo fetch --locked --manifest-path $$rollup$$/rust/Cargo.toml
