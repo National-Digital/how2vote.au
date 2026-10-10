@@ -330,23 +330,41 @@ otherwise leave these app changes without a release, silently.
 
 **`app-version.json` advertises only a version whose F-Droid APK is published.** When
 `fdroid-publish` has uploaded the APK and verified that `dist.how2vote.au` serves it, it sets a
-`fdroid-apk/v<version>` success status on the release commit (`statuses: write`, the only
-permission it adds), then dispatches `deploy.yml` on `main`. Every production deploy (push,
-scheduled or dispatched) advertises the newest reachable release tag carrying that status, so the
-endpoint moves when the APK exists and never before: a skipped release never gets the status, and a
-store release whose F-Droid publish failed is never advertised. Releases before this record existed
-are lightweight tags and count as published (the last one is v1.4.5 plus any release that merges
-before this mechanism does). If the status or the tags cannot be read, the deploy fails rather than
-publish a wrong endpoint. The record is never inferred from the dist URL: the zone caches `/app/*`
-404s, and a probe before the upload would break `fdroid-publish`'s own verification.
+`fdroid-apk/v<version>` success status on the release commit, pointing at its own run, then
+dispatches `deploy.yml` on `main`; it adds `statuses: write` and `actions: write` for this. Every
+production deploy (push, scheduled or dispatched) advertises the newest trusted release tag whose
+record holds: a ship tag whose latest `fdroid-apk/<tag>` status (the combined status, so a later
+failure revokes it) is success and points at an `android-release.yml` run dispatched on `main`
+whose publish job verified the served APK. Skip tags are never looked up. A skipped release never
+gets the record and a store release whose F-Droid publish failed is never advertised, so the
+endpoint moves when the APK exists and never before. The record is never inferred from the dist
+URL: the zone caches `/app/*` 404s, and a probe before the upload would break `fdroid-publish`'s
+own verification.
+
+Legacy releases are lightweight tags and count as published and shipped: every lightweight tag
+until the first annotated release tag exists, then only those whose commit is an ancestor of the
+oldest annotated release tag's commit (v1.4.5 and anything merged before this mechanism). A
+lightweight tag created later, by hand, in the GitHub UI or by `gh release create`, is neither the
+diff base nor advertised.
+
+Only the endpoint depends on the records. If the statuses or runs cannot be read, or no record is
+found within the newest 20 ship tags, the deploy keeps the version the live `app-version.json`
+already names (it named a published APK when it was deployed), and publishes a null payload with a
+warning if that cannot be read either. The deploy fails only if the git tags themselves cannot be
+read.
 
 Limits worth knowing:
 
 - A store release that was dispatched but **failed** still counts as shipped for the diff: its tag
   says `ship`. A docs-only merge after it leaves Play and the App Store behind until a release ships
-  or the failed run is re-dispatched. F-Droid is unaffected: without the status it stays at the last
-  published release.
-- To ship changes a release skipped, merge a follow-up carrying `[ship-apps]`.
+  or the failed run is re-dispatched. F-Droid is unaffected: without the record it stays at the
+  last published release.
+- The next app-affecting merge ships changes a release skipped; to ship them sooner, merge a
+  follow-up carrying `[ship-apps]`.
+- Two races are accepted: a scheduled deploy that read the tags before a record landed can briefly
+  put the endpoint back one release, and the redeploy `fdroid-publish` dispatches can briefly roll
+  the site back to an older `main` if a newer push deploy finished first. The next deploy corrects
+  both.
 - iOS and Android share one decision.
 
 ### Per-PR builds

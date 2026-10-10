@@ -105,6 +105,7 @@ jobs:
       contents: read
       pull-requests: write # upsert the preview-URL comment
       statuses: read # the F-Droid publish records (scripts/store-release-scope.mjs)
+      actions: read # the android-release run each record points at
     outputs:
       ready: ${{ steps.secrets.outputs.ready }}
       version: ${{ steps.target.outputs.version }}
@@ -196,7 +197,8 @@ jobs:
       # Whether this release ships the native apps (read by the release job below), and the
       # newest release whose F-Droid APK is published, which the F-Droid endpoint advertises. On a
       # pull request it only previews the decision in the job summary; on any other event an
-      # unreadable tag or F-Droid record fails the deploy. See scripts/store-release-scope.mjs.
+      # unreadable tag fails the deploy, and unreadable F-Droid records keep the served endpoint.
+      # See scripts/store-release-scope.mjs.
       - name: Decide the store release
         id: stores
         if: steps.secrets.outputs.ready == 'true'
@@ -213,14 +215,17 @@ jobs:
           if [ "$EVENT" = "pull_request" ]; then
             jq -r '.pull_request.title + "\n" + (.pull_request.body // "")' "$GITHUB_EVENT_PATH" > "$PR_TEXT_FILE"
           elif [ "$EVENT" = "push" ]; then
-            # The markers are read from the merged pull request: by commit, else by the (#N) the
-            # squash subject ends with. Unreadable means the apps ship.
-            PRS="$(gh api "repos/$REPO/commits/$SHA/pulls" --jq '.[] | .title + "\n" + (.body // "")' || true)"
+            # The markers are read from the pull request merged as this commit: the (#N) the squash
+            # subject ends with, else the commit's associated pull requests. Only a pull request
+            # whose merge commit is this one counts. Unreadable means the apps ship.
+            MERGED='select(.merged_at != null and .merge_commit_sha == env.SHA) | .title + "\n" + (.body // "")'
+            PRS=""
+            N="$(git log -1 --format=%s "$SHA" | sed -nE 's/.*\(#([0-9]+)\)$/\1/p')"
+            if [ -n "$N" ]; then
+              PRS="$(gh api "repos/$REPO/pulls/$N" --jq "$MERGED")" || PRS=""
+            fi
             if [ -z "$PRS" ]; then
-              N="$(git log -1 --format=%s "$SHA" | sed -nE 's/.*\(#([0-9]+)\)$/\1/p')"
-              if [ -n "$N" ]; then
-                PRS="$(gh api "repos/$REPO/pulls/$N" --jq '.title + "\n" + (.body // "")' || true)"
-              fi
+              PRS="$(gh api "repos/$REPO/commits/$SHA/pulls" --jq ".[] | $MERGED")" || PRS=""
             fi
             if [ -n "$PRS" ]; then
               printf '%s\n' "$PRS" > "$PR_TEXT_FILE"
@@ -641,7 +646,7 @@ jobs:
             exit 1
           fi
           if [ "$SHIP" != true ]; then
-            echo "Store workflows not dispatched (${APPS_REASON:-no app-affecting change}); the apps stay at ${APPS_BASE:-the last release that shipped}. To ship these changes anyway, merge a follow-up carrying [ship-apps]." | tee -a "$GITHUB_STEP_SUMMARY"
+            echo "Store workflows not dispatched (${APPS_REASON:-no app-affecting change}); the apps stay at ${APPS_BASE:-the last release that shipped}. The next app-affecting merge ships these changes; to ship them sooner, merge a follow-up carrying [ship-apps]." | tee -a "$GITHUB_STEP_SUMMARY"
             exit 0
           fi
           dispatch android-release.yml

@@ -21,14 +21,15 @@
  * backticks, or joined to a word, is ignored so the markers can be written about.
  *
  * The decision is recorded on the release tag: deploy.yml creates it annotated, with a
- * `Store-Release: ship|skip` trailer. The diff base is the newest release tag reachable from HEAD
- * not marked `skip` (lightweight tags predate the trailer and all shipped).
+ * `Store-Release: ship|skip` trailer. The diff base is the newest trusted release tag not marked
+ * `skip`. Lightweight tags are legacy releases and count as shipped and published, but only
+ * those that predate the first annotated release tag (see trustedRecords).
  *
- * https://how2vote.au/app-version.json advertises the newest reachable release tag whose F-Droid
- * APK is published: a lightweight tag (every release before this record existed), or one whose
- * commit carries the `fdroid-apk/<tag>` success status that android-release's fdroid-publish job
- * writes after the APK is served. fdroid-publish then redeploys, so the endpoint advances as soon
- * as the APK exists and never before.
+ * https://how2vote.au/app-version.json advertises the newest trusted release tag whose F-Droid APK
+ * is published: a legacy tag, or a ship tag whose commit carries a success `fdroid-apk/<tag>`
+ * status pointing at the android-release run on main that verified the served APK. fdroid-publish
+ * writes that status and redeploys, so the endpoint advances as soon as the APK exists and never
+ * before. When the records cannot be read, the endpoint keeps the version it already serves.
  *
  * Usage (deploy.yml):
  *   EVENT=push PR_TEXT_FILE=… node scripts/store-release-scope.mjs
@@ -37,8 +38,8 @@
  *   node scripts/store-release-scope.mjs --classify < paths   # prints true if any path ships
  * Writes `ship`, `base`, `reason` and `store-version` to $GITHUB_OUTPUT and the decision to the
  * job summary. MARKER_LOOKUP=failed means the pull request text could not be read; the release
- * then ships. On any event but pull_request, a failure to read the tags or the F-Droid records
- * fails the step rather than publish a wrong endpoint. Reads statuses with GH_TOKEN.
+ * then ships. On any event but pull_request, a failure to read the git tags fails the step.
+ * Reads statuses and workflow runs with GH_TOKEN.
  */
 import { execFileSync } from "node:child_process";
 import { appendFileSync, readFileSync } from "node:fs";
@@ -189,8 +190,24 @@ export function isSkipped(message) {
 }
 
 /**
- * The newest release whose apps shipped: the diff base.
+ * The release tags that can be trusted. Annotated tags carry their own ship/skip decision. A
+ * lightweight tag is trusted only as a legacy release: before any annotated release tag exists,
+ * or when its commit is an ancestor of the oldest annotated release tag's commit. Any other
+ * lightweight tag (made by hand, in the GitHub UI, by `gh release create`) is neither shipped nor
+ * published, so it is never the diff base and never advertised.
  * @param {TagRecord[]} records newest first
+ * @param {(ancestor: string, descendant: string) => boolean} isAncestor
+ * @returns {TagRecord[]}
+ */
+export function trustedRecords(records, isAncestor) {
+  const oldestAnnotated = records.filter((t) => t.annotated).at(-1);
+  if (!oldestAnnotated) return records;
+  return records.filter((t) => t.annotated || isAncestor(t.commit, oldestAnnotated.commit));
+}
+
+/**
+ * The newest release whose apps shipped: the diff base.
+ * @param {TagRecord[]} records trusted, newest first
  * @returns {{ tag: string, version: string } | null}
  */
 export function lastShipped(records) {
@@ -214,59 +231,145 @@ export function selectBase(event, shipped) {
 /** The commit status fdroid-publish writes once a tag's APK is served. */
 export const fdroidContext = (tag) => `fdroid-apk/${tag}`;
 
-/** At most this many release tags are checked for an F-Droid record per deploy. */
-export const MAX_RECORD_LOOKUPS = 50;
+/** At most this many ship tags are checked for an F-Droid record per deploy. */
+export const MAX_RECORD_LOOKUPS = 20;
+
+/** The endpoint as deployed, the fallback when the records cannot be read. */
+export const SERVED_URL = "https://how2vote.au/app-version.json";
 
 /**
- * The newest release whose F-Droid APK is published.
- * @param {TagRecord[]} records newest first
+ * The newest release whose F-Droid APK is published. Skip tags are passed over without a lookup:
+ * a skipped release never gets an APK. `complete` is false when the answer is unknown (a lookup
+ * failed, or the cap was reached first); the caller then falls back rather than guess.
+ * @param {TagRecord[]} records trusted, newest first
  * @param {(record: TagRecord) => Promise<boolean>} hasRecord
- * @returns {Promise<{ tag: string, version: string } | null>}
+ * @returns {Promise<{ complete: boolean, published: { tag: string, version: string } | null,
+ *   reason?: string }>}
  */
 export async function lastPublished(records, hasRecord) {
   let lookups = 0;
   for (const record of records) {
-    if (!record.annotated) return { tag: record.tag, version: record.version };
+    const found = { tag: record.tag, version: record.version };
+    if (!record.annotated) return { complete: true, published: found };
+    if (isSkipped(record.message)) continue;
     if (++lookups > MAX_RECORD_LOOKUPS) {
-      throw new Error(`no F-Droid record within the newest ${MAX_RECORD_LOOKUPS} release tags`);
+      return {
+        complete: false,
+        published: null,
+        reason: `no F-Droid record within the newest ${MAX_RECORD_LOOKUPS} ship tags`,
+      };
     }
-    if (await hasRecord(record)) return { tag: record.tag, version: record.version };
+    try {
+      if (await hasRecord(record)) return { complete: true, published: found };
+    } catch (error) {
+      return { complete: false, published: null, reason: error.message };
+    }
   }
-  return null;
+  return { complete: true, published: null };
 }
 
 /**
- * @param {{ state?: string, context?: string }[]} statuses a commit's statuses
+ * The workflow run a tag's F-Droid record points at, from the combined status (latest per
+ * context), or null when there is no success record with a run URL in this repository.
+ * @param {{ statuses?: { state?: string, context?: string, target_url?: string }[] }} combined
  * @param {string} tag
+ * @param {string} repo owner/name
+ * @returns {string | null} the run id
  */
-export function hasSuccessStatus(statuses, tag) {
-  return statuses.some((s) => s?.context === fdroidContext(tag) && s?.state === "success");
+export function recordRunId(combined, tag, repo) {
+  const status = (combined?.statuses ?? []).find((s) => s?.context === fdroidContext(tag));
+  if (status?.state !== "success") return null;
+  const m = /^https:\/\/github\.com\/([^/]+\/[^/]+)\/actions\/runs\/(\d+)$/.exec(
+    status.target_url ?? "",
+  );
+  return m && m[1].toLowerCase() === repo.toLowerCase() ? m[2] : null;
+}
+
+/** The fdroid-publish job and the step whose success means the APK is served. */
+export const PUBLISH_JOB = "Publish the F-Droid APK";
+export const PUBLISH_STEP = "Verify the published URL serves the signed bytes";
+
+/**
+ * Whether a record's run is a real android-release run on main whose publish job verified the
+ * served APK. Anyone able to write a status could otherwise claim an APK that does not exist.
+ * @param {{ path?: string, head_branch?: string, event?: string,
+ *   repository?: { full_name?: string } }} run
+ * @param {{ jobs?: { name?: string, steps?: { name?: string, conclusion?: string }[] }[] }} jobs
+ * @param {string} repo owner/name
+ */
+export function isPublishRun(run, jobs, repo) {
+  if (run?.path !== ".github/workflows/android-release.yml") return false;
+  if (run?.head_branch !== "main" || run?.event !== "workflow_dispatch") return false;
+  if ((run?.repository?.full_name ?? "").toLowerCase() !== repo.toLowerCase()) return false;
+  const job = (jobs?.jobs ?? []).find((j) => j?.name === PUBLISH_JOB);
+  return (job?.steps ?? []).some((st) => st?.name === PUBLISH_STEP && st?.conclusion === "success");
+}
+
+/**
+ * The version a previously deployed app-version.json named, if it is still a trusted release
+ * whose payload is well formed; otherwise null.
+ * @param {{ versionName?: unknown, versionCode?: unknown } | null} served
+ * @param {TagRecord[]} records trusted
+ * @param {(version: string) => (number | null)[]} codes the versionCodes a release may have been
+ *   advertised with (generate-app-version's current and legacy encodings)
+ */
+export function servedVersion(served, records, codes) {
+  const name = typeof served?.versionName === "string" ? served.versionName : "";
+  if (!SEMVER.test(name) || !codes(name).includes(Number(served?.versionCode))) return null;
+  const record = records.find((t) => t.version === name);
+  if (!record || (record.annotated && isSkipped(record.message))) return null;
+  return name;
 }
 
 /* c8 ignore start -- git/network/CLI plumbing, exercised in CI */
 const git = (...args) => execFileSync("git", args, { encoding: "utf8", maxBuffer: 64 << 20 });
 
-async function statusesFor(commit) {
-  const repo = process.env["GITHUB_REPOSITORY"];
-  const url = `https://api.github.com/repos/${repo}/commits/${commit}/statuses?per_page=100`;
+const isAncestor = (ancestor, descendant) => {
+  try {
+    execFileSync("git", ["merge-base", "--is-ancestor", ancestor, descendant]);
+    return true;
+  } catch (error) {
+    if (error.status === 1) return false;
+    throw error;
+  }
+};
+
+async function getJson(url, headers = {}) {
   let last;
   for (let attempt = 1; attempt <= 3; attempt++) {
     try {
-      const res = await fetch(url, {
-        headers: {
-          Accept: "application/vnd.github+json",
-          Authorization: `Bearer ${process.env["GH_TOKEN"]}`,
-          "X-GitHub-Api-Version": "2022-11-28",
-        },
-      });
+      const res = await fetch(url, { headers: { Accept: "application/json", ...headers } });
       if (res.ok) return await res.json();
-      last = new Error(`statuses for ${commit}: HTTP ${res.status}`);
+      last = new Error(`${url}: HTTP ${res.status}`);
     } catch (error) {
       last = error;
     }
     await new Promise((r) => setTimeout(r, 2000 * attempt));
   }
   throw last;
+}
+
+const api = (path) =>
+  getJson(`https://api.github.com/repos/${process.env["GITHUB_REPOSITORY"]}/${path}`, {
+    Accept: "application/vnd.github+json",
+    Authorization: `Bearer ${process.env["GH_TOKEN"]}`,
+    "X-GitHub-Api-Version": "2022-11-28",
+  });
+
+/** @param {TagRecord} record */
+async function hasVerifiedRecord(record) {
+  const repo = process.env["GITHUB_REPOSITORY"] ?? "";
+  const runId = recordRunId(await api(`commits/${record.commit}/status`), record.tag, repo);
+  if (!runId) return false;
+  const [run, jobs] = await Promise.all([
+    api(`actions/runs/${runId}`),
+    api(`actions/runs/${runId}/jobs?filter=latest&per_page=100`),
+  ]);
+  if (isPublishRun(run, jobs, repo)) return true;
+  console.warn(
+    `::warning::${record.tag}'s F-Droid record points at run ${runId}, which is not a verified publish`,
+  );
+  return false;
 }
 
 function summarise({ event, decision, base, version }) {
@@ -291,7 +394,10 @@ function summarise({ event, decision, base, version }) {
           `\`${SKIP_MARKER}\` in this pull request overrides the decision`,
       );
     } else if (!decision.ship) {
-      summary.push(`- to ship these changes anyway, merge a follow-up carrying \`${SHIP_MARKER}\``);
+      summary.push(
+        `- the next app-affecting merge ships these changes; to ship them sooner, merge a ` +
+          `follow-up carrying \`${SHIP_MARKER}\``,
+      );
     }
   }
   if (event !== "pull_request") {
@@ -313,10 +419,15 @@ async function main() {
   let decision = null;
   let base = "";
   let version = "";
+  /** @type {TagRecord[]} */
+  let records;
   try {
     const prText = textFile ? readFileSync(textFile, "utf8") : "";
-    const records = parseTagRecords(
-      git("for-each-ref", "--merged", "HEAD", `--format=${TAG_FORMAT}`, "refs/tags/v*"),
+    records = trustedRecords(
+      parseTagRecords(
+        git("for-each-ref", "--merged", "HEAD", `--format=${TAG_FORMAT}`, "refs/tags/v*"),
+      ),
+      isAncestor,
     );
     const selected = selectBase(event, lastShipped(records));
     if (selected !== undefined) {
@@ -332,21 +443,35 @@ async function main() {
         lookupFailed,
       });
     }
-    if (event !== "pull_request") {
-      const published = await lastPublished(records, async (r) =>
-        hasSuccessStatus(await statusesFor(r.commit), r.tag),
-      );
-      version = published?.version ?? "";
-    }
   } catch (error) {
     if (event !== "pull_request") {
-      console.error(
-        `::error::Could not read the release tags or F-Droid records: ${error.message}`,
-      );
+      console.error(`::error::Could not read the release tags: ${error.message}`);
       process.exit(1);
     }
     console.warn(`::warning::Could not preview the store release: ${error.message}`);
     return;
+  }
+
+  // Only the endpoint depends on the F-Droid records: an unknown answer falls back to what the
+  // endpoint already serves, which named a published APK when it was deployed, and never fails
+  // the deploy.
+  if (event !== "pull_request") {
+    const result = await lastPublished(records, hasVerifiedRecord);
+    if (result.complete) {
+      version = result.published?.version ?? "";
+    } else {
+      console.warn(
+        `::warning::F-Droid records unreadable (${result.reason}); keeping the served version`,
+      );
+      try {
+        const { encodeVersionCode, legacyVersionCode } = await import("./generate-app-version.mjs");
+        const codes = (v) => [encodeVersionCode(v), legacyVersionCode(v)].filter((c) => c !== null);
+        version = servedVersion(await getJson(SERVED_URL), records, codes) ?? "";
+      } catch (error) {
+        console.warn(`::warning::Could not read ${SERVED_URL}: ${error.message}`);
+      }
+      if (!version) console.warn("::warning::app-version.json will carry a null payload");
+    }
   }
 
   const out = process.env["GITHUB_OUTPUT"];
