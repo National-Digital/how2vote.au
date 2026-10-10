@@ -7,10 +7,10 @@ name: Mobile CI
 #   native  — both shells compiled, with the binaries attached: an Android APK that installs on a
 #             device and an iOS Simulator .app. Runs when a change can affect a native build.
 #
-# A Svelte change cannot break gradle or xcodebuild: the native projects consume apps/web/build as
-# opaque static assets, and ci.yml builds that on every PR. So the native tier is scoped to
-# apps/mobile/**, the lockfile, the toolchain pin, the F-Droid recipe, this workflow, the shared
-# build actions and the store/F-Droid scripts. For a branch the scope does not select, dispatch it.
+# The native tier runs for every change that would ship the apps on merge (the release classifier,
+# scripts/store-release-scope.mjs), so no binary reaches a store without its shells having been
+# built on the pull request, plus this workflow and the store/F-Droid check scripts. For a branch
+# the scope does not select, dispatch it.
 #
 # Both shells are gated on the SAME condition, deliberately, so a plugin cannot end up registered
 # on one shell and missing on the other.
@@ -51,6 +51,12 @@ jobs:
       app: ${{ steps.decide.outputs.app }}
       native: ${{ steps.decide.outputs.native }}
     steps:
+      # The release classifier, so every change that would ship the apps also builds the shells.
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7
+        with:
+          sparse-checkout: scripts/store-release-scope.mjs
+          sparse-checkout-cone-mode: false
+          persist-credentials: false
       - name: Decide
         id: decide
         env:
@@ -76,7 +82,9 @@ jobs:
           # change to any of them has to be laid out and checked on screen before it ships to iOS.
           # packages stay out: they are input to the bundle, not to the native build graph.
           NATIVE='^(apps/mobile/|apps/web/src/|docs/research/|pnpm-lock\.yaml|\.nvmrc|docs/fdroid/|\.github/(workflows/mobile-ci\.yml|actions/(build-web-channel|resolve-store-version)/)|scripts/(check-fdroid-ready|check-native-plugins|generate-app-version|generate-store-metadata|build-native-documents|check-native-answer-scale)\.mjs)'
-          if echo "$FILES" | grep -qE "$APP"; then echo "app=true" >> "$GITHUB_OUTPUT"; else echo "app=false" >> "$GITHUB_OUTPUT"; fi
+          # Captured first, so a classifier failure fails this step instead of skipping the builds.
+          SHIPS="$(printf '%s\n' "$FILES" | node scripts/store-release-scope.mjs --classify)"
+          if echo "$FILES" | grep -qE "$APP" || [ "$SHIPS" = true ]; then echo "app=true" >> "$GITHUB_OUTPUT"; else echo "app=false" >> "$GITHUB_OUTPUT"; fi
           # A draft still gets the cheap tier; the builds wait until it is marked ready (which
           # re-triggers this) or are dispatched by hand, so macOS capacity is not spent on
           # work in progress.
@@ -84,6 +92,8 @@ jobs:
             echo "native=false" >> "$GITHUB_OUTPUT"
             echo "::notice::Draft pull request — shell builds skipped until it is marked ready."
           elif echo "$FILES" | grep -qE "$NATIVE"; then
+            echo "native=true" >> "$GITHUB_OUTPUT"
+          elif [ "$SHIPS" = true ]; then
             echo "native=true" >> "$GITHUB_OUTPUT"
           else
             echo "native=false" >> "$GITHUB_OUTPUT"

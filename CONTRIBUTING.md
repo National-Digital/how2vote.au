@@ -59,6 +59,11 @@ version) — this is a helper for the deploy step, not a fully automated release
 A CI check (`PR title`) verifies the title is a Conventional Commit when the PR is opened or edited;
 if it fails, edit the PR title and the check re-runs.
 
+Every merge deploys the web, but the App Store, Play and F-Droid builds run only when the merge
+changes something that reaches the apps. The Deploy run on your PR previews the decision in its job
+summary; `[ship-apps]` or `[skip-apps]` in the PR description overrides it. See "Which releases ship
+the apps" in [`docs/store-distribution.md`](docs/store-distribution.md).
+
 ## Licensing of contributions
 
 Code is licensed **AGPL-3.0-or-later** ([`LICENSE`](LICENSE)); the vote dataset is **ODbL v1.0**
