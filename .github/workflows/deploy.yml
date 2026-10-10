@@ -64,6 +64,7 @@ jobs:
     permissions:
       contents: read
     outputs:
+      ios: ${{ steps.ios.outputs.ios }}
       android: ${{ steps.play.outputs.android }}
       fdroid: ${{ steps.fdroid.outputs.fdroid }}
     if: github.event_name != 'pull_request' && github.event.repository.visibility == 'public'
@@ -72,8 +73,12 @@ jobs:
       - uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e # v6
         with:
           node-version-file: .nvmrc
-      # Both steps fail open: an unreadable store leaves that output empty and the badge renders
+      # Every step fails open: an unreadable store leaves that output empty and the badge renders
       # grey. A missing badge is honest; a failed deploy over one is not.
+      # The iTunes lookup is public, so this step holds no credential.
+      - name: Resolve the live App Store version
+        id: ios
+        run: node scripts/resolve-ios-live-version.mjs
       - name: Resolve the live Play version
         id: play
         env:
@@ -199,6 +204,7 @@ jobs:
           # (scripts/generate-store-badges.mjs). Empty on previews and whenever the store could not
           # be read -> a grey "not published" badge. Never the repo's own version: the repo runs
           # ahead of every store, so that would advertise a build nobody has.
+          IOS_LIVE_VERSION: ${{ needs.live-versions.outputs.ios }}
           ANDROID_LIVE_VERSION: ${{ needs.live-versions.outputs.android }}
           FDROID_LIVE_VERSION: ${{ needs.live-versions.outputs.fdroid }}
           # Apple's numeric App Store id → the in-app "update" store deep link (stale-data notice).

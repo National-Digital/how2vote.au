@@ -10,8 +10,7 @@ export const STORE_LINKS: {
   playStore: string | null;
   fDroid: string | null;
 } = {
-  // e.g. "https://apps.apple.com/au/app/how2vote/id0000000000"
-  appStore: null,
+  appStore: "https://apps.apple.com/au/app/how2vote/id6801009321",
   playStore: "https://play.google.com/store/apps/details?id=au.how2vote.app",
   fDroid: "https://f-droid.org/packages/au.how2vote.app/",
 };
