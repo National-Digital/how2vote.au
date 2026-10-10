@@ -78,6 +78,12 @@ jobs:
         # forks and drive-by PRs run these workflows. See docs/self-hosting.md.
         run: node scripts/check-action-pinning.mjs
 
+      - name: Release-credential gate (each store credential read only in its environment)
+        # The environments that hold store and signing credentials admit only main; a job that
+        # names a credential outside them would fall back to any repository-level copy, from any
+        # branch. See "Credential environments" in docs/store-distribution.md.
+        run: node scripts/check-release-credentials.mjs
+
       - name: Dependency vulnerability gate (fail on high/critical without a signed acceptance)
         # One policy, one implementation: the same gate the deploy runs. It fails closed on any
         # high/critical advisory lacking a signed, unexpired risk acceptance, and on pnpm audit

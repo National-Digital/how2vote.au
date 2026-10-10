@@ -9,6 +9,12 @@ description: >
   build numbers with the same semver digits but their own low digits, which is fine — build numbers
   only ever compete within one store. Requires the repo checked out with fetch-depth: 0 (tags).
 
+inputs:
+  tag:
+    description: Release tag (vX.Y.Z) the checkout is at; empty resolves the latest tag reachable from HEAD
+    required: false
+    default: ""
+
 outputs:
   version:
     description: Marketing version (e.g. 2.1.0)
@@ -26,11 +32,11 @@ runs:
     - id: v
       shell: bash
       env:
-        TAG: ${{ github.event.release.tag_name }}
+        TAG: ${{ inputs.tag }}
         RUN_NUMBER: ${{ github.run_number }}
       run: |
         set -euo pipefail
-        # Release events carry the tag; a workflow_dispatch from a branch resolves the latest tag.
+        # Release dispatches name the tag; a dispatch without one resolves the latest tag.
         if [ -z "${TAG:-}" ]; then TAG="$(git describe --tags --abbrev=0 --match 'v*')"; fi
         VERSION="${TAG#v}"
         # Fail closed on a non-semver tag rather than feeding it into build settings / shell.

@@ -56,7 +56,8 @@ jobs:
   # build — and the deploy job runs PR-authored build code and install scripts, so a store
   # credential must never be present in it. Skipped entirely on pull_request for the same reason —
   # the credential must not meet unreviewed code — which costs nothing, since preview badges are
-  # never published.
+  # never published. Reads Play with the android-build account, so it runs on main only, where
+  # that environment's branch policy admits it.
   live-versions:
     name: Live store versions
     runs-on: ubuntu-latest
@@ -67,7 +68,10 @@ jobs:
       ios: ${{ steps.ios.outputs.ios }}
       android: ${{ steps.play.outputs.android }}
       fdroid: ${{ steps.fdroid.outputs.fdroid }}
-    if: github.event_name != 'pull_request' && github.event.repository.visibility == 'public'
+    if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main' && github.event.repository.visibility == 'public'
+    environment:
+      name: android-build
+      deployment: false
     steps:
       - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7
       - uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e # v6
@@ -519,15 +523,17 @@ jobs:
           # A release created with GITHUB_TOKEN cannot trigger `release: published` workflows
           # (GitHub suppresses events from that token; workflow_dispatch and repository_dispatch
           # are the two documented exceptions), so the store pipelines are dispatched explicitly.
-          # Dispatched AT THE TAG, so the store build ships exactly the released commit even if
-          # main has moved on; each workflow stays fail-closed on secrets, and iOS is skipped
-          # entirely while APPLE_TEAM_ID (its "channel is live" switch) is unset.
+          # Dispatched on main with the tag as input: the store credentials are held in
+          # environments limited to main, and each workflow checks out the tag (after verifying
+          # main contains it), so the store build ships exactly the released commit even if main
+          # has moved on. Each workflow stays fail-closed on secrets, and iOS is skipped entirely
+          # while APPLE_TEAM_ID (its "channel is live" switch) is unset.
           dispatch() {
             for i in 1 2 3; do
-              gh workflow run "$1" --ref "$V" && return 0
+              gh workflow run "$1" --ref main -f tag="$V" && return 0
               sleep 5
             done
-            echo "::error::could not dispatch $1 — run manually: gh workflow run $1 --repo $REPO --ref $V"
+            echo "::error::could not dispatch $1 — run manually: gh workflow run $1 --repo $REPO --ref main -f tag=$V"
             return 1
           }
           # Fetch the remote tag first — a concurrent promotion may already have published it, and
@@ -535,7 +541,7 @@ jobs:
           git fetch --quiet origin "refs/tags/$V:refs/tags/$V" 2>/dev/null || true
           if git rev-parse -q --verify "refs/tags/$V" >/dev/null 2>&1; then
             echo "Tag $V already exists — skipping tag/release."
-            echo "If the store dispatches did not happen for $V, run: gh workflow run android-release.yml --repo $REPO --ref $V"
+            echo "If the store dispatches did not happen for $V, run: gh workflow run android-release.yml --repo $REPO --ref main -f tag=$V"
             exit 0
           fi
           git tag "$V"

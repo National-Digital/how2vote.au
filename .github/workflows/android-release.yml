@@ -2,33 +2,38 @@ name: Android release
 
 # Store pipeline for the Android shell (apps/mobile). Every web release becomes an Android build:
 #
-# release published      -> build the channel web bundle, build + sign the release aab with the
+# workflow_dispatch      -> build the channel web bundle, build + sign the release aab with the
 #                           upload key, upload to the Play internal track, then — behind the
 #                           `play-store` environment's required-reviewer gate — promote that
 #                           build to production at a STAGED 10% rollout (add `[full-rollout]` to
 #                           the release notes before approving to go straight to 100%).
+#                           dry_run=true stops after the signed bundle (no upload).
+#
+# deploy.yml dispatches this on `main` with `tag` set to the release it just published, so the
+# workflow definition always comes from `main` while the build checks out the tag, which must be
+# reachable from `main`. Each credential lives in an environment limited to `main` (see
+# "Credential environments" in docs/store-distribution.md), so a dispatch from any other ref,
+# dry runs included, is refused.
 #
 # NOTE: with Managed publishing enabled in Play Console, a green `promote` job means "ready to
 # publish", not "live" — the release waits for an explicit publish click in the console.
-# workflow_dispatch      -> same build; dry_run=true stops after the signed bundle (no upload),
-#                           dry_run=false uploads to the internal track and continues to the
-#                           environment-gated promote. deploy.yml releases through dispatch (a
-#                           GITHUB_TOKEN-created release cannot fire `release:` triggers), so a
-#                           real dispatch IS the release path.
 #
 # Google Play re-signs uploads with the escrowed app signing key (Play App Signing); the
 # keystore here is the UPLOAD key only.
 #
 # Requires secrets PLAY_SERVICE_ACCOUNT_JSON, ANDROID_UPLOAD_KEYSTORE (base64 JKS),
-# ANDROID_KEYSTORE_PASSWORD, ANDROID_KEY_ALIAS, ANDROID_KEY_PASSWORD. FAILS CLOSED if any is
-# missing: Android is a live store channel, so "no credentials" means a release did not ship, and
-# that must be red. A green run has to mean the bundle reached Play.
+# ANDROID_KEYSTORE_PASSWORD, ANDROID_KEY_ALIAS, ANDROID_KEY_PASSWORD on the `android-build`
+# environment; `play-store` holds its own PLAY_SERVICE_ACCOUNT_JSON for promotion. FAILS CLOSED
+# if any is missing: Android is a live store channel, so "no credentials" means a release did not
+# ship, and that must be red. A green run has to mean the bundle reached Play.
 
 on:
-  release:
-    types: [published]
   workflow_dispatch:
     inputs:
+      tag:
+        description: Release tag to ship (vX.Y.Z, reachable from main); only a dry run may leave it empty
+        type: string
+        default: ""
       dry_run:
         description: Build + sign only; skip the Play upload
         type: boolean
@@ -41,9 +46,9 @@ concurrency:
   # One lane PER RELEASE, not one lane for all of them. The promote job waits on the play-store
   # environment's reviewer, and a run parked at an environment gate still occupies its concurrency
   # group — so a single group made one unapproved promotion block every later release indefinitely,
-  # with the queued runs showing only "pending". Keyed by ref, an unapproved v1 blocks nothing but
-  # another v1. Still never cancels in progress: a signing or store upload must always finish.
-  group: android-release-${{ github.event.release.tag_name || github.ref }}
+  # with the queued runs showing only "pending". Keyed by release tag, an unapproved v1 blocks
+  # nothing but another v1. Still never cancels in progress: a signing or store upload must always finish.
+  group: android-release-${{ inputs.tag || github.ref }}${{ inputs.dry_run && '-dry-run' || '' }}
   cancel-in-progress: false
 
 jobs:
@@ -51,9 +56,15 @@ jobs:
     name: Build & Play internal track
     runs-on: ubuntu-latest
     timeout-minutes: 45
+    # Upload key and the upload-only Play account. deployment: false keeps the branch policy and
+    # the secrets without recording a deployment for every build.
+    environment:
+      name: android-build
+      deployment: false
     outputs:
       app-version: ${{ steps.version.outputs.version }}
       build-number: ${{ steps.version.outputs.build }}
+      commit: ${{ steps.source.outputs.commit }}
     steps:
       # Presence check only; values are never printed (passed via env, not interpolated) and the
       # failure names the missing KEYS, never their contents.
@@ -76,7 +87,7 @@ jobs:
           done
           if [ ${#missing[@]} -gt 0 ]; then
             echo "::error::Android release secrets missing: ${missing[*]}."
-            echo "Set them under Settings → Secrets and variables → Actions (see docs/store-distribution.md)."
+            echo "Set them on the android-build environment (see docs/store-distribution.md)."
             exit 1
           fi
           echo "All five Android release secrets are present."
@@ -84,7 +95,35 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7
         with:
+          ref: ${{ inputs.tag && format('refs/tags/{0}', inputs.tag) || '' }}
           fetch-depth: 0 # full tags so a dispatch run can resolve the current version
+
+      # Runs before any repository code meets a credential, and stays inline: a script or local
+      # action would be read from the checkout this step is vetting. Later jobs check out the
+      # commit recorded here, never the tag, so a tag moved mid-run cannot change what they build.
+      - name: Verify the release source is on main
+        id: source
+        env:
+          TAG: ${{ inputs.tag }}
+          DRY_RUN: ${{ inputs.dry_run }}
+        run: |
+          set -euo pipefail
+          if [ -z "${TAG:-}" ] && [ "$DRY_RUN" != "true" ]; then
+            echo "::error::a release run must name the tag to ship; only a dry run may omit it"; exit 1
+          fi
+          if [ -n "${TAG:-}" ]; then
+            if ! printf '%s' "$TAG" | grep -Eq '^v[0-9]+\.[0-9]+\.[0-9]+$'; then
+              echo "::error::tag input '$TAG' is not vMAJOR.MINOR.PATCH"; exit 1
+            fi
+            TAGGED="$(git rev-parse -q --verify "refs/tags/$TAG^{commit}")" \
+              || { echo "::error::$TAG is not a tag in this repository"; exit 1; }
+            [ "$(git rev-parse HEAD)" = "$TAGGED" ] \
+              || { echo "::error::checkout does not match $TAG"; exit 1; }
+            git fetch --quiet --no-tags origin +refs/heads/main:refs/remotes/origin/main
+            git merge-base --is-ancestor HEAD refs/remotes/origin/main \
+              || { echo "::error::$TAG is not reachable from main — only reviewed commits are released"; exit 1; }
+          fi
+          echo "commit=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
 
       # Google enforces publish rights when an edit is APPLIED, not on the calls that build it, so
       # an under-permissioned service account gets all the way through build + upload + metadata
@@ -99,6 +138,8 @@ jobs:
       - name: Resolve version
         id: version
         uses: ./.github/actions/resolve-store-version
+        with:
+          tag: ${{ inputs.tag }}
 
       - name: Build web bundle (android channel)
         uses: ./.github/actions/build-web-channel
@@ -213,13 +254,18 @@ jobs:
   fdroid-apk:
     name: F-Droid APK (signed, reproducible)
     needs: build
-    if: github.event_name == 'release' || (github.event_name == 'workflow_dispatch' && !inputs.dry_run)
+    if: ${{ !inputs.dry_run }}
+    environment:
+      name: fdroid-signing
+      deployment: false
     runs-on: ubuntu-latest
     timeout-minutes: 45
     permissions:
       contents: read # deliberately NOT write: this job holds the signing key, the next one publishes
     steps:
       - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7
+        with:
+          ref: ${{ needs.build.outputs.commit }}
 
       - name: Check F-Droid signing secrets are configured
         env:
@@ -234,7 +280,7 @@ jobs:
             [ -n "${!key-}" ] || missing+=("$key")
           done
           if [ ${#missing[@]} -gt 0 ]; then
-            echo "::error::F-Droid signing secrets missing: ${missing[*]}."
+            echo "::error::F-Droid signing secrets missing: ${missing[*]}. Set them on the fdroid-signing environment."
             exit 1
           fi
 
@@ -338,12 +384,16 @@ jobs:
           if-no-files-found: error
           retention-days: 30
 
-  # Separate from the signing job so the signing key and the bucket credential are never held
-  # together. Publishes to R2 rather than the GitHub release: releases in this repo are immutable, so
-  # assets cannot be attached after publication, and deploy.yml publishes before dispatching.
+  # Separate from the signing job, and in its own environment, so the signing key and the bucket
+  # credential are never held together. Publishes to R2 rather than the GitHub release: releases
+  # in this repo are immutable, so assets cannot be attached after publication, and deploy.yml
+  # publishes before dispatching.
   fdroid-publish:
     name: Publish the F-Droid APK
     needs: [build, fdroid-apk]
+    environment:
+      name: fdroid-publish
+      deployment: false
     runs-on: ubuntu-latest
     timeout-minutes: 15
     permissions:
@@ -415,11 +465,10 @@ jobs:
   promote:
     name: Promote to Play production
     needs: build
-    # Release events, and real (non-dry-run) dispatches — deploy.yml releases through dispatch,
-    # since a GITHUB_TOKEN-created release cannot fire `release:` triggers. A failed `build` skips
-    # this too (the `if` deliberately does not use always()). The environment carries the
-    # required-reviewer gate — a human promotes every store release, whatever the trigger.
-    if: github.event_name == 'release' || (github.event_name == 'workflow_dispatch' && !inputs.dry_run)
+    # Real (non-dry-run) dispatches only. A failed `build` skips this too (the `if` deliberately
+    # does not use always()). The environment carries the required-reviewer gate — a human
+    # promotes every store release — and the production-release Play account.
+    if: ${{ !inputs.dry_run }}
     environment: play-store
     runs-on: ubuntu-latest
     timeout-minutes: 15
@@ -428,6 +477,8 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7
+        with:
+          ref: ${{ needs.build.outputs.commit }}
 
       # Rollout size is a release-time human decision, so it is read from the release notes at
       # PROMOTE time rather than from the trigger payload (which was captured before the reviewer
@@ -439,8 +490,7 @@ jobs:
         id: rollout
         env:
           GH_TOKEN: ${{ github.token }}
-          # Empty on a dispatch, where the build's resolved version names the same release.
-          TAG: ${{ github.event.release.tag_name || format('v{0}', needs.build.outputs.app-version) }}
+          TAG: ${{ format('v{0}', needs.build.outputs.app-version) }}
         run: |
           set -euo pipefail
           BODY="$(gh release view "$TAG" --json body --jq .body || echo "")"
