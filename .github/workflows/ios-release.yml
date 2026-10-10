@@ -2,16 +2,17 @@ name: iOS release
 
 # Store pipeline for the iOS shell (apps/mobile). Every web release becomes an iOS build:
 #
-# release published      -> build the channel web bundle, archive + sign the ipa (cloud-managed
-#                           signing via the App Store Connect API key), upload to TestFlight,
-#                           then — behind the `app-store` environment's required-reviewer gate —
+# release published      -> build the channel web bundle, archive ad-hoc, export the ipa with
+#                           cloud-managed distribution signing (App Store Connect API key), upload
+#                           to TestFlight, then — behind the `app-store` environment's
+#                           required-reviewer gate —
 #                           submit that build for App Store review with generated metadata, as a
 #                           PHASED release (add `[full-rollout]` to the release notes before
 #                           approving to push all auto-updaters at once).
 #
 # NOTE: `automatic_release: false` — a green submit job means "approved and waiting", not "live";
 # a human clicks release in App Store Connect.
-# workflow_dispatch      -> same build; dry_run=true stops after the signed archive (no upload),
+# workflow_dispatch      -> same build; dry_run=true stops after the signed ipa (no upload),
 #                           dry_run=false uploads to TestFlight and continues to the
 #                           environment-gated submit. deploy.yml releases through dispatch (a
 #                           GITHUB_TOKEN-created release cannot fire `release:` triggers), so a

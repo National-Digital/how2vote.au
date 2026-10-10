@@ -222,10 +222,13 @@ absence of the capability from the code.
 store workflows trigger on `release: published`:
 
 1. **`ios-release.yml`** (macOS runner) — builds the `ios`-channel web bundle → `cap sync ios` →
-   fastlane archives + signs (cloud-managed signing via the App Store Connect API key; no
-   certificate store) → **uploads to TestFlight automatically** → the `submit` job waits on the
-   **`app-store` environment** (required reviewer = a human promotes every store submission),
-   then submits that build for App Review with metadata generated from the operator record.
+   fastlane archives ad-hoc (no Apple credentials, so the archive step cannot create a
+   certificate), then exports the ipa with Apple's cloud-managed distribution certificate via the
+   App Store Connect API key (no certificate store). The lane fails if the archive is
+   certificate-signed, if the ipa lacks a distribution signature or any `App.entitlements` entry,
+   or if a development certificate appeared during the build → **uploads to TestFlight
+   automatically** → the `submit` job waits on the **`app-store` environment** (required
+   reviewer = a human promotes every store submission), then submits that build for App Review with metadata generated from the operator record.
 2. **`android-release.yml`** (ubuntu runner) — builds the `android`-channel bundle →
    `cap sync android` → gradle builds the release AAB signed with the **upload key** (Google
    Play re-signs with its escrowed app signing key) → **uploads to the Play internal track
@@ -574,7 +577,8 @@ which is why the share path uses a throwaway keystore and the upload key never e
 
 **Apple** (organization enrollment, D-U-N-S):
 1. App Store Connect → create app `au.how2vote.app` (name: how2vote, primary locale en-AU).
-2. Users & Access → Integrations → generate an API key (App Manager role); record key id +
+2. Users & Access → Integrations → generate an API key (Admin role, or App Manager with access to
+   cloud-managed distribution certificates, which the export step signs with); record key id +
    issuer id; base64 the `.p8` into `ASC_API_KEY_P8`.
 3. Set the age rating questionnaire and the App Privacy declaration in the console. Declare the
    optional research contribution accurately: it is **opt-in**, **not linked to the user**, **not
