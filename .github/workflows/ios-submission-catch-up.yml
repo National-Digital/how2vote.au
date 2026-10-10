@@ -1,0 +1,166 @@
+name: iOS submission catch-up
+
+# Submits a release whose App Store submission was deferred. ios-submit.yml defers, rather than
+# cancels, when an older version is in review or approved and not yet released, and records the
+# release commit's `app-store/<tag>` status as pending. Every three hours, while no ios-release run
+# is in flight, this lists the releases on main that shipped the apps, takes the newest one with a
+# processed build in App Store Connect, and if its status is still pending asks App Store Connect
+# whether the way is clear. Only then does it call ios-submit.yml, which waits for the `app-store`
+# reviewer like any submission and checks again before `deliver`.
+#
+# A dispatch with `tag` set skips the pending-status test, for re-arming a release after a person
+# resolved a rejection in App Store Connect (docs/store-distribution.md, "Submission deferred or
+# blocked"). Releases are taken only from trusted tags on main, and every credential sits in a
+# main-only environment, so a dispatch from any other ref is refused.
+
+run-name: iOS submission catch-up${{ inputs.tag && format(' {0}', inputs.tag) || '' }}
+
+on:
+  schedule:
+    - cron: "23 */3 * * *"
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: Release to submit (vX.Y.Z on main); empty takes the deferred one, if any
+        type: string
+        default: ""
+
+permissions:
+  contents: read
+
+concurrency:
+  # At most one catch-up waits at the app-store gate; a newer scheduled run queues behind it.
+  group: ios-submission-catch-up
+  cancel-in-progress: false
+
+jobs:
+  find:
+    name: List shipped releases
+    if: vars.APPLE_TEAM_ID != ''
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: read
+      actions: read # ios-release runs in flight
+    outputs:
+      candidates: ${{ steps.list.outputs.candidates }}
+    steps:
+      - name: Checkout main
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7
+        with:
+          fetch-depth: 0
+          filter: tree:0
+
+      - name: List the releases on main that shipped the apps
+        id: list
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ inputs.tag }}
+        run: |
+          set -euo pipefail
+          if [ "$GITHUB_REF" != refs/heads/main ]; then
+            echo "::error::run this from main; releases are taken only from tags on main"; exit 1
+          fi
+          if [ -n "${TAG:-}" ] && ! printf '%s' "$TAG" | grep -Eq '^v[0-9]+\.[0-9]+\.[0-9]+$'; then
+            echo "::error::tag input '$TAG' is not vMAJOR.MINOR.PATCH"; exit 1
+          fi
+          node scripts/supersede-store-runs.mjs catch-up
+
+  check:
+    name: Ask App Store Connect
+    needs: find
+    if: needs.find.outputs.candidates != ''
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    # Read-only calls with the build key, so the reviewer is asked only when there is something to
+    # submit. If that key cannot read review state, the decision moves behind the gate.
+    environment:
+      name: ios-build
+      deployment: false
+    permissions:
+      contents: read
+      statuses: write # read the app-store/<tag> record; close it on a skip or a rejection
+    outputs:
+      go: ${{ steps.report.outputs.go }}
+      tag: ${{ steps.state.outputs.tag }}
+      commit: ${{ steps.state.outputs.commit }}
+      version: ${{ steps.state.outputs.version }}
+      build-year: ${{ steps.state.outputs.build-year }}
+      build: ${{ steps.state.outputs.build }}
+    steps:
+      - name: Checkout main
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7
+        with:
+          sparse-checkout: scripts
+          filter: tree:0
+
+      # The newest shipped release with a processed build, and what App Store Connect allows for it.
+      - name: Read the review state
+        id: state
+        env:
+          CANDIDATES: ${{ needs.find.outputs.candidates }}
+          ASC_KEY_ID: ${{ secrets.ASC_KEY_ID }}
+          ASC_ISSUER_ID: ${{ secrets.ASC_ISSUER_ID }}
+          ASC_API_KEY_P8: ${{ secrets.ASC_API_KEY_P8 }}
+        run: node scripts/app-store-submission.mjs check
+
+      # On the schedule, only a release whose submission was deferred (app-store/<tag> pending) is
+      # owed one; a dispatch naming `tag` re-arms that release whatever its record says.
+      - name: Report
+        id: report
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+          REQUESTED: ${{ inputs.tag }}
+          TAG: ${{ steps.state.outputs.tag }}
+          COMMIT: ${{ steps.state.outputs.commit }}
+          OUTCOME: ${{ steps.state.outputs.outcome }}
+          REASON: ${{ steps.state.outputs.reason }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          set -euo pipefail
+          echo "go=false" >> "$GITHUB_OUTPUT"
+          if [ "$OUTCOME" = none ]; then
+            echo "Nothing to submit: $REASON."; exit 0
+          fi
+          if [ -z "${REQUESTED:-}" ]; then
+            STATE="$(gh api "repos/$REPO/commits/$COMMIT/statuses?per_page=100" \
+              --jq "[.[] | select(.context == \"app-store/$TAG\")][0].state // \"none\"")"
+            if [ "$STATE" != pending ]; then
+              echo "$TAG owes no submission (app-store/$TAG: $STATE)."; exit 0
+            fi
+          fi
+          echo "### App Store catch-up: $TAG" >> "$GITHUB_STEP_SUMMARY"
+          echo "- $OUTCOME: $REASON" >> "$GITHUB_STEP_SUMMARY"
+          record() {
+            gh api -X POST "repos/$REPO/statuses/$COMMIT" -f state="$1" -f context="app-store/$TAG" \
+              -f target_url="$RUN_URL" -f description="$(printf '%s' "$2" | cut -c1-140)" >/dev/null
+          }
+          case "$OUTCOME" in
+            submit|unreadable)
+              echo "go=true" >> "$GITHUB_OUTPUT"
+              echo "::notice::$TAG can be submitted; approve the app-store gate to submit it." ;;
+            defer|wait) echo "$TAG stays deferred: $REASON" ;;
+            skip) record success "not submitted: $REASON" ;;
+            fail)
+              record failure "$REASON"
+              echo "::error::$TAG: $REASON. A person must resolve it in App Store Connect (docs/store-distribution.md, \"Submission deferred or blocked\")."
+              exit 1
+              ;;
+            *) echo "::error::unexpected outcome '$OUTCOME'"; exit 1 ;;
+          esac
+
+  submit:
+    name: Submit for App Store review
+    needs: check
+    if: needs.check.outputs.go == 'true'
+    permissions:
+      contents: read
+      statuses: write
+    uses: ./.github/workflows/ios-submit.yml
+    with:
+      tag: ${{ needs.check.outputs.tag }}
+      commit: ${{ needs.check.outputs.commit }}
+      version: ${{ needs.check.outputs.version }}
+      build: ${{ needs.check.outputs.build }}
+      build-year: ${{ needs.check.outputs.build-year }}
