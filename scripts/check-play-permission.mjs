@@ -41,7 +41,7 @@ if (!key) {
   // misleading signal this probe exists to prevent.
   console.error(
     "Play permission check FAILED — no service-account credential configured.\n" +
-      "Set the PLAY_SERVICE_ACCOUNT_JSON secret (Settings → Secrets and variables → Actions),\n" +
+      "Set PLAY_SERVICE_ACCOUNT_JSON on the android-build environment (Settings → Environments),\n" +
       "or pass PLAY_SERVICE_ACCOUNT_FILE=key.json when running this locally.",
   );
   process.exit(1);
