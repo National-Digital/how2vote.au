@@ -51,6 +51,12 @@ jobs:
       app: ${{ steps.decide.outputs.app }}
       native: ${{ steps.decide.outputs.native }}
     steps:
+      # The release classifier, so every change that would ship the apps also builds the shells.
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7
+        with:
+          sparse-checkout: scripts/store-release-scope.mjs
+          sparse-checkout-cone-mode: false
+          persist-credentials: false
       - name: Decide
         id: decide
         env:
@@ -84,6 +90,8 @@ jobs:
             echo "native=false" >> "$GITHUB_OUTPUT"
             echo "::notice::Draft pull request — shell builds skipped until it is marked ready."
           elif echo "$FILES" | grep -qE "$NATIVE"; then
+            echo "native=true" >> "$GITHUB_OUTPUT"
+          elif [ "$(printf '%s\n' "$FILES" | node scripts/store-release-scope.mjs --classify)" = true ]; then
             echo "native=true" >> "$GITHUB_OUTPUT"
           else
             echo "native=false" >> "$GITHUB_OUTPUT"

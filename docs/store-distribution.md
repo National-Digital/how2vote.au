@@ -4,7 +4,7 @@ The store apps are **Capacitor shells around the unchanged web build**: `apps/mo
 the exact static output of `apps/web` (dataset, maps, stats, fonts included), so the store apps
 are the same offline product as the PWA — there is no separate mobile codebase. No app asset or
 data is fetched at runtime: the bundle is fixed at build time and there is no over-the-air update
-path, so every release ships as a new binary through each store's review (Apple guideline 2.5.2
+path, so every app change ships as a new binary through each store's review (Apple guideline 2.5.2
 requires this, and the offline guarantee depends on it). The only network traffic a shell can
 originate is the optional, opt-in research contribution and the contact form (both first-party,
 see below), plus links the user chooses to follow out to the AEC or They Vote For You.
@@ -218,8 +218,9 @@ absence of the capability from the code.
 
 ## Release flow
 
-`deploy.yml` tags `v<version>` and publishes a GitHub Release on every push to `main`, then
-dispatches both store workflows **on `main`** with `tag=v<version>`. Each workflow's build job
+`deploy.yml` tags `v<version>` and publishes a GitHub Release on every push to `main`, then, when
+the release ships the apps (see "Which releases ship the apps" below), dispatches both store
+workflows **on `main`** with `tag=v<version>`. Each workflow's build job
 checks out that tag, refuses it unless `main` contains it, and records the commit; every later job
 checks out that commit, so a tag moved mid-run cannot change what ships. The workflow definition
 therefore always comes from `main`, which is what lets every store credential live in an
@@ -282,17 +283,82 @@ the `play-store`/`app-store` required reviewers; `mobile-ci.yml`'s static and be
 signing secrets only to decide whether it can produce a release-signed APK — a fork pull request
 gets a debug-signed one instead, which still installs on a device.
 
+### Which releases ship the apps
+
+A store release costs an App Review, a Play rollout and an F-Droid build, so a merge that changes
+nothing in the apps deploys the web, is tagged and released as usual, and dispatches no store
+workflow. `scripts/store-release-scope.mjs` decides in the deploy job, before the build, by diffing
+the pushed commit against the **last release whose apps shipped**:
+
+- **Ships**: anything not on the deny-list below, including unknown paths. In practice: `apps/web`
+  (the bundled build), `apps/mobile` (the shells, the Fastfile, store metadata and screenshots),
+  `packages/engine` and `packages/data-schema`, `data/`, the F-Droid listing under `fastlane/`,
+  `pnpm-lock.yaml` and the other root build config, the `$docs` files the web bundle imports
+  (`docs/research/`), the native copy sources in `docs/legal/`, the F-Droid recipe the release
+  replays (`docs/fdroid/`), the store workflows and composite actions, and the root scripts a store
+  build runs. Listing changes ship because `deliver`/`supply` upload metadata with each release and
+  F-Droid reads the listing at the tag.
+- **Always ships**: a change to `pnpm-lock.yaml`, the store workflows or the composite actions, even
+  when no app source changed. Each can change the bytes of the binary, and F-Droid publishes a
+  version only when its own build from that tag reproduces the APK we built from the same tree, so
+  every advertised version needs an APK built from exactly that tree.
+- **Skips**: root community files (`*.md`, `LICENSE`, `CITATION.cff`), the rest of `docs/`, the rest
+  of `.github/`, editor and lint config, every other root script, `infra/`, `tools/`,
+  `packages/data-pipeline` (its outputs are committed under `data/`), tests (`*.test.*`, `*.spec.*`,
+  `apps/web/e2e`, `features`, `test-support` and the test configs), and the Pages Functions with
+  their migrations and `wrangler.toml`.
+
+`store-release-scope.test.mjs` derives the store-build scripts from the release workflows and
+composite actions, and the `$docs` imports from the web source, and fails if either falls on the
+deny-list.
+
+Every PR's Deploy run previews the decision in its job summary ("Store release on merge").
+Overrides go in the pull request's title or body, standing on their own (a marker in backticks or
+joined to a word is ignored, so they can be written about):
+
+| Marker | Effect |
+| --- | --- |
+| `[ship-apps]` | ships a change the deny-list would skip. Also honoured in a commit message |
+| `[skip-apps]` | holds back an app-affecting change, to batch it with the next one. The base stays at the last release that shipped, so the held-back changes ship with the next release that does. `[ship-apps]` wins if both are present |
+
+The decision is recorded on the release tag, which `deploy.yml` creates **annotated** with a
+`Store-Release: ship` or `Store-Release: skip` trailer; a skipped release also says so in its
+release notes. The diff base is the newest reachable release tag not marked `skip` (lightweight
+tags predate the trailer and all shipped). On a ship decision, the release job refuses an existing
+tag that is not this commit's ship tag: a concurrent release that claimed the version would
+otherwise leave these app changes without a release, silently.
+
+**`app-version.json` advertises only a version whose F-Droid APK is published.** When
+`fdroid-publish` has uploaded the APK and verified that `dist.how2vote.au` serves it, it sets a
+`fdroid-apk/v<version>` success status on the release commit (`statuses: write`, the only
+permission it adds), then dispatches `deploy.yml` on `main`. Every production deploy (push,
+scheduled or dispatched) advertises the newest reachable release tag carrying that status, so the
+endpoint moves when the APK exists and never before: a skipped release never gets the status, and a
+store release whose F-Droid publish failed is never advertised. Releases before this record existed
+are lightweight tags and count as published (the last one is v1.4.5 plus any release that merges
+before this mechanism does). If the status or the tags cannot be read, the deploy fails rather than
+publish a wrong endpoint. The record is never inferred from the dist URL: the zone caches `/app/*`
+404s, and a probe before the upload would break `fdroid-publish`'s own verification.
+
+Limits worth knowing:
+
+- A store release that was dispatched but **failed** still counts as shipped for the diff: its tag
+  says `ship`. A docs-only merge after it leaves Play and the App Store behind until a release ships
+  or the failed run is re-dispatched. F-Droid is unaffected: without the status it stays at the last
+  published release.
+- To ship changes a release skipped, merge a follow-up carrying `[ship-apps]`.
+- iOS and Android share one decision.
+
 ### Per-PR builds
 
 `mobile-ci.yml`'s build tier compiles both shells and attaches the binaries: an Android APK that installs on a
 device, and an iOS Simulator `.app`. A single `scope` job decides, and both platforms share that
 decision.
 
-The build tier runs when a change can affect a native build — `apps/mobile/**`, `pnpm-lock.yaml`, `.nvmrc`,
-`docs/fdroid/**`, the workflow itself, the shared build actions, or the store/F-Droid scripts. Web
-paths are excluded: the native projects consume `apps/web/build` as static assets, and `ci.yml`
-builds that on every PR. To build a branch the filter does not select — a web-only change to
-channel-aware code, say — use `workflow_dispatch`.
+The build tier runs for every change that would ship the apps on merge (the same
+`store-release-scope.mjs` classification, so a pull request never ships a binary its CI did not
+build), plus the workflow itself and the store/F-Droid check scripts. To build a branch the filter
+does not select, use `workflow_dispatch`.
 
 There is no workflow-level `paths:` filter by design. A required check filtered out that way never
 reports, leaving the pull request blocked indefinitely; a job skipped by a job-level `if:` reports
@@ -492,14 +558,14 @@ How the pieces fit — each fact is enforced on every PR (guards named on the ri
 | Fact | Where | Guard |
 | --- | --- | --- |
 | Recipe (reference copy) | `docs/fdroid/au.how2vote.app.yml`; the authoritative copy lives in fdroiddata once the MR merges — mirror review changes back | recipe invariants in `check-fdroid-ready.mjs` |
-| Version discovery | `checkupdates` polls `https://how2vote.au/app-version.json`, published on every production deploy by `scripts/generate-app-version.mjs`; `AutoUpdateMode: Version v%v` maps the pair to the release tag | payload unit tests |
+| Version discovery | `checkupdates` polls `https://how2vote.au/app-version.json`, published on every production deploy by `scripts/generate-app-version.mjs` and naming the newest release whose F-Droid APK is published (see "Which releases ship the apps"); `AutoUpdateMode: Version v%v` maps the pair to the release tag | payload unit tests |
 | One fetch only | `UpdateCheckData`'s versionName URL is the **`.` sentinel** (re-use the fetched page), never the URL again: fdroidserver builds its second request with **no headers**, and that one is answered **403** at the edge. Both values are in the one JSON document | `check-fdroid-ready.mjs` asserts field 3 is `.` |
 | Version injection | the gradle files carry **no literal version**: the recipe's prebuild writes the build block's `$$VERCODE$$`/`$$VERSION$$` into `gradle.properties` — the same project properties store CI passes as `-P` flags | the `fdroid` job builds with **no** `-P` flags and asserts the APK's pair |
 | versionCode | the shared `resolve-store-version` encoding with the three `run_number` digits pinned to `000` (that action uses `run_number`, never `run_attempt`); the Play build of the same release always ranks higher, which is irrelevant across channels (different signing keys) but keeps the numbers cross-referenceable | formula-parity check |
 | Listing text | the fastlane **android** metadata tree is **committed** — F-Droid imports it from the repo at the tag; a gitignored tree would publish an empty listing | drift-checked against the generator |
 | Listing images | `ANDROID_IMAGE_MAP` in `generate-store-metadata.mjs` maps the screenshot pack to fastlane image names for both Android consumers: committed **symlinks** for F-Droid, staged **copies** for Play | `--check` asserts each link is a symlink and resolves; `android-release.yml` fails closed on an unstaged pack |
 | Listing **path** | F-Droid globs `<repo root>/fastlane/metadata/android/<locale>/`, `<repo root>/metadata/<locale>/` and `src/<flavour>/fastlane/…` — all relative to the **checkout root, never the build subdir** — so the committed listing lives at **`fastlane/metadata/android/en-US/`**. Locale is `en-US`, F-Droid's fallback locale | presence in `check-fdroid-ready.mjs`, bytes in `generate-store-metadata.mjs --check` |
-| Reproducible builds | `Binaries:` names the signed APK `android-release.yml` publishes on every release, and `AllowedAPKSigningKeys:` pins its signer digest. F-Droid builds the tag, compares, and on a match publishes **our** binary under **our** signature instead of re-signing with its own key | `check-fdroid-ready.mjs` requires the pair together and `%v` in the URL; the release build asserts the APK's signer equals the pinned digest before the asset is attached |
+| Reproducible builds | `Binaries:` names the signed APK `android-release.yml` publishes on every release that ships the apps, and `AllowedAPKSigningKeys:` pins its signer digest. F-Droid builds the tag, compares, and on a match publishes **our** binary under **our** signature instead of re-signing with its own key | `check-fdroid-ready.mjs` requires the pair together and `%v` in the URL; the release build asserts the APK's signer equals the pinned digest before the asset is attached |
 | Signing key | a **dedicated** key, never the Play upload key. Play upload keys are rotatable by design; an F-Droid signing identity is permanent, so coupling them would make rotating the upload key orphan every F-Droid install. Play App Signing means the Play binary is signed by a Google-held key regardless, so the two channels never share an identity | — |
 | Artifact host | `dist.how2vote.au` — Cloudflare R2 bucket `how2vote-dist`, read-only over that domain, keyed `app/<channel>/how2vote-<channel>-<version>.apk`. Not a GitHub release asset: releases here are **immutable**, and `deploy.yml` publishes before dispatching the store workflows, so an asset can never be attached afterwards. The channel appears in both the path and the filename because a saved APK loses its URL and its signature decides whether it installs | `fdroid-publish` refuses to replace a published object, then re-downloads over the public domain and compares SHA-256 with the signed file |
 | Signing flags | `apksigner --alignment-preserved` is **required**: apksigner re-aligns the zip by default, shifting nearly every entry, and any digest computed over the original layout then fails — F-Droid could never match its own build. v1 (JAR) signing is disabled: minSdk 24 supports v2 everywhere, and v1 adds ~200 KB of per-entry manifests | `fdroid-apk` runs `apksigcopier compare` against the unsigned build, which is the check F-Droid's verification performs |
