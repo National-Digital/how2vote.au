@@ -40,10 +40,14 @@ runs:
           echo "::error::release tag '$TAG' is not vMAJOR.MINOR.PATCH (no leading zeros)"; exit 1
         fi
         IFS=. read -r MAJOR MINOR PATCH <<<"$VERSION"
-        # Each field owns a fixed digit range in the encoding; overflowing one would carry into the
-        # next and rank a later release BELOW an earlier one. Refuse rather than emit that.
-        if [ "$MINOR" -gt 99 ] || [ "$PATCH" -gt 99 ]; then
-          echo "::error::minor/patch must be < 100 to encode a store build number ($VERSION)"; exit 1
+        # Each field owns a fixed digit range in the encoding (minor 2 digits, patch 3); overflowing
+        # one would carry into the next and rank a later release BELOW an earlier one. Lengths are
+        # checked before any numeric test so an oversized field cannot overflow bash arithmetic.
+        # Major is held to 1..9: at least 1 keeps every code above the legacy range, at most 9
+        # keeps every code below the 1e9 + run range the per-PR preview builds use (mobile-ci.yml).
+        if [ "${#MINOR}" -gt 2 ] || [ "${#PATCH}" -gt 3 ] || [ "${#MAJOR}" -gt 1 ] \
+          || [ "$MAJOR" -lt 1 ]; then
+          echo "::error::$VERSION cannot encode a store build number (major 1-9, minor <= 99, patch <= 999)"; exit 1
         fi
         # The store build number must rise every time we upload, and a store rejects a versionCode
         # it has already seen. run_number is the only counter that satisfies that: it increases on
@@ -57,13 +61,14 @@ runs:
         # SAME release is a re-upload straddling a multiple of 1000; the remedy is a patch bump,
         # which raises the high digits.
         RUN_DIGITS=$(( 10#$RUN_NUMBER % 1000 ))
-        # Deterministic, monotonic, store-safe (< 2.1e9 versionCode ceiling for major < ~210):
-        # semver in the high digits so a later release always outranks an earlier one, three digits
-        # of run_number below it so re-uploads of the SAME release still rise.
+        # Deterministic, monotonic, store-safe (< 1e9 for major <= 9): semver in the high
+        # digits so a later release always outranks an earlier one, three digits of run_number below
+        # it so re-uploads of the SAME release still rise. Every code is >= 10^8, above every code
+        # the legacy (MAJOR*10000 + MINOR*100 + PATCH)*1000 encoding issued.
         # KEEP IN SYNC with scripts/generate-app-version.mjs, which publishes the SAME encoding
         # with run digits 000 as the F-Droid source-build baseline (check-fdroid-ready.mjs
         # guards the parity).
-        BUILD=$(( (10#$MAJOR * 10000 + 10#$MINOR * 100 + 10#$PATCH) * 1000 + RUN_DIGITS ))
+        BUILD=$(( 10#$MAJOR * 100000000 + 10#$MINOR * 1000000 + 10#$PATCH * 1000 + RUN_DIGITS ))
         # Copyright year = the year of the tagged commit, not the wall clock, so a re-run reproduces
         # the same listing.
         BUILD_YEAR="$(git log -1 --format=%cd --date=format:%Y "$TAG" 2>/dev/null || git log -1 --format=%cd --date=format:%Y)"

@@ -14,9 +14,9 @@
  * check-fdroid-ready.mjs asserts the version it would install matches .nvmrc.
  *
  * Usage:
- *   node scripts/fdroid-recipe-build.mjs init     --version 9.9.9 --code 90909000
- *   node scripts/fdroid-recipe-build.mjs prebuild --version 9.9.9 --code 90909000
- *   node scripts/fdroid-recipe-build.mjs build    --version 9.9.9 --code 90909000
+ *   node scripts/fdroid-recipe-build.mjs init     --version 9.9.9 --code 909009000
+ *   node scripts/fdroid-recipe-build.mjs prebuild --version 9.9.9 --code 909009000
+ *   node scripts/fdroid-recipe-build.mjs build    --version 9.9.9 --code 909009000
  *   node scripts/fdroid-recipe-build.mjs build --print   # show the shell line, run nothing
  *   node scripts/fdroid-recipe-build.mjs signing-keys   # digests the recipe pins, one per line
  */
@@ -213,7 +213,7 @@ function main() {
     : materialiseSrclibs(referenced);
   const line = shellLine(cmds, {
     version: arg("version", "9.9.9"),
-    code: arg("code", "90909000"),
+    code: arg("code", "909009000"),
     srclibs,
   });
   const cwd = join(ROOT, subdir(recipe));

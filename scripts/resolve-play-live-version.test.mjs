@@ -76,13 +76,25 @@ describe("decodeVersionCode", () => {
   });
 
   it("round-trips every field boundary the encoding allows", () => {
-    for (const v of ["0.0.1", "1.0.0", "1.99.99", "12.3.4"]) {
+    for (const v of ["1.0.0", "1.99.999", "9.3.4", "9.99.999"]) {
       expect(decodeVersionCode(encodeVersionCode(v))).toBe(v);
     }
   });
 
   it("refuses input the encoder could not have produced", () => {
-    for (const bad of [0, 999, -1, 1.5, "x", null, undefined]) {
+    for (const bad of [
+      0,
+      999,
+      -1,
+      1.5,
+      "x",
+      null,
+      undefined,
+      10500000,
+      10407000,
+      9009000,
+      1000000000,
+    ]) {
       expect(decodeVersionCode(bad)).toBeNull();
     }
   });

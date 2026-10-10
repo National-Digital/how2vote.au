@@ -51,7 +51,10 @@ version) — this is a helper for the deploy step, not a fully automated release
 - `feat: …` → suggests the next **minor** version
 - `fix: …`, `docs: …`, `chore: …`, `perf: …`, `refactor: …`, `test: …` → suggests the next **patch**
   version
-- The major version is **never** bumped automatically.
+- The major version moves only on an explicit breaking marker (`feat!: …`, or `BREAKING CHANGE` in
+  the title).
+- The highest bump across every commit since the last release wins, so a `feat` still counts if its
+  own release was skipped.
 
 A CI check (`PR title`) verifies the title is a Conventional Commit when the PR is opened or edited;
 if it fails, edit the PR title and the check re-runs.
