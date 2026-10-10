@@ -5,10 +5,9 @@ name: iOS release
 # release published      -> build the channel web bundle, archive ad-hoc, export the ipa with
 #                           cloud-managed distribution signing (App Store Connect API key), upload
 #                           to TestFlight, then — behind the `app-store` environment's
-#                           required-reviewer gate —
-#                           submit that build for App Store review with generated metadata, as a
-#                           PHASED release (add `[full-rollout]` to the release notes before
-#                           approving to push all auto-updaters at once).
+#                           required-reviewer gate — submit that build for App Store review with
+#                           generated metadata, as a PHASED release (add `[full-rollout]` to the
+#                           release notes before approving to push all auto-updaters at once).
 #
 # NOTE: `automatic_release: false` — a green submit job means "approved and waiting", not "live";
 # a human clicks release in App Store Connect.
