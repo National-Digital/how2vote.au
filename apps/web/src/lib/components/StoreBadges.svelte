@@ -24,12 +24,17 @@
       {/if}
       {#if STORE_LINKS.playStore}
         <ExternalLink href={STORE_LINKS.playStore} icon={false}>
-          <img src="/badges/google-play.png" alt="Get it on Google Play" height="40" />
+          <img
+            class="padded"
+            src="/badges/google-play.png"
+            alt="Get it on Google Play"
+            height="40"
+          />
         </ExternalLink>
       {/if}
       {#if STORE_LINKS.fDroid}
         <ExternalLink href={STORE_LINKS.fDroid} icon={false}>
-          <img src="/badges/f-droid.svg" alt="Get it on F-Droid" height="40" />
+          <img class="padded" src="/badges/f-droid.svg" alt="Get it on F-Droid" height="40" />
         </ExternalLink>
       {/if}
     </p>
@@ -59,19 +64,31 @@
   }
   .row {
     display: flex;
-    gap: 12px;
+    flex-wrap: wrap;
+    gap: 8px 12px;
     justify-content: center;
     align-items: center;
     margin: 0 0 6px;
   }
+  /* 40px is Apple's minimum on-screen badge height; the link carries a 44px target (WCAG 2.5.5). */
   .row :global(a) {
     display: inline-flex;
+    align-items: center;
+    min-height: 44px;
     text-decoration: none;
+    overflow: hidden;
   }
   img {
     height: 40px;
     width: auto;
     display: block;
+  }
+  /* The Google Play and F-Droid artwork sits inside a transparent 41px margin on a 646x250 canvas
+     (visible 564x168). Scale so the visible artwork matches the App Store badge's 40px, then
+     cancel the margin so the files stay unmodified. */
+  img.padded {
+    height: calc(40px * 250 / 168);
+    margin: calc(40px * -41 / 168);
   }
   .marks {
     font-size: 9.5px;

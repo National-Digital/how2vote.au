@@ -395,7 +395,7 @@ APIs are queried by whatever sets them, never by the generator:
 
 | Variable | Badge | Source once live |
 | --- | --- | --- |
-| `IOS_LIVE_VERSION` | `ios.json` | App Store Connect API |
+| `IOS_LIVE_VERSION` | `ios.json` | iTunes lookup (`resolve-ios-live-version.mjs`) |
 | `ANDROID_LIVE_VERSION` | `android.json` | Play Developer API |
 | `FDROID_LIVE_VERSION` | `fdroid.json` | F-Droid index (`resolve-fdroid-live-version.mjs`) |
 
