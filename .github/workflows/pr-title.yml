@@ -1,8 +1,9 @@
 name: PR title
 
 # Verifies the pull-request title is a Conventional Commit (see CONTRIBUTING.md). On a squash merge
-# the PR title becomes the commit subject on main, and scripts/next-version.mjs reads that subject to
-# suggest the next release version — so a non-conventional title silently defaults the version bump.
+# the PR title becomes the commit subject on main, and scripts/next-version.mjs reads every such
+# subject since the last release to pick the next version — so a non-conventional title silently
+# defaults the version bump.
 # This check catches it at PR time. Self-contained: no third-party actions, just the event payload.
 #
 # `edited` is included so fixing the title re-runs the check without needing a new push.

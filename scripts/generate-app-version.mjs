@@ -8,10 +8,10 @@
  * apps/mobile/android/app/build.gradle). This script publishes the pair F-Droid needs at
  * https://how2vote.au/app-version.json on every production deploy:
  *
- *   { "versionName": "2.1.0", "versionCode": 20100000 }
+ *   { "versionName": "2.1.0", "versionCode": 201000000 }
  *
  * versionCode is the SAME deterministic semver encoding as resolve-store-version —
- * (MAJOR×10000 + MINOR×100 + PATCH)×1000 — with the three run-number digits pinned to 000.
+ * MAJOR×10^8 + MINOR×10^6 + PATCH×10^3 — with the three run-number digits pinned to 000.
  * Store uploads append the workflow run number (≥ 1, so a re-upload of one release out-ranks the
  * last) making a store versionCode for the same release always higher; that is fine because
  * versionCode only needs to be monotonic
@@ -42,43 +42,80 @@ const OUT_REL = "apps/web/static/app-version.json";
  *  zeros are rejected on both sides so the two encodings cannot disagree about `1.01.0`. */
 const SEMVER = /^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)$/;
 
+/** Google Play's versionCode ceiling. */
+export const MAX_VERSION_CODE = 2100000000;
+/** Per-PR preview builds use 1e9 + run number; release codes must stay below that range. */
+export const PREVIEW_CODE_FLOOR = 1000000000;
+/** Major 9 is the largest that keeps every release code below PREVIEW_CODE_FLOOR. */
+const MAX_MAJOR = 9;
+
 /**
  * The source-build versionCode baseline for a release: semver encoded exactly as
  * .github/actions/resolve-store-version does, with the run-number digits pinned to 000.
- * Minor/patch above 99 would carry into the next field and rank a later release below an earlier
- * one, so they are refused rather than encoded.
+ * A minor above 99 or a patch above 999 would carry into the next field and rank a later release
+ * below an earlier one, so they are refused rather than encoded. Major 0 is refused so every code
+ * stays above the legacy range (see legacyVersionCode).
  * @param {string} version strict semver ("2.1.0")
- * @returns {number|null} e.g. 20100000, or null for input this scheme cannot encode
+ * @returns {number|null} e.g. 201000000, or null for input this scheme cannot encode
  */
 export function encodeVersionCode(version) {
   const m = SEMVER.exec(version ?? "");
   if (!m) return null;
   const [, major, minor, patch] = m.map(Number);
-  if (minor > 99 || patch > 99) return null;
+  if (major < 1 || major > MAX_MAJOR || minor > 99 || patch > 999) return null;
+  return major * 100000000 + minor * 1000000 + patch * 1000;
+}
+
+/** Every code the current encoding emits is at or above this; every legacy code is below it. */
+const LEGACY_CEILING = 100000000;
+
+/** The last release published under the legacy encoding. */
+export const LEGACY_LAST_VERSION = [1, 4, 6];
+
+/**
+ * The code a release up to LEGACY_LAST_VERSION was published with under the legacy encoding,
+ * (MAJOR×10000 + MINOR×100 + PATCH)×1000, or null for any other version. Kept so the store
+ * codes and recipe build blocks already issued still decode and validate.
+ * @param {string} version strict semver
+ * @returns {number|null}
+ */
+export function legacyVersionCode(version) {
+  const m = SEMVER.exec(version ?? "");
+  if (!m) return null;
+  const [, major, minor, patch] = m.map(Number);
+  const [lastMajor, lastMinor, lastPatch] = LEGACY_LAST_VERSION;
+  const issued =
+    major === lastMajor && (minor < lastMinor || (minor === lastMinor && patch <= lastPatch));
+  if (!issued || minor > 99 || patch > 99) return null;
   return (major * 10000 + minor * 100 + patch) * 1000;
 }
 
 /**
- * The semver a store versionCode was built from — the inverse of encodeVersionCode.
+ * The semver a store versionCode was built from — the inverse of encodeVersionCode (or of
+ * legacyVersionCode for a code below the current range).
  * Store uploads append the workflow run number to the baseline (see above), so the low three
  * digits are discarded before decoding rather than treated as part of the version.
- * @param {number|string} code e.g. 20100007
+ * @param {number|string} code e.g. 201000007
  * @returns {string|null} e.g. "2.1.0", or null for input this scheme cannot have produced
  */
 export function decodeVersionCode(code) {
   const n = Number(code);
   if (!Number.isInteger(n) || n <= 0) return null;
-  const baseline = Math.floor(n / 1000);
-  // Below 1000 there is no baseline at all, only run-number digits — 0.0.0 is not a release.
-  if (baseline < 1) return null;
-  const major = Math.floor(baseline / 10000);
-  const minor = Math.floor(baseline / 100) % 100;
-  const patch = baseline % 100;
-  const version = `${major}.${minor}.${patch}`;
+  const baseline = Math.floor(n / 1000) * 1000;
+  let version;
+  let encode;
+  if (n >= LEGACY_CEILING) {
+    version = `${Math.floor(n / 100000000)}.${Math.floor(n / 1000000) % 100}.${Math.floor(n / 1000) % 1000}`;
+    encode = encodeVersionCode;
+  } else {
+    const b = baseline / 1000;
+    version = `${Math.floor(b / 10000)}.${Math.floor(b / 100) % 100}.${b % 100}`;
+    encode = legacyVersionCode;
+  }
   // Round-trip rather than trust the arithmetic: anything the encoder would not have produced
-  // (a versionCode from some other scheme, or a carry out of the minor/patch fields) decodes to
-  // null instead of a plausible-looking wrong version.
-  return encodeVersionCode(version) === baseline * 1000 ? version : null;
+  // (a versionCode from some other scheme, or a carry out of a field) decodes to null instead of
+  // a plausible-looking wrong version.
+  return encode(version) === baseline ? version : null;
 }
 
 /**

@@ -41,7 +41,7 @@ import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { resolve, dirname } from "node:path";
 
-import { encodeVersionCode } from "./generate-app-version.mjs";
+import { encodeVersionCode, legacyVersionCode } from "./generate-app-version.mjs";
 import { signingKeys } from "./fdroid-recipe-build.mjs";
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), "..");
@@ -145,8 +145,8 @@ export function phaseItems(recipe) {
 }
 
 /** The one shared versionCode formula, as each side spells it. */
-const FORMULA_BASH = "(10#$MAJOR * 10000 + 10#$MINOR * 100 + 10#$PATCH) * 1000";
-const FORMULA_JS = "(major * 10000 + minor * 100 + patch) * 1000";
+const FORMULA_BASH = "10#$MAJOR * 100000000 + 10#$MINOR * 1000000 + 10#$PATCH * 1000 + RUN_DIGITS";
+const FORMULA_JS = "major * 100000000 + minor * 1000000 + patch * 1000";
 
 /**
  * The commit a ref names, or null when it cannot be resolved — a CI checkout has no tags unless it
@@ -513,14 +513,29 @@ export function verdict(files, options = {}) {
         );
       }
     }
+    // Releases up to LEGACY_LAST_VERSION keep their legacy codes; every other block must carry the
+    // current encoding.
     for (const [label, name, code] of pairs) {
       const expected = encodeVersionCode(name);
+      const legacy = legacyVersionCode(name);
       if (expected === null) {
         push(`${RECIPE_REL}: ${label}: "${name}" is not a versionCode-encodable semver`);
-      } else if (Number(code) !== expected) {
+      } else if (Number(code) !== expected && Number(code) !== legacy) {
         push(
           `${RECIPE_REL}: ${label}: versionCode ${code} is not the shared encoding of ${name} ` +
             `(expected ${expected})`,
+        );
+      }
+    }
+    // checkupdates appends blocks in release order, so codes must rise block over block; this is
+    // what catches a legacy code declared after a release that used the current encoding.
+    for (let i = 1; i < blocks.length; i++) {
+      const [, prevName, prevCode] = blocks[i - 1];
+      const [, name, code] = blocks[i];
+      if (Number(code) <= Number(prevCode)) {
+        push(
+          `${RECIPE_REL}: build block ${name}: versionCode ${code} does not rise above the ` +
+            `previous block ${prevName} (${prevCode})`,
         );
       }
     }

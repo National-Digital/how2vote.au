@@ -12,7 +12,7 @@ import {
   phaseItems,
   verdict,
 } from "./check-fdroid-ready.mjs";
-import { encodeVersionCode } from "./generate-app-version.mjs";
+import { encodeVersionCode, legacyVersionCode } from "./generate-app-version.mjs";
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const RELS = [
@@ -81,10 +81,23 @@ describe("F-Droid readiness guard", () => {
     const files = realFiles();
     files[".github/actions/resolve-store-version/action.yml"] = files[
       ".github/actions/resolve-store-version/action.yml"
-    ].replace("MAJOR * 10000", "MAJOR * 100000");
+    ].replace("10#$MINOR * 1000000", "10#$MINOR * 100000");
     const { ok, errors } = verdict(files);
     expect(ok).toBe(false);
     expect(errors.some((e) => e.includes("formula"))).toBe(true);
+  });
+
+  it("catches a one-sided versionCode formula change (JS generator edited alone)", () => {
+    const files = realFiles();
+    files["scripts/generate-app-version.mjs"] = files["scripts/generate-app-version.mjs"].replace(
+      "patch * 1000;",
+      "patch * 100;",
+    );
+    const { ok, errors } = verdict(files);
+    expect(ok).toBe(false);
+    expect(errors.some((e) => e.includes("generate-app-version.mjs: versionCode formula"))).toBe(
+      true,
+    );
   });
 
   it("catches a remote-content server block appearing in capacitor.config.ts", () => {
@@ -148,7 +161,7 @@ describe("recipe version pairs", () => {
     const name = recipe.match(/versionName:\s*([\d.]+)/)?.[1];
     const code = Number(recipe.match(/versionCode:\s*(\d+)/)?.[1]);
     expect(name).toBeTruthy();
-    expect(code).toBe(encodeVersionCode(name));
+    expect([encodeVersionCode(name), legacyVersionCode(name)]).toContain(code);
   });
 
   it("declares a CurrentVersionCode that matches the shared encoding of CurrentVersion", () => {
@@ -156,7 +169,7 @@ describe("recipe version pairs", () => {
     const name = recipe.match(/^CurrentVersion:[ \t]*([\d.]+)/m)?.[1];
     const code = Number(recipe.match(/^CurrentVersionCode:[ \t]*(\d+)/m)?.[1]);
     expect(name).toBeTruthy();
-    expect(code).toBe(encodeVersionCode(name));
+    expect([encodeVersionCode(name), legacyVersionCode(name)]).toContain(code);
   });
 
   it("catches a mis-scaled CurrentVersionCode", () => {
@@ -179,6 +192,46 @@ describe("recipe version pairs", () => {
     const { ok, errors } = verdict(files);
     expect(ok).toBe(false);
     expect(errors.some((e) => e.includes("build block"))).toBe(true);
+  });
+
+  /** The recipe with one more build block appended, CurrentVersion following it. */
+  const withBlock = (files, name, code) => {
+    const recipe = files[RECIPE_REL];
+    const start = recipe.search(/^[ \t]*-[ \t]*versionName:/m);
+    const end = recipe.search(/^AllowedAPKSigningKeys:/m);
+    const block = recipe
+      .slice(start, end)
+      .replace(/versionName: \S+/, `versionName: ${name}`)
+      .replace(/versionCode: \d+/, `versionCode: ${code}`)
+      .replace(/commit: \S+/, `commit: v${name}`);
+    return (recipe.slice(0, end) + block + recipe.slice(end))
+      .replace(/^CurrentVersion:.*$/m, `CurrentVersion: ${name}`)
+      .replace(/^CurrentVersionCode:.*$/m, `CurrentVersionCode: ${code}`);
+  };
+
+  it("accepts a current-encoding block after a legacy one", () => {
+    const files = realFiles();
+    files[RECIPE_REL] = withBlock(files, "1.4.7", encodeVersionCode("1.4.7"));
+    expect(verdict(files, { revParse: () => null })).toEqual({ ok: true, errors: [] });
+  });
+
+  it("catches a legacy code on a release after the legacy cutover", () => {
+    const files = realFiles();
+    files[RECIPE_REL] = withBlock(files, "1.5.0", 10500000);
+    const { ok, errors } = verdict(files, { revParse: () => null });
+    expect(ok).toBe(false);
+    expect(errors.some((e) => e.includes("not the shared encoding of 1.5.0"))).toBe(true);
+  });
+
+  it("catches a legacy code declared after a current-encoding block", () => {
+    const files = realFiles();
+    files[RECIPE_REL] = withBlock(files, "1.4.7", encodeVersionCode("1.4.7"));
+    files[RECIPE_REL] = withBlock(files, "1.4.6", legacyVersionCode("1.4.6"));
+    const { ok, errors } = verdict(files, { revParse: () => null });
+    expect(ok).toBe(false);
+    expect(errors.some((e) => e.includes("does not rise above the previous block 1.4.7"))).toBe(
+      true,
+    );
   });
 
   it("catches CurrentVersion lagging the newest build block", () => {
@@ -252,7 +305,7 @@ describe("recipe version pairs", () => {
     // it, so without the declared-vs-parsed count it would be silently unvalidated.
     files[RECIPE_REL] = files[RECIPE_REL].replace(
       /^AutoUpdateMode:/m,
-      "  - versionName: 9.9.9\n    versionCode: 90909000\n    disable: example\n    commit: v9.9.9\n\nAutoUpdateMode:",
+      "  - versionName: 9.9.9\n    versionCode: 909009000\n    disable: example\n    commit: v9.9.9\n\nAutoUpdateMode:",
     );
     const { ok, errors } = verdict(files);
     expect(ok).toBe(false);
