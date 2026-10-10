@@ -103,7 +103,7 @@ export function isAppPath(path) {
  * @param {string} marker
  */
 export function hasMarker(text, marker) {
-  const escaped = marker.replace(/[[\]]/g, "\\$&");
+  const escaped = marker.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
   return new RegExp(`(^|[^\\w\`-])${escaped}(?=$|[^\\w\`-])`, "im").test(text ?? "");
 }
 
