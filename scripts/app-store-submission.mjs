@@ -14,7 +14,7 @@
  *           to this release and attaches this build.
  *   clear   an unsent draft submission holds items: remove them, and `deliver` reuses the draft.
  *   wait    a cancellation is still settling: poll, then decide again.
- *   defer   an older version is in review, or approved and waiting to be released. It is never
+ *   defer   an older version is in review, or approved and not yet on sale. It is never
  *           cancelled; the build stays in TestFlight and ios-submission-catch-up.yml submits it
  *           once the way is clear.
  *   skip    this build is already submitted, or App Store Connect already holds a newer version or
@@ -228,9 +228,12 @@ function decideOnly({ target, versions, submissions, builds = [], releases = new
   }
   const pending = versions.find((v) => AWAITING_RELEASE.has(v.state));
   if (pending) {
+    // Versions are submitted for automatic release, so only a manually released one waits here.
+    const hint =
+      pending.state === "PENDING_DEVELOPER_RELEASE" ? "; release it in App Store Connect" : "";
     return {
       action: "defer",
-      reason: `${label(pending)} is approved and not yet released (${pending.state})`,
+      reason: `${label(pending)} is approved and not yet released (${pending.state})${hint}`,
     };
   }
 

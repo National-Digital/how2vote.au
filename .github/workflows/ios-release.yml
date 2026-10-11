@@ -17,10 +17,11 @@ name: iOS release
 # "Credential environments" in docs/store-distribution.md), so a dispatch from any other ref,
 # dry runs included, is refused.
 #
-# NOTE: `automatic_release: false` — a green submit job means "approved and waiting", not "live";
-# a human clicks release in App Store Connect. A submission that cannot go in yet (an older version
-# is in review or awaiting release) is deferred, not failed: see ios-submit.yml and
-# ios-submission-catch-up.yml.
+# A green submit job means "submitted for review". The version is submitted for automatic release,
+# so it goes on sale as soon as App Review approves it, and its phased release starts then. A
+# submission that cannot go in yet (an older version is in review or awaiting release) is deferred,
+# not failed: see ios-submit.yml and ios-submission-catch-up.yml. A failed run opens or updates a
+# `store-release-failure` issue (store-release-alert.yml).
 #
 # Guideline 2.5.2 means there is no OTA update path: the web bundle ships inside the binary and
 # every change goes through App Review, which is why this must be fully automated.
@@ -273,3 +274,22 @@ jobs:
       version: ${{ needs.build.outputs.app-version }}
       build: ${{ needs.build.outputs.build-number }}
       build-year: ${{ needs.build.outputs.build-year }}
+
+  # Opens or updates the release's failure issue when a job fails or times out, and closes it when
+  # a later run of the same or a newer release gets through its submit job. A deferred submission
+  # is green, so it reports nothing. Skipped for dry runs and for a cancelled run (a stale run
+  # cancelled by a newer release). Named "Report failures": supersede-store-runs.mjs ignores it
+  # while the run waits at the gate.
+  alert:
+    name: Report failures
+    needs: [build, owe, supersede, submit]
+    if: ${{ !cancelled() && !inputs.dry_run }}
+    permissions:
+      contents: read
+      issues: write
+    uses: ./.github/workflows/store-release-alert.yml
+    with:
+      name: iOS release
+      tag: ${{ inputs.tag }}
+      results: ${{ toJSON(needs) }}
+      terminal: submit

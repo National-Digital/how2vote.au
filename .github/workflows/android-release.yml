@@ -6,8 +6,8 @@ name: Android release
 # workflow_dispatch      -> build the channel web bundle, build + sign the release aab with the
 #                           upload key, upload to the Play internal track, then — behind the
 #                           `play-store` environment's required-reviewer gate — promote that
-#                           build to production at a STAGED 10% rollout (add `[full-rollout]` to
-#                           the release notes before approving to go straight to 100%).
+#                           build to production for every user (add `[staged-rollout]` to the
+#                           release notes before approval for a 10% rollout ramped by hand).
 #                           dry_run=true stops after the signed bundle (no upload).
 #
 # deploy.yml dispatches this on `main` with `tag` set to the release it just published, so the
@@ -16,8 +16,11 @@ name: Android release
 # "Credential environments" in docs/store-distribution.md), so a dispatch from any other ref,
 # dry runs included, is refused.
 #
-# NOTE: with Managed publishing enabled in Play Console, a green `promote` job means "ready to
-# publish", not "live" — the release waits for an explicit publish click in the console.
+# With Managed publishing off in Play Console, a green `promote` job means the release is live
+# (after Google's review, if one applies). With it on, the release waits in Publishing overview for
+# a publish click.
+#
+# A failed run opens or updates a `store-release-failure` issue (store-release-alert.yml).
 #
 # Google Play re-signs uploads with the escrowed app signing key (Play App Signing); the
 # keystore here is the UPLOAD key only.
@@ -561,12 +564,11 @@ jobs:
           PLAY_SERVICE_ACCOUNT_JSON: ${{ secrets.PLAY_SERVICE_ACCOUNT_JSON }}
         run: node .release-tools/scripts/play-promotion.mjs
 
-      # Rollout size is a release-time human decision, so it is read from the release notes at
-      # PROMOTE time rather than from the trigger payload (which was captured before the reviewer
-      # saw it) or a repo variable (sticky — a full rollout left switched on is the failure mode
-      # this whole gate exists to prevent). The approver adds the marker, then approves; the choice
-      # stays visible in the release notes afterwards. Default is staged. See
-      # "Rollout policy" in docs/store-distribution.md.
+      # Read from the release notes at PROMOTE time rather than from the trigger payload (captured
+      # before the notes could be edited) or a repo variable (sticky). Default is every user;
+      # `[staged-rollout]` gives 10%, and `[full-rollout]` wins over it. Only a marker in a pull
+      # request title or on a line of its own counts (see scripts/rollout-markers.mjs and
+      # "Rollout policy" in docs/store-distribution.md).
       - name: Resolve rollout fraction
         id: rollout
         if: steps.track.outputs.promote == 'true'
@@ -575,14 +577,8 @@ jobs:
           TAG: ${{ format('v{0}', needs.build.outputs.app-version) }}
         run: |
           set -euo pipefail
-          BODY="$(gh release view "$TAG" --json body --jq .body || echo "")"
-          if printf '%s' "$BODY" | grep -qiF '[full-rollout]'; then
-            echo "fraction=1" >> "$GITHUB_OUTPUT"
-            echo "::warning::[full-rollout] marker present — promoting to 100% of users."
-          else
-            echo "fraction=0.1" >> "$GITHUB_OUTPUT"
-            echo "Staged rollout: 10%. Ramp in Play Console, or halt if crash-rate regresses."
-          fi
+          BODY="$(gh release view "$TAG" --json body --jq .body || echo "")" \
+            node .release-tools/scripts/rollout-markers.mjs play
 
       - name: Set up Ruby / fastlane
         if: steps.track.outputs.promote == 'true'
@@ -601,3 +597,21 @@ jobs:
           PLAY_SERVICE_ACCOUNT_JSON: ${{ secrets.PLAY_SERVICE_ACCOUNT_JSON }}
           PLAY_ROLLOUT: ${{ steps.rollout.outputs.fraction }}
         run: bundle exec fastlane android promote
+
+  # Opens or updates the release's failure issue when a job fails or times out, and closes it when
+  # a later run of the same or a newer release promotes. Skipped for dry runs and for a cancelled
+  # run (a stale run cancelled by a newer release's supersede job). Named "Report failures":
+  # supersede-store-runs.mjs ignores it while the run waits at the gate.
+  alert:
+    name: Report failures
+    needs: [build, fdroid-apk, fdroid-publish, supersede, promote]
+    if: ${{ !cancelled() && !inputs.dry_run }}
+    permissions:
+      contents: read
+      issues: write
+    uses: ./.github/workflows/store-release-alert.yml
+    with:
+      name: Android release
+      tag: ${{ inputs.tag }}
+      results: ${{ toJSON(needs) }}
+      terminal: promote

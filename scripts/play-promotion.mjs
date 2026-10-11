@@ -3,11 +3,13 @@
  * @fileoverview Whether the promote job should move this build to Play production.
  *
  * fastlane's promote sends a track update carrying only the new release. In an update Play reads
- * `releases` as the desired change, and the release that last completed stays in place beneath a
- * new staged one. The new staged release is expected to replace an older one still rolling out
- * (users who already have that build keep it, and the new release goes to the same group of users
- * first); how Play treats an older `halted` release in that case is not documented. With Managed
- * publishing on, the committed change waits in the console to be published.
+ * `releases` as the desired change. A completed release (the default, a full rollout) replaces
+ * whatever production serves, a staged rollout included. A staged release (`[staged-rollout]`)
+ * leaves the release that last completed in place beneath it, and is expected to replace an older
+ * one still rolling out (users who already have that build keep it, and the new release goes to
+ * the same group of users first); how Play treats an older `halted` release in that case is not
+ * documented. With Managed publishing on, the committed change waits in the console to be
+ * published.
  *
  * What the update cannot express is "this build is stale", so this reads the production and
  * internal tracks first, in a throwaway edit that is always deleted, and decides:
