@@ -232,14 +232,17 @@ environment limited to `main` (see "Credential environments" below):
    App Store Connect API key (no certificate store). The lane fails if the archive is
    certificate-signed, if the ipa lacks a distribution signature or any `App.entitlements` entry,
    or if any new development or distribution certificate appeared during the build → **uploads
-   to TestFlight automatically** → the `submit` job waits on the **`app-store` environment**
-   (required reviewer = a human promotes every store submission), then submits that build for
-   App Review with metadata generated from the operator record.
+   to TestFlight automatically** → the `submit` job (`ios-submit.yml`) waits on the **`app-store`
+   environment** (required reviewer = a human promotes every store submission), then submits that
+   build for App Review with metadata generated from the operator record. When an earlier version
+   is still in App Store Connect it cancels, defers or stops as described in "Overlapping store
+   releases" below.
 2. **`android-release.yml`** (ubuntu runner) — builds the `android`-channel bundle →
    `cap sync android` → gradle builds the release AAB signed with the **upload key** (Google
    Play re-signs with its escrowed app signing key) → **uploads to the Play internal track
    automatically** → the `promote` job waits on the **`play-store` environment**, then promotes
-   internal → production at a **staged 10% rollout** (see Rollout policy below).
+   internal → production at a **staged 10% rollout** (see Rollout policy below), replacing any
+   earlier staged rollout (see "Overlapping store releases" below).
 3. **F-Droid** — no workflow of ours runs: F-Droid's buildserver builds from the release tag via
    the fdroiddata recipe, discovers new releases by polling
    `https://how2vote.au/app-version.json`, and publishes our signed APK when its build reproduces
@@ -282,6 +285,147 @@ environment that admits only `main`, and the production-release credentials addi
 the `play-store`/`app-store` required reviewers; `mobile-ci.yml`'s static and behaviour jobs reference no secrets, and its Android build reads the
 signing secrets only to decide whether it can produce a release-signed APK — a fork pull request
 gets a debug-signed one instead, which still installs on a device.
+
+### Overlapping store releases
+
+A release per merge means a store run often starts while an earlier release is still with a store.
+Release tooling (`scripts/app-store-submission.mjs`, `scripts/play-promotion.mjs`,
+`scripts/supersede-store-runs.mjs`) is checked out from the workflow's own commit on `main`, not
+from the tag being shipped, so it always matches the YAML running it.
+
+**Stale gated runs.** Once a release's build job succeeds, a `supersede` job cancels older runs of
+the same workflow that are waiting at the `play-store`/`app-store` gate for an older tag (matched by
+run name, `Android release v1.5.0`; dry runs are never touched). On iOS it also cancels any
+`ios-submission-catch-up` run parked at the gate: the newer release supersedes whatever that run
+was about to submit. A run with a job still executing, such as an F-Droid publish, is left alone,
+and each run's jobs are read again just before it is cancelled. Every gated job also stands down,
+green and without changing the store, when the store itself already holds something newer: on iOS
+a newer App Store version, or a processed build of a newer **release** (a version with a trusted
+release tag) or of the same version with a higher build number; on Play a higher version code on
+the internal or production track. A newer tag alone never stops a gated job, so a release whose
+newer successor failed before reaching the store still goes out when approved. A processed build of
+a version that is not a release (a stray manual upload) is reported as a warning and ignored, so it
+cannot block submissions.
+
+**App Store.** App Store Connect allows one open review submission and one version in flight. Before
+`deliver` runs, `ios-submit.yml` reads the app's review submissions, versions and processed builds
+and decides:
+
+| An earlier version is | The submit job | Recorded as `app-store/<tag>` |
+| --- | --- | --- |
+| nowhere in flight | submits | `success` |
+| waiting for review | re-reads that submission, cancels it while it is still waiting (the version becomes Developer Rejected), waits for the cancellation to settle (up to 15 minutes), then `deliver` renames that editable version to this release, attaches this build and submits | `success` |
+| in an unsent draft submission | removes the draft's items (App Store Connect refuses to cancel or delete a draft), and `deliver` reuses the empty draft | `success` |
+| in review | **defers**: never cancels a review in progress; the build stays in TestFlight | `pending` |
+| approved and not yet released (Pending Developer Release, Pending Apple Release, Processing for Distribution, Accepted) | **defers**: App Store Connect refuses a new version until the approved one is released, and developer-rejecting an approved version can leave it uneditable | `pending` |
+| rejected (its submission has unresolved issues), or in a state the script does not know | **fails red**: a rejection needs a person | `failure` |
+| this same build, already submitted; or App Store Connect holds something newer (above) | does nothing | `success` |
+
+The job cancels or empties a submission only when every item in it is an App Store version; a
+submission that also carries an in-app event, a custom product page or an experiment fails the job
+with the item types named. After cancelling or emptying it waits and re-reads the state for up to
+about five minutes; if App Store Connect still lists the submission as waiting, or the draft's
+items, it defers and the catch-up tries again.
+
+`failure` is reserved for what needs a person: a rejection, an unknown state, a submission it may not
+touch, a missing build, an App Store Connect error that will recur (any 4xx but 409 and 429, such
+as a revoked or expired key), a key or setting the job cannot use at all (a malformed `.p8`), and a
+`deliver` failure. A submission or item that disappears while the job reads it is read again, not
+failed. The schedule never retries a `failure`;
+dispatching the catch-up with `tag` re-arms the release once the cause is fixed. Only what may pass
+on a later attempt is recorded `pending` and retried by the catch-up: a deferral, a cancellation
+that did not settle, a transient App Store Connect error (5xx, 409, 429 or a network failure, after
+retries), and another submission holding the turn too long ("busy turn", below). A run of
+transient errors can keep a release pending, and the catch-up then asks for approval on each run;
+withdraw it (below) if that persists. As soon as a build is in TestFlight, a small `owe` job (no
+checkout, `statuses: write` only) records `pending`, so a release whose submit job never runs (a
+later build step fails, the gate is rejected or expires, the run is cancelled) is still owed a
+submission. The build job itself keeps a read-only token.
+
+**One submission at a time.** Submissions of different releases must not run `deliver` together:
+both would edit the one editable version. A concurrency group spanning all releases would also be
+held by a job parked at the gate and stall every later release behind an unapproved one, so the
+submit job instead waits, after the gate, until no other App Store submit job that started earlier
+is still running (`supersede-store-runs.mjs wait-turn`, ordered by start time then job id; jobs
+parked at the gate hold nothing). After 30 minutes it gives up, records `pending` and leaves the
+release to the catch-up. Its concurrency group is per release only, which keeps one approval
+request per release.
+
+A deferred job is green, with a notice and a job summary line. **`ios-submission-catch-up.yml`**
+runs every three hours. It lists the releases on `main` that shipped the apps (trusted tags only,
+as in "Which releases ship the apps"), takes the newest one with a processed build in App Store
+Connect, and treats it as owed a submission when its `app-store/<tag>` status is `pending` or
+absent and no `ios-release` run for it or a newer release is in flight. Only then does it ask App
+Store Connect (read-only, with the `ios-build` key) whether the way is clear, and only if it is does
+it call `ios-submit.yml`, which waits for the `app-store` reviewer like any submission and checks
+again before `deliver`, so a build is never submitted twice. Only its read-only check is
+serialised; a catch-up parked at the gate never blocks the next one. Expect an approval request from
+it after an earlier version is released, and after a transient failure. Rejecting that request
+leaves the release owed, so it is asked again on the next run. A catch-up whose check finds a
+cancellation still settling (`wait`) does nothing and says so only in its log; the next run looks
+again.
+
+**Withdrawing a release from the catch-up.** Close its record, using the release commit's sha:
+
+```sh
+gh api -X POST repos/National-Digital/how2vote.au/statuses/<commit> \
+  -f state=error -f context=app-store/<tag> -f description=withdrawn
+```
+
+**First catch-up after this lands.** Releases from before it have no `app-store/<tag>` record, and
+"absent" counts as owed. If the newest release that shipped the apps has a processed build that
+was never submitted (a v1.4.x build left in TestFlight), the first scheduled catch-up asks for
+`app-store` approval to submit it. To pre-empt that, withdraw that release with the command above
+before merging, or reject the approval request and then withdraw it.
+
+Whether the `ios-build` key, a Developer-role key, may read review submissions and versions is not
+verified. If it cannot, the check passes the decision to the gated job instead, so the approval
+request comes every three hours while a submission is owed; approving it early just defers again.
+The owner checklist below includes a dispatch that shows which case applies.
+
+With `automatic_release: false` an approved version waits in Pending Developer Release until
+someone releases it, so in practice the catch-up submits the next build shortly after that click.
+
+**Google Play.** `promote` first reads the production and internal tracks in a throwaway edit. It
+skips a build production already holds, or one older than a build on the internal or production
+track (a version code can only move forward), saying to promote the newest run or re-dispatch it,
+and fails if the build is not on the internal track. Otherwise fastlane sends a track update
+carrying only the new release: Play treats an update's releases as the desired change and keeps the
+last completed release in place beneath a staged one, and the new staged release is expected to
+replace an earlier one still rolling out (users who already have the earlier build keep it, and a
+new staged release goes to the same group of users first). What Play does with an earlier release
+that was **halted** is not documented: check the production track after promoting over one. The job
+summary names the rollout it replaced. With Managed publishing on, the committed change waits in
+Publishing overview; a later promotion replaces it there before anyone publishes. If an earlier
+change is still in Google's review, Play refuses to send another for review automatically, and
+fastlane re-commits it as "not sent for review": send it for review from Publishing overview.
+
+Re-dispatching an **older** tag after a newer one reached the internal track uploads the older build
+as the internal track's release, replacing the newer one there: the newer release's promotion then
+fails with "not on the internal track". Re-dispatch the newest release instead of an older one.
+
+#### Submission deferred or blocked
+
+- **Deferred** (green run, notice "App Store submission of X deferred"): nothing to do. Release or
+  wait out the earlier version; the catch-up submits the newest shipped build afterwards and asks
+  for `app-store` approval. To push it sooner, run `ios-submission-catch-up.yml` from `main`.
+- **Retryable** (`app-store/<tag>` pending after a timeout, a transient error or a busy turn):
+  nothing to do; the catch-up retries on its next run and asks for approval again.
+- **`deliver` failed, or an App Store Connect error that will recur** (red run, e.g. a 401/403 from
+  a revoked or expired key): fix the cause (rotate the `app-store` key, fix the metadata), then
+  dispatch `ios-submission-catch-up.yml` from `main` with `tag` set to the release.
+- **Rejected** (red run, "unresolved issues"): read the rejection in App Store Connect → App
+  Review. Either reply and resubmit the rejected version there, or, to replace it with the newest
+  build, cancel that submission in App Store Connect, then run `ios-submission-catch-up.yml` from
+  `main` with `tag` set to the newest shipped release. The rejection closes `app-store/<tag>` as
+  `failure`, so the schedule does not retry it; the `tag` input re-arms it.
+- **Blocked on an unknown state or foreign items** (red run naming it): resolve it in App Store
+  Connect (remove the items, or cancel the submission), then dispatch the catch-up with `tag` as
+  above.
+- **Never re-run a submit job**, and do not run `deliver` by hand: dispatch the catch-up instead,
+  which re-checks the state first.
+- **Play**: a skipped promotion names the newer build Play already holds. To promote a release
+  whose run was cancelled as stale, re-dispatch `android-release.yml` for the newest release.
 
 ### Which releases ship the apps
 
@@ -466,7 +610,8 @@ build goes live at all:
 
 - **Play: keep Managed publishing enabled** in the console. Approved releases wait for an explicit
   publish click.
-- **App Store: `automatic_release: false`** is set in the `submit_review` lane.
+- **App Store: `automatic_release: false`** is set in the `submit_review` lane. While an approved
+  version waits to be released, newer builds are deferred (see "Overlapping store releases").
 
 In both cases a green workflow means **"approved and waiting", not "live"**.
 
@@ -679,8 +824,8 @@ environment, so a workflow reads `PLAY_SERVICE_ACCOUNT_JSON` whichever account i
 | `PLAY_SERVICE_ACCOUNT_JSON` | android-release → promote | `play-store` | `main` + required reviewers | **production** service account: release to production |
 | `FDROID_KEYSTORE`, `FDROID_KEYSTORE_PASSWORD`, `FDROID_KEY_ALIAS`, `FDROID_KEY_PASSWORD` | android-release → fdroid-apk | `fdroid-signing` | `main` | F-Droid release keystore (PKCS12, **base64-encoded**; NOT the Play upload key). Key password = store password (PKCS12 permits only one). Locked forever |
 | `R2_ACCOUNT_ID`, `R2_ACCESS_KEY_ID`, `R2_SECRET_ACCESS_KEY` | android-release → fdroid-publish | `fdroid-publish` | `main` | R2 token scoped to the `how2vote-dist` bucket (**not** account-wide); the account id only forms the S3 endpoint |
-| `ASC_KEY_ID`, `ASC_ISSUER_ID`, `ASC_API_KEY_P8` | ios-release → build | `ios-build` | `main` | **Developer**-role App Store Connect key with **Access to Cloud Managed Distribution Certificates** (`.p8` **base64-encoded**): cloud-signed export, certificate guard, TestFlight upload; cannot submit for review |
-| `ASC_KEY_ID`, `ASC_ISSUER_ID`, `ASC_API_KEY_P8` | ios-release → submit | `app-store` | `main` + required reviewers | **App Manager** key: metadata + review submission; the only key in CI that can submit |
+| `ASC_KEY_ID`, `ASC_ISSUER_ID`, `ASC_API_KEY_P8` | ios-release → build; ios-submission-catch-up → check (read-only) | `ios-build` | `main` | **Developer**-role App Store Connect key with **Access to Cloud Managed Distribution Certificates** (`.p8` **base64-encoded**): cloud-signed export, certificate guard, TestFlight upload; cannot submit for review |
+| `ASC_KEY_ID`, `ASC_ISSUER_ID`, `ASC_API_KEY_P8` | ios-submit → submit (called by ios-release and ios-submission-catch-up) | `app-store` | `main` + required reviewers | **App Manager** key: metadata + review submission; the only key in CI that can submit |
 | `PLAY_SHARE_SERVICE_ACCOUNT_JSON`, `PLAY_SHARE_KEYSTORE`, `PLAY_SHARE_KEYSTORE_PASSWORD`, `PLAY_SHARE_KEY_ALIAS`, `PLAY_SHARE_KEY_PASSWORD` | mobile-ci → android-share | `play-share` | none: dispatched from PR branches; required reviewers | internal-app-sharing account (no release rights) + throwaway keystore |
 | `CLOUDFLARE_API_TOKEN` | deploy → deploy, cleanup | repository | n/a | Pages deploy token; PR previews need it, so it cannot be limited to `main` |
 | `CF_D1_API_TOKEN` | deploy → deploy | repository | n/a | D1 migrations (non-PR runs) and `data:stats`, which also runs on same-repo PRs; its job builds PR previews |
@@ -692,9 +837,9 @@ environment, so a workflow reads `PLAY_SERVICE_ACCOUNT_JSON` whichever account i
 | environment | `android-build` | android-release build, deploy live-versions, play-permission probe | branch policy `main`; no reviewer |
 | environment | `fdroid-signing` | android-release fdroid-apk | branch policy `main`; no reviewer |
 | environment | `fdroid-publish` | android-release fdroid-publish | branch policy `main`; no reviewer |
-| environment | `ios-build` | ios-release build | branch policy `main`; no reviewer |
+| environment | `ios-build` | ios-release build, ios-submission-catch-up check | branch policy `main`; no reviewer |
 | environment | `play-store` | android-release promote | branch policy `main`; required reviewers = compliance signatories |
-| environment | `app-store` | ios-release submit | branch policy `main`; required reviewers = compliance signatories |
+| environment | `app-store` | ios-submit submit (from ios-release and ios-submission-catch-up) | branch policy `main`; required reviewers = compliance signatories |
 | environment | `play-share` | mobile-ci android-share | required reviewers; no branch policy |
 
 F-Droid signing and publishing are separate environments for the same reason they are separate
@@ -780,6 +925,11 @@ Take them in order; the repository copies go last, after verification.
      Android build job uploads to the internal track under the upload account.
    - The same dry-run dispatch from any other branch fails at the environment.
    - `gh workflow run play-permission.yml` goes green (it probes the upload account).
+   - `gh workflow run ios-submission-catch-up.yml --ref main` (no `tag`) shows whether the
+     `ios-build` key can read review state: its "Ask App Store Connect" job runs read-only calls,
+     and a warning that the key "cannot read the review state" means every catch-up while a
+     submission is owed will ask the `app-store` reviewer. It submits nothing unless a release is
+     owed a submission, and then only after that reviewer approves.
    - The next `deploy.yml` run on `main` shows a green live-versions job and a populated Android badge.
    **Fallback:** if the Developer key cannot list certificates or cannot export, put an Admin key in
    `ios-build` instead. That key can also submit for review, so the `app-store` reviewer then

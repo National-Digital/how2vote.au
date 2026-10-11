@@ -70,7 +70,7 @@ const APP_PATHS = [
   /^docs\/research\//, // $docs imports in the web bundle
   /^docs\/fdroid\//, // the recipe android-release replays for the F-Droid APK
   /^docs\/legal\/(native-copy|required-checks)\.json$/, // native copy sources
-  /^\.github\/workflows\/(android|ios)-release\.yml$/,
+  /^\.github\/workflows\/(android-release|ios-release|ios-submit)\.yml$/,
   /^\.github\/actions\//,
 ];
 

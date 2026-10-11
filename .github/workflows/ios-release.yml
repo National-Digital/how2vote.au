@@ -18,7 +18,9 @@ name: iOS release
 # dry runs included, is refused.
 #
 # NOTE: `automatic_release: false` — a green submit job means "approved and waiting", not "live";
-# a human clicks release in App Store Connect.
+# a human clicks release in App Store Connect. A submission that cannot go in yet (an older version
+# is in review or awaiting release) is deferred, not failed: see ios-submit.yml and
+# ios-submission-catch-up.yml.
 #
 # Guideline 2.5.2 means there is no OTA update path: the web bundle ships inside the binary and
 # every change goes through App Review, which is why this must be fully automated.
@@ -27,6 +29,8 @@ name: iOS release
 # environment (Developer key with cloud-managed certificate access: cloud signing + TestFlight)
 # and again on `app-store` (App Manager key: review submission), and variable APPLE_TEAM_ID. The build job is skipped while APPLE_TEAM_ID is
 # unset, and fails closed when it is set but a secret is missing.
+
+run-name: iOS release ${{ inputs.tag || github.ref_name }}${{ inputs.dry_run && ' (dry run)' || '' }}
 
 on:
   workflow_dispatch:
@@ -44,8 +48,8 @@ permissions:
   contents: read
 
 concurrency:
-  # One lane PER RELEASE. Two runs of the SAME release still serialize (a second `deliver` while the
-  # first review submission is open hard-fails at ASC), but a submit_review job waiting on the
+  # One lane PER RELEASE. Two runs of the SAME release still serialize (their submissions would race
+  # in App Store Connect), but a submit_review job waiting on the
   # app-store environment's reviewer no longer holds the group and block every later release.
   # Never cancels in progress: a signing or store upload must always finish.
   group: ios-release-${{ inputs.tag || github.ref }}${{ inputs.dry_run && '-dry-run' || '' }}
@@ -70,6 +74,7 @@ jobs:
       build-number: ${{ steps.version.outputs.build }}
       build-year: ${{ steps.version.outputs.build-year }}
       commit: ${{ steps.source.outputs.commit }}
+      uploaded: ${{ steps.upload.outputs.uploaded }}
     steps:
       # Presence check only; values are never printed (passed via env, not interpolated) and the
       # failure names the missing KEYS, never their contents.
@@ -149,6 +154,7 @@ jobs:
           working-directory: apps/mobile
 
       - name: Archive, sign${{ (github.event_name == 'workflow_dispatch' && inputs.dry_run) && ' (dry run)' || ' & upload to TestFlight' }}
+        id: upload
         working-directory: apps/mobile
         env:
           APP_VERSION: ${{ steps.version.outputs.version }}
@@ -166,7 +172,8 @@ jobs:
           if [ "$DRY_RUN" = "true" ]; then
             bundle exec fastlane ios build
           else
-            bundle exec fastlane ios beta
+            # `uploaded` is read by the owe job even if a later step of this job fails.
+            bundle exec fastlane ios beta && echo "uploaded=true" >> "$GITHUB_OUTPUT"
           fi
 
       - name: Record artifact provenance
@@ -191,72 +198,78 @@ jobs:
           if-no-files-found: warn
           retention-days: 30
 
-  submit:
-    name: Submit for App Store review
+  # Marks the release as owed a submission once its build is in TestFlight, whatever happens to the
+  # rest of the build job. The submit job overwrites it with the real outcome; if that job never runs
+  # (a later step fails, the gate is rejected or expires, the run is cancelled), the pending record is
+  # what ios-submission-catch-up.yml picks up. A job of its own, with no checkout, so the write scope
+  # never sits beside the build's dependency tree.
+  owe:
+    name: Record the submission as owed
     needs: build
-    # Real (non-dry-run) dispatches only. A skipped or failed `build` skips this too (the `if`
-    # deliberately does not use always()). The environment carries the required-reviewer gate — a
-    # human promotes every store submission — and the App Manager key, the only credential in CI
-    # that can submit for review.
-    if: ${{ !inputs.dry_run }}
-    environment: app-store
-    runs-on: macos-15
-    timeout-minutes: 30
+    if: always() && needs.build.outputs.uploaded == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
     permissions:
-      contents: read # gh release view (rollout marker)
+      statuses: write # app-store/<tag> = pending
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7
-        with:
-          ref: ${{ needs.build.outputs.commit }}
-
-      # Same marker and same policy as android-release.yml, so one decision in the release notes
-      # governs BOTH stores and they can't drift. Read at submit time rather than from the trigger
-      # payload (captured before the reviewer saw it) or a repo variable (sticky — a full rollout
-      # left switched on is the failure this gate exists to prevent). See "Rollout policy" in
-      # docs/store-distribution.md.
-      - name: Resolve phased-release mode
-        id: rollout
+      - name: Record app-store/<tag> as pending
         env:
           GH_TOKEN: ${{ github.token }}
-          TAG: ${{ format('v{0}', needs.build.outputs.app-version) }}
+          REPO: ${{ github.repository }}
+          COMMIT: ${{ needs.build.outputs.commit }}
+          TAG: ${{ inputs.tag }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
         run: |
-          set -euo pipefail
-          BODY="$(gh release view "$TAG" --json body --jq .body || echo "")"
-          if printf '%s' "$BODY" | grep -qiF '[full-rollout]'; then
-            echo "phased=false" >> "$GITHUB_OUTPUT"
-            echo "::warning::[full-rollout] marker present — phased release OFF (all auto-updaters at once)."
-          else
-            echo "phased=true" >> "$GITHUB_OUTPUT"
-            echo "Phased release: Apple's 7-day schedule. Pause in App Store Connect if needed."
-          fi
+          gh api -X POST "repos/$REPO/statuses/$COMMIT" -f state=pending -f context="app-store/$TAG" \
+            -f target_url="$RUN_URL" -f description="in TestFlight; submission pending" >/dev/null \
+            || echo "::warning::could not record app-store/$TAG as pending"
 
-      - uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e # v6
+  # Cancels older runs of this workflow still waiting at the app-store gate, and catch-up runs parked
+  # there: approving one would submit a stale build. After the build, so a failed build leaves the
+  # older run approvable. A run still executing a job is left alone; the submit job's own check of
+  # App Store Connect covers it.
+  supersede:
+    name: Cancel older gated runs
+    needs: build
+    if: ${{ !inputs.dry_run }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      contents: read
+      actions: write # cancel the older runs
+    steps:
+      - name: Checkout the release tooling
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7
         with:
-          node-version-file: .nvmrc
+          path: .release-tools
+          sparse-checkout: scripts
+          filter: tree:0
 
-      # Listing copy is generated from the operator + shared product-copy records so the s 321D
-      # authorisation and the entity are single-sourced (see scripts/generate-store-metadata.mjs).
-      - name: Generate store metadata
+      - name: Cancel older runs waiting at the gate
         env:
-          BUILD_YEAR: ${{ needs.build.outputs.build-year }}
-        run: node scripts/generate-store-metadata.mjs
+          GH_TOKEN: ${{ github.token }}
+          WORKFLOW: ios-release.yml
+          ALSO_CATCH_UP: "true"
+          TAG: ${{ inputs.tag }}
+        run: node .release-tools/scripts/supersede-store-runs.mjs cancel-stale
 
-      - name: Set up Ruby / fastlane
-        uses: ruby/setup-ruby@95ef2b042f9d7a56d8268cba8559e2842e2ad01b # v1.321.0
-        with:
-          ruby-version: .ruby-version # single source: apps/mobile/.ruby-version
-          bundler-cache: true
-          working-directory: apps/mobile
-
-      - name: Submit build for review
-        working-directory: apps/mobile
-        env:
-          APP_VERSION: ${{ needs.build.outputs.app-version }}
-          BUILD_NUMBER: ${{ needs.build.outputs.build-number }}
-          ASC_KEY_ID: ${{ secrets.ASC_KEY_ID }}
-          ASC_ISSUER_ID: ${{ secrets.ASC_ISSUER_ID }}
-          ASC_API_KEY_P8: ${{ secrets.ASC_API_KEY_P8 }}
-          APPLE_TEAM_ID: ${{ vars.APPLE_TEAM_ID }}
-          IOS_PHASED_RELEASE: ${{ steps.rollout.outputs.phased }}
-        run: bundle exec fastlane ios submit_review
+  # Real (non-dry-run) dispatches only. A skipped or failed `build` skips this too (the `if`
+  # deliberately does not use always()). ios-submit.yml holds the `app-store` environment: the
+  # required-reviewer gate (a human promotes every store submission) and the App Manager key, the
+  # only credential in CI that can submit for review. It never cancels a version in review: it
+  # defers instead, and ios-submission-catch-up.yml submits the build later.
+  submit:
+    name: Submit for App Store review
+    needs: [build, owe]
+    if: ${{ !inputs.dry_run }}
+    permissions:
+      contents: read
+      statuses: write
+      actions: read # wait for another release's submission to finish
+    uses: ./.github/workflows/ios-submit.yml
+    with:
+      tag: ${{ format('v{0}', needs.build.outputs.app-version) }}
+      commit: ${{ needs.build.outputs.commit }}
+      version: ${{ needs.build.outputs.app-version }}
+      build: ${{ needs.build.outputs.build-number }}
+      build-year: ${{ needs.build.outputs.build-year }}
