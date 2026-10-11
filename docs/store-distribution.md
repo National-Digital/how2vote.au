@@ -329,7 +329,9 @@ items, it defers and the catch-up tries again.
 
 `failure` is reserved for what needs a person: a rejection, an unknown state, a submission it may not
 touch, a missing build, an App Store Connect error that will recur (any 4xx but 409 and 429, such
-as a revoked or expired key), and a `deliver` failure. The schedule never retries a `failure`;
+as a revoked or expired key), a key or setting the job cannot use at all (a malformed `.p8`), and a
+`deliver` failure. A submission or item that disappears while the job reads it is read again, not
+failed. The schedule never retries a `failure`;
 dispatching the catch-up with `tag` re-arms the release once the cause is fixed. Only what may pass
 on a later attempt is recorded `pending` and retried by the catch-up: a deferral, a cancellation
 that did not settle, a transient App Store Connect error (5xx, 409, 429 or a network failure, after

@@ -9,6 +9,7 @@ import {
   checkCatchUp,
   isPermanent,
   itemKinds,
+  NetworkError,
   latestBuild,
   owed,
   parseCandidates,
@@ -16,6 +17,7 @@ import {
   pickCandidate,
   prepare,
   readState,
+  runPrepare,
   SETTLE_READS,
   versionState,
 } from "./app-store-submission.mjs";
@@ -834,7 +836,136 @@ describe("isPermanent", () => {
     for (const status of [409, 429, 500, 503]) {
       expect(isPermanent(new ApiError(status, "x")), String(status)).toBe(false);
     }
-    expect(isPermanent(new Error("socket hang up"))).toBe(false);
+    expect(isPermanent(new NetworkError("socket hang up"))).toBe(false);
+  });
+
+  it("treats any other error (a malformed key, a bad argument) as permanent", () => {
+    expect(isPermanent(new Error("bad key"))).toBe(true);
+    expect(isPermanent(new TypeError("Invalid key"))).toBe(true);
+  });
+});
+
+describe("runPrepare", () => {
+  const noSleep = async () => {};
+  const base = { version: "1.5.1", build: "105001007", releases: new Set(), sleep: noSleep };
+
+  it("fails, rather than leaving the record pending, on a malformed key", async () => {
+    const makeClient = () =>
+      createClient({
+        fetchImpl: async () => {
+          throw new Error("never reached");
+        },
+        token: () => ascToken({ keyId: "K", issuerId: "I", privateKey: "not a key" }),
+        sleep: noSleep,
+      });
+    const { decision } = await runPrepare({ ...base, makeClient });
+    expect(decision.action).toBe("fail");
+  });
+
+  it("fails when the client cannot be built or the arguments are bad", async () => {
+    const broken = () => {
+      throw new Error("ASC_KEY_ID is not set");
+    };
+    expect((await runPrepare({ ...base, makeClient: broken })).decision).toEqual({
+      action: "fail",
+      reason: "ASC_KEY_ID is not set",
+    });
+    expect(
+      (await runPrepare({ ...base, version: "1.5", makeClient: () => fakeApi({}).api })).decision
+        .action,
+    ).toBe("fail");
+  });
+
+  it("fails on a permanent API error and when no build is processed", async () => {
+    const refused = fakeApi({ "GET /v1/apps": () => [403, { errors: [{ detail: "revoked" }] }] });
+    expect(
+      (await runPrepare({ ...base, makeClient: () => refused.api })).decision.reason,
+    ).toContain("HTTP 403");
+    const apps = {
+      "GET /v1/apps": () => [
+        200,
+        { data: [{ id: "app1", attributes: { bundleId: "au.how2vote.app" } }] },
+      ],
+    };
+    const empty = fakeApi(apps);
+    expect(
+      (await runPrepare({ ...base, build: "", makeClient: () => empty.api })).decision,
+    ).toEqual({ action: "fail", reason: "no processed build of 1.5.1 in App Store Connect" });
+  });
+
+  it("throws a transient error, so the job leaves no outcome", async () => {
+    const flaky = fakeApi({ "GET /v1/apps": () => [503, "busy"] });
+    await expect(runPrepare({ ...base, makeClient: () => flaky.api })).rejects.toThrow("HTTP 503");
+    const offline = () =>
+      createClient({
+        fetchImpl: async () => {
+          throw new Error("ECONNRESET");
+        },
+        token: () => "t",
+        sleep: noSleep,
+      });
+    await expect(runPrepare({ ...base, makeClient: offline })).rejects.toBeInstanceOf(NetworkError);
+  });
+});
+
+describe("prepare — a submission that vanishes", () => {
+  it("reads the state again when the submission's items are gone", async () => {
+    let gone = false;
+    const { api } = fakeApi({
+      "GET /v1/apps/app1/appStoreVersions": () => [
+        200,
+        versionsPayload([
+          "old",
+          "1.5.0",
+          gone ? "DEVELOPER_REJECTED" : "WAITING_FOR_REVIEW",
+          "b",
+          "1",
+        ]),
+      ],
+      "GET /v1/apps/app1/reviewSubmissions": () => [
+        200,
+        gone ? { data: [] } : submissionsPayload(["sub", "WAITING_FOR_REVIEW", "old"]),
+      ],
+      "GET /v1/reviewSubmissions/sub/items": () => {
+        gone = true;
+        return [404, { errors: [{ detail: "not found" }] }];
+      },
+    });
+    await expect(
+      prepare({ api, appId: "app1", target, sleep: async () => {} }),
+    ).resolves.toMatchObject({
+      action: "submit",
+    });
+  });
+
+  it("reads the state again when the submission itself is gone", async () => {
+    let gone = false;
+    const { api, calls } = fakeApi({
+      "GET /v1/apps/app1/appStoreVersions": () => [
+        200,
+        versionsPayload([
+          "old",
+          "1.5.0",
+          gone ? "DEVELOPER_REJECTED" : "WAITING_FOR_REVIEW",
+          "b",
+          "1",
+        ]),
+      ],
+      "GET /v1/apps/app1/reviewSubmissions": () => [
+        200,
+        gone ? { data: [] } : submissionsPayload(["sub", "WAITING_FOR_REVIEW", "old"]),
+      ],
+      "GET /v1/reviewSubmissions/sub": () => {
+        gone = true;
+        return [404, { errors: [{ detail: "not found" }] }];
+      },
+    });
+    await expect(
+      prepare({ api, appId: "app1", target, sleep: async () => {} }),
+    ).resolves.toMatchObject({
+      action: "submit",
+    });
+    expect(calls.some((c) => c.method === "PATCH")).toBe(false);
   });
 });
 

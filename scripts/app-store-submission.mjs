@@ -287,6 +287,9 @@ export function ascToken({ keyId, issuerId, privateKey, now = Date.now() }) {
   return `${input}.${signature.toString("base64url")}`;
 }
 
+/** A request that never got an HTTP response. */
+export class NetworkError extends Error {}
+
 export class ApiError extends Error {
   /** @param {number} status @param {string} message */
   constructor(status, message) {
@@ -297,17 +300,14 @@ export class ApiError extends Error {
 
 /**
  * Whether an error will recur on retry: any 4xx but 409 and 429 (a revoked or expired key, a
- * refused request). 5xx, 409, 429 and network errors may pass later.
+ * refused request), and any error that is not an API or network error (a malformed key, a bad
+ * argument). 5xx, 409, 429 and network errors may pass later.
  * @param {unknown} error
  */
 export function isPermanent(error) {
-  return (
-    error instanceof ApiError &&
-    error.status >= 400 &&
-    error.status < 500 &&
-    error.status !== 409 &&
-    error.status !== 429
-  );
+  if (error instanceof NetworkError) return false;
+  if (!(error instanceof ApiError)) return true;
+  return error.status >= 400 && error.status < 500 && error.status !== 409 && error.status !== 429;
 }
 
 /** Attempts per request; 429, 5xx and network errors are retried with backoff. */
@@ -324,16 +324,23 @@ export function createClient({
   sleep = (ms) => new Promise((r) => setTimeout(r, ms)),
 }) {
   const once = async (method, url, body) => {
-    const res = await fetchImpl(url, {
-      method,
-      headers: {
-        Authorization: `Bearer ${token()}`,
-        Accept: "application/json",
-        ...(body ? { "Content-Type": "application/json" } : {}),
-      },
-      ...(body ? { body: JSON.stringify(body) } : {}),
-    });
-    const text = await res.text();
+    const headers = {
+      Authorization: `Bearer ${token()}`,
+      Accept: "application/json",
+      ...(body ? { "Content-Type": "application/json" } : {}),
+    };
+    let res;
+    let text;
+    try {
+      res = await fetchImpl(url, {
+        method,
+        headers,
+        ...(body ? { body: JSON.stringify(body) } : {}),
+      });
+      text = await res.text();
+    } catch (error) {
+      throw new NetworkError(`${method} ${new URL(url).pathname}: ${error?.message ?? error}`);
+    }
     let json;
     try {
       json = text ? JSON.parse(text) : {};
@@ -357,7 +364,8 @@ export function createClient({
         return await once(method, url, body);
       } catch (error) {
         const transient =
-          !(error instanceof ApiError) || error.status === 429 || error.status >= 500;
+          error instanceof NetworkError ||
+          (error instanceof ApiError && (error.status === 429 || error.status >= 500));
         if (!transient || attempt >= ATTEMPTS) throw error;
         await sleep(2000 * 2 ** (attempt - 1));
       }
@@ -570,7 +578,21 @@ export async function prepare({
             : `draft submission ${submissionId} still lists items after this job removed them; the catch-up tries again`,
       };
     }
-    const items = await submissionItems(api, submissionId);
+    // A submission that vanished between the list and these reads is read again, not failed.
+    const vanished = async (read) => {
+      try {
+        return await read();
+      } catch (error) {
+        if (!(error instanceof ApiError) || error.status !== 404) throw error;
+        log(
+          `review submission ${submissionId} is gone (${error.message}); reading the state again`,
+        );
+        await sleep(pollMs);
+        return null;
+      }
+    };
+    const items = await vanished(() => submissionItems(api, submissionId));
+    if (items === null) continue;
     const kinds = itemKinds(items);
     const foreign = kinds.filter((k) => k !== "appStoreVersion");
     if (foreign.length > 0) {
@@ -580,8 +602,9 @@ export async function prepare({
       };
     }
     if (action === "cancel") {
-      const { data } = await api.get(`/v1/reviewSubmissions/${submissionId}`);
-      const current = data[0]?.attributes?.state;
+      const read = await vanished(() => api.get(`/v1/reviewSubmissions/${submissionId}`));
+      if (read === null) continue;
+      const current = read.data[0]?.attributes?.state;
       if (current !== "WAITING_FOR_REVIEW") {
         log(`review submission ${submissionId} is now ${current}; reading the state again`);
         await sleep(pollMs);
@@ -761,6 +784,49 @@ export async function checkCatchUp({ api, candidates, releases, requested, inFli
   }
 }
 
+/**
+ * The prepare mode end to end: validates its arguments, builds the client, resolves the build and
+ * decides. Anything that will recur (bad arguments, a malformed key, a missing build, a permanent
+ * API error) becomes a `fail`; a transient error is thrown, leaving no outcome, which the submit
+ * job records as pending.
+ * @param {{ version: string, build: string, releases: Set<string>,
+ *   makeClient: () => ReturnType<typeof createClient>, sleep: (ms: number) => Promise<void>,
+ *   log?: (line: string) => void, pollMs?: number }} deps
+ * @returns {Promise<{ decision: Decision, build: string }>}
+ */
+export async function runPrepare({ version, build, releases, makeClient, sleep, log, pollMs }) {
+  try {
+    if (!SEMVER.test(version) || !/^\d*$/.test(build)) {
+      throw new Error("APP_VERSION must be a version and BUILD_NUMBER a number or empty");
+    }
+    const api = makeClient();
+    const appId = await findAppId(api);
+    const chosen = build || ((await latestBuild(api, appId, version)) ?? "");
+    if (!chosen) {
+      return {
+        decision: {
+          action: "fail",
+          reason: `no processed build of ${version} in App Store Connect`,
+        },
+        build: "",
+      };
+    }
+    const decision = await prepare({
+      api,
+      appId,
+      target: { version, build: chosen },
+      releases,
+      sleep,
+      log,
+      ...(pollMs ? { pollMs } : {}),
+    });
+    return { decision, build: chosen };
+  } catch (error) {
+    if (!isPermanent(error)) throw error;
+    return { decision: { action: "fail", reason: error.message }, build };
+  }
+}
+
 /* c8 ignore start -- network/CLI plumbing, exercised in CI not unit tests */
 function output(values) {
   const out = process.env["GITHUB_OUTPUT"];
@@ -822,30 +888,14 @@ async function main() {
   const releases = parseReleases(process.env["RELEASES"]) ?? new Set();
   if (mode === "prepare") {
     const version = process.env["APP_VERSION"] ?? "";
-    let build = process.env["BUILD_NUMBER"] ?? "";
-    if (!SEMVER.test(version) || !/^\d*$/.test(build)) {
-      throw new Error("APP_VERSION must be a version and BUILD_NUMBER a number or empty");
-    }
-    const api = client();
-    let decision;
-    try {
-      const appId = await findAppId(api);
-      build ||= (await latestBuild(api, appId, version)) ?? "";
-      decision = build
-        ? await prepare({
-            api,
-            appId,
-            target: { version, build },
-            releases,
-            sleep,
-            log: console.info,
-          })
-        : { action: "fail", reason: `no processed build of ${version} in App Store Connect` };
-    } catch (error) {
-      // Transient errors leave no outcome, which the submit job records as pending.
-      if (!isPermanent(error)) throw error;
-      decision = { action: "fail", reason: error.message };
-    }
+    const { decision, build } = await runPrepare({
+      version,
+      build: process.env["BUILD_NUMBER"] ?? "",
+      releases,
+      makeClient: client,
+      sleep,
+      log: console.info,
+    });
     const target = { version, build };
     for (const warning of decision.warnings ?? []) console.warn(`::warning::${warning}`);
     output({ outcome: decision.action, reason: decision.reason, build });
