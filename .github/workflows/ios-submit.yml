@@ -10,10 +10,11 @@ name: iOS submit
 # still waiting for review, defers while an older version is in review or approved and unreleased,
 # stands down when App Store Connect already holds a newer version or a processed build of one, and
 # fails on a rejection (see "Submission deferred or blocked" in docs/store-distribution.md).
-# The outcome is recorded as the `app-store/<tag>` commit status on the release commit: failure only
-# for what needs a person (a rejection, an unknown state); pending while deferred or after anything
-# that may pass later (a cancellation that did not settle, a deliver failure, another submission
-# holding the turn), which is what the catch-up workflow retries.
+# The outcome is recorded as the `app-store/<tag>` commit status on the release commit: failure for
+# what needs a person (a rejection, an unknown state, an API error that will recur such as a revoked
+# key, a missing build, a deliver failure); pending while deferred or after something that may pass
+# later (a cancellation that did not settle, a transient API error, a busy turn), which is what the
+# catch-up workflow retries.
 
 on:
   workflow_call:
@@ -166,13 +167,15 @@ jobs:
           COMMIT: ${{ inputs.commit }}
           TAG: ${{ inputs.tag }}
           OUTCOME: ${{ steps.prepare.outputs.outcome }}
+          TURN: ${{ steps.turn.outputs.turn }}
           REASON: ${{ steps.prepare.outputs.reason }}
           JOB_STATUS: ${{ job.status }}
           RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
         run: |
           set -euo pipefail
-          # failure only for what needs a person (a rejection, an unknown state); anything that
-          # may pass on a later attempt stays pending, which the catch-up retries.
+          # failure for what needs a person: a rejection, an unknown state, an API error that will
+          # recur, and a deliver failure (the catch-up dispatched with `tag` re-arms it). pending,
+          # which the catch-up retries, only for what may pass later.
           if [ "$OUTCOME" = fail ]; then
             STATE=failure DESC="$REASON"
           elif [ "$OUTCOME" = defer ]; then
@@ -182,9 +185,11 @@ jobs:
           elif [ "$OUTCOME" = submit ] && [ "$JOB_STATUS" = success ]; then
             STATE=success DESC="submitted for review"
           elif [ "$OUTCOME" = submit ]; then
-            STATE=pending DESC="deliver failed; the catch-up tries again"
+            STATE=failure DESC="deliver failed; after fixing, dispatch the catch-up with tag=$TAG"
+          elif [ "$TURN" = false ]; then
+            STATE=pending DESC="busy turn: another submission ran too long; the catch-up tries again"
           else
-            STATE=pending DESC="not submitted (no decision reached); the catch-up tries again"
+            STATE=pending DESC="not submitted (transient error before a decision); the catch-up tries again"
           fi
           gh api -X POST "repos/$REPO/statuses/$COMMIT" -f state="$STATE" \
             -f context="app-store/$TAG" -f target_url="$RUN_URL" \

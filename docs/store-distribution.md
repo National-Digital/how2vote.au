@@ -323,16 +323,22 @@ and decides:
 
 The job cancels or empties a submission only when every item in it is an App Store version; a
 submission that also carries an in-app event, a custom product page or an experiment fails the job
-with the item types named. After cancelling or emptying it waits and reads the state up to three
-more times before treating a submission that still needs the same action as stuck (a red run).
+with the item types named. After cancelling or emptying it waits and re-reads the state for up to
+about five minutes; if App Store Connect still lists the submission as waiting, or the draft's
+items, it defers and the catch-up tries again.
 
 `failure` is reserved for what needs a person: a rejection, an unknown state, a submission it may not
-touch, or one that stays stuck after it acted. Everything that may pass on a later attempt is
-recorded `pending` and so retried by the catch-up: a deferral, a cancellation that did not settle
-within 15 minutes, a `deliver` failure, an API error before a decision, and another submission
-holding the turn too long (below). The build job also records `pending` the moment its build is in
-TestFlight, before any step that can fail, so a release whose submit job never runs (a later step
-fails, the gate is rejected or expires, the run is cancelled) is still owed a submission.
+touch, a missing build, an App Store Connect error that will recur (any 4xx but 409 and 429, such
+as a revoked or expired key), and a `deliver` failure. The schedule never retries a `failure`;
+dispatching the catch-up with `tag` re-arms the release once the cause is fixed. Only what may pass
+on a later attempt is recorded `pending` and retried by the catch-up: a deferral, a cancellation
+that did not settle, a transient App Store Connect error (5xx, 409, 429 or a network failure, after
+retries), and another submission holding the turn too long ("busy turn", below). A run of
+transient errors can keep a release pending, and the catch-up then asks for approval on each run;
+withdraw it (below) if that persists. As soon as a build is in TestFlight, a small `owe` job (no
+checkout, `statuses: write` only) records `pending`, so a release whose submit job never runs (a
+later build step fails, the gate is rejected or expires, the run is cancelled) is still owed a
+submission. The build job itself keeps a read-only token.
 
 **One submission at a time.** Submissions of different releases must not run `deliver` together:
 both would edit the one editable version. A concurrency group spanning all releases would also be
@@ -352,10 +358,23 @@ Store Connect (read-only, with the `ios-build` key) whether the way is clear, an
 it call `ios-submit.yml`, which waits for the `app-store` reviewer like any submission and checks
 again before `deliver`, so a build is never submitted twice. Only its read-only check is
 serialised; a catch-up parked at the gate never blocks the next one. Expect an approval request from
-it after an earlier version is released, and after any retryable failure. Rejecting that request
-leaves the release owed, so it is asked again on the next run; to withdraw a release from the
-catch-up, close its record by hand:
-`gh api -X POST repos/<owner>/<repo>/statuses/<commit> -f state=error -f context=app-store/<tag> -f description=withdrawn`.
+it after an earlier version is released, and after a transient failure. Rejecting that request
+leaves the release owed, so it is asked again on the next run. A catch-up whose check finds a
+cancellation still settling (`wait`) does nothing and says so only in its log; the next run looks
+again.
+
+**Withdrawing a release from the catch-up.** Close its record, using the release commit's sha:
+
+```sh
+gh api -X POST repos/National-Digital/how2vote.au/statuses/<commit> \
+  -f state=error -f context=app-store/<tag> -f description=withdrawn
+```
+
+**First catch-up after this lands.** Releases from before it have no `app-store/<tag>` record, and
+"absent" counts as owed. If the newest release that shipped the apps has a processed build that
+was never submitted (a v1.4.x build left in TestFlight), the first scheduled catch-up asks for
+`app-store` approval to submit it. To pre-empt that, withdraw that release with the command above
+before merging, or reject the approval request and then withdraw it.
 
 Whether the `ios-build` key, a Developer-role key, may read review submissions and versions is not
 verified. If it cannot, the check passes the decision to the gated job instead, so the approval
@@ -388,16 +407,19 @@ fails with "not on the internal track". Re-dispatch the newest release instead o
 - **Deferred** (green run, notice "App Store submission of X deferred"): nothing to do. Release or
   wait out the earlier version; the catch-up submits the newest shipped build afterwards and asks
   for `app-store` approval. To push it sooner, run `ios-submission-catch-up.yml` from `main`.
-- **Retryable** (`app-store/<tag>` pending after a `deliver` failure, a timeout or a busy turn):
+- **Retryable** (`app-store/<tag>` pending after a timeout, a transient error or a busy turn):
   nothing to do; the catch-up retries on its next run and asks for approval again.
+- **`deliver` failed, or an App Store Connect error that will recur** (red run, e.g. a 401/403 from
+  a revoked or expired key): fix the cause (rotate the `app-store` key, fix the metadata), then
+  dispatch `ios-submission-catch-up.yml` from `main` with `tag` set to the release.
 - **Rejected** (red run, "unresolved issues"): read the rejection in App Store Connect → App
   Review. Either reply and resubmit the rejected version there, or, to replace it with the newest
   build, cancel that submission in App Store Connect, then run `ios-submission-catch-up.yml` from
   `main` with `tag` set to the newest shipped release. The rejection closes `app-store/<tag>` as
   `failure`, so the schedule does not retry it; the `tag` input re-arms it.
-- **Blocked on an unknown state, foreign items or a stuck submission** (red run naming it): resolve
-  it in App Store Connect (remove the items, or cancel the submission), then dispatch the catch-up
-  with `tag` as above.
+- **Blocked on an unknown state or foreign items** (red run naming it): resolve it in App Store
+  Connect (remove the items, or cancel the submission), then dispatch the catch-up with `tag` as
+  above.
 - **Never re-run a submit job**, and do not run `deliver` by hand: dispatch the catch-up instead,
   which re-checks the state first.
 - **Play**: a skipped promotion names the newer build Play already holds. To promote a release

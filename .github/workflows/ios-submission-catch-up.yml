@@ -32,7 +32,8 @@ permissions:
 jobs:
   find:
     name: List shipped releases
-    if: vars.APPLE_TEAM_ID != ''
+    # Production automation runs only from the public repository.
+    if: vars.APPLE_TEAM_ID != '' && github.event.repository.visibility == 'public'
     runs-on: ubuntu-latest
     timeout-minutes: 10
     permissions:

@@ -7,6 +7,7 @@ import {
   createClient,
   decide,
   checkCatchUp,
+  isPermanent,
   itemKinds,
   latestBuild,
   owed,
@@ -15,6 +16,7 @@ import {
   pickCandidate,
   prepare,
   readState,
+  SETTLE_READS,
   versionState,
 } from "./app-store-submission.mjs";
 
@@ -610,7 +612,7 @@ describe("prepare", () => {
     });
   });
 
-  it("re-reads a few times, then fails, when a cancelled submission is still waiting", async () => {
+  it("re-reads for a while, then defers, when a cancelled submission is still waiting", async () => {
     const sleeps = [];
     const { api, calls } = fakeApi({
       "GET /v1/apps/app1/appStoreVersions": () => [
@@ -625,10 +627,10 @@ describe("prepare", () => {
       "PATCH /v1/reviewSubmissions/sub": () => [200, { data: {} }],
     });
     const d = await prepare({ api, appId: "app1", target, sleep: async (ms) => sleeps.push(ms) });
-    expect(d.action).toBe("fail");
-    expect(d.reason).toContain("cancel it in App Store Connect");
+    expect(d.action).toBe("defer");
+    expect(d.reason).toContain("still listed as waiting for review");
     expect(calls.filter((c) => c.method === "PATCH")).toHaveLength(1);
-    expect(sleeps).toEqual([15000, 15000, 15000]);
+    expect(sleeps).toEqual(Array(SETTLE_READS).fill(15000));
   });
 
   it("empties an unsent draft by deleting its items, then submits into it", async () => {
@@ -681,7 +683,7 @@ describe("prepare", () => {
     expect(d.reason).toContain("remove them in App Store Connect");
   });
 
-  it("re-reads a few times, then fails, when a draft still holds items after they were removed", async () => {
+  it("re-reads for a while, then defers, when a draft still lists items after they were removed", async () => {
     const sleeps = [];
     const { api } = fakeApi({
       "GET /v1/apps/app1/appStoreVersions": () => [
@@ -695,9 +697,9 @@ describe("prepare", () => {
       "DELETE /v1/reviewSubmissionItems/i0": () => [204, ""],
     });
     const d = await prepare({ api, appId: "app1", target, sleep: async (ms) => sleeps.push(ms) });
-    expect(d.action).toBe("fail");
-    expect(d.reason).toContain("still holds items");
-    expect(sleeps).toEqual([15000, 15000, 15000]);
+    expect(d.action).toBe("defer");
+    expect(d.reason).toContain("still lists items");
+    expect(sleeps).toEqual(Array(SETTLE_READS).fill(15000));
   });
 
   it("gives up waiting after the poll limit", async () => {
@@ -817,7 +819,22 @@ describe("prepare — submission items", () => {
     });
     const d = await prepare({ api, appId: "app1", target, sleep: noSleep });
     // The 404 counts as removed; the fake still lists the item, so it fails only after re-reads.
-    expect(d.reason).toContain("still holds items after this job removed them");
+    expect(d.reason).toContain("still lists items after this job removed them");
+  });
+});
+
+describe("isPermanent", () => {
+  it("treats a 4xx other than 409 and 429 as permanent", () => {
+    for (const status of [400, 401, 403, 404, 422]) {
+      expect(isPermanent(new ApiError(status, "x")), String(status)).toBe(true);
+    }
+  });
+
+  it("treats 409, 429, 5xx and non-API errors as transient", () => {
+    for (const status of [409, 429, 500, 503]) {
+      expect(isPermanent(new ApiError(status, "x")), String(status)).toBe(false);
+    }
+    expect(isPermanent(new Error("socket hang up"))).toBe(false);
   });
 });
 
@@ -943,9 +960,15 @@ describe("checkCatchUp", () => {
     expect(warnings[0]).toContain("cannot read the review state");
   });
 
-  it("reports unreadable for the newest candidate when nothing was chosen yet", async () => {
-    const { values } = await run({ "GET /v1/apps": () => [401, { errors: [{ detail: "auth" }] }] });
-    expect(values).toMatchObject({ outcome: "unreadable", tag: "v1.5.2", build: "" });
+  it("reports none, never a release without a build, when nothing was chosen yet", async () => {
+    const { values, warnings } = await run({
+      "GET /v1/apps": () => [401, { errors: [{ detail: "auth" }] }],
+    });
+    expect(values).toEqual({
+      outcome: "none",
+      reason: "this key cannot read which release has a processed build",
+    });
+    expect(warnings[0]).toContain("cannot read the review state");
   });
 });
 

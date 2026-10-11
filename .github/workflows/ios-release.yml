@@ -69,14 +69,12 @@ jobs:
     environment:
       name: ios-build
       deployment: false
-    permissions:
-      contents: read
-      statuses: write # app-store/<tag> = pending once the build is in TestFlight
     outputs:
       app-version: ${{ steps.version.outputs.version }}
       build-number: ${{ steps.version.outputs.build }}
       build-year: ${{ steps.version.outputs.build-year }}
       commit: ${{ steps.source.outputs.commit }}
+      uploaded: ${{ steps.upload.outputs.uploaded }}
     steps:
       # Presence check only; values are never printed (passed via env, not interpolated) and the
       # failure names the missing KEYS, never their contents.
@@ -156,6 +154,7 @@ jobs:
           working-directory: apps/mobile
 
       - name: Archive, sign${{ (github.event_name == 'workflow_dispatch' && inputs.dry_run) && ' (dry run)' || ' & upload to TestFlight' }}
+        id: upload
         working-directory: apps/mobile
         env:
           APP_VERSION: ${{ steps.version.outputs.version }}
@@ -173,25 +172,9 @@ jobs:
           if [ "$DRY_RUN" = "true" ]; then
             bundle exec fastlane ios build
           else
-            bundle exec fastlane ios beta
+            # `uploaded` is read by the owe job even if a later step of this job fails.
+            bundle exec fastlane ios beta && echo "uploaded=true" >> "$GITHUB_OUTPUT"
           fi
-
-      # Marks the release as owed a submission the moment its build is in TestFlight, before any
-      # step that can fail. The submit job overwrites it with the real outcome; if that job never
-      # runs (a later step fails, the gate is rejected or expires, the run is cancelled), the
-      # pending record is what ios-submission-catch-up.yml picks up.
-      - name: Record the submission as owed
-        if: ${{ !inputs.dry_run }}
-        env:
-          GH_TOKEN: ${{ github.token }}
-          REPO: ${{ github.repository }}
-          COMMIT: ${{ steps.source.outputs.commit }}
-          TAG: ${{ inputs.tag }}
-          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
-        run: |
-          gh api -X POST "repos/$REPO/statuses/$COMMIT" -f state=pending -f context="app-store/$TAG" \
-            -f target_url="$RUN_URL" -f description="in TestFlight; submission pending" >/dev/null \
-            || echo "::warning::could not record app-store/$TAG as pending"
 
       - name: Record artifact provenance
         env:
@@ -214,6 +197,32 @@ jobs:
             apps/mobile/builds/how2vote.app.dSYM.zip
           if-no-files-found: warn
           retention-days: 30
+
+  # Marks the release as owed a submission once its build is in TestFlight, whatever happens to the
+  # rest of the build job. The submit job overwrites it with the real outcome; if that job never runs
+  # (a later step fails, the gate is rejected or expires, the run is cancelled), the pending record is
+  # what ios-submission-catch-up.yml picks up. A job of its own, with no checkout, so the write scope
+  # never sits beside the build's dependency tree.
+  owe:
+    name: Record the submission as owed
+    needs: build
+    if: always() && needs.build.outputs.uploaded == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      statuses: write # app-store/<tag> = pending
+    steps:
+      - name: Record app-store/<tag> as pending
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+          COMMIT: ${{ needs.build.outputs.commit }}
+          TAG: ${{ inputs.tag }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          gh api -X POST "repos/$REPO/statuses/$COMMIT" -f state=pending -f context="app-store/$TAG" \
+            -f target_url="$RUN_URL" -f description="in TestFlight; submission pending" >/dev/null \
+            || echo "::warning::could not record app-store/$TAG as pending"
 
   # Cancels older runs of this workflow still waiting at the app-store gate, and catch-up runs parked
   # there: approving one would submit a stale build. After the build, so a failed build leaves the
@@ -251,7 +260,7 @@ jobs:
   # defers instead, and ios-submission-catch-up.yml submits the build later.
   submit:
     name: Submit for App Store review
-    needs: build
+    needs: [build, owe]
     if: ${{ !inputs.dry_run }}
     permissions:
       contents: read

@@ -24,14 +24,16 @@
  * Modes:
  *   prepare  (submit job, App Manager key) acts on `cancel`, `clear` and `wait` until another
  *            outcome, then writes `outcome`, `reason` and `build` to $GITHUB_OUTPUT. Exits 1 on
- *            `fail`. With BUILD_NUMBER empty it takes the newest processed build of APP_VERSION.
+ *            `fail`, which includes a missing build and any API error that will recur (see
+ *            isPermanent); other errors exit 1 with no outcome. With BUILD_NUMBER empty it takes
+ *            the newest processed build of APP_VERSION.
  *   check    (catch-up, read-only) takes CANDIDATES ("tag=commit=year …", newest first), picks the
  *            newest with a processed build, and writes its `tag`, `commit`, `version`,
  *            `build-year` and `build` with the `outcome` and `reason` for it. `outcome=none` when
  *            no candidate has a build or the catch-up owes it nothing (see `owed`: REQUESTED,
- *            IN_FLIGHT and its `app-store/<tag>` status, read with GH_TOKEN). A refused read
- *            writes `outcome=unreadable` for the release chosen so far (the newest candidate if
- *            none), so the caller can leave the decision to `prepare` behind the reviewer gate.
+ *            IN_FLIGHT and its `app-store/<tag>` status, read with GH_TOKEN). A refused read of
+ *            the review state writes `outcome=unreadable` for the release already chosen, so the
+ *            caller can leave the decision to `prepare` behind the reviewer gate.
  * Both modes take RELEASES, the versions of the trusted release tags: only a processed build of
  * one of them stands a submission down.
  *
@@ -293,6 +295,21 @@ export class ApiError extends Error {
   }
 }
 
+/**
+ * Whether an error will recur on retry: any 4xx but 409 and 429 (a revoked or expired key, a
+ * refused request). 5xx, 409, 429 and network errors may pass later.
+ * @param {unknown} error
+ */
+export function isPermanent(error) {
+  return (
+    error instanceof ApiError &&
+    error.status >= 400 &&
+    error.status < 500 &&
+    error.status !== 409 &&
+    error.status !== 429
+  );
+}
+
 /** Attempts per request; 429, 5xx and network errors are retried with backoff. */
 export const ATTEMPTS = 4;
 
@@ -500,15 +517,15 @@ export async function submissionItems(api, submissionId) {
   }
 }
 
-/** Re-reads allowed after acting on a submission before it counts as unchanged. */
-export const SETTLE_READS = 3;
+/** Re-reads (about five minutes at the default poll) allowed after acting on a submission. */
+export const SETTLE_READS = 20;
 
 /**
  * Decide, acting on `cancel`, `clear` and `wait` until the outcome is final. A submission is
  * cancelled or emptied only when every item in it is an App Store version, and at most once: after
- * acting this waits `pollMs` and re-reads up to SETTLE_READS times before failing on a submission
- * that still needs the same action. When a cancellation does not settle within `maxPolls`, the
- * outcome is `defer`, so the catch-up tries again later.
+ * acting this waits `pollMs` and re-reads up to SETTLE_READS times. A submission that still needs
+ * the same action after that, or a cancellation that does not settle within `maxPolls`, is a
+ * `defer`, so the catch-up tries again later.
  * @param {{ api: ReturnType<typeof createClient>, appId: string,
  *   target: { version: string, build: string }, releases?: Set<string>,
  *   sleep: (ms: number) => Promise<void>, log?: (line: string) => void, pollMs?: number,
@@ -546,11 +563,11 @@ export async function prepare({
         continue;
       }
       return {
-        action: "fail",
+        action: "defer",
         reason:
           action === "cancel"
-            ? `review submission ${submissionId} is still waiting for review after this job cancelled it; cancel it in App Store Connect`
-            : `draft submission ${submissionId} still holds items after this job removed them; remove them in App Store Connect`,
+            ? `review submission ${submissionId} is still listed as waiting for review after this job cancelled it; the catch-up tries again`
+            : `draft submission ${submissionId} still lists items after this job removed them; the catch-up tries again`,
       };
     }
     const items = await submissionItems(api, submissionId);
@@ -680,8 +697,8 @@ export function parseReleases(text) {
 
 /**
  * The catch-up's read-only check: the newest candidate with a processed build, whether it is owed
- * a submission, and what App Store Connect allows for it. A 401/403 reports `unreadable` for the
- * release chosen so far, or the newest candidate if none was chosen yet.
+ * a submission, and what App Store Connect allows for it. A 401/403 after a release with a
+ * processed build was chosen reports `unreadable` for it; before that, `none`.
  * @param {{ api: ReturnType<typeof createClient>, candidates: ReturnType<typeof parseCandidates>,
  *   releases: Set<string>, requested: string, inFlight: string[],
  *   stateOf: (tag: string, commit: string) => Promise<string | null> }} deps
@@ -723,13 +740,21 @@ export async function checkCatchUp({ api, candidates, releases, requested, inFli
     return report(outcome, decision.reason, target, decision.warnings);
   } catch (error) {
     if (error instanceof ApiError && (error.status === 401 || error.status === 403)) {
+      const warning = `This key cannot read the review state (${error.message}).`;
+      if (!target) {
+        return {
+          warnings: [warning],
+          values: {
+            outcome: "none",
+            reason: "this key cannot read which release has a processed build",
+          },
+        };
+      }
       return report(
         "unreadable",
         `this key cannot read the review state (${error.message}); the gated submit job decides`,
-        target ?? { ...candidates[0], build: "" },
-        [
-          `This key cannot read the review state (${error.message}); the gated submit job decides instead.`,
-        ],
+        target,
+        [`${warning} The gated submit job decides instead.`],
       );
     }
     throw error;
@@ -777,7 +802,7 @@ const HEADLINE = {
 
 async function appStoreState(tag, commit) {
   const res = await fetch(
-    `https://api.github.com/repos/${process.env["GITHUB_REPOSITORY"]}/commits/${commit}/statuses?per_page=100`,
+    `https://api.github.com/repos/${process.env["GITHUB_REPOSITORY"]}/commits/${commit}/status?per_page=100`,
     {
       headers: {
         Accept: "application/vnd.github+json",
@@ -786,9 +811,9 @@ async function appStoreState(tag, commit) {
       },
     },
   );
-  if (!res.ok) throw new Error(`statuses for ${commit}: HTTP ${res.status}`);
-  const statuses = await res.json();
-  return statuses.find((st) => st?.context === `app-store/${tag}`)?.state ?? null;
+  if (!res.ok) throw new Error(`status of ${commit}: HTTP ${res.status}`);
+  const combined = await res.json();
+  return combined.statuses?.find((st) => st?.context === `app-store/${tag}`)?.state ?? null;
 }
 
 async function main() {
@@ -802,11 +827,26 @@ async function main() {
       throw new Error("APP_VERSION must be a version and BUILD_NUMBER a number or empty");
     }
     const api = client();
-    const appId = await findAppId(api);
-    build ||= (await latestBuild(api, appId, version)) ?? "";
-    if (!build) throw new Error(`no processed build of ${version} in App Store Connect`);
+    let decision;
+    try {
+      const appId = await findAppId(api);
+      build ||= (await latestBuild(api, appId, version)) ?? "";
+      decision = build
+        ? await prepare({
+            api,
+            appId,
+            target: { version, build },
+            releases,
+            sleep,
+            log: console.info,
+          })
+        : { action: "fail", reason: `no processed build of ${version} in App Store Connect` };
+    } catch (error) {
+      // Transient errors leave no outcome, which the submit job records as pending.
+      if (!isPermanent(error)) throw error;
+      decision = { action: "fail", reason: error.message };
+    }
     const target = { version, build };
-    const decision = await prepare({ api, appId, target, releases, sleep, log: console.info });
     for (const warning of decision.warnings ?? []) console.warn(`::warning::${warning}`);
     output({ outcome: decision.action, reason: decision.reason, build });
     summary(`### App Store review\n- ${HEADLINE[decision.action]}: ${decision.reason}`);
