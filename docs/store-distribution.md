@@ -295,13 +295,17 @@ from the tag being shipped, so it always matches the YAML running it.
 
 **Stale gated runs.** Once a release's build job succeeds, a `supersede` job cancels older runs of
 the same workflow that are waiting at the `play-store`/`app-store` gate for an older tag (matched by
-run name, `Android release v1.5.0`; dry runs are never touched). A run with a job still executing,
-such as an F-Droid publish, is left alone, and each run's jobs are read again just before it is
-cancelled. Every gated job also stands down, green and without changing the store, when the store
-itself already holds something newer: on iOS a newer version or a processed build of one in App
-Store Connect, on Play a higher version code on the internal or production track. A newer tag alone
-never stops a gated job, so a release whose newer successor failed before reaching the store still
-goes out when approved.
+run name, `Android release v1.5.0`; dry runs are never touched). On iOS it also cancels any
+`ios-submission-catch-up` run parked at the gate: the newer release supersedes whatever that run
+was about to submit. A run with a job still executing, such as an F-Droid publish, is left alone,
+and each run's jobs are read again just before it is cancelled. Every gated job also stands down,
+green and without changing the store, when the store itself already holds something newer: on iOS
+a newer App Store version, or a processed build of a newer **release** (a version with a trusted
+release tag) or of the same version with a higher build number; on Play a higher version code on
+the internal or production track. A newer tag alone never stops a gated job, so a release whose
+newer successor failed before reaching the store still goes out when approved. A processed build of
+a version that is not a release (a stray manual upload) is reported as a warning and ignored, so it
+cannot block submissions.
 
 **App Store.** App Store Connect allows one open review submission and one version in flight. Before
 `deliver` runs, `ios-submit.yml` reads the app's review submissions, versions and processed builds
@@ -310,61 +314,92 @@ and decides:
 | An earlier version is | The submit job | Recorded as `app-store/<tag>` |
 | --- | --- | --- |
 | nowhere in flight | submits | `success` |
-| waiting for review | re-reads that submission, cancels it while it is still waiting (the version becomes Developer Rejected), waits for the cancellation to settle (up to 15 minutes), then `deliver` renames that editable version to this release, attaches this build and submits. A submission still waiting after the job cancelled it fails the job at once | `success` |
-| in an unsent draft submission | removes the draft's items (App Store Connect refuses to cancel or delete a draft), and `deliver` reuses the empty draft. If the items cannot be removed, the job fails and says to remove them in App Store Connect | `success` |
+| waiting for review | re-reads that submission, cancels it while it is still waiting (the version becomes Developer Rejected), waits for the cancellation to settle (up to 15 minutes), then `deliver` renames that editable version to this release, attaches this build and submits | `success` |
+| in an unsent draft submission | removes the draft's items (App Store Connect refuses to cancel or delete a draft), and `deliver` reuses the empty draft | `success` |
 | in review | **defers**: never cancels a review in progress; the build stays in TestFlight | `pending` |
 | approved and not yet released (Pending Developer Release, Pending Apple Release, Processing for Distribution, Accepted) | **defers**: App Store Connect refuses a new version until the approved one is released, and developer-rejecting an approved version can leave it uneditable | `pending` |
 | rejected (its submission has unresolved issues), or in a state the script does not know | **fails red**: a rejection needs a person | `failure` |
-| this same build, already submitted; or App Store Connect holds a newer version, or a processed build of one | does nothing | `success` |
+| this same build, already submitted; or App Store Connect holds something newer (above) | does nothing | `success` |
+
+The job cancels or empties a submission only when every item in it is an App Store version; a
+submission that also carries an in-app event, a custom product page or an experiment fails the job
+with the item types named. After cancelling or emptying it waits and reads the state up to three
+more times before treating a submission that still needs the same action as stuck (a red run).
+
+`failure` is reserved for what needs a person: a rejection, an unknown state, a submission it may not
+touch, or one that stays stuck after it acted. Everything that may pass on a later attempt is
+recorded `pending` and so retried by the catch-up: a deferral, a cancellation that did not settle
+within 15 minutes, a `deliver` failure, an API error before a decision, and another submission
+holding the turn too long (below). The build job also records `pending` the moment its build is in
+TestFlight, before any step that can fail, so a release whose submit job never runs (a later step
+fails, the gate is rejected or expires, the run is cancelled) is still owed a submission.
+
+**One submission at a time.** Submissions of different releases must not run `deliver` together:
+both would edit the one editable version. A concurrency group spanning all releases would also be
+held by a job parked at the gate and stall every later release behind an unapproved one, so the
+submit job instead waits, after the gate, until no other App Store submit job that started earlier
+is still running (`supersede-store-runs.mjs wait-turn`, ordered by start time then job id; jobs
+parked at the gate hold nothing). After 30 minutes it gives up, records `pending` and leaves the
+release to the catch-up. Its concurrency group is per release only, which keeps one approval
+request per release.
 
 A deferred job is green, with a notice and a job summary line. **`ios-submission-catch-up.yml`**
-runs every three hours. While no `ios-release` run is in flight, it lists the releases on `main`
-that shipped the apps (trusted tags only, as in "Which releases ship the apps"), takes the newest
-one with a processed build in App Store Connect, and if its `app-store/<tag>` status is `pending`
-asks App Store Connect (read-only, with the `ios-build` key) whether the way is now clear. Only then does it call
-`ios-submit.yml`, which waits for the `app-store` reviewer like any submission and checks the state
-again before `deliver`, so a build is never submitted twice; two submissions of one release never
-run at once. Expect an approval request from it after an earlier version is released. Whether the
-`ios-build` key, a Developer-role key, may read review submissions and versions is not verified. If
-it cannot, the check passes the decision to the gated job instead, so the approval request comes
-every three hours while a submission is owed; approving it early just defers again. The owner
-checklist below includes a dispatch that shows which case applies. Only the newest shipped release is caught up: an
-older deferred one is superseded by it.
+runs every three hours. It lists the releases on `main` that shipped the apps (trusted tags only,
+as in "Which releases ship the apps"), takes the newest one with a processed build in App Store
+Connect, and treats it as owed a submission when its `app-store/<tag>` status is `pending` or
+absent and no `ios-release` run for it or a newer release is in flight. Only then does it ask App
+Store Connect (read-only, with the `ios-build` key) whether the way is clear, and only if it is does
+it call `ios-submit.yml`, which waits for the `app-store` reviewer like any submission and checks
+again before `deliver`, so a build is never submitted twice. Only its read-only check is
+serialised; a catch-up parked at the gate never blocks the next one. Expect an approval request from
+it after an earlier version is released, and after any retryable failure. Rejecting that request
+leaves the release owed, so it is asked again on the next run; to withdraw a release from the
+catch-up, close its record by hand:
+`gh api -X POST repos/<owner>/<repo>/statuses/<commit> -f state=error -f context=app-store/<tag> -f description=withdrawn`.
+
+Whether the `ios-build` key, a Developer-role key, may read review submissions and versions is not
+verified. If it cannot, the check passes the decision to the gated job instead, so the approval
+request comes every three hours while a submission is owed; approving it early just defers again.
+The owner checklist below includes a dispatch that shows which case applies.
 
 With `automatic_release: false` an approved version waits in Pending Developer Release until
 someone releases it, so in practice the catch-up submits the next build shortly after that click.
 
 **Google Play.** `promote` first reads the production and internal tracks in a throwaway edit. It
 skips a build production already holds, or one older than a build on the internal or production
-track (a version code can only move forward, and the newer release's own run promotes it), and fails
-if the build is not on the internal track. Otherwise fastlane
-sends a track update carrying only the new release: Play treats an update's releases as the desired
-change and keeps the last completed release in place beneath a staged one, and the new staged
-release is expected to replace an earlier one still rolling out (users who already have the earlier
-build keep it, and a new staged release goes to the same group of users first). What Play does with
-an earlier release that was **halted** is not documented: check the production track after
-promoting over one. The job summary names the
-rollout it replaced. With Managed publishing on, the committed change waits in Publishing overview;
-a later promotion replaces it there before anyone publishes. If an earlier change is still in
-Google's review, Play refuses to send another for review automatically, and fastlane re-commits it
-as "not sent for review": send it for review from Publishing overview.
+track (a version code can only move forward), saying to promote the newest run or re-dispatch it,
+and fails if the build is not on the internal track. Otherwise fastlane sends a track update
+carrying only the new release: Play treats an update's releases as the desired change and keeps the
+last completed release in place beneath a staged one, and the new staged release is expected to
+replace an earlier one still rolling out (users who already have the earlier build keep it, and a
+new staged release goes to the same group of users first). What Play does with an earlier release
+that was **halted** is not documented: check the production track after promoting over one. The job
+summary names the rollout it replaced. With Managed publishing on, the committed change waits in
+Publishing overview; a later promotion replaces it there before anyone publishes. If an earlier
+change is still in Google's review, Play refuses to send another for review automatically, and
+fastlane re-commits it as "not sent for review": send it for review from Publishing overview.
+
+Re-dispatching an **older** tag after a newer one reached the internal track uploads the older build
+as the internal track's release, replacing the newer one there: the newer release's promotion then
+fails with "not on the internal track". Re-dispatch the newest release instead of an older one.
 
 #### Submission deferred or blocked
 
 - **Deferred** (green run, notice "App Store submission of X deferred"): nothing to do. Release or
   wait out the earlier version; the catch-up submits the newest shipped build afterwards and asks
   for `app-store` approval. To push it sooner, run `ios-submission-catch-up.yml` from `main`.
+- **Retryable** (`app-store/<tag>` pending after a `deliver` failure, a timeout or a busy turn):
+  nothing to do; the catch-up retries on its next run and asks for approval again.
 - **Rejected** (red run, "unresolved issues"): read the rejection in App Store Connect → App
   Review. Either reply and resubmit the rejected version there, or, to replace it with the newest
   build, cancel that submission in App Store Connect, then run `ios-submission-catch-up.yml` from
   `main` with `tag` set to the newest shipped release. The rejection closes `app-store/<tag>` as
   `failure`, so the schedule does not retry it; the `tag` input re-arms it.
-- **Blocked on an unknown state** (red run naming the state): resolve it in App Store Connect,
-  then dispatch the catch-up with `tag` as above.
+- **Blocked on an unknown state, foreign items or a stuck submission** (red run naming it): resolve
+  it in App Store Connect (remove the items, or cancel the submission), then dispatch the catch-up
+  with `tag` as above.
 - **Never re-run a submit job**, and do not run `deliver` by hand: dispatch the catch-up instead,
   which re-checks the state first.
-- **Draft could not be emptied** (red run, "remove them in App Store Connect"): open the draft
-  submission in App Store Connect, remove its items, then dispatch the catch-up with `tag`.
 - **Play**: a skipped promotion names the newer build Play already holds. To promote a release
   whose run was cancelled as stale, re-dispatch `android-release.yml` for the newest release.
 

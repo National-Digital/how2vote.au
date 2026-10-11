@@ -2,10 +2,11 @@ name: iOS submission catch-up
 
 # Submits a release whose App Store submission was deferred. ios-submit.yml defers, rather than
 # cancels, when an older version is in review or approved and not yet released, and records the
-# release commit's `app-store/<tag>` status as pending. Every three hours, while no ios-release run
-# is in flight, this lists the releases on main that shipped the apps, takes the newest one with a
-# processed build in App Store Connect, and if its status is still pending asks App Store Connect
-# whether the way is clear. Only then does it call ios-submit.yml, which waits for the `app-store`
+# release commit's `app-store/<tag>` status as pending (the build job records it pending as soon as
+# the build is in TestFlight). Every three hours this lists the releases on main that shipped the
+# apps, takes the newest one with a processed build in App Store Connect, and if it is owed a
+# submission (pending or no record, and no ios-release run for it or a newer release in flight) asks
+# App Store Connect whether the way is clear. Only then does it call ios-submit.yml, which waits for the `app-store`
 # reviewer like any submission and checks again before `deliver`.
 #
 # A dispatch with `tag` set skips the pending-status test, for re-arming a release after a person
@@ -28,11 +29,6 @@ on:
 permissions:
   contents: read
 
-concurrency:
-  # At most one catch-up waits at the app-store gate; a newer scheduled run queues behind it.
-  group: ios-submission-catch-up
-  cancel-in-progress: false
-
 jobs:
   find:
     name: List shipped releases
@@ -44,6 +40,8 @@ jobs:
       actions: read # ios-release runs in flight
     outputs:
       candidates: ${{ steps.list.outputs.candidates }}
+      in-flight: ${{ steps.list.outputs.in-flight }}
+      releases: ${{ steps.list.outputs.releases }}
     steps:
       - name: Checkout main
         uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7
@@ -77,6 +75,12 @@ jobs:
     environment:
       name: ios-build
       deployment: false
+    # One check at a time; a catch-up parked at the app-store gate holds nothing here, so it never
+    # blocks the next one. ios-submit.yml's per-release group keeps one approval request per release,
+    # and a newer ios-release build cancels parked catch-ups.
+    concurrency:
+      group: ios-submission-catch-up-check
+      cancel-in-progress: false
     permissions:
       contents: read
       statuses: write # read the app-store/<tag> record; close it on a skip or a rejection
@@ -94,24 +98,28 @@ jobs:
           sparse-checkout: scripts
           filter: tree:0
 
-      # The newest shipped release with a processed build, and what App Store Connect allows for it.
+      # The newest shipped release with a processed build, whether the catch-up owes it a
+      # submission (on the schedule: its app-store/<tag> record is pending or absent and no
+      # ios-release run for it or a newer release is in flight; a dispatch naming `tag` always), and
+      # what App Store Connect allows for it.
       - name: Read the review state
         id: state
         env:
+          GH_TOKEN: ${{ github.token }}
           CANDIDATES: ${{ needs.find.outputs.candidates }}
+          IN_FLIGHT: ${{ needs.find.outputs.in-flight }}
+          RELEASES: ${{ needs.find.outputs.releases }}
+          REQUESTED: ${{ inputs.tag }}
           ASC_KEY_ID: ${{ secrets.ASC_KEY_ID }}
           ASC_ISSUER_ID: ${{ secrets.ASC_ISSUER_ID }}
           ASC_API_KEY_P8: ${{ secrets.ASC_API_KEY_P8 }}
         run: node scripts/app-store-submission.mjs check
 
-      # On the schedule, only a release whose submission was deferred (app-store/<tag> pending) is
-      # owed one; a dispatch naming `tag` re-arms that release whatever its record says.
       - name: Report
         id: report
         env:
           GH_TOKEN: ${{ github.token }}
           REPO: ${{ github.repository }}
-          REQUESTED: ${{ inputs.tag }}
           TAG: ${{ steps.state.outputs.tag }}
           COMMIT: ${{ steps.state.outputs.commit }}
           OUTCOME: ${{ steps.state.outputs.outcome }}
@@ -122,13 +130,6 @@ jobs:
           echo "go=false" >> "$GITHUB_OUTPUT"
           if [ "$OUTCOME" = none ]; then
             echo "Nothing to submit: $REASON."; exit 0
-          fi
-          if [ -z "${REQUESTED:-}" ]; then
-            STATE="$(gh api "repos/$REPO/commits/$COMMIT/statuses?per_page=100" \
-              --jq "[.[] | select(.context == \"app-store/$TAG\")][0].state // \"none\"")"
-            if [ "$STATE" != pending ]; then
-              echo "$TAG owes no submission (app-store/$TAG: $STATE)."; exit 0
-            fi
           fi
           echo "### App Store catch-up: $TAG" >> "$GITHUB_STEP_SUMMARY"
           echo "- $OUTCOME: $REASON" >> "$GITHUB_STEP_SUMMARY"
@@ -157,6 +158,7 @@ jobs:
     permissions:
       contents: read
       statuses: write
+      actions: read
     uses: ./.github/workflows/ios-submit.yml
     with:
       tag: ${{ needs.check.outputs.tag }}

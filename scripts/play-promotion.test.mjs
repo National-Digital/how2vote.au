@@ -51,7 +51,8 @@ describe("decidePromotion", () => {
     });
     expect(d).toEqual({
       action: "skip",
-      reason: "production holds a newer build: 1.5.1 (inProgress 10%)",
+      reason:
+        "production holds a newer build: 1.5.1 (inProgress 10%); promote the newest run or re-dispatch it",
     });
   });
 
@@ -64,7 +65,7 @@ describe("decidePromotion", () => {
     expect(d).toEqual({
       action: "skip",
       reason:
-        "the internal track holds a newer build: 1.5.1 (completed); its own release promotes it",
+        "the internal track holds a newer build: 1.5.1 (completed); promote the newest run or re-dispatch it",
     });
   });
 

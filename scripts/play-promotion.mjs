@@ -45,12 +45,15 @@ export function decidePromotion({ code, production, internal }) {
   if (already) return { action: "skip", reason: `production already holds ${describe(already)}` };
   const newer = production.find((r) => codes(r).some((c) => c > target));
   if (newer)
-    return { action: "skip", reason: `production holds a newer build: ${describe(newer)}` };
+    return {
+      action: "skip",
+      reason: `production holds a newer build: ${describe(newer)}; promote the newest run or re-dispatch it`,
+    };
   const uploaded = internal.find((r) => codes(r).some((c) => c > target));
   if (uploaded) {
     return {
       action: "skip",
-      reason: `the internal track holds a newer build: ${describe(uploaded)}; its own release promotes it`,
+      reason: `the internal track holds a newer build: ${describe(uploaded)}; promote the newest run or re-dispatch it`,
     };
   }
   if (!internal.some((r) => codes(r).includes(target))) {

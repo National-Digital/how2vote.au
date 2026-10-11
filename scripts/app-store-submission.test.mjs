@@ -6,8 +6,12 @@ import {
   compareVersions,
   createClient,
   decide,
+  checkCatchUp,
+  itemKinds,
   latestBuild,
+  owed,
   parseCandidates,
+  parseReleases,
   pickCandidate,
   prepare,
   readState,
@@ -81,11 +85,12 @@ describe("decide", () => {
     });
   });
 
-  it("skips when a processed build of a newer version exists", () => {
+  it("skips when a processed build of a newer release exists", () => {
     const d = decide({
       target,
       versions: [live],
       submissions: [],
+      releases: new Set(["1.5.1", "1.5.2", "1.6.0"]),
       builds: [
         { version: "1.5.1", build: target.build },
         { version: "1.5.2", build: "105002001" },
@@ -94,6 +99,53 @@ describe("decide", () => {
     });
     expect(d.action).toBe("skip");
     expect(d.reason).toContain("1.6.0 (106000002)");
+  });
+
+  it("warns about, and ignores, a newer build whose version is not a release", () => {
+    const d = decide({
+      target,
+      versions: [live],
+      submissions: [],
+      releases: new Set(["1.5.1"]),
+      builds: [
+        { version: "9.9.9", build: "999000001" },
+        { version: "9.9.9", build: "999000001" },
+      ],
+    });
+    expect(d.action).toBe("submit");
+    expect(d.warnings).toEqual([
+      "build 999000001 of 9.9.9 is processed but 9.9.9 is not a release",
+    ]);
+    expect(
+      decide({
+        target,
+        versions: [live],
+        submissions: [],
+        builds: [{ version: "1.6.0", build: "1" }],
+      }).action,
+    ).toBe("submit");
+  });
+
+  it("skips when a later build of the same version is processed, compared numerically", () => {
+    const d = decide({
+      target: { version: "1.5.1", build: "99" },
+      versions: [live],
+      submissions: [],
+      builds: [
+        { version: "1.5.1", build: "100" },
+        { version: "1.5.1", build: "98" },
+      ],
+    });
+    expect(d.action).toBe("skip");
+    expect(d.reason).toContain("a later build of 1.5.1 is processed: 1.5.1 (100)");
+    expect(
+      decide({
+        target: { version: "1.5.1", build: "100" },
+        versions: [live],
+        submissions: [],
+        builds: [{ version: "1.5.1", build: "99" }],
+      }).action,
+    ).toBe("submit");
   });
 
   it("ignores processed builds of this version or older ones", () => {
@@ -221,7 +273,9 @@ function fakeApi(pages) {
   const fetchImpl = async (url, init = {}) => {
     const u = new URL(url);
     calls.push({ method: init.method ?? "GET", url: u, body: init.body && JSON.parse(init.body) });
-    const handler = handlers[`${init.method ?? "GET"} ${u.pathname}`];
+    const handler =
+      handlers[`${init.method ?? "GET"} ${u.pathname}`] ??
+      (/^\/v1\/reviewSubmissions\/[^/]+\/items$/.test(u.pathname) ? versionItems : undefined);
     const [status, body] = handler ? handler(u, calls) : [404, { errors: [{ detail: "nope" }] }];
     const text = typeof body === "string" ? body : body ? JSON.stringify(body) : "";
     return { ok: status < 300, status, text: async () => text };
@@ -263,6 +317,20 @@ const submission = (id, state, versionId, items = 1) => ({
 });
 const submissionsPayload = (...list) => ({ data: list.map((args) => submission(...args)) });
 const single = (id, state) => () => [200, { data: submission(id, state, null) }];
+function versionItems() {
+  return [
+    200,
+    {
+      data: [
+        {
+          type: "reviewSubmissionItems",
+          id: "i0",
+          relationships: { appStoreVersion: { data: { id: "old" } } },
+        },
+      ],
+    },
+  ];
+}
 
 describe("versionState", () => {
   it("prefers appVersionState", () => {
@@ -542,7 +610,7 @@ describe("prepare", () => {
     });
   });
 
-  it("fails at once, without polling, when a cancelled submission is still waiting", async () => {
+  it("re-reads a few times, then fails, when a cancelled submission is still waiting", async () => {
     const sleeps = [];
     const { api, calls } = fakeApi({
       "GET /v1/apps/app1/appStoreVersions": () => [
@@ -560,7 +628,7 @@ describe("prepare", () => {
     expect(d.action).toBe("fail");
     expect(d.reason).toContain("cancel it in App Store Connect");
     expect(calls.filter((c) => c.method === "PATCH")).toHaveLength(1);
-    expect(sleeps).toEqual([]);
+    expect(sleeps).toEqual([15000, 15000, 15000]);
   });
 
   it("empties an unsent draft by deleting its items, then submits into it", async () => {
@@ -613,7 +681,7 @@ describe("prepare", () => {
     expect(d.reason).toContain("remove them in App Store Connect");
   });
 
-  it("fails at once when a draft still holds items after they were removed", async () => {
+  it("re-reads a few times, then fails, when a draft still holds items after they were removed", async () => {
     const sleeps = [];
     const { api } = fakeApi({
       "GET /v1/apps/app1/appStoreVersions": () => [
@@ -629,7 +697,7 @@ describe("prepare", () => {
     const d = await prepare({ api, appId: "app1", target, sleep: async (ms) => sleeps.push(ms) });
     expect(d.action).toBe("fail");
     expect(d.reason).toContain("still holds items");
-    expect(sleeps).toEqual([]);
+    expect(sleeps).toEqual([15000, 15000, 15000]);
   });
 
   it("gives up waiting after the poll limit", async () => {
@@ -645,8 +713,8 @@ describe("prepare", () => {
     });
     const d = await prepare({ api, appId: "app1", target, sleep: noSleep, maxPolls: 4 });
     expect(d).toEqual({
-      action: "fail",
-      reason: "the previous submission did not clear within 1 minutes",
+      action: "defer",
+      reason: "the previous submission did not clear within 1 minutes; the catch-up tries again",
     });
   });
 
@@ -683,6 +751,201 @@ describe("prepare", () => {
       action: "fail",
     });
     expect(calls.some((c) => c.method !== "GET")).toBe(false);
+  });
+});
+
+describe("prepare — submission items", () => {
+  const noSleep = async () => {};
+  const base = (submissionState, versionState) => ({
+    "GET /v1/apps/app1/appStoreVersions": () => [
+      200,
+      versionsPayload(["old", "1.5.0", versionState, "b", "1"]),
+    ],
+    "GET /v1/apps/app1/reviewSubmissions": () => [
+      200,
+      submissionsPayload(["sub", submissionState, "old"]),
+    ],
+    "GET /v1/reviewSubmissions/sub": single("sub", submissionState),
+  });
+
+  it("refuses to cancel a submission holding anything but an App Store version", async () => {
+    const { api, calls } = fakeApi({
+      ...base("WAITING_FOR_REVIEW", "WAITING_FOR_REVIEW"),
+      "GET /v1/reviewSubmissions/sub/items": () => [
+        200,
+        {
+          data: [
+            { relationships: { appStoreVersion: { data: { id: "old" } } } },
+            { relationships: { appEvent: { data: { id: "e1" } } } },
+            { relationships: {} },
+          ],
+        },
+      ],
+    });
+    const d = await prepare({ api, appId: "app1", target, sleep: noSleep });
+    expect(d.action).toBe("fail");
+    expect(d.reason).toContain("holds items other than an App Store version (appEvent, unknown)");
+    expect(calls.some((c) => c.method === "PATCH")).toBe(false);
+  });
+
+  it("refuses to empty a draft holding anything but an App Store version", async () => {
+    const { api, calls } = fakeApi({
+      ...base("READY_FOR_REVIEW", "READY_FOR_REVIEW"),
+      "GET /v1/reviewSubmissions/sub/items": () => [
+        200,
+        { data: [{ relationships: { appCustomProductPageVersion: { data: { id: "p" } } } }] },
+      ],
+    });
+    const d = await prepare({ api, appId: "app1", target, sleep: noSleep });
+    expect(d.reason).toContain("(appCustomProductPageVersion)");
+    expect(calls.some((c) => c.method === "DELETE")).toBe(false);
+  });
+
+  it("falls back to the appStoreVersion include when the item includes are refused", async () => {
+    let first = true;
+    const { api } = fakeApi({
+      ...base("READY_FOR_REVIEW", "READY_FOR_REVIEW"),
+      "GET /v1/reviewSubmissions/sub/items": (u) => {
+        if (first) {
+          first = false;
+          return [400, { errors: [{ detail: "bad include" }] }];
+        }
+        expect(u.searchParams.get("include")).toBe("appStoreVersion");
+        return versionItems();
+      },
+      "DELETE /v1/reviewSubmissionItems/i0": () => [404, { errors: [{ detail: "gone" }] }],
+    });
+    const d = await prepare({ api, appId: "app1", target, sleep: noSleep });
+    // The 404 counts as removed; the fake still lists the item, so it fails only after re-reads.
+    expect(d.reason).toContain("still holds items after this job removed them");
+  });
+});
+
+describe("itemKinds", () => {
+  it("names what each item points at", () => {
+    expect(
+      itemKinds([
+        { relationships: { appStoreVersion: { data: { id: "v" } }, appEvent: { data: null } } },
+        { relationships: { appStoreVersionExperiment: { data: { id: "x" } } } },
+        { relationships: { appEvent: { links: {} } } },
+        {},
+      ]),
+    ).toEqual(["appStoreVersion", "appStoreVersionExperiment", "unknown", "unknown"]);
+  });
+});
+
+describe("owed", () => {
+  const base = { tag: "v1.5.1", requested: "", inFlight: [] };
+  it("owes a release whose record is pending or absent", () => {
+    expect(owed({ ...base, state: "pending" }).owed).toBe(true);
+    expect(owed({ ...base, state: null })).toEqual({
+      owed: true,
+      reason: "app-store/v1.5.1 is absent",
+    });
+  });
+
+  it("owes nothing once the record is closed", () => {
+    for (const state of ["success", "failure", "error"]) {
+      expect(owed({ ...base, state }).owed, state).toBe(false);
+    }
+  });
+
+  it("owes nothing while a run for it or a newer release is in flight", () => {
+    expect(owed({ ...base, state: null, inFlight: ["v1.5.1"] }).reason).toContain(
+      "v1.5.1 is in flight",
+    );
+    expect(owed({ ...base, state: "pending", inFlight: ["v1.6.0"] }).owed).toBe(false);
+    expect(owed({ ...base, state: "pending", inFlight: ["v1.5.0"] }).owed).toBe(true);
+  });
+
+  it("always owes a requested release", () => {
+    expect(
+      owed({ ...base, requested: "v1.5.1", state: "failure", inFlight: ["v1.6.0"] }).owed,
+    ).toBe(true);
+  });
+});
+
+describe("parseReleases", () => {
+  it("reads versions, with or without the v", () => {
+    expect(parseReleases("1.5.0 v1.5.1  junk 1.5")).toEqual(new Set(["1.5.0", "1.5.1"]));
+    expect(parseReleases("")).toEqual(new Set());
+    expect(parseReleases(undefined)).toBeNull();
+  });
+});
+
+describe("checkCatchUp", () => {
+  const sha = (c) => c.repeat(40);
+  const candidates = [
+    { tag: "v1.5.2", commit: sha("c"), year: "2026" },
+    { tag: "v1.5.1", commit: sha("b"), year: "2026" },
+  ];
+  const apps = {
+    "GET /v1/apps": () => [
+      200,
+      { data: [{ id: "app1", attributes: { bundleId: "au.how2vote.app" } }] },
+    ],
+  };
+  const buildsOf = (map) => (u) => {
+    const v = u.searchParams.get("filter[preReleaseVersion.version]");
+    return [200, { data: (map[v] ?? []).map((n) => ({ attributes: { version: n } })) }];
+  };
+  const run = (pages, { states = {}, requested = "", inFlight = [] } = {}) =>
+    checkCatchUp({
+      api: fakeApi({ ...apps, ...pages }).api,
+      candidates,
+      releases: new Set(["1.5.1", "1.5.2"]),
+      requested,
+      inFlight,
+      stateOf: async (tag) => states[tag] ?? null,
+    });
+
+  it("treats the newest release with a build and no record as owed", async () => {
+    const { values } = await run({
+      "GET /v1/builds": buildsOf({ "1.5.1": ["105001003"] }),
+      "GET /v1/apps/app1/appStoreVersions": () => [
+        200,
+        versionsPayload(["l", "1.4.9", "READY_FOR_DISTRIBUTION"]),
+      ],
+      "GET /v1/apps/app1/reviewSubmissions": () => [200, { data: [] }],
+    });
+    expect(values).toMatchObject({
+      outcome: "submit",
+      tag: "v1.5.1",
+      build: "105001003",
+      version: "1.5.1",
+    });
+  });
+
+  it("owes nothing when that release's run is in flight or its record is closed", async () => {
+    const pages = {
+      "GET /v1/builds": buildsOf({ "1.5.1": ["105001003"] }),
+      "GET /v1/apps/app1/appStoreVersions": () => [200, { data: [] }],
+      "GET /v1/apps/app1/reviewSubmissions": () => [200, { data: [] }],
+    };
+    expect((await run(pages, { inFlight: ["v1.5.1"] })).values.outcome).toBe("none");
+    expect((await run(pages, { states: { "v1.5.1": "success" } })).values.outcome).toBe("none");
+  });
+
+  it("reports none when no candidate has a build", async () => {
+    expect((await run({})).values).toEqual({
+      outcome: "none",
+      reason: "no shipped release has a processed build",
+    });
+  });
+
+  it("reports unreadable for the release already chosen, not the newest candidate", async () => {
+    const { values, warnings } = await run({
+      "GET /v1/builds": buildsOf({ "1.5.1": ["105001003"] }),
+      "GET /v1/apps/app1/appStoreVersions": () => [403, { errors: [{ detail: "role" }] }],
+      "GET /v1/apps/app1/reviewSubmissions": () => [200, { data: [] }],
+    });
+    expect(values).toMatchObject({ outcome: "unreadable", tag: "v1.5.1", build: "105001003" });
+    expect(warnings[0]).toContain("cannot read the review state");
+  });
+
+  it("reports unreadable for the newest candidate when nothing was chosen yet", async () => {
+    const { values } = await run({ "GET /v1/apps": () => [401, { errors: [{ detail: "auth" }] }] });
+    expect(values).toMatchObject({ outcome: "unreadable", tag: "v1.5.2", build: "" });
   });
 });
 

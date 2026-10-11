@@ -27,9 +27,13 @@
  *            `fail`. With BUILD_NUMBER empty it takes the newest processed build of APP_VERSION.
  *   check    (catch-up, read-only) takes CANDIDATES ("tag=commit=year …", newest first), picks the
  *            newest with a processed build, and writes its `tag`, `commit`, `version`,
- *            `build-year` and `build` with the `outcome` and `reason` for it; `outcome=none` when
- *            no candidate has a build. A refused read writes `outcome=unreadable` for the newest
- *            candidate, so the caller can leave the decision to `prepare` behind the reviewer gate.
+ *            `build-year` and `build` with the `outcome` and `reason` for it. `outcome=none` when
+ *            no candidate has a build or the catch-up owes it nothing (see `owed`: REQUESTED,
+ *            IN_FLIGHT and its `app-store/<tag>` status, read with GH_TOKEN). A refused read
+ *            writes `outcome=unreadable` for the release chosen so far (the newest candidate if
+ *            none), so the caller can leave the decision to `prepare` behind the reviewer gate.
+ * Both modes take RELEASES, the versions of the trusted release tags: only a processed build of
+ * one of them stands a submission down.
  *
  * Usage:
  *   APP_VERSION=1.5.0 BUILD_NUMBER=105000123 ASC_KEY_ID=… ASC_ISSUER_ID=… ASC_API_KEY_P8=<base64 .p8> \
@@ -118,17 +122,32 @@ export function compareVersions(a, b) {
  * @typedef {{ id: string, state: string, versionId: string | null, itemIds: string[] }} Submission
  * @typedef {{ version: string, build: string }} Build
  * @typedef {{ action: "submit" | "cancel" | "clear" | "wait" | "defer" | "skip" | "fail",
- *   reason: string, submissionId?: string, itemIds?: string[] }} Decision
+ *   reason: string, submissionId?: string, itemIds?: string[], warnings?: string[] }} Decision
  */
 
 /**
  * What to do with `target`, given the app's App Store versions, open review submissions and
- * processed builds.
+ * processed builds. A processed build of a newer version stands this one down only when that
+ * version is a release (`releases`, the versions of the trusted release tags); any other newer
+ * build is reported in `warnings` and ignored, so a stray TestFlight upload cannot block
+ * submissions.
  * @param {{ target: { version: string, build: string }, versions: Version[],
- *   submissions: Submission[], builds?: Build[] }} state
+ *   submissions: Submission[], builds?: Build[], releases?: Set<string> }} state
  * @returns {Decision}
  */
-export function decide({ target, versions, submissions, builds = [] }) {
+export function decide(state) {
+  const decision = decideOnly(state);
+  const warnings = (state.builds ?? [])
+    .filter(
+      (b) =>
+        compareVersions(b.version, state.target.version) > 0 && !state.releases?.has(b.version),
+    )
+    .map((b) => `build ${b.build} of ${b.version} is processed but ${b.version} is not a release`);
+  return warnings.length ? { ...decision, warnings: [...new Set(warnings)] } : decision;
+}
+
+/** @param {Parameters<typeof decide>[0]} state @returns {Decision} */
+function decideOnly({ target, versions, submissions, builds = [], releases = new Set() }) {
   const label = (v) => `${v.version}${v.build ? ` (${v.build})` : ""}`;
   const versionOf = (s) => versions.find((v) => v.id === s.versionId);
   const about = (s) => {
@@ -150,11 +169,22 @@ export function decide({ target, versions, submissions, builds = [] }) {
       reason: `a newer version is in App Store Connect: ${label(newer)} (${newer.state})`,
     };
   }
-  const newerBuild = newest(builds.filter((b) => compareVersions(b.version, target.version) > 0));
+  const newerBuild = newest(
+    builds.filter((b) => compareVersions(b.version, target.version) > 0 && releases.has(b.version)),
+  );
   if (newerBuild) {
     return {
       action: "skip",
       reason: `a newer build is processed in App Store Connect: ${label(newerBuild)}; its own release submits it`,
+    };
+  }
+  const laterBuild = builds
+    .filter((b) => b.version === target.version && Number(b.build) > Number(target.build))
+    .sort((a, b) => Number(b.build) - Number(a.build))[0];
+  if (laterBuild) {
+    return {
+      action: "skip",
+      reason: `a later build of ${target.version} is processed: ${label(laterBuild)}; its own run submits it`,
     };
   }
   const approved = versions.find(
@@ -435,35 +465,101 @@ export async function readState(api, appId) {
   return { versions, submissions, builds };
 }
 
+/** Relationships a review submission item can point at; only `appStoreVersion` is handled. */
+const ITEM_KINDS = [
+  "appStoreVersion",
+  "appCustomProductPageVersion",
+  "appStoreVersionExperiment",
+  "appEvent",
+  "appStoreVersionExperimentV2",
+  "backgroundAssetVersion",
+];
+
 /**
- * Decide, acting on `cancel`, `clear` and `wait` until the outcome is final. Each submission is
- * acted on at most once: if it still needs the same action afterwards, this fails at once.
+ * What each review submission item holds, from its relationships ("unknown" when none is set).
+ * @param {{ relationships?: Record<string, { data?: unknown }> }[]} items
+ * @returns {string[]}
+ */
+export function itemKinds(items) {
+  return items.map((item) => ITEM_KINDS.find((k) => item?.relationships?.[k]?.data) ?? "unknown");
+}
+
+/**
+ * A review submission's items with the resources they point at. Items of a kind outside the
+ * requested includes come back without relationship data and read as "unknown".
+ * @param {ReturnType<typeof createClient>} api
+ * @param {string} submissionId
+ */
+export async function submissionItems(api, submissionId) {
+  const path = `/v1/reviewSubmissions/${submissionId}/items`;
+  try {
+    return (await api.get(path, { include: ITEM_KINDS.slice(0, 4).join(","), limit: "50" })).data;
+  } catch (error) {
+    if (!(error instanceof ApiError) || error.status !== 400) throw error;
+    return (await api.get(path, { include: "appStoreVersion", limit: "50" })).data;
+  }
+}
+
+/** Re-reads allowed after acting on a submission before it counts as unchanged. */
+export const SETTLE_READS = 3;
+
+/**
+ * Decide, acting on `cancel`, `clear` and `wait` until the outcome is final. A submission is
+ * cancelled or emptied only when every item in it is an App Store version, and at most once: after
+ * acting this waits `pollMs` and re-reads up to SETTLE_READS times before failing on a submission
+ * that still needs the same action. When a cancellation does not settle within `maxPolls`, the
+ * outcome is `defer`, so the catch-up tries again later.
  * @param {{ api: ReturnType<typeof createClient>, appId: string,
- *   target: { version: string, build: string }, sleep: (ms: number) => Promise<void>,
- *   log?: (line: string) => void, pollMs?: number, maxPolls?: number }} deps
+ *   target: { version: string, build: string }, releases?: Set<string>,
+ *   sleep: (ms: number) => Promise<void>, log?: (line: string) => void, pollMs?: number,
+ *   maxPolls?: number }} deps
  * @returns {Promise<Decision>}
  */
 export async function prepare({
   api,
   appId,
   target,
+  releases,
   sleep,
   log = () => {},
   pollMs = 15000,
   maxPolls = 60,
 }) {
-  const acted = new Set();
+  /** @type {Map<string, number>} action:submission → re-reads since acting */
+  const acted = new Map();
   for (let poll = 0; poll <= maxPolls; poll++) {
-    const decision = decide({ target, ...(await readState(api, appId)) });
+    const decision = decide({ target, releases, ...(await readState(api, appId)) });
     log(decision.reason);
+    for (const warning of decision.warnings ?? []) log(`warning: ${warning}`);
     const { action, submissionId } = decision;
-    if ((action === "cancel" || action === "clear") && acted.has(`${action}:${submissionId}`)) {
+    if (action !== "cancel" && action !== "clear") {
+      if (action !== "wait") return decision;
+      await sleep(pollMs);
+      continue;
+    }
+    const key = `${action}:${submissionId}`;
+    if (acted.has(key)) {
+      const reads = acted.get(key) + 1;
+      if (reads < SETTLE_READS) {
+        acted.set(key, reads);
+        await sleep(pollMs);
+        continue;
+      }
       return {
         action: "fail",
         reason:
           action === "cancel"
             ? `review submission ${submissionId} is still waiting for review after this job cancelled it; cancel it in App Store Connect`
             : `draft submission ${submissionId} still holds items after this job removed them; remove them in App Store Connect`,
+      };
+    }
+    const items = await submissionItems(api, submissionId);
+    const kinds = itemKinds(items);
+    const foreign = kinds.filter((k) => k !== "appStoreVersion");
+    if (foreign.length > 0) {
+      return {
+        action: "fail",
+        reason: `review submission ${submissionId} holds items other than an App Store version (${[...new Set(foreign)].join(", ")}); resolve it in App Store Connect`,
       };
     }
     if (action === "cancel") {
@@ -474,7 +570,7 @@ export async function prepare({
         await sleep(pollMs);
         continue;
       }
-      acted.add(`${action}:${submissionId}`);
+      acted.set(key, 0);
       try {
         await api.patch(`/v1/reviewSubmissions/${submissionId}`, {
           data: { type: "reviewSubmissions", id: submissionId, attributes: { canceled: true } },
@@ -483,29 +579,34 @@ export async function prepare({
       } catch (error) {
         // The submission may have been picked up for review since it was read.
         if (!(error instanceof ApiError) || error.status !== 409) throw error;
+        acted.delete(key);
         log(`cancellation refused (${error.message}); reading the state again`);
       }
+      await sleep(pollMs);
       continue;
     }
-    if (action === "clear") {
-      acted.add(`${action}:${submissionId}`);
-      try {
-        for (const id of decision.itemIds ?? []) await api.del(`/v1/reviewSubmissionItems/${id}`);
-        log(`removed ${decision.itemIds?.length} item(s) from draft submission ${submissionId}`);
-      } catch (error) {
-        return {
-          action: "fail",
-          reason: `could not remove the items of draft submission ${submissionId} (${error.message}); remove them in App Store Connect`,
-        };
+    acted.set(key, 0);
+    try {
+      for (const id of decision.itemIds ?? []) {
+        try {
+          await api.del(`/v1/reviewSubmissionItems/${id}`);
+        } catch (error) {
+          // Already gone: a retried DELETE whose first attempt succeeded.
+          if (!(error instanceof ApiError) || error.status !== 404) throw error;
+        }
       }
-      continue;
+      log(`removed ${decision.itemIds?.length} item(s) from draft submission ${submissionId}`);
+    } catch (error) {
+      return {
+        action: "fail",
+        reason: `could not remove the items of draft submission ${submissionId} (${error.message}); remove them in App Store Connect`,
+      };
     }
-    if (action !== "wait") return decision;
     await sleep(pollMs);
   }
   return {
-    action: "fail",
-    reason: `the previous submission did not clear within ${Math.round((maxPolls * pollMs) / 60000)} minutes`,
+    action: "defer",
+    reason: `the previous submission did not clear within ${Math.round((maxPolls * pollMs) / 60000)} minutes; the catch-up tries again`,
   };
 }
 
@@ -543,6 +644,96 @@ export async function pickCandidate(candidates, buildOf) {
     if (build) return { ...c, version, build };
   }
   return null;
+}
+
+/**
+ * Whether the catch-up owes `tag` a submission. A dispatch naming the release always does. Otherwise
+ * not while an ios-release run for it, or for a newer release, is in flight (that run submits);
+ * and only while its `app-store/<tag>` record is pending (deferred, or uploaded and not yet
+ * submitted) or absent (a build whose submit never recorded anything).
+ * @param {{ tag: string, requested: string, state: string | null, inFlight: string[] }} input
+ * @returns {{ owed: boolean, reason: string }}
+ */
+export function owed({ tag, requested, state, inFlight }) {
+  if (requested) return { owed: true, reason: `${tag} was requested` };
+  const running = inFlight.find((t) => compareVersions(t.replace(/^v/, ""), tag.slice(1)) >= 0);
+  if (running) return { owed: false, reason: `an ios-release run for ${running} is in flight` };
+  if (state === "pending" || state === null) {
+    return { owed: true, reason: `app-store/${tag} is ${state ?? "absent"}` };
+  }
+  return { owed: false, reason: `${tag} owes no submission (app-store/${tag}: ${state})` };
+}
+
+/**
+ * RELEASES (space-separated versions) as a set; null when unset.
+ * @param {string | undefined} text
+ */
+export function parseReleases(text) {
+  if (text === undefined) return null;
+  return new Set(
+    String(text)
+      .split(/\s+/)
+      .map((v) => v.replace(/^v/, ""))
+      .filter((v) => SEMVER.test(v)),
+  );
+}
+
+/**
+ * The catch-up's read-only check: the newest candidate with a processed build, whether it is owed
+ * a submission, and what App Store Connect allows for it. A 401/403 reports `unreadable` for the
+ * release chosen so far, or the newest candidate if none was chosen yet.
+ * @param {{ api: ReturnType<typeof createClient>, candidates: ReturnType<typeof parseCandidates>,
+ *   releases: Set<string>, requested: string, inFlight: string[],
+ *   stateOf: (tag: string, commit: string) => Promise<string | null> }} deps
+ * @returns {Promise<{ values: Record<string, string>, warnings: string[] }>}
+ */
+export async function checkCatchUp({ api, candidates, releases, requested, inFlight, stateOf }) {
+  let target = null;
+  const report = async (outcome, reason, chosen, warnings = []) => {
+    const due = owed({
+      tag: chosen.tag,
+      requested,
+      state: await stateOf(chosen.tag, chosen.commit),
+      inFlight,
+    });
+    return {
+      warnings,
+      values: {
+        ...(due.owed ? { outcome, reason } : { outcome: "none", reason: due.reason }),
+        tag: chosen.tag,
+        commit: chosen.commit,
+        version: chosen.tag.slice(1),
+        "build-year": chosen.year,
+        build: chosen.build ?? "",
+      },
+    };
+  };
+  try {
+    const appId = await findAppId(api);
+    target = await pickCandidate(candidates, (v) => latestBuild(api, appId, v));
+    if (!target) {
+      return {
+        warnings: [],
+        values: { outcome: "none", reason: "no shipped release has a processed build" },
+      };
+    }
+    const decision = decide({ target, releases, ...(await readState(api, appId)) });
+    const outcome =
+      decision.action === "cancel" || decision.action === "clear" ? "submit" : decision.action;
+    return report(outcome, decision.reason, target, decision.warnings);
+  } catch (error) {
+    if (error instanceof ApiError && (error.status === 401 || error.status === 403)) {
+      return report(
+        "unreadable",
+        `this key cannot read the review state (${error.message}); the gated submit job decides`,
+        target ?? { ...candidates[0], build: "" },
+        [
+          `This key cannot read the review state (${error.message}); the gated submit job decides instead.`,
+        ],
+      );
+    }
+    throw error;
+  }
 }
 
 /* c8 ignore start -- network/CLI plumbing, exercised in CI not unit tests */
@@ -584,9 +775,26 @@ const HEADLINE = {
   wait: "Previous submission still clearing",
 };
 
+async function appStoreState(tag, commit) {
+  const res = await fetch(
+    `https://api.github.com/repos/${process.env["GITHUB_REPOSITORY"]}/commits/${commit}/statuses?per_page=100`,
+    {
+      headers: {
+        Accept: "application/vnd.github+json",
+        Authorization: `Bearer ${process.env["GH_TOKEN"]}`,
+        "X-GitHub-Api-Version": "2022-11-28",
+      },
+    },
+  );
+  if (!res.ok) throw new Error(`statuses for ${commit}: HTTP ${res.status}`);
+  const statuses = await res.json();
+  return statuses.find((st) => st?.context === `app-store/${tag}`)?.state ?? null;
+}
+
 async function main() {
   const mode = process.argv[2];
   const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+  const releases = parseReleases(process.env["RELEASES"]) ?? new Set();
   if (mode === "prepare") {
     const version = process.env["APP_VERSION"] ?? "";
     let build = process.env["BUILD_NUMBER"] ?? "";
@@ -598,7 +806,8 @@ async function main() {
     build ||= (await latestBuild(api, appId, version)) ?? "";
     if (!build) throw new Error(`no processed build of ${version} in App Store Connect`);
     const target = { version, build };
-    const decision = await prepare({ api, appId, target, sleep, log: console.info });
+    const decision = await prepare({ api, appId, target, releases, sleep, log: console.info });
+    for (const warning of decision.warnings ?? []) console.warn(`::warning::${warning}`);
     output({ outcome: decision.action, reason: decision.reason, build });
     summary(`### App Store review\n- ${HEADLINE[decision.action]}: ${decision.reason}`);
     if (decision.action === "fail") {
@@ -617,47 +826,17 @@ async function main() {
   if (mode === "check") {
     const candidates = parseCandidates(process.env["CANDIDATES"]);
     if (candidates.length === 0) throw new Error("CANDIDATES holds no release");
-    const api = client();
-    try {
-      const appId = await findAppId(api);
-      const target = await pickCandidate(candidates, (v) => latestBuild(api, appId, v));
-      if (!target) {
-        output({ outcome: "none", reason: "no shipped release has a processed build" });
-        console.info("Nothing to submit: no shipped release has a processed build.");
-        return;
-      }
-      const decision = decide({ target, ...(await readState(api, appId)) });
-      const outcome =
-        decision.action === "cancel" || decision.action === "clear" ? "submit" : decision.action;
-      output({
-        outcome,
-        reason: decision.reason,
-        tag: target.tag,
-        commit: target.commit,
-        version: target.version,
-        "build-year": target.year,
-        build: target.build,
-      });
-      console.info(`${target.tag}: ${HEADLINE[outcome]}: ${decision.reason}`);
-    } catch (error) {
-      if (error instanceof ApiError && (error.status === 401 || error.status === 403)) {
-        const [first] = candidates;
-        output({
-          outcome: "unreadable",
-          reason: error.message,
-          tag: first.tag,
-          commit: first.commit,
-          version: first.tag.slice(1),
-          "build-year": first.year,
-          build: "",
-        });
-        console.warn(
-          `::warning::This key cannot read the review state (${error.message}); the gated submit job decides instead.`,
-        );
-        return;
-      }
-      throw error;
-    }
+    const result = await checkCatchUp({
+      api: client(),
+      candidates,
+      releases,
+      requested: process.env["REQUESTED"] ?? "",
+      inFlight: (process.env["IN_FLIGHT"] ?? "").split(/\s+/).filter(Boolean),
+      stateOf: appStoreState,
+    });
+    for (const warning of result.warnings) console.warn(`::warning::${warning}`);
+    output(result.values);
+    console.info(`${result.values.tag ?? ""} ${result.values.outcome}: ${result.values.reason}`);
     return;
   }
   throw new Error("usage: app-store-submission.mjs prepare|check");

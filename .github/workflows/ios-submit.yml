@@ -10,8 +10,10 @@ name: iOS submit
 # still waiting for review, defers while an older version is in review or approved and unreleased,
 # stands down when App Store Connect already holds a newer version or a processed build of one, and
 # fails on a rejection (see "Submission deferred or blocked" in docs/store-distribution.md).
-# The outcome is recorded as the `app-store/<tag>` commit status on the release commit: pending
-# while deferred, which is what the catch-up workflow looks for.
+# The outcome is recorded as the `app-store/<tag>` commit status on the release commit: failure only
+# for what needs a person (a rejection, an unknown state); pending while deferred or after anything
+# that may pass later (a cancellation that did not settle, a deliver failure, another submission
+# holding the turn), which is what the catch-up workflow retries.
 
 on:
   workflow_call:
@@ -48,16 +50,20 @@ jobs:
   submit:
     name: Submit for App Store review
     environment: app-store
-    # Two submissions of one release (a release run and a catch-up) never run at once.
+    # At most one approval request per release (a release run and a catch-up). Submissions of
+    # different releases are serialised after the gate by the wait-turn step instead: a group
+    # spanning all releases would also be held while a job is parked at the gate.
     concurrency:
       group: ios-submit-${{ inputs.tag }}
       cancel-in-progress: false
     runs-on: macos-15
-    # Up to 15 minutes for an older submission's cancellation to settle, then deliver.
-    timeout-minutes: 45
+    # Up to 30 minutes waiting for another submission, 15 for an older submission's cancellation
+    # to settle, then deliver.
+    timeout-minutes: 75
     permissions:
       contents: read # gh release view (rollout marker)
       statuses: write # the app-store/<tag> record
+      actions: read # wait-turn reads the other submit jobs
     outputs:
       outcome: ${{ steps.prepare.outputs.outcome }}
     steps:
@@ -71,6 +77,7 @@ jobs:
         with:
           path: .release-tools
           sparse-checkout: scripts
+          fetch-depth: 0 # main's history and tags: which versions are releases
           filter: tree:0
 
       - uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e # v6
@@ -98,9 +105,23 @@ jobs:
             echo "Phased release: Apple's 7-day schedule. Pause in App Store Connect if needed."
           fi
 
+      - name: Read the release versions
+        id: releases
+        run: node .release-tools/scripts/supersede-store-runs.mjs releases
+
+      # One release's prepare and deliver at a time: waits while another submit job that started
+      # earlier is still running. Jobs parked at the gate do not hold the turn.
+      - name: Wait for other App Store submissions
+        id: turn
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: node .release-tools/scripts/supersede-store-runs.mjs wait-turn
+
       - name: Clear the way for the submission
         id: prepare
+        if: steps.turn.outputs.turn == 'true'
         env:
+          RELEASES: ${{ steps.releases.outputs.versions }}
           APP_VERSION: ${{ inputs.version }}
           BUILD_NUMBER: ${{ inputs.build }}
           ASC_KEY_ID: ${{ secrets.ASC_KEY_ID }}
@@ -150,16 +171,20 @@ jobs:
           RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
         run: |
           set -euo pipefail
-          if [ "$OUTCOME" = defer ]; then
+          # failure only for what needs a person (a rejection, an unknown state); anything that
+          # may pass on a later attempt stays pending, which the catch-up retries.
+          if [ "$OUTCOME" = fail ]; then
+            STATE=failure DESC="$REASON"
+          elif [ "$OUTCOME" = defer ]; then
             STATE=pending DESC="deferred: $REASON"
           elif [ "$OUTCOME" = skip ]; then
             STATE=success DESC="not submitted: $REASON"
           elif [ "$OUTCOME" = submit ] && [ "$JOB_STATUS" = success ]; then
             STATE=success DESC="submitted for review"
           elif [ "$OUTCOME" = submit ]; then
-            STATE=failure DESC="deliver failed"
+            STATE=pending DESC="deliver failed; the catch-up tries again"
           else
-            STATE=failure DESC="${REASON:-submission failed}"
+            STATE=pending DESC="not submitted (no decision reached); the catch-up tries again"
           fi
           gh api -X POST "repos/$REPO/statuses/$COMMIT" -f state="$STATE" \
             -f context="app-store/$TAG" -f target_url="$RUN_URL" \

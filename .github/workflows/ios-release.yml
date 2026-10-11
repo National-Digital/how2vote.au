@@ -69,6 +69,9 @@ jobs:
     environment:
       name: ios-build
       deployment: false
+    permissions:
+      contents: read
+      statuses: write # app-store/<tag> = pending once the build is in TestFlight
     outputs:
       app-version: ${{ steps.version.outputs.version }}
       build-number: ${{ steps.version.outputs.build }}
@@ -173,6 +176,23 @@ jobs:
             bundle exec fastlane ios beta
           fi
 
+      # Marks the release as owed a submission the moment its build is in TestFlight, before any
+      # step that can fail. The submit job overwrites it with the real outcome; if that job never
+      # runs (a later step fails, the gate is rejected or expires, the run is cancelled), the
+      # pending record is what ios-submission-catch-up.yml picks up.
+      - name: Record the submission as owed
+        if: ${{ !inputs.dry_run }}
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+          COMMIT: ${{ steps.source.outputs.commit }}
+          TAG: ${{ inputs.tag }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          gh api -X POST "repos/$REPO/statuses/$COMMIT" -f state=pending -f context="app-store/$TAG" \
+            -f target_url="$RUN_URL" -f description="in TestFlight; submission pending" >/dev/null \
+            || echo "::warning::could not record app-store/$TAG as pending"
+
       - name: Record artifact provenance
         env:
           VERSION: ${{ steps.version.outputs.version }}
@@ -195,9 +215,10 @@ jobs:
           if-no-files-found: warn
           retention-days: 30
 
-  # Cancels older runs of this workflow still waiting at the app-store gate: approving one would
-  # submit a stale build. After the build, so a failed build leaves the older run approvable. A run
-  # still executing a job is left alone; the submit job's own newer-release check covers it.
+  # Cancels older runs of this workflow still waiting at the app-store gate, and catch-up runs parked
+  # there: approving one would submit a stale build. After the build, so a failed build leaves the
+  # older run approvable. A run still executing a job is left alone; the submit job's own check of
+  # App Store Connect covers it.
   supersede:
     name: Cancel older gated runs
     needs: build
@@ -219,6 +240,7 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
           WORKFLOW: ios-release.yml
+          ALSO_CATCH_UP: "true"
           TAG: ${{ inputs.tag }}
         run: node .release-tools/scripts/supersede-store-runs.mjs cancel-stale
 
@@ -234,6 +256,7 @@ jobs:
     permissions:
       contents: read
       statuses: write
+      actions: read # wait for another release's submission to finish
     uses: ./.github/workflows/ios-submit.yml
     with:
       tag: ${{ format('v{0}', needs.build.outputs.app-version) }}

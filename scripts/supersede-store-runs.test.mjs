@@ -3,11 +3,15 @@ import { parseTagRecords, TRAILER, trustedRecords } from "./store-release-scope.
 import {
   appStoreContext,
   catchUpCandidates,
+  inFlightTags,
   latestState,
   MAX_CANDIDATES,
   parkedAtGate,
+  parkedCatchUps,
   runTag,
   staleRuns,
+  SUBMIT_JOB,
+  turnHolder,
 } from "./supersede-store-runs.mjs";
 
 /** for-each-ref output in TAG_FORMAT: [tag, annotated, commit, decision]. */
@@ -109,6 +113,72 @@ describe("staleRuns", () => {
   });
 });
 
+describe("parkedCatchUps", () => {
+  it("cancels every parked catch-up run but this one", () => {
+    const runs = [
+      { id: 1, status: "waiting" },
+      { id: 2, status: "waiting" },
+      { id: 3, status: "in_progress" },
+      { id: 9, status: "waiting" },
+    ];
+    const jobs = new Map([
+      [1, [{ status: "completed" }, { status: "waiting" }]],
+      [2, [{ status: "in_progress" }, { status: "waiting" }]],
+      [3, [{ status: "waiting" }]],
+      [9, [{ status: "waiting" }]],
+    ]);
+    expect(parkedCatchUps({ runs, jobs, runId: 9 })).toEqual([1]);
+  });
+});
+
+describe("turnHolder", () => {
+  const job = (id, started, status = "in_progress", name = `${SUBMIT_JOB} / ${SUBMIT_JOB}`) => ({
+    id,
+    name,
+    status,
+    started_at: started,
+  });
+
+  it("waits for a running submit job that started earlier", () => {
+    const jobs = [job(5, "2026-10-11T00:00:00Z"), job(7, "2026-10-11T00:01:00Z")];
+    expect(turnHolder(jobs, 7)?.id).toBe(5);
+    expect(turnHolder(jobs, 5)).toBeNull();
+  });
+
+  it("breaks a start-time tie by job id", () => {
+    const jobs = [job(8, "2026-10-11T00:00:00Z"), job(6, "2026-10-11T00:00:00Z")];
+    expect(turnHolder(jobs, 8)?.id).toBe(6);
+    expect(turnHolder(jobs, 6)).toBeNull();
+  });
+
+  it("ignores jobs parked at the gate, finished, or not submit jobs", () => {
+    const jobs = [
+      job(1, null, "waiting"),
+      job(2, "2026-10-11T00:00:00Z", "completed"),
+      job(3, "2026-10-11T00:00:00Z", "in_progress", "Build & TestFlight"),
+      job(9, "2026-10-11T00:05:00Z"),
+    ];
+    expect(turnHolder(jobs, 9)).toBeNull();
+  });
+
+  it("does not hold a job that cannot find itself", () => {
+    expect(turnHolder([job(5, "2026-10-11T00:00:00Z")], 7)).toBeNull();
+  });
+});
+
+describe("inFlightTags", () => {
+  it("lists the releases of runs not yet completed, without dry runs", () => {
+    expect(
+      inFlightTags([
+        { status: "waiting", display_title: "iOS release v1.5.1" },
+        { status: "in_progress", display_title: "iOS release v1.5.2 (dry run)" },
+        { status: "completed", display_title: "iOS release v1.5.0" },
+        { status: "queued", display_title: "iOS release main" },
+      ]),
+    ).toEqual(["v1.5.1"]);
+  });
+});
+
 describe("parkedAtGate", () => {
   it("is true only when a job waits and every other job has completed", () => {
     expect(parkedAtGate([{ status: "completed" }, { status: "waiting" }])).toBe(true);
@@ -141,9 +211,11 @@ describe("catchUpCandidates", () => {
   );
 
   it("lists the shipped releases, newest first", () => {
-    expect(
-      catchUpCandidates({ records, requested: "", inFlight: false }).candidates.map((r) => r.tag),
-    ).toEqual(["v1.5.2", "v1.5.1", "v1.4.6"]);
+    expect(catchUpCandidates({ records, requested: "" }).candidates.map((r) => r.tag)).toEqual([
+      "v1.5.2",
+      "v1.5.1",
+      "v1.4.6",
+    ]);
   });
 
   it("offers at most MAX_CANDIDATES", () => {
@@ -155,22 +227,16 @@ describe("catchUpCandidates", () => {
         "ship",
       ]),
     );
-    expect(
-      catchUpCandidates({ records: many, requested: "", inFlight: false }).candidates,
-    ).toHaveLength(MAX_CANDIDATES);
-  });
-
-  it("offers nothing while an iOS release run is in flight", () => {
-    expect(catchUpCandidates({ records, requested: "v1.5.1", inFlight: true }).reason).toContain(
-      "in flight",
+    expect(catchUpCandidates({ records: many, requested: "" }).candidates).toHaveLength(
+      MAX_CANDIDATES,
     );
   });
 
   it("offers a requested release on its own, shipped or not", () => {
-    expect(catchUpCandidates({ records, requested: "v1.5.0", inFlight: false })).toEqual({
+    expect(catchUpCandidates({ records, requested: "v1.5.0" })).toEqual({
       candidates: [records.find((r) => r.tag === "v1.5.0")],
     });
-    expect(catchUpCandidates({ records, requested: "v9.9.9", inFlight: false }).reason).toContain(
+    expect(catchUpCandidates({ records, requested: "v9.9.9" }).reason).toContain(
       "not a trusted release tag on main",
     );
   });
@@ -193,12 +259,10 @@ describe("catchUpCandidates", () => {
     );
     const trusted = trustedRecords(all, (ancestor) => ancestor === "c1");
     expect(
-      catchUpCandidates({ records: trusted, requested: "", inFlight: false }).candidates.map(
-        (r) => r.tag,
-      ),
+      catchUpCandidates({ records: trusted, requested: "" }).candidates.map((r) => r.tag),
     ).toEqual(["v1.5.1", "v1.4.6"]);
-    expect(
-      catchUpCandidates({ records: trusted, requested: "v1.6.0", inFlight: false }).reason,
-    ).toContain("not a trusted release tag");
+    expect(catchUpCandidates({ records: trusted, requested: "v1.6.0" }).reason).toContain(
+      "not a trusted release tag",
+    );
   });
 });
