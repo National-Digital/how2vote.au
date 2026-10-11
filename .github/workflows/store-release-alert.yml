@@ -1,0 +1,85 @@
+name: Store release alert
+
+# Keeps one open issue, labelled `store-release-failure`, per failing release (for example
+# "Android release v1.5.0 failed"). Called as the last job of each store workflow, named
+# "Report failures", with the results of the jobs it needs:
+#
+#   a job failed (or timed out)   -> open the issue, or note the run on the open one (a comment at
+#                                    most once a day, a counter in the issue body in between); a
+#                                    cancelled job is not a failure
+#   the terminal job succeeded    -> close the open issue, and those of older releases of the same
+#   (and resolves is true)           name
+#
+# The caller skips this for dry runs and for runs that were themselves cancelled. It holds no
+# store credential; its only write scope is issues. See "Failure alerts" in
+# docs/store-distribution.md.
+
+on:
+  workflow_call:
+    inputs:
+      name:
+        description: Workflow name for the issue title, such as "Android release"
+        type: string
+        required: true
+      tag:
+        description: Release tag; used in the title only when it is vMAJOR.MINOR.PATCH
+        type: string
+        default: ""
+      untagged-name:
+        description: Title used without a valid tag (defaults to name)
+        type: string
+        default: ""
+      results:
+        description: toJSON(needs) from the caller, or a map of job id to its needs entry or result
+        type: string
+        required: true
+      terminal:
+        description: The job whose success resolves the issue (promote, submit, probe)
+        type: string
+        default: ""
+      resolves:
+        description: Whether a run whose terminal job succeeded closes the issue
+        type: boolean
+        default: true
+      clear-untagged:
+        description: Close the untagged-name issue (the run got past the steps it reports)
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+
+jobs:
+  report:
+    name: Open, update or close the failure issue
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    # One queue per release: GitHub keeps one pending job per group and cancels the one it
+    # replaces, so a group shared by releases could drop an alert. Two releases' reports may run
+    # together; closing an issue that is already closed is harmless.
+    concurrency:
+      group: store-release-alert-${{ inputs.name }}-${{ inputs.tag }}
+      cancel-in-progress: false
+    permissions:
+      contents: read
+      issues: write
+    steps:
+      - name: Checkout the release tooling
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7
+        with:
+          path: .release-tools
+          sparse-checkout: scripts
+          filter: tree:0
+
+      - name: Report
+        env:
+          GH_TOKEN: ${{ github.token }}
+          NAME: ${{ inputs.name }}
+          TAG: ${{ inputs.tag }}
+          UNTAGGED_NAME: ${{ inputs.untagged-name }}
+          RESULTS: ${{ inputs.results }}
+          TERMINAL: ${{ inputs.terminal }}
+          RESOLVES: ${{ inputs.resolves }}
+          CLEAR_UNTAGGED: ${{ inputs.clear-untagged }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}/attempts/${{ github.run_attempt }}
+        run: node .release-tools/scripts/store-release-alert.mjs

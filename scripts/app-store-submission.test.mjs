@@ -192,6 +192,9 @@ describe("decide", () => {
       const d = run([v("1.4.9", "READY_FOR_DISTRIBUTION"), v("1.5.0", state, "105000004")]);
       expect(d.action, state).toBe("defer");
       expect(d.reason, state).toContain("approved and not yet released");
+      expect(d.reason.endsWith("; release it in App Store Connect"), state).toBe(
+        state === "PENDING_DEVELOPER_RELEASE",
+      );
     }
   });
 

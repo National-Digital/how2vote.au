@@ -17,6 +17,8 @@ name: Play publish permission
 # Probes the android-build account, the one that uploads the bundle and the listing. The
 # production account on `play-store` sits behind a required reviewer, so a scheduled job cannot
 # hold it; its grant is exercised by each promotion.
+#
+# A failed probe opens or updates a `store-release-failure` issue (store-release-alert.yml).
 
 on:
   schedule:
@@ -49,3 +51,17 @@ jobs:
         env:
           PLAY_SERVICE_ACCOUNT_JSON: ${{ secrets.PLAY_SERVICE_ACCOUNT_JSON }}
         run: node scripts/check-play-permission.mjs
+
+  # Opens or updates one failure issue while the probe fails, and closes it on the next pass.
+  alert:
+    name: Report failures
+    needs: probe
+    if: ${{ !cancelled() && github.event.repository.visibility == 'public' }}
+    permissions:
+      contents: read
+      issues: write
+    uses: ./.github/workflows/store-release-alert.yml
+    with:
+      name: Play publish permission
+      results: ${{ toJSON(needs) }}
+      terminal: probe

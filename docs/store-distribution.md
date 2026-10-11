@@ -234,15 +234,19 @@ environment limited to `main` (see "Credential environments" below):
    or if any new development or distribution certificate appeared during the build → **uploads
    to TestFlight automatically** → the `submit` job (`ios-submit.yml`) waits on the **`app-store`
    environment** (required reviewer = a human promotes every store submission), then submits that
-   build for App Review with metadata generated from the operator record. When an earlier version
-   is still in App Store Connect it cancels, defers or stops as described in "Overlapping store
-   releases" below.
+   build for App Review with metadata generated from the operator record, for **automatic
+   release**: App Store Connect puts the version on sale as soon as App Review approves it, as a
+   phased release unless `[full-rollout]` is set (see Rollout policy below). When an earlier
+   version is still in App Store Connect it cancels, defers or stops as described in "Overlapping
+   store releases" below.
 2. **`android-release.yml`** (ubuntu runner) — builds the `android`-channel bundle →
    `cap sync android` → gradle builds the release AAB signed with the **upload key** (Google
    Play re-signs with its escrowed app signing key) → **uploads to the Play internal track
    automatically** → the `promote` job waits on the **`play-store` environment**, then promotes
-   internal → production at a **staged 10% rollout** (see Rollout policy below), replacing any
-   earlier staged rollout (see "Overlapping store releases" below).
+   internal → production as a **full rollout** to every user, or a 10% staged rollout when the
+   release is marked `[staged-rollout]` (see Rollout policy below), replacing any earlier release
+   still rolling out (see "Overlapping store releases" below). Whether it is then live depends on
+   Play Console's Managed publishing (see "Going live without a click" under Rollout policy).
 3. **F-Droid** — no workflow of ours runs: F-Droid's buildserver builds from the release tag via
    the fdroiddata recipe, discovers new releases by polling
    `https://how2vote.au/app-version.json`, and publishes our signed APK when its build reproduces
@@ -383,22 +387,30 @@ verified. If it cannot, the check passes the decision to the gated job instead, 
 request comes every three hours while a submission is owed; approving it early just defers again.
 The owner checklist below includes a dispatch that shows which case applies.
 
-With `automatic_release: false` an approved version waits in Pending Developer Release until
-someone releases it, so in practice the catch-up submits the next build shortly after that click.
+Submissions are made for automatic release, so an approved version moves through Processing for
+Distribution to Ready for Distribution by itself, usually within hours, and the next catch-up
+submits the deferred build. A version still waits in **Pending Developer Release** only if it was
+submitted before automatic release was adopted, or someone set it to manual release in App Store
+Connect; the submit job keeps deferring behind it until a person releases it (see "Submission
+deferred or blocked" below). A phased release does not block the next submission: its version is
+already Ready for Distribution, and releasing the next version ends the phase-in.
 
 **Google Play.** `promote` first reads the production and internal tracks in a throwaway edit. It
 skips a build production already holds, or one older than a build on the internal or production
 track (a version code can only move forward), saying to promote the newest run or re-dispatch it,
 and fails if the build is not on the internal track. Otherwise fastlane sends a track update
-carrying only the new release: Play treats an update's releases as the desired change and keeps the
-last completed release in place beneath a staged one, and the new staged release is expected to
-replace an earlier one still rolling out (users who already have the earlier build keep it, and a
-new staged release goes to the same group of users first). What Play does with an earlier release
-that was **halted** is not documented: check the production track after promoting over one. The job
-summary names the rollout it replaced. With Managed publishing on, the committed change waits in
-Publishing overview; a later promotion replaces it there before anyone publishes. If an earlier
-change is still in Google's review, Play refuses to send another for review automatically, and
-fastlane re-commits it as "not sent for review": send it for review from Publishing overview.
+carrying only the new release: Play treats an update's releases as the desired change. A full
+rollout is sent as `completed` and replaces whatever production serves, a staged rollout included.
+A `[staged-rollout]` release is sent as `inProgress` at 10%: Play keeps the last completed release
+in place beneath it, and it is expected to replace an earlier one still rolling out (users who
+already have the earlier build keep it, and a new staged release goes to the same group of users
+first). What Play does with an earlier release that was **halted** is not documented: check the
+production track after promoting over one. The job summary names the rollout it replaced. With
+Managed publishing off, the committed change goes to Google's review, if one applies, and is
+published when it clears. With it on, the change waits in Publishing overview, and a later
+promotion replaces it there before anyone publishes. If an earlier change is still in Google's
+review, Play refuses to send another for review automatically, and fastlane re-commits it as "not
+sent for review": send it for review from Publishing overview.
 
 Re-dispatching an **older** tag after a newer one reached the internal track uploads the older build
 as the internal track's release, replacing the newer one there: the newer release's promotion then
@@ -406,9 +418,15 @@ fails with "not on the internal track". Re-dispatch the newest release instead o
 
 #### Submission deferred or blocked
 
-- **Deferred** (green run, notice "App Store submission of X deferred"): nothing to do. Release or
-  wait out the earlier version; the catch-up submits the newest shipped build afterwards and asks
-  for `app-store` approval. To push it sooner, run `ios-submission-catch-up.yml` from `main`.
+- **Deferred** (green run, notice "App Store submission of X deferred"): usually nothing to do. An
+  earlier version in review or processing for distribution clears by itself, and the catch-up
+  submits the newest shipped build afterwards (asking for `app-store` approval while that
+  environment has reviewers). To push it sooner, run `ios-submission-catch-up.yml` from `main`.
+- **Deferred behind Pending Developer Release** (the reason ends "release it in App Store
+  Connect"): an earlier version was submitted for manual release and is approved. App Store
+  Connect → the app → that version → **Release This Version**. The catch-up submits the deferred
+  build within three hours, or run it from `main` at once. Nothing else unblocks it: the submit job
+  never developer-rejects an approved version.
 - **Retryable** (`app-store/<tag>` pending after a timeout, a transient error or a busy turn):
   nothing to do; the catch-up retries on its next run and asks for approval again.
 - **`deliver` failed, or an App Store Connect error that will recur** (red run, e.g. a 401/403 from
@@ -575,45 +593,132 @@ redeploy away and every user gets the fix on next load. Native has no equivalent
 path by design (guideline 2.5.2, and the offline guarantee depends on it), so a bad build sits on
 devices until a *new* build clears review. Same cadence, different blast radius.
 
-A staged rollout is therefore **not a slower release process — it is the substitute for the
-rollback native doesn't have.** Play can halt a rollout mid-flight, which caps exposure at whatever
-percentage was reached. That is the only "undo" available.
+Releases go live **without console steps**: Play promotes to every user, and the App Store
+submits for automatic release with Apple's phased release, which ramps on its own schedule. The
+"undo" left is to stop a release in flight: pause the phased release in App Store Connect, or halt
+the release in Play Console (a halted release stops reaching further devices; devices that already
+updated keep it). A fix then ships as a new release.
 
-| Situation | Behaviour | How |
-| --- | --- | --- |
-| Default | staged / phased; halt or pause on a crash-rate regression | nothing to do |
-| Data correction inside the campaign period (writ issued → polls close) | everyone at once | add `[full-rollout]` to the release notes **before** approving the environment gate |
+| Situation | Google Play | App Store | How |
+| --- | --- | --- | --- |
+| Default | every user at once | phased release: Apple's 7-day schedule, no clicks | nothing to do |
+| A shell change the author wants exposed gradually | 10% staged rollout, **ramped by hand** | phased release, as by default | `[staged-rollout]` in the release notes |
+| Data correction inside the campaign period (writ issued → polls close) | every user at once | phased release **off**: every auto-updater at once | `[full-rollout]` in the release notes |
 
-The exception exists because near a poll the risk inverts: leaving most users on wrong ballot data
-is a worse failure than a shell regression, and it is exactly what the stale-data notice above
-exists to warn about.
+The campaign-period exception exists because near a poll the risk inverts: leaving users on wrong
+ballot data is a worse failure than a shell regression, and it is exactly what the stale-data
+notice above exists to warn about. `[full-rollout]` wins if both markers are present.
 
-**One marker governs both stores** so they cannot drift. It is read from the release notes at
-promote/submit time (`gh release view`), not from the trigger payload — which was captured before
-the reviewer saw it — and deliberately **not** from a repo variable, since a full-rollout flag left
-switched on is the precise failure these gates exist to prevent. The choice stays visible in the
-release notes afterwards.
+**A `[staged-rollout]` release stays at 10% until a person moves it**: Play Console → Production →
+the release → **Manage rollout** → update the percentage (or **Halt rollout**). Nothing in CI ramps
+it. The next release's full rollout replaces it.
 
-The **policy** is identical; the **mechanisms are not**, and the difference matters:
+**Put a marker in the pull request title.** The markers are read from the GitHub release notes at promote/submit time (`gh release view`),
+not from the trigger payload, and deliberately not from a repo variable, since a flag left switched
+on is sticky. `deploy.yml` generates the release notes from the merged pull request titles, so a
+marker in the PR title reaches both stores with no further step. Otherwise add the marker **alone
+on a line of its own** to the release notes before the gated job runs: while
+`play-store`/`app-store` have reviewers, before approving. Only those two places count
+(`scripts/rollout-markers.mjs`): a marker in a generated pull request line's title, standing on its
+own (not in backticks, not joined to a word), or a line holding nothing but the marker. A marker
+quoted in prose, or written about in backticks in a title, is ignored, so a pull request that
+merely mentions `[full-rollout]` cannot turn the phased release off. An ignored marker is reported
+rather than dropped silently: an ignored `[staged-rollout]` fails the promote job (and opens a
+failure issue), so a release meant to be staged never goes to every user by mistake; fix the notes
+(the marker alone on a line, or removed) and re-run the job. An ignored `[full-rollout]` is a
+warning. The choice stays visible in the release notes afterwards.
+
+The mechanisms differ, and the difference matters:
 
 | | Google Play | App Store |
 | --- | --- | --- |
-| Control | `rollout:` fraction you choose (default `0.1`) | `phased_release: true` — Apple's **fixed** 7-day schedule (1/2/5/10/20/50/100%), no percentage to pick |
+| Control | `rollout:` fraction: `1` by default, sent as status `completed` with no user fraction; `0.1` with `[staged-rollout]`, sent as `inProgress` | `phased_release: true` — Apple's **fixed** 7-day schedule (1/2/5/10/20/50/100%), no percentage to pick |
 | Who it affects | all users on that track | **only automatic updates for existing users** — new installs and manual updates always get the latest immediately |
-| Emergency stop | halt rollout | pause phased release |
-| Full-rollout marker sets | `PLAY_ROLLOUT=1` | `IOS_PHASED_RELEASE=false` |
+| Emergency stop | halt the release | pause the phased release (up to 30 days) |
+| `[staged-rollout]` sets | `PLAY_ROLLOUT=0.1` | nothing |
+| `[full-rollout]` sets | `PLAY_ROLLOUT=1` (the default) | `IOS_PHASED_RELEASE=false` |
 
-Because Apple's phased release doesn't cover new installs, it is a weaker safety net than Play's.
+### Going live without a click
 
-**Hold-for-human is on for both** and is separate from rollout — it controls *when* an approved
-build goes live at all:
+Whether an approved build goes live by itself is separate from rollout size:
 
-- **Play: keep Managed publishing enabled** in the console. Approved releases wait for an explicit
-  publish click.
-- **App Store: `automatic_release: false`** is set in the `submit_review` lane. While an approved
-  version waits to be released, newer builds are deferred (see "Overlapping store releases").
+- **App Store: `automatic_release: true`** in the `submit_review` lane (fastlane sets the version's
+  release type to `AFTER_APPROVAL`). The version goes on sale as soon as App Review approves it,
+  and its phased release starts at that moment. A green submit job means "submitted for review";
+  going live follows approval with no click.
+- **Play: Managed publishing**, a Play Console setting with no API.
+  - **Off** (the intended state): a committed promotion goes to Google's review, if one applies,
+    and is published automatically when it clears. A green `promote` job means "live, or in
+    Google's review".
+  - **On**: the promotion still lands, but waits in **Publishing overview** for a **Publish
+    changes** click, as does any listing change the internal lane uploads. A green `promote` job
+    means "ready to publish", not "live".
+  - To turn it off: check what is waiting in **Publishing overview** first, since changes held
+    there may be published once managed publishing is off, then Play Console → the app →
+    **Publishing overview** → **Managed publishing** → turn off, and confirm.
+  - With it off, the listing text and images the internal lane uploads on every release are
+    published without review in the console, so the backstop described under "Credential
+    environments" no longer applies. What contains the upload account then is the `android-build`
+    environment admitting `main` only.
 
-In both cases a green workflow means **"approved and waiting", not "live"**.
+### The release gate in GitHub
+
+The `play-store` and `app-store` environments carry **required reviewers = the compliance
+signatories**: a human promotes every store release. That remains the default and the recorded
+control. With it in place and Managed publishing off, the only click left in a release is the
+environment approval in GitHub (one per store, from the run page or the notification email).
+
+Removing those reviewers would make store releases fully unattended. It is an **owner decision**,
+not a pipeline setting: it retires a control that this document and the workflow comments state,
+so it needs the compliance signatories' sign-off and the same change must update the compliance
+text (this section, "Release flow", "Credential environments", the environment table and the
+workflow comments) and any register that records the control. The workflows need no change
+either way: without reviewers, the gated jobs run as soon as their build finishes. To remove them:
+Settings → Environments → `play-store` (then `app-store`) → untick **Required reviewers** → **Save
+protection rules**, keeping the `main` branch rule. Store failures are still reported (see
+"Failure alerts" below).
+
+## Failure alerts
+
+Every store workflow ends with an alert job named "Report failures"
+(`.github/workflows/store-release-alert.yml`, logic in `scripts/store-release-alert.mjs`). When any
+job it watches fails (a timeout included), it opens an issue labelled **`store-release-failure`**
+titled "<workflow> vX.Y.Z failed", or notes the run on the open one, naming the run and the failing
+jobs. A repeat failure is commented at most once a day; inside that window the issue body's "Repeat
+failures" counter is updated instead. A run whose tag is missing or not `vX.Y.Z` uses a title
+without one. Alerts follow red jobs only: a cancelled job is never reported.
+
+An issue is closed when a later run's **terminal job** succeeds, and that run also closes the open
+issues of older releases of the same workflow, which it supersedes. A run whose terminal job was
+cancelled or skipped closes nothing.
+
+| Workflow | Issue title | Jobs watched | Terminal job, closed by |
+| --- | --- | --- | --- |
+| `android-release.yml` | Android release vX.Y.Z failed | build, fdroid-apk, fdroid-publish, supersede, promote | promote green, for this or a newer release |
+| `ios-release.yml` | iOS release vX.Y.Z failed | build, owe, supersede, submit (`ios-submit.yml`) | submit green with outcome submit, skip or defer, for this or a newer release (a deferral counts: the run itself worked; a busy turn that submitted nothing does not) |
+| `ios-submission-catch-up.yml` | the release's own "iOS release vX.Y.Z failed"; "iOS submission catch-up failed" before a release is chosen | find, check, submit | submit green with outcome submit or skip; the untagged issue by any run whose check is green |
+| `deploy.yml` (release job) | Store dispatch vX.Y.Z failed | release: tagging, the GitHub release, the store dispatches | **never automatically**: a re-run exits green on "tag already exists" without dispatching, so close it by hand once the store runs exist |
+| `play-permission.yml` | Play publish permission failed | probe | the next green probe |
+
+Nothing is reported for a dry run, a cancelled run or job (a stale run cancelled by a newer
+release, a parked submission replaced in its concurrency group), or an outcome that finishes green:
+a deferred or skipped submission or promotion, and a submission left `pending` because another one
+held the turn. A transient App Store Connect error is also recorded `pending`, but the submit job
+exits red, so it opens an issue, as does any other red submit job (a `deliver` failure, an error
+that will recur). A release run for a malformed tag fails in build and opens "Android
+release without a valid tag failed" or "iOS release without a valid tag failed"; the next run of
+that workflow whose build passes closes it. A reviewer rejecting the `play-store`/`app-store` gate fails that job, so it
+does open an issue. While a run waits at the gate its alert job is queued behind it;
+`supersede-store-runs.mjs` ignores the "Report failures" job when deciding whether a run is parked.
+The alert job holds no store credential and needs only `issues: write`; the label is created on
+first use. GitHub notifies repository watchers of new issues, so the owner should watch the
+repository with **Issues** selected (Watch → Custom → Issues) to be emailed.
+
+What to do depends on the failing job: a submission problem is covered by "Submission deferred or
+blocked" above; a promotion by re-dispatching `android-release.yml` from `main` for the newest
+release; an F-Droid job by the F-Droid section below; a store dispatch by the command the release
+job prints; a failed probe by the grants in step 1 of the owner checklist. Close the issue by hand
+if it was resolved without a green run.
 
 ## Store listing copy
 
@@ -810,7 +915,9 @@ Play internal track) hold credentials that cannot publish to production; the pro
 credentials sit only in the reviewer-gated environments. Two limits remain. The Play upload account
 needs **Manage store presence**, because the internal lane uploads the listing, so it can change
 listing text and images; with Managed publishing on, such a change is held until someone publishes
-it in Play Console, and that is the backstop. On iOS the protection depends on the `ios-build` key
+it in Play Console, and that is the backstop. With Managed publishing off (see "Going live without a
+click"), listing changes publish with each release and the backstop is the `main`-only branch
+policy alone. On iOS the protection depends on the `ios-build` key
 being a **Developer**-role key, which can cloud-sign and upload to TestFlight but cannot submit for
 review; if it has to be an Admin key (see the checklist's fallback), the `app-store` reviewer no
 longer contains the submit capability and the iOS gate rests only on the workflow YAML coming from
@@ -882,8 +989,9 @@ Take them in order; the repository copies go last, after verification.
    `au.how2vote.app` → grant **Release apps to testing tracks** and **Manage store presence** (the
    internal lane uploads the listing and screenshots, and the permission probe stages a listing
    change). Do **not** grant **Release to production, exclude devices, and use Play App Signing**, and
-   grant no account-level permissions. **Apply**, then **Save**. Keep Managed publishing on: it holds
-   any listing change this account makes until it is published in the console.
+   grant no account-level permissions. **Apply**, then **Save**. While Managed publishing is on, it
+   holds any listing change this account makes until it is published in the console; turning it
+   off is covered under "Going live without a click".
    **Required before the key goes into GitHub:**
    `PLAY_SERVICE_ACCOUNT_FILE=upload.json node scripts/check-play-permission.mjs` exits 0, and
    `PLAY_SERVICE_ACCOUNT_FILE=upload.json node scripts/resolve-play-live-version.mjs` prints the live
