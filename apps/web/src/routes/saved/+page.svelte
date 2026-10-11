@@ -40,7 +40,7 @@
         <li>
           <a class="open" href={card.url}>
             <span class="name">{card.electorate}</span>
-            <span class="meta ui">
+            <span class="detail ui">
               {fill(SAVED_COPY.meta, { state: card.state, date: card.date })}
             </span>
           </a>
@@ -143,7 +143,7 @@
     text-decoration: underline;
     text-underline-offset: 3px;
   }
-  .meta {
+  .detail {
     font-size: 12px;
     color: var(--ink3);
   }

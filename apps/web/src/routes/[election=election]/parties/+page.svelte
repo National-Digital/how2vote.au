@@ -24,7 +24,7 @@
   <ul class="cols">
     {#each data.parties as p (p.href)}
       <li>
-        <a href={p.href}>{p.name}</a>{#if p.independent}<span class="meta">
+        <a href={p.href}>{p.name}</a>{#if p.independent}<span class="detail">
             · independent</span
           >{/if}
       </li>

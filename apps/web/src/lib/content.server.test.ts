@@ -11,12 +11,14 @@ import {
   buildPartyHub,
   buildPartyPage,
   buildSenatePage,
+  bandSummary,
   contentPaths,
   datasetFor,
   electorateEntries,
   issueEntries,
   partyEntries,
   senateEntries,
+  stateSummary,
 } from "./content.server";
 
 const CONTENT_ROUTES = resolve(
@@ -137,6 +139,39 @@ describe("content.server page builders", () => {
     }
   });
 
+  it("states each issue band's size out of everyone recorded, and its score", () => {
+    expect(bandSummary(18, 46, 5)).toBe(
+      "18 of the 46 parties and independents with a record on this proposition score 5 on the 1–5 scale.",
+    );
+    expect(bandSummary(1, 46, 2)).toBe(
+      "1 party or independent of the 46 with a record on this proposition scores 2 on the 1–5 scale.",
+    );
+    expect(bandSummary(1, 1, 3)).toBe(
+      "The 1 party or independent with a record on this proposition scores 3 on the 1–5 scale.",
+    );
+    for (const e of issueEntries()) {
+      const page = buildIssuePage(e.election, e.issue)!;
+      const total = page.bands.reduce((n, b) => n + b.parties.length, 0);
+      for (const b of page.bands) {
+        expect(b.summary).toBe(bandSummary(b.parties.length, total, b.position));
+      }
+    }
+  });
+
+  it("states each electorate hub group's electorate count", () => {
+    expect(stateSummary("Tasmania", 5, 2025)).toBe(
+      "Tasmania has 5 federal electorates at the 2025 election.",
+    );
+    expect(stateSummary("Somewhere", 1, 2025)).toBe(
+      "Somewhere has 1 federal electorate at the 2025 election.",
+    );
+    for (const meta of ELECTIONS) {
+      for (const s of buildElectorateHub(meta.id)?.states ?? []) {
+        expect(s.summary).toBe(stateSummary(s.name, s.electorates.length, meta.year));
+      }
+    }
+  });
+
   it("hubs list the same number of items the entries enumerate", () => {
     const hub = buildElectorateHub(id)!;
     const listed = hub.states.reduce((n, s) => n + s.electorates.length, 0);
@@ -176,6 +211,32 @@ describe("content routes stay neutral (no scoring engine)", () => {
       expect(banned.test(readFileSync(file, "utf8"))).toBe(false);
     });
   }
+});
+
+describe("content pages keep their text out of chrome-named classes", () => {
+  // Reader views and crawlers drop elements whose class contains these words as page furniture.
+  const chrome =
+    /header|footer|banner|sidebar|related|meta|byline|author|tags|share|social|comment|menu|nav|button|hidden|scroll|promo|widget|extra|contact|media/;
+  const DATA_PAGE = resolve(dirname(fileURLToPath(import.meta.url)), "components/DataPage.svelte");
+  for (const file of [...routeFiles().filter((f) => f.endsWith(".svelte")), DATA_PAGE]) {
+    it(`${file.split("/src/")[1]} uses no chrome-named class`, () => {
+      const source = readFileSync(file, "utf8");
+      const style = source.match(/<style>([\s\S]*)<\/style>/)?.[1] ?? "";
+      const classes = [
+        ...[...source.matchAll(/class="([^"{]*)"/g)].flatMap((m) => m[1]!.split(/\s+/)),
+        ...[...style.matchAll(/\.([a-z][\w-]*)/g)].map((m) => m[1]!),
+      ].filter((c) => chrome.test(c));
+      expect(classes).toEqual([]);
+    });
+  }
+
+  it("the site footer names itself as one", () => {
+    const footer = readFileSync(
+      resolve(dirname(fileURLToPath(import.meta.url)), "components/Footer.svelte"),
+      "utf8",
+    );
+    expect(footer).toMatch(/<footer class="[^"]*\bsite-footer\b/);
+  });
 });
 
 describe("contentPaths", () => {

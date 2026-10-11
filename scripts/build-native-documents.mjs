@@ -54,7 +54,7 @@ export const INLINE_ROLES = {
   prov: "provenance",
   evidence: "evidence",
   lead: "primary",
-  meta: "secondary",
+  detail: "secondary",
   past: "caveat",
 };
 

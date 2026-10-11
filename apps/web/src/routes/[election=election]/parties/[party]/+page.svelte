@@ -51,7 +51,7 @@
     {#each data.rows as r (r.href)}
       <li>
         <a class="lead" href={r.href}>{r.text}</a>
-        <span class="meta">{r.stance} · <ExternalLink href={r.tvfy}>record</ExternalLink></span>
+        <span class="detail">{r.stance} · <ExternalLink href={r.tvfy}>record</ExternalLink></span>
       </li>
     {/each}
   </ul>

@@ -16,6 +16,7 @@
     canonicalPath,
     resolveMeta,
   } from "$lib/seo";
+  import { manifestFor } from "$lib/manifest";
 
   let {
     title,
@@ -36,6 +37,11 @@
   const img = $derived(image ?? OG_IMAGE);
   const canonical = $derived(SITE_URL + path);
   const indexable = $derived(meta.index !== false);
+  // Data pages are dated by their election's data version: the date their voting record is current to.
+  const election = $derived(page.params.election);
+  const modified = $derived(
+    type === "article" && election ? manifestFor(election).dataVersion : null,
+  );
 </script>
 
 <svelte:head>
@@ -54,6 +60,7 @@
   <meta property="og:image:width" content={String(OG_IMAGE_WIDTH)} />
   <meta property="og:image:height" content={String(OG_IMAGE_HEIGHT)} />
   <meta property="og:image:alt" content="How2Vote — vote on their record" />
+  {#if modified}<meta property="article:modified_time" content={modified} />{/if}
 
   <meta name="twitter:card" content="summary_large_image" />
   <meta name="twitter:title" content={t} />

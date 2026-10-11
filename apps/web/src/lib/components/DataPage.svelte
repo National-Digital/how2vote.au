@@ -88,7 +88,7 @@
   .prose :global(.rows .lead) {
     color: var(--ink);
   }
-  .prose :global(.rows .meta) {
+  .prose :global(.rows .detail) {
     color: var(--ink3);
     text-align: right;
     flex: 0 0 auto;
