@@ -54,9 +54,11 @@ jobs:
     name: Open, update or close the failure issue
     runs-on: ubuntu-latest
     timeout-minutes: 5
-    # Two reports for one workflow never interleave (a success also closes older releases' issues).
+    # One queue per release: GitHub keeps one pending job per group and cancels the one it
+    # replaces, so a group shared by releases could drop an alert. Two releases' reports may run
+    # together; closing an issue that is already closed is harmless.
     concurrency:
-      group: store-release-alert-${{ inputs.name }}
+      group: store-release-alert-${{ inputs.name }}-${{ inputs.tag }}
       cancel-in-progress: false
     permissions:
       contents: read

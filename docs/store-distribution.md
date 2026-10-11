@@ -611,7 +611,7 @@ notice above exists to warn about. `[full-rollout]` wins if both markers are pre
 the release → **Manage rollout** → update the percentage (or **Halt rollout**). Nothing in CI ramps
 it. The next release's full rollout replaces it.
 
-**The markers are read from the GitHub release notes** at promote/submit time (`gh release view`),
+**Put a marker in the pull request title.** The markers are read from the GitHub release notes at promote/submit time (`gh release view`),
 not from the trigger payload, and deliberately not from a repo variable, since a flag left switched
 on is sticky. `deploy.yml` generates the release notes from the merged pull request titles, so a
 marker in the PR title reaches both stores with no further step. Otherwise add the marker **alone
@@ -620,8 +620,11 @@ on a line of its own** to the release notes before the gated job runs: while
 (`scripts/rollout-markers.mjs`): a marker in a generated pull request line's title, standing on its
 own (not in backticks, not joined to a word), or a line holding nothing but the marker. A marker
 quoted in prose, or written about in backticks in a title, is ignored, so a pull request that
-merely mentions `[full-rollout]` cannot turn the phased release off. The choice stays visible in
-the release notes afterwards.
+merely mentions `[full-rollout]` cannot turn the phased release off. An ignored marker is reported
+rather than dropped silently: an ignored `[staged-rollout]` fails the promote job (and opens a
+failure issue), so a release meant to be staged never goes to every user by mistake; fix the notes
+(the marker alone on a line, or removed) and re-run the job. An ignored `[full-rollout]` is a
+warning. The choice stays visible in the release notes afterwards.
 
 The mechanisms differ, and the difference matters:
 
@@ -690,7 +693,7 @@ cancelled or skipped closes nothing.
 | Workflow | Issue title | Jobs watched | Terminal job, closed by |
 | --- | --- | --- | --- |
 | `android-release.yml` | Android release vX.Y.Z failed | build, fdroid-apk, fdroid-publish, supersede, promote | promote green, for this or a newer release |
-| `ios-release.yml` | iOS release vX.Y.Z failed | build, owe, supersede, submit (`ios-submit.yml`) | submit green, for this or a newer release (a deferral counts: the run itself worked) |
+| `ios-release.yml` | iOS release vX.Y.Z failed | build, owe, supersede, submit (`ios-submit.yml`) | submit green with outcome submit, skip or defer, for this or a newer release (a deferral counts: the run itself worked; a busy turn that submitted nothing does not) |
 | `ios-submission-catch-up.yml` | the release's own "iOS release vX.Y.Z failed"; "iOS submission catch-up failed" before a release is chosen | find, check, submit | submit green with outcome submit or skip; the untagged issue by any run whose check is green |
 | `deploy.yml` (release job) | Store dispatch vX.Y.Z failed | release: tagging, the GitHub release, the store dispatches | **never automatically**: a re-run exits green on "tag already exists" without dispatching, so close it by hand once the store runs exist |
 | `play-permission.yml` | Play publish permission failed | probe | the next green probe |
@@ -698,8 +701,11 @@ cancelled or skipped closes nothing.
 Nothing is reported for a dry run, a cancelled run or job (a stale run cancelled by a newer
 release, a parked submission replaced in its concurrency group), or an outcome that finishes green:
 a deferred or skipped submission or promotion, and a submission left `pending` because another one
-held the turn or an error was transient. A red submit job (a `deliver` failure, an error that will
-recur) is reported. A reviewer rejecting the `play-store`/`app-store` gate fails that job, so it
+held the turn. A transient App Store Connect error is also recorded `pending`, but the submit job
+exits red, so it opens an issue, as does any other red submit job (a `deliver` failure, an error
+that will recur). A release run for a malformed tag fails in build and opens "Android
+release without a valid tag failed" or "iOS release without a valid tag failed"; the next run of
+that workflow whose build passes closes it. A reviewer rejecting the `play-store`/`app-store` gate fails that job, so it
 does open an issue. While a run waits at the gate its alert job is queued behind it;
 `supersede-store-runs.mjs` ignores the "Report failures" job when deciding whether a run is parked.
 The alert job holds no store credential and needs only `issues: write`; the label is created on

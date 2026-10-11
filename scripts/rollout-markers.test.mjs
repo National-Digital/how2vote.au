@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { iosPhased, markers, playFraction } from "./rollout-markers.mjs";
+import { ignoredMarkers, iosPhased, markers, playFraction } from "./rollout-markers.mjs";
 
 const pr = (title, n = 70) =>
   `* ${title} by @cameron in https://github.com/National-Digital/how2vote.au/pull/${n}`;
@@ -67,5 +67,33 @@ describe("playFraction and iosPhased", () => {
     const body = notes(pr("fix: a [staged-rollout]"), pr("fix(data): b [full-rollout]", 71));
     expect(playFraction(body)).toBe("1");
     expect(iosPhased(body)).toBe(false);
+  });
+});
+
+describe("ignoredMarkers", () => {
+  it("reports a marker that appears but was not counted", () => {
+    expect(ignoredMarkers(notes(pr("docs: explain `[staged-rollout]`")))).toEqual({
+      full: false,
+      staged: true,
+    });
+    expect(ignoredMarkers("Use [Full-Rollout] for data corrections.")).toEqual({
+      full: true,
+      staged: false,
+    });
+  });
+
+  it("is quiet when every marker present was counted, or there is none", () => {
+    expect(ignoredMarkers(notes(pr("fix: a [staged-rollout]")))).toEqual({
+      full: false,
+      staged: false,
+    });
+    expect(ignoredMarkers("[full-rollout]\n")).toEqual({ full: false, staged: false });
+    expect(ignoredMarkers(notes(pr("fix: a")))).toEqual({ full: false, staged: false });
+  });
+
+  it("does not report a quoted marker that was also counted elsewhere", () => {
+    expect(
+      ignoredMarkers(notes(pr("fix: a [staged-rollout]"), "see `[staged-rollout]`")).staged,
+    ).toBe(false);
   });
 });

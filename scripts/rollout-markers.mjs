@@ -10,7 +10,9 @@
  * ("* <title> by @<author> in https://github.com/<owner>/<repo>/pull/<n>"). A marker counts only
  * in a pull request TITLE on such a line, standing on its own (not in backticks, not joined to a
  * word), or alone on a line of its own, as a person editing the notes would add it. A marker
- * quoted in prose, or in a title that merely mentions it in backticks, is ignored.
+ * quoted in prose, or in a title that merely mentions it in backticks, is ignored, and reported:
+ * an ignored `[staged-rollout]` fails the Play promotion (a release meant to be staged must not go
+ * to every user by mistake); an ignored `[full-rollout]` is a warning.
  *
  * Usage:
  *   BODY="$(gh release view v1.5.0 --json body --jq .body)" node scripts/rollout-markers.mjs play
@@ -51,6 +53,20 @@ export function markers(body) {
   return { full: has(FULL), staged: has(STAGED) };
 }
 
+/**
+ * Markers whose text appears in the notes (any case) but that `markers` did not count.
+ * @param {string} body
+ * @returns {{ full: boolean, staged: boolean }}
+ */
+export function ignoredMarkers(body) {
+  const text = String(body ?? "").toLowerCase();
+  const counted = markers(body);
+  return {
+    full: text.includes(FULL) && !counted.full,
+    staged: text.includes(STAGED) && !counted.staged,
+  };
+}
+
 /** @param {string} body */
 export function playFraction(body) {
   const m = markers(body);
@@ -69,7 +85,20 @@ function main() {
   const out = process.env["GITHUB_OUTPUT"];
   const write = (line) => (out ? appendFileSync(out, `${line}\n`) : console.info(line));
   const m = markers(body);
+  const ignored = ignoredMarkers(body);
+  const where = "a pull request title or alone on a line of its own";
+  if (ignored.full) {
+    console.info(
+      `::warning::${FULL} appears in the release notes but not in ${where}, so it was ignored.`,
+    );
+  }
   if (mode === "play") {
+    if (ignored.staged) {
+      throw new Error(
+        `${STAGED} appears in the release notes but not in ${where}. Put it alone on a line of the ` +
+          "release notes to stage this release, or remove it to roll out to every user, then re-run this job",
+      );
+    }
     const fraction = playFraction(body);
     write(`fraction=${fraction}`);
     if (m.full) console.info(`${FULL} marker present: promoting to every user.`);

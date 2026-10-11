@@ -613,5 +613,8 @@ jobs:
     with:
       name: Android release
       tag: ${{ inputs.tag }}
+      # A run for a malformed tag fails in build; the next run whose build passes closes its issue.
+      untagged-name: Android release without a valid tag
+      clear-untagged: ${{ needs.build.result == 'success' }}
       results: ${{ toJSON(needs) }}
       terminal: promote

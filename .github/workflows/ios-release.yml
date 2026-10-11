@@ -291,5 +291,12 @@ jobs:
     with:
       name: iOS release
       tag: ${{ inputs.tag }}
+      # A run for a malformed tag fails in build; the next run whose build passes closes its issue.
+      untagged-name: iOS release without a valid tag
+      clear-untagged: ${{ needs.build.result == 'success' }}
       results: ${{ toJSON(needs) }}
       terminal: submit
+      # A green submit job that submitted nothing (a busy turn) resolves nothing.
+      resolves: >-
+        ${{ needs.submit.outputs.outcome == 'submit' || needs.submit.outputs.outcome == 'skip' ||
+        needs.submit.outputs.outcome == 'defer' }}
