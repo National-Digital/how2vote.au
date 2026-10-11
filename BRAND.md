@@ -38,7 +38,6 @@ reader — stays `how2vote`, always, with no exceptions:
 | Application id / bundle id | `au.how2vote.app` |
 | Package scope | `@how2vote/engine` |
 | Storage and cache keys | `how2vote:quiz:v2`, `how2vote:consent:v1` |
-| Tool and function names | `how2vote_find_electorate` |
 | Infrastructure names | the `how2vote-au` worker, the `how2vote-research` D1 database |
 | File and asset names | `docs/brand/how2vote-wordmark.svg` |
 | Email addresses | `contact@how2vote.au` |

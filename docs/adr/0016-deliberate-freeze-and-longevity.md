@@ -52,28 +52,10 @@ the posture explicitly and adds the one thing a frozen project most often lacks:
    maintainer-once step, in the same class as the branch-protection toggles tracked in
    [`docs/legal/required-checks.json`](../legal/required-checks.json).
 
-3. **Pre-standard surfaces are marked non-durable.** The WebMCP tool surface
-   (`modelContext`, an Edge-native / Chrome-origin-trial, W3C **Community Group** draft — not
-   on the Standards Track) is kept only as a progressive, read-only, no-op-when-absent mirror of the
-   public content. It is **explicitly not a supported surface** and may be removed at any time with no
-   user-facing loss; its rot risk is contained to itself. The durable agent-facing surfaces are
+3. **Agent-facing surfaces.** The durable agent-facing surfaces are
    `robots.txt`, schema.org structured data (incl. `Dataset`), and `llms.txt`/`llms-full.txt`.
 
-   Churn in this surface is absorbed rather than chased. The provider object moved from
-   `navigator.modelContext` to `document.modelContext` during the origin trial, so `$lib/webmcp` probes
-   `document` first and falls back to `navigator`; that order is required because reading the
-   `navigator` property is what emits the deprecation warning.
-
-   **The surface stays read-only; form and write tools are declined.** Browser DevTools audits pages for
-   un-annotated `<form>` elements and suggests exposing them to agents. That advice is not followed for
-   the two forms on this site (`/contact` and the feedback widget), for these reasons:
-   - Both forms are gated by the self-hosted ALTCHA proof-of-work challenge (ADR-0015), whose purpose is
-     to keep unattended automated submissions off an inbound human channel. An agent-callable submit
-     tool would bypass that control.
-   - Both carry a person's own words to a maintainer inbox. An agent-composed message is
-     unattributable, and attribution is the property a corrections channel depends on.
-   - Nothing is withheld beyond unattended submission: both forms are labelled, keyboard-accessible
-     HTML that an agent driving the page can complete with a person in the loop.
+   WebMCP was removed on 2026-10-12. MCP of any kind is out of scope for this site.
 
 4. **Do not chase build-chain majors.** Vite 8 (Rolldown), SvelteKit 3, and Svelte 6 are **not**
    adopted for a frozen tree; the static output does not need them. The one future *forced* migration
@@ -85,7 +67,7 @@ the posture explicitly and adds the one thing a frozen project most often lacks:
    planned:
    - runtime/toolchain EOL (Node 24 ≈ April 2028) and whether the runner/build image is still patched;
    - the accumulated CVE list against the frozen lockfile;
-   - standards drift on the surfaces above (WebMCP, AIPREF, WCAG, `$env/*`).
+   - standards drift on the surfaces above (AIPREF, WCAG, `$env/*`).
 
    This aligns naturally with the project's core recurring operation: adding the next election (see the
    [adding-an-election runbook](../adding-an-election.md)) already reopens the tree around 2028, before
@@ -101,8 +83,6 @@ the posture explicitly and adds the one thing a frozen project most often lacks:
 - CI stays green on a truly untouched tree (frozen-lockfile installs are deterministic); the vuln gate
   may go red if a CVE lands mid-freeze — that redness is the signal for the re-review, not something to
   suppress.
-- If the WebMCP API changes or is withdrawn, the affected code no-ops; nothing else regresses. Removing
-  it later is a clean deletion.
 - The next-election onboarding is the expected moment this ADR is revisited; a maintainer doing that
   work should treat this file's checklist as part of the job.
 

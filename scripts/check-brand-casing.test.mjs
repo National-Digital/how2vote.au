@@ -23,11 +23,6 @@ describe("verdict — identifier shapes must be lower case", () => {
     { label: "a package scope", bad: 'from "@How2Vote/engine"', good: 'from "@how2vote/engine"' },
     { label: "a storage or cache key", bad: '"How2Vote:quiz:v2"', good: '"how2vote:quiz:v2"' },
     {
-      label: "a tool or function name",
-      bad: "How2Vote_find_electorate",
-      good: "how2vote_find_electorate",
-    },
-    {
       label: "an infrastructure name",
       bad: "database_name = How2Vote-research",
       good: "database_name = how2vote-research",
@@ -61,7 +56,7 @@ describe("verdict — identifier shapes must be lower case", () => {
   });
 
   it("flags an inner capital", () => {
-    expect(verdict(src("how2Vote_list_candidates")).ok).toBe(false);
+    expect(verdict(src("how2Vote:quiz:v2")).ok).toBe(false);
   });
 
   it("reports the 1-indexed line of the offending identifier", () => {
