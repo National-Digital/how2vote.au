@@ -76,6 +76,7 @@
     "sbom:build": "node scripts/build-sbom.mjs",
     "supply-chain:check": "node scripts/check-supply-chain.mjs",
     "action-pinning:check": "node scripts/check-action-pinning.mjs",
+    "release-credentials:check": "node scripts/check-release-credentials.mjs",
     "security:check": "node scripts/check-security-register.mjs",
     "security:config": "node scripts/check-security-config.mjs",
     "security:logs": "node scripts/check-forbidden-log-fields.mjs",

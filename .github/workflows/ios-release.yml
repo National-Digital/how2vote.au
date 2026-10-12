@@ -2,33 +2,38 @@ name: iOS release
 
 # Store pipeline for the iOS shell (apps/mobile). Every web release becomes an iOS build:
 #
-# release published      -> build the channel web bundle, archive ad-hoc, export the ipa with
+# workflow_dispatch      -> build the channel web bundle, archive ad-hoc, export the ipa with
 #                           cloud-managed distribution signing (App Store Connect API key), upload
 #                           to TestFlight, then — behind the `app-store` environment's
 #                           required-reviewer gate — submit that build for App Store review with
 #                           generated metadata, as a PHASED release (add `[full-rollout]` to the
 #                           release notes before approving to push all auto-updaters at once).
+#                           dry_run=true stops after the signed ipa (no upload).
+#
+# deploy.yml dispatches this on `main` with `tag` set to the release it just published, so the
+# workflow definition always comes from `main` while the build checks out the tag, which must be
+# reachable from `main`. Each credential lives in an environment limited to `main` (see
+# "Credential environments" in docs/store-distribution.md), so a dispatch from any other ref,
+# dry runs included, is refused.
 #
 # NOTE: `automatic_release: false` — a green submit job means "approved and waiting", not "live";
 # a human clicks release in App Store Connect.
-# workflow_dispatch      -> same build; dry_run=true stops after the signed ipa (no upload),
-#                           dry_run=false uploads to TestFlight and continues to the
-#                           environment-gated submit. deploy.yml releases through dispatch (a
-#                           GITHUB_TOKEN-created release cannot fire `release:` triggers), so a
-#                           real dispatch IS the release path.
 #
 # Guideline 2.5.2 means there is no OTA update path: the web bundle ships inside the binary and
 # every change goes through App Review, which is why this must be fully automated.
 #
-# Requires secrets ASC_KEY_ID, ASC_ISSUER_ID, ASC_API_KEY_P8 (base64 .p8) and variable
-# APPLE_TEAM_ID. The build job is skipped while APPLE_TEAM_ID is unset, and fails closed when it
-# is set but a secret is missing.
+# Requires secrets ASC_KEY_ID, ASC_ISSUER_ID, ASC_API_KEY_P8 (base64 .p8) on the `ios-build`
+# environment (Developer key with cloud-managed certificate access: cloud signing + TestFlight)
+# and again on `app-store` (App Manager key: review submission), and variable APPLE_TEAM_ID. The build job is skipped while APPLE_TEAM_ID is
+# unset, and fails closed when it is set but a secret is missing.
 
 on:
-  release:
-    types: [published]
   workflow_dispatch:
     inputs:
+      tag:
+        description: Release tag to ship (vX.Y.Z, reachable from main); only a dry run may leave it empty
+        type: string
+        default: ""
       dry_run:
         description: Build + sign only; skip the TestFlight upload
         type: boolean
@@ -42,7 +47,7 @@ concurrency:
   # first review submission is open hard-fails at ASC), but a submit_review job waiting on the
   # app-store environment's reviewer no longer holds the group and block every later release.
   # Never cancels in progress: a signing or store upload must always finish.
-  group: ios-release-${{ github.event.release.tag_name || github.ref }}
+  group: ios-release-${{ inputs.tag || github.ref }}${{ inputs.dry_run && '-dry-run' || '' }}
   cancel-in-progress: false
 
 jobs:
@@ -53,10 +58,17 @@ jobs:
     env:
       DEVELOPER_DIR: /Applications/Xcode_26.3.app
     if: vars.APPLE_TEAM_ID != ''
+    # Developer-role App Store Connect key with access to cloud-managed distribution certificates:
+    # enough to sign and upload to TestFlight, not to submit for review. deployment: false keeps
+    # the branch policy and the secrets without recording a deployment for every build.
+    environment:
+      name: ios-build
+      deployment: false
     outputs:
       app-version: ${{ steps.version.outputs.version }}
       build-number: ${{ steps.version.outputs.build }}
       build-year: ${{ steps.version.outputs.build-year }}
+      commit: ${{ steps.source.outputs.commit }}
     steps:
       # Presence check only; values are never printed (passed via env, not interpolated) and the
       # failure names the missing KEYS, never their contents.
@@ -73,7 +85,7 @@ jobs:
           done
           if [ ${#missing[@]} -gt 0 ]; then
             echo "::error::APPLE_TEAM_ID is set (iOS is a live channel) but secrets are missing: ${missing[*]}."
-            echo "Set them under Settings → Secrets and variables → Actions (see docs/store-distribution.md),"
+            echo "Set them on the ios-build environment (see docs/store-distribution.md),"
             echo "or clear the APPLE_TEAM_ID variable if iOS should not be released yet."
             exit 1
           fi
@@ -82,11 +94,41 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7
         with:
+          ref: ${{ inputs.tag && format('refs/tags/{0}', inputs.tag) || '' }}
           fetch-depth: 0 # full tags so a dispatch run can resolve the current version
+
+      # Runs before any repository code meets a credential, and stays inline: a script or local
+      # action would be read from the checkout this step is vetting. Later jobs check out the
+      # commit recorded here, never the tag, so a tag moved mid-run cannot change what they build.
+      - name: Verify the release source is on main
+        id: source
+        env:
+          TAG: ${{ inputs.tag }}
+          DRY_RUN: ${{ inputs.dry_run }}
+        run: |
+          set -euo pipefail
+          if [ -z "${TAG:-}" ] && [ "$DRY_RUN" != "true" ]; then
+            echo "::error::a release run must name the tag to ship; only a dry run may omit it"; exit 1
+          fi
+          if [ -n "${TAG:-}" ]; then
+            if ! printf '%s' "$TAG" | grep -Eq '^v[0-9]+\.[0-9]+\.[0-9]+$'; then
+              echo "::error::tag input '$TAG' is not vMAJOR.MINOR.PATCH"; exit 1
+            fi
+            TAGGED="$(git rev-parse -q --verify "refs/tags/$TAG^{commit}")" \
+              || { echo "::error::$TAG is not a tag in this repository"; exit 1; }
+            [ "$(git rev-parse HEAD)" = "$TAGGED" ] \
+              || { echo "::error::checkout does not match $TAG"; exit 1; }
+            git fetch --quiet --no-tags origin +refs/heads/main:refs/remotes/origin/main
+            git merge-base --is-ancestor HEAD refs/remotes/origin/main \
+              || { echo "::error::$TAG is not reachable from main — only reviewed commits are released"; exit 1; }
+          fi
+          echo "commit=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
 
       - name: Resolve version
         id: version
         uses: ./.github/actions/resolve-store-version
+        with:
+          tag: ${{ inputs.tag }}
 
       - name: Build web bundle (ios channel)
         uses: ./.github/actions/build-web-channel
@@ -151,12 +193,11 @@ jobs:
   submit:
     name: Submit for App Store review
     needs: build
-    # Release events, and real (non-dry-run) dispatches — deploy.yml releases through dispatch,
-    # since a GITHUB_TOKEN-created release cannot fire `release:` triggers. A skipped or failed
-    # `build` skips this too (the `if` deliberately does not use always()). The environment
-    # carries the required-reviewer gate — a human promotes every store submission, whatever the
-    # trigger.
-    if: github.event_name == 'release' || (github.event_name == 'workflow_dispatch' && !inputs.dry_run)
+    # Real (non-dry-run) dispatches only. A skipped or failed `build` skips this too (the `if`
+    # deliberately does not use always()). The environment carries the required-reviewer gate — a
+    # human promotes every store submission — and the App Manager key, the only credential in CI
+    # that can submit for review.
+    if: ${{ !inputs.dry_run }}
     environment: app-store
     runs-on: macos-15
     timeout-minutes: 30
@@ -165,6 +206,8 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7
+        with:
+          ref: ${{ needs.build.outputs.commit }}
 
       # Same marker and same policy as android-release.yml, so one decision in the release notes
       # governs BOTH stores and they can't drift. Read at submit time rather than from the trigger
@@ -175,8 +218,7 @@ jobs:
         id: rollout
         env:
           GH_TOKEN: ${{ github.token }}
-          # Empty on a dispatch, where the build's resolved version names the same release.
-          TAG: ${{ github.event.release.tag_name || format('v{0}', needs.build.outputs.app-version) }}
+          TAG: ${{ format('v{0}', needs.build.outputs.app-version) }}
         run: |
           set -euo pipefail
           BODY="$(gh release view "$TAG" --json body --jq .body || echo "")"

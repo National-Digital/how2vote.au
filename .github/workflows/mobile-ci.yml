@@ -436,8 +436,8 @@ jobs:
   #     `if:` cannot be the boundary, because a branch can edit the condition that gates it.
   #   - a SEPARATE, least-privilege Play credential. PLAY_SHARE_SERVICE_ACCOUNT_JSON should hold a
   #     service account with internal-app-sharing rights only, so it cannot promote a release. The
-  #     production PLAY_SERVICE_ACCOUNT_JSON stays scoped to play-store, reachable only from
-  #     android-release.yml, and never enters a dispatchable job.
+  #     release Play accounts (PLAY_SERVICE_ACCOUNT_JSON) live in the android-build and play-store
+  #     environments, which admit only main, so a dispatch from a branch never receives them.
   # It rebuilds rather than reusing the preview APK: the preview is debug-signed.
   android-share:
     name: Play internal app sharing (reviewed)

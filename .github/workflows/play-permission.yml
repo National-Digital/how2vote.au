@@ -13,6 +13,10 @@ name: Play publish permission
 #
 # Red if PLAY_SERVICE_ACCOUNT_JSON is missing, not green: a credential that has disappeared is one
 # of the ways "we can no longer publish" shows up, and it is the one a skip would hide.
+#
+# Probes the android-build account, the one that uploads the bundle and the listing. The
+# production account on `play-store` sits behind a required reviewer, so a scheduled job cannot
+# hold it; its grant is exercised by each promotion.
 
 on:
   schedule:
@@ -33,6 +37,9 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 5
     if: github.event.repository.visibility == 'public'
+    environment:
+      name: android-build
+      deployment: false
     steps:
       - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7
       - uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e # v6

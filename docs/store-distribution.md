@@ -218,8 +218,12 @@ absence of the capability from the code.
 
 ## Release flow
 
-`deploy.yml` tags `v<version>` and publishes a GitHub Release on every push to `main`. Both
-store workflows trigger on `release: published`:
+`deploy.yml` tags `v<version>` and publishes a GitHub Release on every push to `main`, then
+dispatches both store workflows **on `main`** with `tag=v<version>`. Each workflow's build job
+checks out that tag, refuses it unless `main` contains it, and records the commit; every later job
+checks out that commit, so a tag moved mid-run cannot change what ships. The workflow definition
+therefore always comes from `main`, which is what lets every store credential live in an
+environment limited to `main` (see "Credential environments" below):
 
 1. **`ios-release.yml`** (macOS runner) — builds the `ios`-channel web bundle → `cap sync ios` →
    fastlane archives ad-hoc (no Apple credentials, so the archive step cannot create a
@@ -246,7 +250,21 @@ store workflows trigger on `release: published`:
    shells compiled, with the binaries attached. See "Per-PR builds" below.
 
 Both release workflows support `workflow_dispatch` with `dry_run` (build + sign, no upload) and
-record the artifact's SHA-256 in the job summary.
+record the artifact's SHA-256 in the job summary. Every job that holds a credential is in a
+`main`-only environment, so **dispatch from `main`, dry runs included**: a dispatch from any other
+ref is refused at the environment before a runner starts. Signing changes on a branch are proved by
+merging them and dry-running from `main`; the iOS dry run cannot be offered on branches, because its
+export step needs the cloud-signing App Store Connect key. A real run must name `tag` (the build job
+fails without it); only a dry run may leave it empty, which builds `main`'s head.
+
+**Workflow and tag are coupled.** A store run executes `main`'s workflow YAML, as it stands when
+the run is dispatched, against the tag's code: the composite actions (`.github/actions/*`), the
+Fastfile lanes, the gradle build and the scripts all come from the tag. A store-workflow change
+merged while an earlier release is still to be dispatched, or before an earlier tag is dispatched
+by hand, runs the new YAML against the earlier tag's code. A change to a store workflow, a
+composite action or a lane must therefore stay compatible with the previous release's tag for one
+release. Where that is impractical, merge it only after the previous release's build job has
+started; a run keeps the YAML it was created with.
 
 Both **fail closed on missing secrets**. A release run has two honest outcomes — the build reached
 the store, or the run is red — so a repo that cannot publish must never show a green tick. The one
@@ -257,10 +275,10 @@ that declares iOS live. `scripts/check-play-permission.mjs` follows the same rul
 `PLAY_SERVICE_ACCOUNT_JSON` is red, because a credential that has disappeared is one of the ways
 "we can no longer publish" shows up.
 
-The five Android secrets must be set for releases to work at all. Fork pull requests cannot
-reach any of them: the release workflows do not run on
-`pull_request`, they are gated behind the `play-store`/`app-store` environments with a required
-reviewer; `mobile-ci.yml`'s static and behaviour jobs reference no secrets, and its Android build reads the
+The five Android secrets must be set for releases to work at all. Pull requests cannot reach any
+of them: the release workflows do not run on `pull_request`, every credential sits in an
+environment that admits only `main`, and the production-release credentials additionally sit behind
+the `play-store`/`app-store` required reviewers; `mobile-ci.yml`'s static and behaviour jobs reference no secrets, and its Android build reads the
 signing secrets only to decide whether it can produce a release-signed APK — a fork pull request
 gets a debug-signed one instead, which still installs on a device.
 
@@ -547,52 +565,171 @@ fdroidserver extracts it from the built APK.
 
 ## GitHub configuration (all secrets/vars, per current patterns)
 
+### Credential environments
+
+Every store and signing credential is an **environment** secret, held by the one environment whose
+jobs need it. A repository secret is readable by every job in every same-repo run, so anyone who can
+push a branch could dispatch an edited workflow and spend it; an environment secret is released only
+to a job that names the environment, and the environment's **deployment branch policy** decides which
+refs may do that. The environments below that hold release credentials admit **`main` only**, so a
+branch can edit a workflow but can no longer run it with a store credential in scope. Neither the
+policy nor the reviewers live in the workflow file, which is the point: a branch can edit an `if:`
+condition, but it cannot edit repository settings.
+
+The split also narrows each credential to the job that needs it. Ungated jobs (build, TestFlight,
+Play internal track) hold credentials that cannot publish to production; the production-release
+credentials sit only in the reviewer-gated environments. Two limits remain. The Play upload account
+needs **Manage store presence**, because the internal lane uploads the listing, so it can change
+listing text and images; with Managed publishing on, such a change is held until someone publishes
+it in Play Console, and that is the backstop. On iOS the protection depends on the `ios-build` key
+being a **Developer**-role key, which can cloud-sign and upload to TestFlight but cannot submit for
+review; if it has to be an Admin key (see the checklist's fallback), the `app-store` reviewer no
+longer contains the submit capability and the iOS gate rests only on the workflow YAML coming from
+`main`. The secret **names** are the same in each
+environment, so a workflow reads `PLAY_SERVICE_ACCOUNT_JSON` whichever account it is given.
+
+| Secret | Workflow → job | Environment | Branch policy | Holds |
+| --- | --- | --- | --- | --- |
+| `ANDROID_UPLOAD_KEYSTORE`, `ANDROID_KEYSTORE_PASSWORD`, `ANDROID_KEY_ALIAS`, `ANDROID_KEY_PASSWORD` | android-release → build | `android-build` | `main` | Play upload key (JKS, **base64-encoded**). Play re-signs with the app signing key |
+| `PLAY_SERVICE_ACCOUNT_JSON` | android-release → build; deploy → live-versions; play-permission → probe | `android-build` | `main` | **upload** service account (raw JSON): testing tracks + store presence, **no** production release |
+| `PLAY_SERVICE_ACCOUNT_JSON` | android-release → promote | `play-store` | `main` + required reviewers | **production** service account: release to production |
+| `FDROID_KEYSTORE`, `FDROID_KEYSTORE_PASSWORD`, `FDROID_KEY_ALIAS`, `FDROID_KEY_PASSWORD` | android-release → fdroid-apk | `fdroid-signing` | `main` | F-Droid release keystore (PKCS12, **base64-encoded**; NOT the Play upload key). Key password = store password (PKCS12 permits only one). Locked forever |
+| `R2_ACCOUNT_ID`, `R2_ACCESS_KEY_ID`, `R2_SECRET_ACCESS_KEY` | android-release → fdroid-publish | `fdroid-publish` | `main` | R2 token scoped to the `how2vote-dist` bucket (**not** account-wide); the account id only forms the S3 endpoint |
+| `ASC_KEY_ID`, `ASC_ISSUER_ID`, `ASC_API_KEY_P8` | ios-release → build | `ios-build` | `main` | **Developer**-role App Store Connect key with **Access to Cloud Managed Distribution Certificates** (`.p8` **base64-encoded**): cloud-signed export, certificate guard, TestFlight upload; cannot submit for review |
+| `ASC_KEY_ID`, `ASC_ISSUER_ID`, `ASC_API_KEY_P8` | ios-release → submit | `app-store` | `main` + required reviewers | **App Manager** key: metadata + review submission; the only key in CI that can submit |
+| `PLAY_SHARE_SERVICE_ACCOUNT_JSON`, `PLAY_SHARE_KEYSTORE`, `PLAY_SHARE_KEYSTORE_PASSWORD`, `PLAY_SHARE_KEY_ALIAS`, `PLAY_SHARE_KEY_PASSWORD` | mobile-ci → android-share | `play-share` | none: dispatched from PR branches; required reviewers | internal-app-sharing account (no release rights) + throwaway keystore |
+| `CLOUDFLARE_API_TOKEN` | deploy → deploy, cleanup | repository | n/a | Pages deploy token; PR previews need it, so it cannot be limited to `main` |
+| `CF_D1_API_TOKEN` | deploy → deploy | repository | n/a | D1 migrations (non-PR runs) and `data:stats`, which also runs on same-repo PRs; its job builds PR previews |
+| `TVFY_API_KEY` | data-refresh → refresh | repository | n/a | read-only third-party data API key; manual dispatch |
+
 | Kind | Name | Used by | Notes |
 | --- | --- | --- | --- |
-| secret | `ASC_KEY_ID` | ios-release | App Store Connect API key id |
-| secret | `ASC_ISSUER_ID` | ios-release | ASC issuer id |
-| secret | `ASC_API_KEY_P8` | ios-release | the `.p8` key, **base64-encoded** |
-| var | `APPLE_TEAM_ID` | ios-release | Developer team id (not sensitive) |
-| secret | `PLAY_SERVICE_ACCOUNT_JSON` | android-release | Play API service-account JSON (raw) |
-| secret | `ANDROID_UPLOAD_KEYSTORE` | android-release | upload keystore (JKS), **base64-encoded** |
-| secret | `ANDROID_KEYSTORE_PASSWORD` | android-release | |
-| secret | `ANDROID_KEY_ALIAS` | android-release | |
-| secret | `ANDROID_KEY_PASSWORD` | android-release | |
-| secret | `FDROID_KEYSTORE` | android-release fdroid-apk | F-Droid release keystore (PKCS12), **base64-encoded** — NOT the Play upload key |
-| secret | `FDROID_KEYSTORE_PASSWORD` | android-release fdroid-apk | |
-| secret | `FDROID_KEY_ALIAS` | android-release fdroid-apk | |
-| secret | `FDROID_KEY_PASSWORD` | android-release fdroid-apk | same value as the store password (PKCS12 permits only one) |
-| secret | `R2_ACCOUNT_ID` | android-release fdroid-publish | Cloudflare account id, used only to form the S3 endpoint |
-| secret | `R2_ACCESS_KEY_ID` | android-release fdroid-publish | R2 token scoped to the `how2vote-dist` bucket — **not** account-wide |
-| secret | `R2_SECRET_ACCESS_KEY` | android-release fdroid-publish | |
-| secret | `PLAY_SHARE_SERVICE_ACCOUNT_JSON` | mobile-ci android-share | **environment secret of `play-share`.** Least privilege: internal app sharing only, no release rights |
-| secret | `PLAY_SHARE_KEYSTORE` | mobile-ci android-share | **environment secret of `play-share`.** Throwaway keystore (JKS), **base64-encoded** — NOT the upload key |
-| secret | `PLAY_SHARE_KEYSTORE_PASSWORD` | mobile-ci android-share | environment secret of `play-share` |
-| secret | `PLAY_SHARE_KEY_ALIAS` | mobile-ci android-share | environment secret of `play-share` |
-| secret | `PLAY_SHARE_KEY_PASSWORD` | mobile-ci android-share | environment secret of `play-share` |
-| environment | `app-store` | ios-release submit | required reviewers = compliance signatories |
-| environment | `play-store` | android-release promote | required reviewers = compliance signatories |
-| environment | `play-share` | mobile-ci android-share | required reviewers; holds the five `PLAY_SHARE_*` secrets |
+| var | `APPLE_TEAM_ID` | ios-release | Developer team id (not sensitive); unset skips iOS entirely |
+| environment | `android-build` | android-release build, deploy live-versions, play-permission probe | branch policy `main`; no reviewer |
+| environment | `fdroid-signing` | android-release fdroid-apk | branch policy `main`; no reviewer |
+| environment | `fdroid-publish` | android-release fdroid-publish | branch policy `main`; no reviewer |
+| environment | `ios-build` | ios-release build | branch policy `main`; no reviewer |
+| environment | `play-store` | android-release promote | branch policy `main`; required reviewers = compliance signatories |
+| environment | `app-store` | ios-release submit | branch policy `main`; required reviewers = compliance signatories |
+| environment | `play-share` | mobile-ci android-share | required reviewers; no branch policy |
 
-The release credentials stay **repository** secrets used only by `android-release.yml` / `ios-release.yml`;
-the five `PLAY_SHARE_*` secrets are **environment** secrets on `play-share` and must not be duplicated at
-repository level. A repository secret is readable by every job in every same-repo run, so the scoping is
-what actually contains it — the required reviewer stops an unapproved run, and the scoping stops any
-other job reading the credential at all. Neither control lives in the workflow file, which is the point:
-a branch can edit an `if:` condition, but it cannot edit repository settings.
+F-Droid signing and publishing are separate environments for the same reason they are separate
+jobs: the signing key and the bucket credential are never held together.
+
+The build-type jobs (`android-build`, `fdroid-*`, `ios-build`) declare
+`environment: { name: …, deployment: false }`. GitHub then applies the environment's secrets and
+protection rules without recording a deployment for every build: required reviewers and wait timers
+still apply, and GitHub documents environment branch policies as the way to restrict which branches
+can use an environment's secrets this way. (`deployment: false` is incompatible with custom
+deployment protection rules, which none of these environments use.) The promote and submit jobs keep
+ordinary deployments, so the `play-store`/`app-store` history records each approval.
+
+`deploy.yml`'s live-versions job reads Play with the upload account and runs on `main` only. The daily
+`play-permission.yml` probe checks the upload account, the one that applies the internal-track and
+listing edits; the production account cannot be probed on a schedule, because `play-store`'s
+reviewer would hold every run, and its grant is exercised by each promotion.
+`scripts/check-release-credentials.mjs` (the release-credential gate in `ci.yml`) fails a change that
+reads one of these credentials from a job outside its listed environment, uses the secrets context
+without a literal name (`toJSON(secrets)`, `secrets[expr]`, `secrets: inherit`), or puts a
+`main`-only environment in a job whose `if:` does not exclude pull requests.
+
+### Owner migration checklist
+
+The required state: every credential in the table above is an environment secret of the
+environment listed for it; `android-build`, `fdroid-signing`, `fdroid-publish`, `ios-build`,
+`play-store` and `app-store` each admit `main` only; and none of those credentials exists as a
+repository secret. An environment secret overrides a repository secret of the same name, so the
+steps below can be taken while repository copies still exist without any run losing a credential.
+Take them in order; the repository copies go last, after verification.
+
+1. **Play upload account.** Create a second GCP service account and a JSON key
+   (`gcloud iam service-accounts create how2vote-play-upload`, then
+   `gcloud iam service-accounts keys create upload.json --iam-account how2vote-play-upload@<project>.iam.gserviceaccount.com`).
+   If the organisation enforces `iam.disableServiceAccountKeyCreation`, key creation is refused: an
+   organisation policy administrator must override that constraint for this project only, the key
+   is created, and enforcement is restored. There is no keyless alternative, because fastlane supply
+   and `scripts/play-auth.mjs` both authenticate with a JSON key.
+   Play Console → **Users and permissions** → **Invite new users** → its email → **App permissions** →
+   `au.how2vote.app` → grant **Release apps to testing tracks** and **Manage store presence** (the
+   internal lane uploads the listing and screenshots, and the permission probe stages a listing
+   change). Do **not** grant **Release to production, exclude devices, and use Play App Signing**, and
+   grant no account-level permissions. **Apply**, then **Save**. Keep Managed publishing on: it holds
+   any listing change this account makes until it is published in the console.
+   **Required before the key goes into GitHub:**
+   `PLAY_SERVICE_ACCOUNT_FILE=upload.json node scripts/check-play-permission.mjs` exits 0, and
+   `PLAY_SERVICE_ACCOUNT_FILE=upload.json node scripts/resolve-play-live-version.mjs` prints the live
+   version. If either fails, fix the grants first; the account that can release to production is
+   the `play-store` account and must not be substituted here.
+2. **App Store Connect keys.** Users and Access → Integrations → App Store Connect API → Team Keys:
+   - a **Developer** key with **Access to Cloud Managed Distribution Certificates** enabled, for
+     `ios-build`;
+   - an **App Manager** key, for `app-store`.
+   Download each `.p8` (offered once) and note its key id; the issuer id is shared. No Admin key is
+   used by CI.
+3. **Environments.** Settings → Environments. `android-build`, `fdroid-signing`, `fdroid-publish`
+   and `ios-build`: **Deployment branches and tags** → **Selected branches and tags** → branch rule
+   `main` (not "Protected branches only", which admits every protected branch); no required
+   reviewers. `play-store` and `app-store`: the same branch rule, keeping their required reviewers.
+   Create each environment in this state before a workflow first names it, because GitHub
+   auto-creates a missing environment with no policy; if one was auto-created, edit it to this state.
+   A `main`-only policy refuses any run whose ref is not `main`, so the store workflows must be
+   dispatched on `main` with `tag` set, as `deploy.yml` does.
+4. **Environment secrets** (values copied exactly from the existing repository secrets unless
+   stated):
+   - `android-build`: `ANDROID_UPLOAD_KEYSTORE`, `ANDROID_KEYSTORE_PASSWORD`, `ANDROID_KEY_ALIAS`,
+     `ANDROID_KEY_PASSWORD`, and `PLAY_SERVICE_ACCOUNT_JSON` = the **upload** account's `upload.json`.
+   - `fdroid-signing`: `FDROID_KEYSTORE`, `FDROID_KEYSTORE_PASSWORD`, `FDROID_KEY_ALIAS`,
+     `FDROID_KEY_PASSWORD` (the locked key; copy, never regenerate).
+   - `fdroid-publish`: `R2_ACCOUNT_ID`, `R2_ACCESS_KEY_ID`, `R2_SECRET_ACCESS_KEY`.
+   - `ios-build`: `ASC_KEY_ID`, `ASC_ISSUER_ID`, `ASC_API_KEY_P8` = the **Developer** key
+     (`base64 -i AuthKey_<id>.p8`).
+   - `play-store`: `PLAY_SERVICE_ACCOUNT_JSON` = the **production** account (the existing repository
+     value).
+   - `app-store`: `ASC_KEY_ID`, `ASC_ISSUER_ID`, `ASC_API_KEY_P8` = the **App Manager** key.
+5. Leave `play-share` as it is: reviewer, its five environment secrets, no branch policy.
+6. **Verify, while the repository copies still exist:**
+   - `gh workflow run android-release.yml --ref main -f dry_run=true` goes green.
+   - `gh workflow run ios-release.yml --ref main -f dry_run=true` goes green under the Developer key:
+     the build lane's certificate guard (which lists certificates) and the cloud-signed export both
+     pass.
+   - The next release's iOS build job uploads to TestFlight under the Developer key, and its
+     Android build job uploads to the internal track under the upload account.
+   - The same dry-run dispatch from any other branch fails at the environment.
+   - `gh workflow run play-permission.yml` goes green (it probes the upload account).
+   - The next `deploy.yml` run on `main` shows a green live-versions job and a populated Android badge.
+   **Fallback:** if the Developer key cannot list certificates or cannot export, put an Admin key in
+   `ios-build` instead. That key can also submit for review, so the `app-store` reviewer then
+   guards only the workflow's own submit step, and the iOS gate rests on the workflow YAML coming
+   from `main` alone.
+7. **Delete the repository-level copies** (Settings → Secrets and variables → Actions → Repository
+   secrets): `ANDROID_UPLOAD_KEYSTORE`, `ANDROID_KEYSTORE_PASSWORD`, `ANDROID_KEY_ALIAS`,
+   `ANDROID_KEY_PASSWORD`, `PLAY_SERVICE_ACCOUNT_JSON`, `FDROID_KEYSTORE`, `FDROID_KEYSTORE_PASSWORD`,
+   `FDROID_KEY_ALIAS`, `FDROID_KEY_PASSWORD`, `R2_ACCOUNT_ID`, `R2_ACCESS_KEY_ID`,
+   `R2_SECRET_ACCESS_KEY`, `ASC_KEY_ID`, `ASC_ISSUER_ID`, `ASC_API_KEY_P8`. Keep
+   `CLOUDFLARE_API_TOKEN`, `CF_D1_API_TOKEN` and `TVFY_API_KEY`. Once no environment holds the
+   former Admin key, revoke it in App Store Connect unless something outside CI uses it.
+8. **Re-verify:** `gh secret list` shows only those three; `gh secret list --env <name>` shows each
+   environment's set from step 4. Repeat the step 6 dry runs, then watch the next release: build
+   uploads to the internal track and TestFlight, fdroid-apk and fdroid-publish go green, promote
+   waits for a reviewer and promotes with the production account, and submit waits for a reviewer
+   and submits with the App Manager key.
 
 Play internal app sharing accepts an artifact signed with **any** key and re-signs it with an Internal
 App Sharing key it generates ([Play Console Help](https://support.google.com/googleplay/android-developer/answer/9844679)),
-which is why the share path uses a throwaway keystore and the upload key never enters a dispatchable job.
+which is why the share path uses a throwaway keystore and the upload key never enters a job a branch
+can dispatch.
+
 
 ## Store account provisioning (one-time)
 
 **Apple** (organization enrollment, D-U-N-S):
 1. App Store Connect → create app `au.how2vote.app` (name: how2vote, primary locale en-AU).
-2. Users & Access → Integrations → generate an API key (Admin role, or App Manager with access to
-   cloud-managed distribution certificates, which the export step signs with). The key must
-   also be able to read certificates, which the build's certificate guard lists. Record key id +
-   issuer id; base64 the `.p8` into `ASC_API_KEY_P8`.
+2. Users & Access → Integrations → generate two API keys: a **Developer** key with **Access to
+   Cloud Managed Distribution Certificates** for the build (the export step signs with cloud-managed
+   distribution certificates, and the build's certificate guard lists certificates), stored in the
+   `ios-build` environment; and an **App Manager** key for review submission, stored in the
+   `app-store` environment. Record each key id + the issuer id; base64 each `.p8` into that
+   environment's `ASC_API_KEY_P8`. See the owner checklist for the Admin fallback.
 3. Set the age rating questionnaire and the App Privacy declaration in the console. Declare the
    optional research contribution accurately: it is **opt-in**, **not linked to the user**, **not
    used for tracking**, and collected for **Analytics/Research** only (same posture as the web
@@ -607,7 +744,9 @@ which is why the share path uses a throwaway keystore and the upload key never e
 2. Create a GCP service account + JSON key (`gcloud iam service-accounts create` … `keys create`,
    with `androidpublisher.googleapis.com` enabled on the project), invite its email in Play
    Console → **Users and permissions** with release + store-presence permissions, and store the
-   key JSON as `PLAY_SERVICE_ACCOUNT_JSON`.
+   key JSON as `PLAY_SERVICE_ACCOUNT_JSON`. Two accounts are used: an **upload** account (testing
+   tracks + store presence) in the `android-build` environment, and a **production** account
+   (release to production) in `play-store`; see "Owner migration checklist".
 
    The permissions that matter are **App permissions → the app → "Release to testing tracks"** and
    **"Manage store presence"**, applied *and* saved on the user page. Google enforces publish rights
@@ -632,7 +771,8 @@ which is why the share path uses a throwaway keystore and the upload key never e
    the JKS into `ANDROID_UPLOAD_KEYSTORE`. The first AAB can be uploaded through the API too —
    but only as a **draft** release (see Bootstrap traps below).
 
-**Both**: create the `app-store` / `play-store` environments with required reviewers. There is no
+**Both**: create the `app-store` / `play-store` environments with required reviewers, and every
+credential environment with a `main`-only branch policy (see "Credential environments"). There is no
 third-party captcha allowlist to configure for the shells: the anti-abuse challenge is self-hosted
 (ADR 0017) and the shell origins are already covered by the research CORS allowlist
 (`src/lib/research/cors.ts`).
