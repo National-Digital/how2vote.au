@@ -1,5 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
-import { seedEligibility, waitForServiceWorker } from "./flow-helpers";
+import { currentQuestionCount, seedEligibility, waitForServiceWorker } from "./flow-helpers";
 
 const QUESTIONS = 50;
 
@@ -278,4 +278,23 @@ test("a per-election landing carries its own social preview and canonical", asyn
     /2022 Federal Election/,
   );
   await expect(page.getByText(/Answer 36 real questions/)).toBeVisible();
+});
+
+test("the prerendered quiz description states the current election's question count", async ({
+  request,
+}) => {
+  const html = await (await request.get("/quiz")).text();
+  expect(html).toContain(
+    `<meta name="description" content="Answer ${currentQuestionCount} real questions `,
+  );
+});
+
+test("the quiz description follows the election being answered", async ({ page }) => {
+  await page.goto("/2025");
+  await pickBean(page);
+  await expect(page.locator("span.label")).toHaveText("Question 1 of 50");
+  await expect(page.locator('meta[name="description"]')).toHaveAttribute(
+    "content",
+    /^Answer 50 real questions /,
+  );
 });

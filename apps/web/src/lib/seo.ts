@@ -8,6 +8,22 @@
  * not knowable at prerender time — it is pinned here and combined with the request pathname.
  */
 
+import { CURRENT_ELECTION_ID } from "@how2vote/data-schema";
+import { manifestFor } from "./manifest";
+
+/**
+ * Number of questions in the current election's quiz, from its bundled manifest (equal to the
+ * dataset's active questions; question-count.test.ts holds every election to that).
+ */
+export const CURRENT_QUESTION_COUNT: number =
+  manifestFor(CURRENT_ELECTION_ID).counts["questions"] ?? 0;
+
+/** The /quiz description for a question set of `count` questions; count-free when unknown. */
+export function quizDescription(count: number): string {
+  const n = count > 0 ? `${count} ` : "";
+  return `Answer ${n}real questions that parliament has voted on. It takes about five minutes and your progress is saved as you go.`;
+}
+
 /** Canonical production origin (apex). Drives canonical URLs, OG url and the sitemap. */
 export const SITE_URL = "https://how2vote.au";
 export const SITE_NAME = "How2Vote";
@@ -130,8 +146,7 @@ export const pageMeta = {
   },
   "/quiz": {
     title: "The questions — How2Vote",
-    description:
-      "Answer 50 real questions that parliament has voted on. It takes about five minutes and your progress is saved as you go.",
+    description: quizDescription(CURRENT_QUESTION_COUNT),
     index: false,
   },
   "/review": {

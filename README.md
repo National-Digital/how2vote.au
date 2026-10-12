@@ -44,7 +44,7 @@
 [![Data: They Vote For You](https://img.shields.io/badge/data-They%20Vote%20For%20You-6b21a8)](https://theyvoteforyou.org.au/)
 
 An independent voting-record **comparison** tool for Australian federal elections.
-You answer 50 propositions parliament has actually voted on; the tool shows how closely each
+You answer propositions that parliament has actually voted on; the tool shows how closely each
 party's **recorded parliamentary votes** match your positions, against the candidates on your
 ballot in official ballot order — then you build your own voting plan. Nothing is ranked by
 score and no preference is recommended: you author your own preference order.
