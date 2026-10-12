@@ -10,6 +10,7 @@
   // page would claim that page is the HowTo.
   import { HOWTO_STEPS } from "$lib/structured-data";
   import { METHODOLOGY_VERSION } from "$lib/provenance";
+  import { SITE_URL } from "$lib/seo";
 </script>
 
 <p>
@@ -195,6 +196,17 @@
   source of its candidate ballots (AEC candidate nominations) and the data version they arrived in. Ballots
   are ingested through a manual, human-reviewed change process, and once an election's snapshot is locked,
   automated checks refuse any further change to it.
+</p>
+<p>
+  The propositions, each party's recorded positions and the candidate ballots shown on this site are
+  also published as static JSON files, listed in the
+  <ExternalLink href="{SITE_URL}/data/index.json">data index</ExternalLink> and described by an
+  <ExternalLink href="{SITE_URL}/data/openapi.json">OpenAPI document</ExternalLink>. Each file
+  carries the licence and credit of the data it holds and says what we changed: the propositions and
+  positions are They Vote For You data under the ODbL, with our own contributions (the adapted
+  wording and the computed positions) also under the DbCL and registered party names credited to the
+  Australian Electoral Commission as their source, and the candidate ballots are Australian
+  Electoral Commission data under CC BY 4.0.
 </p>
 <p>
   We keep a published <a href="/corrections">correction and methodology-change history</a>: every

@@ -40,6 +40,14 @@
 /service-worker.js
   Cache-Control: public, max-age=0, must-revalidate
 
+# Public, read-only data files: readable from any origin, revalidated like pages because their
+# paths are stable across data releases. The sitewide same-origin resource policy is detached so
+# other sites may load them.
+/data/*
+  ! Cross-Origin-Resource-Policy
+  Access-Control-Allow-Origin: *
+  Cache-Control: public, max-age=0, must-revalidate
+
 # Runtime public env (PUBLIC_* form IDs, noindex flag) is emitted here and is NOT content-hashed, so
 # it must revalidate too — otherwise a changed form ID could stay stale behind the default cache.
 /_app/env.js

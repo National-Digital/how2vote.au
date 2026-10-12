@@ -138,6 +138,61 @@ export function insightsDatasetGraph() {
   };
 }
 
+export const OPEN_DATA_DATASET_ID = `${SITE_URL}/methodology#data`;
+
+/** One published /data/ file, as listed by the build-time catalogue ($lib/open-data.server). */
+export type OpenDataDownload = {
+  name: string;
+  url: string;
+  dataVersion: string;
+  license: { id: string; name: string; url: string };
+  attribution: string;
+  /** Every credit the file carries (its attribution plus any scoped credit). */
+  credit: string;
+  /** The upstream source the file is drawn from. */
+  source: string;
+  /** The year of the election the file is for. */
+  year: number;
+};
+
+/**
+ * Dataset describing the static /data/ files: propositions, recorded party positions and candidate
+ * ballots per election. The files come from sources under different licences, so the licence and
+ * credit are stated on each DataDownload rather than once for the Dataset.
+ */
+export function openDataDatasetGraph(files: OpenDataDownload[]) {
+  return {
+    "@context": "https://schema.org",
+    "@type": "Dataset",
+    "@id": OPEN_DATA_DATASET_ID,
+    name: "How2Vote election data — propositions, party positions and candidates",
+    description:
+      "Static JSON files of the parliamentary propositions, each party's recorded position on them, and the House and Senate candidates in ballot-paper order, for each Australian federal election How2Vote covers.",
+    url: `${SITE_URL}/methodology`,
+    creator: { "@id": ORG_ID },
+    isAccessibleForFree: true,
+    inLanguage: "en-AU",
+    spatialCoverage: { "@type": "Place", name: "Australia" },
+    temporalCoverage: `${Math.min(...files.map((f) => f.year))}/${Math.max(...files.map((f) => f.year))}`,
+    isBasedOn: [...new Set(files.map((f) => f.source))],
+    subjectOf: {
+      "@type": "CreativeWork",
+      name: "OpenAPI description",
+      encodingFormat: "application/json",
+      url: `${SITE_URL}/data/openapi.json`,
+    },
+    distribution: files.map((f) => ({
+      "@type": "DataDownload",
+      name: f.name,
+      encodingFormat: "application/json",
+      contentUrl: f.url,
+      version: f.dataVersion,
+      license: f.license.url,
+      creditText: f.credit,
+    })),
+  };
+}
+
 /**
  * The three steps a voter takes to build a card. This is the SINGLE source for both the visible
  * "In short" list on /methodology and the HowTo JSON-LD below, so the structured data can never

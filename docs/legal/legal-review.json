@@ -362,6 +362,20 @@
       "disposition": "reviewed",
       "reviewer": "cameron-young",
       "affectedControls": ["control-4", "control-5", "control-6"]
+    },
+    {
+      "date": "2026-10-12",
+      "change": "The propositions, recorded party positions and candidate ballots the content pages already show are published as static JSON files on how2vote.au under /data/<election>/ for 2019, 2022 and 2025 (propositions.json, positions.json, candidates.json), with /data/index.json and /data/openapi.json describing them (the CC0-1.0 dedication on openapi.json covers that description document only, not the data files), and a schema.org Dataset on /methodology listing each file with its own licence and credit. The ODbL and CC BY terms, attributions, copyright and sources are read from data/rights/rights-classes.json at build; the DbCL grant for National Digital's contributions is recorded in the register's tvfy-odbl notes (and so in LICENSE-DATA.md) and in data/rights/proposition-content-rights.json. propositions.json and positions.json are the vote-positions domain under the ODbL with the They Vote For You attribution and OpenAustralia Foundation notice intact; each names National Digital as publisher, states How2Vote's modifications (the proposition wording is adapted by How2Vote from They Vote For You policy descriptions, and the selection and wording are editorial; the party positions are computed by How2Vote from They Vote For You member agreement figures), licenses National Digital's contributions (the adaptation of the proposition wording and the computed positions) under the Database Contents License (DbCL-1.0) to the extent it has rights in them, and carries the election's provenance statement from its manifest. The registered party names in positions.json are credited to the AEC as their source (\"Registered party names © Commonwealth of Australia (Australian Electoral Commission)\", scoped to parties[].name where independent is false; independents' names come from They Vote For You member records) with no licence stated for them in the ODbL file. candidates.json is the candidate-ballots domain under CC BY 4.0 with the AEC attribution and copyright notice, the per-election AEC downloads recorded in data/source/<election>/aec-sources.json as source and provenance, and a statement of How2Vote's restructuring; candidate lines carry only ballot position, name and party as printed. A domain whose class does not permit redistribution (boundary geometry, research aggregates) is refused at build, and only elections with an entry in data/rights/proposition-content-rights.json are published, so the upcoming election (next) is withheld. data/rights/proposition-content-rights.json records that the proposition wording is adapted from, and the positions computed from, the They Vote For You snapshots, and that National Digital's contributions are additionally licensed under the DbCL 1.0; the rights register records the new outputs against each domain and adds the DbCL grant to the tvfy-odbl class notes. No other rights class, licence term or attribution string is altered; no consent or Terms version is affected; no collection, use, disclosure, retention or overseas-processing practice is altered. Reviewed against ODbL 1.0 §§4.2–4.7 and CC BY 4.0 §§2(a)(5), 3(a): ODbL files carry the licence URI and intact OpenAustralia Foundation notices, are offered in full (§4.6) with no added terms or technological measures, and contain no incompatible Contents (National Digital's contributions under the DbCL to the extent it has rights in them; AEC registered party names credited as facts, not licensed material); candidates.json carries the AEC creator and copyright notice, licence URI, source URI and a modifications statement, implies no AEC endorsement and adds no restrictions; next is withheld until it has a proposition-rights entry.",
+      "disposition": "reviewed",
+      "reviewer": "cameron-young",
+      "affectedControls": [
+        "control-5",
+        "control-7",
+        "control-10",
+        "control-12",
+        "control-13",
+        "control-14"
+      ]
     }
   ],
   "nextMandatoryReviewDate": "2027-07-15",
