@@ -1,11 +1,13 @@
 import { expect, test } from "@playwright/test";
+import { waitForServiceWorker } from "./flow-helpers";
 
 test("the offline page reports the whole card flow as available once cached", async ({ page }) => {
-  // First load registers the service worker; give it a moment to install and precache, then reload
-  // so the page is controlled and can read the populated cache.
+  // First load registers the service worker; once it has precached and activated, reload so the
+  // page is controlled and can read the populated cache.
   await page.goto("/offline");
-  await page.waitForTimeout(1500);
+  await waitForServiceWorker(page);
   await page.reload();
+  expect(await page.evaluate(() => navigator.serviceWorker.controller !== null)).toBe(true);
 
   await expect(page.getByRole("heading", { level: 1 })).toContainText("offline");
   await expect(page.getByText("Online", { exact: true })).toBeVisible();
@@ -23,7 +25,7 @@ test("an offline navigation to an uncached page falls back to the branded offlin
 }) => {
   // Prime the service worker from the home page, then cut the network.
   await page.goto("/");
-  await page.waitForTimeout(1500);
+  await waitForServiceWorker(page);
   await context.setOffline(true);
 
   await page.goto("/a-page-that-was-never-cached-12345");

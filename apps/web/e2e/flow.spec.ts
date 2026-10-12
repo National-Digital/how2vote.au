@@ -1,5 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
-import { seedEligibility } from "./flow-helpers";
+import { seedEligibility, waitForServiceWorker } from "./flow-helpers";
 
 const QUESTIONS = 50;
 
@@ -210,8 +210,8 @@ test("a shared card link recomputes offline", async ({ page, context }) => {
   await expect(page).toHaveURL(/\/card#v1\./);
   const shareUrl = page.url();
 
-  // Let the service worker install and take control, then cut the network.
-  await page.waitForTimeout(1500);
+  // Let the service worker precache and activate, then cut the network.
+  await waitForServiceWorker(page);
   await context.setOffline(true);
   await page.goto(shareUrl);
   await expect(page.getByText("House of Representatives")).toBeVisible();
