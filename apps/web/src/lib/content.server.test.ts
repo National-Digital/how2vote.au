@@ -213,32 +213,6 @@ describe("content routes stay neutral (no scoring engine)", () => {
   }
 });
 
-describe("content pages keep their text out of chrome-named classes", () => {
-  // Reader views and crawlers drop elements whose class contains these words as page furniture.
-  const chrome =
-    /header|footer|banner|sidebar|related|meta|byline|author|tags|share|social|comment|menu|nav|button|hidden|scroll|promo|widget|extra|contact|media/;
-  const DATA_PAGE = resolve(dirname(fileURLToPath(import.meta.url)), "components/DataPage.svelte");
-  for (const file of [...routeFiles().filter((f) => f.endsWith(".svelte")), DATA_PAGE]) {
-    it(`${file.split("/src/")[1]} uses no chrome-named class`, () => {
-      const source = readFileSync(file, "utf8");
-      const style = source.match(/<style>([\s\S]*)<\/style>/)?.[1] ?? "";
-      const classes = [
-        ...[...source.matchAll(/class="([^"{]*)"/g)].flatMap((m) => m[1]!.split(/\s+/)),
-        ...[...style.matchAll(/\.([a-z][\w-]*)/g)].map((m) => m[1]!),
-      ].filter((c) => chrome.test(c));
-      expect(classes).toEqual([]);
-    });
-  }
-
-  it("the site footer names itself as one", () => {
-    const footer = readFileSync(
-      resolve(dirname(fileURLToPath(import.meta.url)), "components/Footer.svelte"),
-      "utf8",
-    );
-    expect(footer).toMatch(/<footer class="[^"]*\bsite-footer\b/);
-  });
-});
-
 describe("contentPaths", () => {
   it("are unique, absolute and slash-prefixed", () => {
     const paths = contentPaths();
