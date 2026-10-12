@@ -50,10 +50,11 @@ overrides:
   # has resurfaced after each partial fix (GHSA-v2hh-gcrm-f6hx, GHSA-7p8r-x3mc-p8w7,
   # GHSA-f65p-4m7j-42xc, GHSA-jqff-g426-hqxp, GHSA-fph4-wmhf-6fwf, GHSA-5jgf-p345-68v8, all high;
   # the last three name 3.1.5 itself); 3.1.6 serialises an unvalidated port and misreads an
-  # unclosed bracket in the authority (GHSA-qw65-cvwx-89v3, GHSA-58mr-gqgx-xq4g). Only reached transitively via eslint-plugin-tsdoc ->
-  # @microsoft/tsdoc-config -> ajv in the dev-only lint toolchain; forced to the patched line, and
-  # held on 3.x because ajv requires it.
-  fast-uri@>=3.0.0 <3.1.7: "3.1.7"
+  # unclosed bracket in the authority (GHSA-qw65-cvwx-89v3, GHSA-58mr-gqgx-xq4g); 3.1.7 normalises
+  # host case inconsistently across percent-encoded octets (GHSA-hrr3-gc8f-f4qj, medium). Only
+  # reached transitively via eslint-plugin-tsdoc -> @microsoft/tsdoc-config -> ajv in the dev-only
+  # lint toolchain; forced to the patched line, and held on 3.x because ajv requires it.
+  fast-uri@>=3.0.0 <3.1.8: "3.1.8"
   # sharp < 0.35.4 inherits libvips CVEs (GHSA-f88m-g3jw-g9cj, GHSA-rgj7-g3m4-5g8c, both high);
   # 0.35.5 takes the patched librsvg (GHSA-wq5f-xc86-pv6w, high). The direct dependency is declared
   # at ^0.35.5 in apps/web and apps/mobile; this forces the instance pulled in via wrangler ->
@@ -63,6 +64,11 @@ overrides:
   # offsets (GHSA-68fv-2mgg-jv7q, high). Reached only through build tooling reading our own
   # source maps, never user input; forced to the patched line to keep the gate clean.
   source-map-js@>=1.0.0 <1.2.2: "1.2.2"
+  # postcss-selector-parser < 7.1.6 parses a long flat selector in quadratic time, so a crafted
+  # selector can exhaust the CPU (GHSA-rj75-hqrm-r3gf, medium). Reached only via
+  # svelte-eslint-parser in the dev-only lint toolchain, which reads our own components; forced to
+  # the patched line to keep the gate clean.
+  postcss-selector-parser@>=7.0.0 <7.1.6: "7.1.6"
   # brace-expansion <= 5.0.8 has an unbounded-expansion DoS — a crafted brace pattern can OOM the
   # process (GHSA-mh99-v99m-4gvg), and 5.0.9 closes the bypass of that mitigation via unbounded
   # intermediate arrays (GHSA-rgw5-rvv9-x895, both high); 5.0.11 bounds the recursion on nested
