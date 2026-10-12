@@ -14,6 +14,7 @@ Per-domain summary (see `LICENSE-DATA.md` for the exact terms and required attri
 | Parliamentary vote/position data | `source/**/positions*`, compiled into `dist/` | **ODbL v1.0** — Derivative Database of [They Vote For You](https://theyvoteforyou.org.au/) (© OpenAustralia Foundation). Attribution **and** share-alike are obligations. | Permitted under ODbL (share-alike). |
 | AEC candidate / ballot / electorate data | `source/**/ballots*`, `source/<id>/aec-sources.json` | **CC BY 4.0** (provisional — pending verification), from public AEC nomination publications. | Permitted with attribution. |
 | AEC federal boundary geometry | `aec-spatial/`, compiled maps | **AEC Spatial Data Download Data Licence** (restrictive) — © Commonwealth of Australia (AEC). **Redistribution restricted**; a Derivative Product notice must be shown wherever the geometry appears. | **Restricted** — do not redistribute the raw geometry; see `LICENSE-DATA.md` + `aec-spatial/source-record.json`. |
+| Postcode → federal electorate correspondence | `postcodes/` | **CC BY 4.0** — compiled from ABS ASGS correspondence and allocation files (© Commonwealth of Australia, ABS). No AEC boundary geometry is used. | Permitted with attribution. |
 | Project aggregates & research stats | `dist/**/stats*`, `snapshots/` compiled outputs | **No licence asserted** — the project's own compiled aggregates; reuse terms are not granted here. | Not licensed for reuse without asking. |
 | `v0-seed/` | `v0-seed/` | Pre-rewrite seed kept for provenance + the dataset migration; its vote/position portion is ODbL as above. | Per its underlying domain. |
 
@@ -22,6 +23,7 @@ Per-domain summary (see `LICENSE-DATA.md` for the exact terms and required attri
 | `source/` | Curated per-election inputs (questions, positions, ballots) the pipeline compiles from, plus per-election provenance records (`aec-sources.json`, `ballot-verification.json`, `candidate-mapping.json`). |
 | `dist/` | Compiled, checksummed dataset shipped with the build — each `manifest.json` carries the data vintage and attribution string. |
 | `aec-spatial/` | AEC boundary-geometry source record + rebuild instructions (the raw archive is git-ignored — restricted redistribution). |
+| `postcodes/` | Postcode → electorate membership compiled by `scripts/build-postcode-electorates.mjs`, its source record (SHA-256 pins, retrieval URLs, which elections it applies to) and the ABS licence capture. The ABS source files are not committed. |
 | `rights/` | `rights-classes.json` — the single source of truth for every domain's rights class; `LICENSE-DATA.md` is generated from it. |
 | `governance/` | The signed runtime kill-switch control plane (`control-plane.json`). |
 | `snapshots/` | Locked upstream TVFY snapshots, immutable after lock (ADR 0005). |

@@ -133,6 +133,10 @@ jobs:
       # component.
       - name: Stale-data predicate is pure and channel-independent
         run: node scripts/check-staleness.mjs
+      # The next election's postcode pages state the boundaries were unchanged as at a date; it must
+      # be re-checked against the AEC redistributions page before it is 120 days old.
+      - name: Postcode boundary statement is current
+        run: node scripts/check-postcode-staleness.mjs
 
   privacy-research:
     name: CI group (Privacy and Research)

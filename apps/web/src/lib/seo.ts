@@ -199,8 +199,15 @@ export function canonicalPath(pathname: string): string {
   return pathname;
 }
 
+// Earlier elections' postcode pages near-duplicate the current election's, so only those are indexed.
+const POSTCODE_PATH = /^\/([^/]+)\/postcodes(?:\/|$)/;
+
 /** Resolve metadata for a pathname, falling back to the site default for unknown routes. */
 export function resolveMeta(pathname: string): PageMeta {
   const key = canonicalPath(pathname);
-  return (pageMeta as Record<string, PageMeta>)[key] ?? DEFAULT_META;
+  const meta = (pageMeta as Record<string, PageMeta>)[key] ?? DEFAULT_META;
+  const postcodeElection = POSTCODE_PATH.exec(key)?.[1];
+  return postcodeElection && postcodeElection !== CURRENT_ELECTION_ID
+    ? { ...meta, index: false }
+    : meta;
 }

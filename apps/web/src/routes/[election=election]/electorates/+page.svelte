@@ -24,6 +24,10 @@
 >
   <div class="switch"><ElectionToggle active={page.params.election!} section="electorates" /></div>
 
+  {#if data.postcodesHref}
+    <p><a href={data.postcodesHref}>Find your electorate by postcode →</a></p>
+  {/if}
+
   {#if noBallot}
     <p class="note">
       Once the AEC declares nominations, every candidate will be listed here in ballot-paper order.

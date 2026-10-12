@@ -2,6 +2,11 @@ import { describe, expect, it } from "vitest";
 import { formatAuthorisation, PREFERENCE_SOURCE_NOTICE } from "./print-auth";
 import { AUTHORISATION, DATA_SOURCE, LICENCES, ORG } from "./org";
 import { MAP_LICENCE_NAME, MAP_LICENCE_NOTICE, MAP_LICENCE_URL } from "./mapLicence";
+import {
+  POSTCODE_ATTRIBUTION,
+  POSTCODE_LICENCE_NAME,
+  POSTCODE_LICENCE_URL,
+} from "./postcodeLicence";
 
 /**
  * Golden-file (approved-output) harness for the legally-load-bearing text the app stamps onto
@@ -36,7 +41,7 @@ describe("golden: s321D print authorisation stamp", () => {
 });
 
 describe("golden: attribution and licence notices", () => {
-  it("captures the operator attribution, open-licence facts and prescribed AEC map notice", async () => {
+  it("captures the operator attribution, open-licence facts, AEC map notice and ABS attribution", async () => {
     const golden = [
       "# Attribution & licence notices",
       "",
@@ -62,6 +67,11 @@ describe("golden: attribution and licence notices", () => {
       `licence: ${MAP_LICENCE_NAME}`,
       `url:     ${MAP_LICENCE_URL}`,
       ...MAP_LICENCE_NOTICE.map((p, i) => `\n[${i + 1}] ${p}`),
+      "",
+      "## ABS postcode correspondence attribution (postcodeLicence.ts — postcode pages)",
+      `licence:     ${POSTCODE_LICENCE_NAME}`,
+      `url:         ${POSTCODE_LICENCE_URL}`,
+      `attribution: ${POSTCODE_ATTRIBUTION}`,
       "",
     ].join("\n");
     await expect(golden).toMatchFileSnapshot("./__golden__/attribution-notice.txt");

@@ -68,6 +68,27 @@
       "notes": "Creative Commons Attribution 4.0 International (CC BY 4.0) pursuant to the AEC website-wide copyright notice (https://www.aec.gov.au/footer/copyright.htm). Applies to AEC-produced candidate, party, polling-place and election-results CSV data unless a particular file states otherwise. EXCLUDES AEC maps / electoral-boundary GIS + shapefiles (expressly not CC BY 4.0 — subject to the separate AEC Spatial Data Download Data Licence, see the aec-boundary-spatial class), AEC logos, the Commonwealth Coat of Arms, and third-party content. The 2025 candidate/ballot/electorate CSVs are retrieved from the canonical aec.gov.au downloads (https://www.aec.gov.au/election/fe25/downloads-statistics.htm), retained in-repo, SHA-256 pinned and verified to reproduce ballots.json exactly (see data/source/2025/aec-sources.json)."
     },
     {
+      "id": "abs-asgs-cc-by",
+      "name": "ABS postcode to federal electorate correspondence",
+      "source": "ABS Australian Statistical Geography Standard (ASGS) Edition 3 correspondences and allocation files",
+      "sourceOrg": "Australian Bureau of Statistics",
+      "sourceUrl": "https://data.gov.au/data/dataset/asgs-edition-3-2021-correspondences",
+      "licence": {
+        "spdxId": "CC-BY-4.0",
+        "name": "Creative Commons Attribution 4.0 International",
+        "url": "https://creativecommons.org/licenses/by/4.0/"
+      },
+      "copyright": "© Commonwealth of Australia (Australian Bureau of Statistics)",
+      "attribution": "Postcode correspondence data © Commonwealth of Australia (Australian Bureau of Statistics), CC BY 4.0",
+      "redistribution": "permitted",
+      "modification": "permitted",
+      "shareAlike": false,
+      "attributionRequired": true,
+      "licenceStatus": "current",
+      "noticeRef": "data/postcodes/source-record.json",
+      "notes": "Sources: ASGS Geographic Correspondences (2021) Edition 3 (https://data.gov.au/data/dataset/asgs-edition-3-2021-correspondences), the ASGS Edition 3 allocation files (https://www.abs.gov.au/statistics/standards/australian-statistical-geography-standard-asgs-edition-3/jul2021-jun2026/access-and-downloads/allocation-files) and Census of Population and Housing: Mesh Block Counts, 2021 (https://www.abs.gov.au/census/guide-census-data/mesh-block-counts/latest-release), all published by the Australian Bureau of Statistics. Creative Commons Attribution 4.0 International per the ABS website copyright notice (https://www.abs.gov.au/website-privacy-copyright-and-disclaimer), which excludes the Commonwealth Coat of Arms, the ABS logo, trade marks, unit record data, third-party content and ABS sub-brands; the data.gov.au catalogue entry for the ASGS Edition 3 correspondences also records CC BY 4.0. Wording captured in data/postcodes/abs-licence-capture-2026-10-12.md. Commonwealth Electoral Divisions in the ASGS are ABS approximations built from Mesh Blocks, not the AEC's legal boundaries, and no AEC boundary geometry is used to build this domain. The adapted data is published with the source titles and links, the attribution, a link to the licence, a statement that it was adapted by How2Vote, and a statement that it is provided without warranty. The ABS source files are SHA-256 pinned in the source record and not committed; only the compiled membership list is, and it carries the attribution, licence and sources. Source record attested by cameron-young on 2026-10-12."
+    },
+    {
       "id": "how2vote-aggregates",
       "name": "how2vote.au research aggregates",
       "source": "how2vote.au aggregate research counters",
@@ -115,6 +136,13 @@
       "rightsClass": "aec-boundary-spatial",
       "sources": ["data/raw/boundaries/** (gitignored raw AEC GIS)"],
       "outputs": ["apps/web/static/maps/*/*.json"]
+    },
+    {
+      "id": "postcode-electorates",
+      "description": "Federal electorates each postcode falls in",
+      "rightsClass": "abs-asgs-cc-by",
+      "sources": ["data/postcodes/source-record.json (ABS files pinned by SHA-256, not committed)"],
+      "outputs": ["data/postcodes/postcode-electorates.json", "/[election]/postcodes pages"]
     },
     {
       "id": "research-aggregates",

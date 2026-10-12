@@ -35,6 +35,14 @@ const BASE_CSP = {
 const isNativeChannel =
   process.env.PUBLIC_DIST_CHANNEL === "ios" || process.env.PUBLIC_DIST_CHANNEL === "android";
 
+// Web-only routes: the app channels build none of their pages (src/lib/postcodes.server.ts), so
+// they are expected to go unseen there and nowhere else.
+const WEB_ONLY_ROUTES = [
+  "/[election=election]/postcodes",
+  "/[election=election]/postcodes/[postcode]",
+];
+const isAppChannel = ["ios", "android", "fdroid"].includes(process.env.PUBLIC_DIST_CHANNEL ?? "");
+
 // The CSP is a pure function of the third-party registry (mergeRegistryCsp). The one channel
 // difference: native shells serve from a local WebView origin, so the optional research POST to our
 // OWN canonical origin is cross-origin and must be allowed in connect-src. This is first-party
@@ -67,6 +75,12 @@ const config = {
     csp: {
       mode: "hash",
       directives: channelDirectives(BASE_CSP),
+    },
+    prerender: {
+      handleUnseenRoutes: ({ routes, message }) => {
+        if (isAppChannel && routes.every((id) => WEB_ONLY_ROUTES.includes(id))) return;
+        throw new Error(message);
+      },
     },
     serviceWorker: {
       register: !isNativeChannel,

@@ -67,6 +67,34 @@
   (https://www.aec.gov.au/election/fe25/downloads-statistics.htm), retained in-repo, SHA-256
   pinned and verified to reproduce ballots.json exactly (see data/source/2025/aec-sources.json).
 
+  ABS postcode to federal electorate correspondence
+  -------------------------------------------------
+  Domains: postcode-electorates
+  Source: ABS Australian Statistical Geography Standard (ASGS) Edition 3 correspondences and allocation files (Australian Bureau of Statistics) — https://data.gov.au/data/dataset/asgs-edition-3-2021-correspondences
+  Licence: Creative Commons Attribution 4.0 International [CC-BY-4.0, https://creativecommons.org/licenses/by/4.0/] — status: current
+  Copyright: © Commonwealth of Australia (Australian Bureau of Statistics)
+  Terms: redistribution permitted; modification permitted; share-alike no.
+  Required attribution: "Postcode correspondence data © Commonwealth of Australia (Australian Bureau of Statistics), CC BY 4.0"
+  Sources: ASGS Geographic Correspondences (2021) Edition 3
+  (https://data.gov.au/data/dataset/asgs-edition-3-2021-correspondences), the ASGS Edition 3
+  allocation files
+  (https://www.abs.gov.au/statistics/standards/australian-statistical-geography-standard-asgs-edition-3/jul2021-jun2026/access-and-downloads/allocation-files)
+  and Census of Population and Housing: Mesh Block Counts, 2021
+  (https://www.abs.gov.au/census/guide-census-data/mesh-block-counts/latest-release), all
+  published by the Australian Bureau of Statistics. Creative Commons Attribution 4.0
+  International per the ABS website copyright notice
+  (https://www.abs.gov.au/website-privacy-copyright-and-disclaimer), which excludes the
+  Commonwealth Coat of Arms, the ABS logo, trade marks, unit record data, third-party content
+  and ABS sub-brands; the data.gov.au catalogue entry for the ASGS Edition 3 correspondences
+  also records CC BY 4.0. Wording captured in data/postcodes/abs-licence-capture-2026-10-12.md.
+  Commonwealth Electoral Divisions in the ASGS are ABS approximations built from Mesh Blocks,
+  not the AEC's legal boundaries, and no AEC boundary geometry is used to build this domain. The
+  adapted data is published with the source titles and links, the attribution, a link to the
+  licence, a statement that it was adapted by How2Vote, and a statement that it is provided
+  without warranty. The ABS source files are SHA-256 pinned in the source record and not
+  committed; only the compiled membership list is, and it carries the attribution, licence and
+  sources. Source record attested by cameron-young on 2026-10-12.
+
   how2vote.au research aggregates
   -------------------------------
   Domains: research-aggregates
