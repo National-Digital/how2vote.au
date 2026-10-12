@@ -278,7 +278,7 @@ platform :android do
   lane :draft_share do
     # Internal app sharing, NOT a track, and the distinction is load-bearing. A track upload
     # consumes a version code in the release sequence — Play requires every later upload to that
-    # track to be higher — so a preview code of 1e9+ would make every future real release (~1000700)
+    # track to be higher — so a preview code of 1e9+ would make every future real release (~104000000)
     # unpublishable to the internal track and permanently break the `internal` lane above.
     # Internal app sharing sits outside every track, interacts with no version code, and cannot be
     # promoted. Do NOT "simplify" this to upload_to_play_store.

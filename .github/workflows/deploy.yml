@@ -153,13 +153,17 @@ jobs:
         id: target
         if: steps.secrets.outputs.ready == 'true'
         env:
-          # PR title on previews; the merge commit subject on main (a squash merge's subject IS the
-          # PR title). Both drive scripts/next-version.mjs.
+          # PR title on previews: the preview version comes from it alone. Elsewhere
+          # scripts/next-version.mjs reads every commit since the latest reachable tag.
           PR_TITLE: ${{ github.event.pull_request.title }}
         run: |
           # Fail closed: an empty version would deploy a null app-version.json payload silently.
           set -euo pipefail
-          NEXT=$(node scripts/next-version.mjs "${PR_TITLE:-$(git log -1 --pretty=%s)}")
+          if [ -n "${PR_TITLE:-}" ]; then
+            NEXT=$(node scripts/next-version.mjs "$PR_TITLE")
+          else
+            NEXT=$(node scripts/next-version.mjs)
+          fi
           if [ "${{ github.event_name }}" = "pull_request" ]; then
             echo "branch=pr-${{ github.event.pull_request.number }}" >> "$GITHUB_OUTPUT"
             echo "noindex=1" >> "$GITHUB_OUTPUT"

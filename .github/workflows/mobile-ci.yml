@@ -360,10 +360,9 @@ jobs:
           #
           # The versionCode sits ABOVE any release code, so a preview installs over a store build
           # instead of being refused as a downgrade. Releases encode as
-          # (MAJOR*10000 + MINOR*100 + PATCH)*1000 + run digits (resolve-store-version), which does
-          # not reach 1e9 until major 100, and the versionCode ceiling is 2.1e9 — so the range is
-          # unreachable in practice. Nothing here touches a release track, so no release code is
-          # consumed.
+          # MAJOR*10^8 + MINOR*10^6 + PATCH*10^3 + run digits (resolve-store-version), which caps
+          # major at 9 so every release code stays below 1e9; the versionCode ceiling is 2.1e9.
+          # Nothing here touches a release track, so no release code is consumed.
           echo "name=$NAME" >> "$GITHUB_OUTPUT"
           echo "code=$(( 1000000000 + RUN ))" >> "$GITHUB_OUTPUT"
 
@@ -522,7 +521,7 @@ jobs:
 
       # Internal app sharing, NEVER a track. A track upload would consume a version code in the
       # release sequence: Play requires every later upload to that track to be higher, and a
-      # preview code of 1e9+ would make every future real release (~1000700) unpublishable to it,
+      # preview code of 1e9+ would make every future real release (~104000000) unpublishable to it,
       # permanently breaking android-release.yml. Internal app sharing sits outside every track,
       # interacts with no version code, and cannot be promoted.
       #
@@ -890,7 +889,7 @@ jobs:
       # ---- fdroid-recipe-build.mjs runs each recipe phase the way fdroidserver does (one bash,
       # ---- "; " joined, cwd = subdir). The commands must come from the recipe, never be restated
       # ---- here: a restatement can pass while the buildserver fails.
-      # 9.9.9 under the shared encoding, (MAJOR*10000 + MINOR*100 + PATCH)*1000, is 90909000.
+      # 9.9.9 under the shared encoding, MAJOR*10^8 + MINOR*10^6 + PATCH*10^3, is 909009000.
       - run: corepack enable
 
       - uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e # v6
@@ -905,7 +904,7 @@ jobs:
       # Injects the version pair into the android project's gradle.properties — the recipe's
       # prebuild, so a broken injection path fails here rather than on the buildserver.
       - name: Recipe prebuild
-        run: node scripts/fdroid-recipe-build.mjs prebuild --version 9.9.9 --code 90909000
+        run: node scripts/fdroid-recipe-build.mjs prebuild --version 9.9.9 --code 909009000
 
       - name: Set up Java
         uses: actions/setup-java@03ad4de0992f5dab5e18fcb136590ce7c4a0ac95 # v5.6.0
@@ -915,7 +914,7 @@ jobs:
 
       # Builds the fdroid-channel web bundle and runs cap sync, from the recipe's own build phase.
       - name: Recipe build
-        run: node scripts/fdroid-recipe-build.mjs build --version 9.9.9 --code 90909000
+        run: node scripts/fdroid-recipe-build.mjs build --version 9.9.9 --code 909009000
 
       # assembleRelease (APK), not bundleRelease: F-Droid builds and signs APKs. No -P flags — if
       # the property-injection path broke, the assertion below catches the 0.0.0-dev fallback.
@@ -929,7 +928,7 @@ jobs:
           AAPT2=$(ls "$ANDROID_HOME"/build-tools/*/aapt2 | sort -V | tail -1)
           BADGING=$("$AAPT2" dump badging "$APK" | head -1)
           echo "$BADGING"
-          echo "$BADGING" | grep -q "versionCode='90909000'" \
+          echo "$BADGING" | grep -q "versionCode='909009000'" \
             || { echo "::error::versionCode was not injected via gradle.properties — the F-Droid recipe path is broken"; exit 1; }
           echo "$BADGING" | grep -q "versionName='9.9.9'" \
             || { echo "::error::versionName was not injected via gradle.properties — the F-Droid recipe path is broken"; exit 1; }

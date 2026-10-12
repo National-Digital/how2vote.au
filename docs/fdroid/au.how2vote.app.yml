@@ -26,10 +26,11 @@
 # Versioning: the gradle files carry NO literal version (values arrive as project properties).
 # checkupdates polls https://how2vote.au/app-version.json (published on every production deploy
 # by scripts/generate-app-version.mjs) for the versionName/versionCode pair and appends a build
-# block below. versionCode = (MAJOR×10000 + MINOR×100 + PATCH)×1000 — the shared
+# block below. versionCode = MAJOR×10^8 + MINOR×10^6 + PATCH×10^3 — the shared
 # resolve-store-version encoding with the run-number digits pinned to 000, so an F-Droid build
 # of a release always ranks below the Play build of the same release (different signers; the
-# codes never compete within one channel).
+# codes never compete within one channel). Releases up to 1.4.6 carry the legacy
+# (MAJOR×10000 + MINOR×100 + PATCH)×1000 codes; every current code is higher.
 
 Categories:
   - Science & Education

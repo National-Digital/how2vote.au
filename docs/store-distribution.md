@@ -302,14 +302,25 @@ and there is no per-PR Apple path. The release-time route is `ios-release.yml`, 
 
 Versioning: both stores share one source (`.github/actions/resolve-store-version`). Marketing
 version = the web release tag; the build number (iOS `CFBundleVersion` / Android `versionCode`) is
-a deterministic encoding of that semver — `(MAJOR×10000 + MINOR×100 + PATCH)×1000` plus three run
-digits — so the same release yields the same high digits on both stores (the run digits come from
-each workflow's own counter, which only competes within its store) and re-runs get a higher
-number. F-Droid uses the same encoding with the run digits pinned to `000`
+a deterministic encoding of that semver — `MAJOR×10^8 + MINOR×10^6 + PATCH×10^3` plus three run
+digits (major 1–9, minor ≤ 99, patch ≤ 999; anything else fails closed, and major ≤ 9 keeps every
+release code below the `1e9 + run` range of the per-PR preview builds) — so the same release yields the same high digits on both
+stores (the run digits come from each workflow's own counter, which only competes within its store)
+and re-runs get a higher number. F-Droid uses the same encoding with the run digits pinned to `000`
 (`scripts/generate-app-version.mjs`, parity-guarded by `check-fdroid-ready.mjs`): its build of a
 release always ranks below the stores' builds of that release, which never matters (channels
 have different signing keys and never upgrade each other) but keeps every published versionCode
-decodable back to the same release tag.
+decodable back to the same release tag. Releases up to 1.4.6 were published under the legacy
+`(MAJOR×10000 + MINOR×100 + PATCH)×1000` encoding; every current code is at least 10^8 and so ranks
+above all of them, and the decoder and recipe check still accept the legacy codes for those
+releases.
+
+The release tag itself comes from `scripts/next-version.mjs`: the highest bump over every commit
+since the latest release tag reachable from the pushed commit (`!`/`BREAKING CHANGE` in a subject →
+major, `feat` → minor, anything else → patch), so a `feat` whose own release was skipped still
+moves the minor on the next one. A commit that is already tagged keeps its version, so a re-run
+mints no new tag and dispatches no store release. PR previews take their version from the PR title
+alone.
 
 ## Rollout policy (both stores)
 
