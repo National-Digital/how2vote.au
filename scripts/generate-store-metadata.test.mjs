@@ -1,11 +1,15 @@
 import { describe, expect, it } from "vitest";
 import { existsSync, lstatSync, readFileSync } from "node:fs";
+import { fileURLToPath } from "node:url";
+import { ballotOf, ballotStates } from "./ballot-states.mjs";
 import {
   ANDROID_IMAGE_MAP,
   FDROID_FILES,
   authorisationLine,
   buildMetadata,
+  electionStageOf,
   reviewerRoute,
+  stageInstant,
   fdroidTargetRel,
   validateMetadata,
 } from "./generate-store-metadata.mjs";
@@ -195,23 +199,179 @@ describe("reviewerRoute", () => {
     current: true,
     provisionalStage: "pending",
   };
-  const Y2025 = { id: "2025", label: "2025 Federal Election", shortLabel: "2025" };
+  const TIMETABLE = {
+    declarationOfNominations: "2028-04-11T12:00:00+10:00",
+    pollsCloseAt: "2028-05-03T20:00:00+10:00",
+  };
+  const CALLED = { ...NEXT, provisionalStage: undefined, timetable: TIMETABLE };
+  const Y2025 = {
+    id: "2025",
+    label: "2025 Federal Election",
+    shortLabel: "2025",
+    timetable: {
+      declarationOfNominations: "2025-04-11T12:00:00+10:00",
+      pollsCloseAt: "2025-05-03T20:00:00+10:00",
+    },
+  };
+  const BEFORE = new Date("2028-04-01T00:00:00+10:00");
+  const DURING = new Date("2028-04-20T00:00:00+10:00");
+  const ONLY_2025 = { next: "none", 2025: "drawn" };
+  const LISTED =
+    "How2Vote doesn't have the AEC's declared candidates and ballot order for that election";
 
   it("names the election that has a ballot while the default has none", () => {
-    const note = reviewerRoute([NEXT, Y2025]);
+    const note = reviewerRoute([NEXT, Y2025], ONLY_2025, BEFORE);
     expect(note).toContain("Next Federal Election");
+    expect(note).toContain("That election has not been called");
     expect(note).toContain('tap "2025"');
   });
 
-  // The whole point of deriving it: a note telling a reviewer to switch elections is wrong the
-  // moment the default carries its own ballot, and nobody would think to delete it by hand.
-  it("retires itself once the current election is called", () => {
-    const called = { ...NEXT, provisionalStage: undefined };
-    expect(reviewerRoute([called, Y2025])).toBe("");
+  it("says candidates aren't final, not that it is uncalled, once the election is called", () => {
+    const note = reviewerRoute([CALLED, Y2025], ONLY_2025, BEFORE);
+    expect(note).toContain("Candidates for that election aren't final yet");
+    expect(note).not.toContain("not been called");
+    expect(note).toContain('tap "2025"');
   });
 
-  it("says nothing when there is no election to point at", () => {
-    expect(reviewerRoute([NEXT])).toBe("");
-    expect(reviewerRoute([])).toBe("");
+  it("says How2Vote hasn't loaded the candidates once the AEC has declared them", () => {
+    const note = reviewerRoute([CALLED, Y2025], ONLY_2025, DURING);
+    expect(note).toContain("How2Vote hasn't loaded the declared candidates for that election yet");
+    expect(note).not.toContain("aren't final");
+    expect(note).not.toContain("not been called");
+  });
+
+  // The whole point of deriving it: a note telling a reviewer to switch elections is wrong the
+  // moment the default's plan builder opens, and nobody would think to delete it by hand.
+  it("is emitted while the current election's plan builder is closed", () => {
+    // A: called, a drawn list loaded before the declaration.
+    expect(reviewerRoute([CALLED, Y2025], { next: "drawn", 2025: "drawn" }, BEFORE)).toContain(
+      LISTED,
+    );
+    // B: a pending, provisional or drawn list carries electorates before the election is called.
+    for (const provisionalStage of ["pending", "provisional", "drawn"]) {
+      for (const ballot of ["provisional", "drawn"]) {
+        const note = reviewerRoute(
+          [{ ...NEXT, provisionalStage }, Y2025],
+          { next: ballot, 2025: "drawn" },
+          BEFORE,
+        );
+        expect(note).toContain(LISTED);
+        expect(note).not.toContain("no data to show");
+      }
+    }
+    // A provisional list stays listed after the declaration.
+    expect(
+      reviewerRoute([CALLED, Y2025], { next: "provisional", 2025: "drawn" }, DURING),
+    ).toContain(LISTED);
+  });
+
+  it("retires itself once the current election's drawn ballot is declared and loaded", () => {
+    expect(reviewerRoute([CALLED, Y2025], { next: "drawn", 2025: "drawn" }, DURING)).toBe("");
+  });
+
+  it("points only to an election whose plan builder opens", () => {
+    expect(reviewerRoute([NEXT], ONLY_2025, BEFORE)).toBe("");
+    expect(reviewerRoute([NEXT, Y2025], {}, BEFORE)).toBe("");
+    expect(reviewerRoute([NEXT, { ...Y2025, timetable: undefined }], ONLY_2025, BEFORE)).toBe("");
+    expect(reviewerRoute([NEXT, Y2025], { next: "none", 2025: "provisional" }, BEFORE)).toBe("");
+    expect(reviewerRoute([], {}, BEFORE)).toBe("");
+  });
+});
+
+describe("stageInstant", () => {
+  const elections = [{ dataVersion: "2026-06-23" }, { dataVersion: "2025-03-28" }, {}];
+
+  it("is the newest dataVersion, so the committed check never reads the wall clock", () => {
+    expect(stageInstant(elections, {}).toISOString()).toBe("2026-06-22T14:00:00.000Z");
+  });
+
+  it("is SOURCE_DATE_EPOCH when set", () => {
+    expect(stageInstant(elections, { SOURCE_DATE_EPOCH: "1800000000" }).getTime()).toBe(
+      1_800_000_000_000,
+    );
+  });
+
+  it("words today's committed notes the same whatever the clock reads", () => {
+    const registry = JSON.parse(
+      readFileSync(new URL("../data/dist/elections.json", import.meta.url), "utf8"),
+    );
+    const ballots = ballotStates(fileURLToPath(new URL("../data/dist", import.meta.url)));
+    const now = stageInstant(registry, {});
+    const build = () => buildMetadata(operator, copy, registry, ballots, now);
+    const first = build();
+    const RealDate = Date;
+    // A clock years ahead changes nothing: the instant comes from the data.
+    globalThis.Date = class extends RealDate {
+      constructor(...args) {
+        super(...(args.length ? args : [RealDate.parse("2040-01-01T00:00:00Z")]));
+      }
+      static now() {
+        return RealDate.parse("2040-01-01T00:00:00Z");
+      }
+    };
+    try {
+      expect(buildMetadata(operator, copy, registry, ballots, stageInstant(registry, {}))).toEqual(
+        first,
+      );
+    } finally {
+      globalThis.Date = RealDate;
+    }
+  });
+});
+
+describe("electionStageOf", () => {
+  it("applies the web's stage rule (apps/web/src/lib/election-stage.ts) to every case", async () => {
+    const { stageFor } = await import("../apps/web/src/lib/election-stage.ts");
+    const elections = JSON.parse(
+      readFileSync(new URL("../data/dist/elections.json", import.meta.url), "utf8"),
+    );
+    const timetabled = elections.find((e) => e.timetable);
+    const { timetable, ...untimetabled } = timetabled;
+    const t = timetable;
+    const at = (iso, minutes) => new Date(Date.parse(iso) + minutes * 60_000);
+    const instants = [
+      at(t.declarationOfNominations, -1),
+      at(t.declarationOfNominations, 0),
+      at(t.pollsCloseAt, -1),
+      at(t.pollsCloseAt, 0),
+      at(t.returnOfWrits, 1),
+    ];
+    const seen = new Set();
+    for (const meta of [timetabled, untimetabled]) {
+      for (const ballot of ["none", "provisional", "drawn"]) {
+        for (const now of instants) {
+          const stage = electionStageOf(meta, ballot, now);
+          expect(stage).toBe(stageFor(meta, ballot, now));
+          seen.add(stage);
+        }
+      }
+    }
+    expect(seen).toEqual(
+      new Set(["unannounced", "called", "listed", "declared", "ballot", "held"]),
+    );
+  });
+
+  it("keeps a provisional list listed whatever the phase, short of held", () => {
+    const meta = {
+      timetable: { declarationOfNominations: "2028-04-11", pollsCloseAt: "2028-05-03" },
+    };
+    expect(electionStageOf(meta, "provisional", new Date("2028-04-20"))).toBe("listed");
+    expect(electionStageOf(meta, "drawn", new Date("2028-04-20"))).toBe("ballot");
+    expect(electionStageOf(meta, "provisional", new Date("2028-06-01"))).toBe("held");
+  });
+});
+
+describe("ballotOf", () => {
+  it("reads the dataset's ballot as the web does", async () => {
+    const web = await import("../apps/web/src/lib/election-stage.ts");
+    const cases = [
+      { electorates: [] },
+      { electorates: [], ballotStatus: "pending" },
+      { electorates: [{}], ballotStatus: "provisional" },
+      { electorates: [{}], ballotStatus: "drawn" },
+      { electorates: [{}] },
+    ];
+    expect(cases.map(ballotOf)).toEqual(["none", "none", "provisional", "drawn", "drawn"]);
+    expect(cases.map(web.ballotOf)).toEqual(cases.map(ballotOf));
   });
 });

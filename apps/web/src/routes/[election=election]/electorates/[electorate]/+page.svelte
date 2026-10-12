@@ -34,7 +34,9 @@
 <DataPage
   {crumbs}
   {title}
-  intro="Every candidate on the House of Representatives ballot in {data.electorate}, {data.stateName}, at the {data.year} federal election, in ballot-paper order."
+  intro={data.provisional
+    ? `The candidates listed so far for the House of Representatives in ${data.electorate}, ${data.stateName}, at the ${data.year} federal election. How2Vote doesn't have the AEC's declared list and ballot order yet.`
+    : `Every candidate on the House of Representatives ballot in ${data.electorate}, ${data.stateName}, at the ${data.year} federal election, in ballot-paper order.`}
 >
   <ul class="rows">
     {#each data.candidates as c (c.position)}
@@ -47,7 +49,11 @@
     {/each}
   </ul>
 
-  <p><a href={data.senateHref}>See the {data.stateName} Senate ballot →</a></p>
+  <p>
+    <a href={data.senateHref}
+      >See the {data.stateName} Senate {data.provisional ? "candidates" : "ballot"} →</a
+    >
+  </p>
   <p><a href={data.hubHref}>All electorates, {data.year} →</a></p>
 
   <p class="source">

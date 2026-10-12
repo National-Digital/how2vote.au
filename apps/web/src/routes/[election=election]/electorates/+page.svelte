@@ -9,31 +9,24 @@
   let { data }: { data: PageData } = $props();
   const home = $derived(electionHome(page.params.election!));
   const crumbs = $derived([home, { label: "Electorates" }]);
-  // A provisional/upcoming election ships no ballot, so there are no electorates to list yet.
   const noBallot = $derived(data.states.length === 0);
 </script>
 
 <Meta title={data.seo.title} description={data.seo.description} type="article" />
 
-<DataPage
-  {crumbs}
-  title="Electorates & candidates — {data.label}"
-  intro={noBallot
-    ? "The next federal election hasn't been announced yet, so no electorates or candidates have been drawn."
-    : `Choose your federal electorate to see every candidate on the House ballot, or open your state's Senate ballot. ${data.year} election.`}
->
+<DataPage {crumbs} title="Electorates & candidates — {data.label}" intro={data.intro}>
   <div class="switch"><ElectionToggle active={page.params.election!} section="electorates" /></div>
 
   {#if data.postcodesHref}
     <p><a href={data.postcodesHref}>Find your electorate by postcode →</a></p>
   {/if}
 
-  {#if noBallot}
+  {#if data.awaitsNominations}
     <p class="note">
       Once the AEC declares nominations, every candidate will be listed here in ballot-paper order.
       For now, you can <a href="/">compare your views with the parties' voting records</a>.
     </p>
-  {:else}
+  {:else if !noBallot}
     {#each data.states as s (s.code)}
       <h2>{s.name}</h2>
       <p>{s.summary}</p>
@@ -42,7 +35,7 @@
           <li><a href={e.href}>{e.name}</a></li>
         {/each}
       </ul>
-      <p><a href={s.senateHref}>{s.name} Senate ballot →</a></p>
+      <p><a href={s.senateHref}>{s.name} {data.senateLink} →</a></p>
     {/each}
   {/if}
 </DataPage>

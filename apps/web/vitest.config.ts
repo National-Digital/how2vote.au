@@ -1,11 +1,18 @@
 import { fileURLToPath } from "node:url";
 import { defineConfig } from "vitest/config";
+import { ballotStates } from "../../scripts/ballot-states.mjs";
 
 // Unit tests for pure app modules. The SvelteKit plugin is intentionally omitted — component and
 // full-flow behaviour is covered by the Playwright e2e suite (test:e2e), not here. The two SvelteKit
 // path aliases the tested modules rely on are re-declared so vitest can resolve them without the
 // plugin: `$lib` (app code) and `$data` (the committed datasets).
 export default defineConfig({
+  // As vite.config.ts bakes it in for the app.
+  define: {
+    __BALLOTS__: JSON.stringify(
+      ballotStates(fileURLToPath(new URL("../../data/dist", import.meta.url))),
+    ),
+  },
   resolve: {
     alias: {
       $lib: fileURLToPath(new URL("./src/lib", import.meta.url)),

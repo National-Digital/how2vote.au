@@ -46,6 +46,7 @@ import {
 } from "$lib/governance";
 import { NATIONAL_BALLOT, isElectorateLess, loadData, stateName, type Data } from "$lib/data";
 import { election } from "$lib/election.svelte";
+import { ballotOf, plansOpen, stageOfPhase } from "$lib/election-stage";
 import { moveDown, moveUp, planStatus, prefOf, setRank, type PlanStatus } from "$lib/plan";
 import { printAuth } from "$lib/print-auth.svelte";
 import { quiz } from "$lib/quiz.svelte";
@@ -417,13 +418,20 @@ class CardFlow {
     this.data ? this.data.card.state === "ACT" || this.data.card.state === "NT" : false,
   );
 
-  // Lifecycle phase, derived deterministically from the polling day + verified ballot-final flag
-  // (never the `current` toggle). Archived = polling day passed → historical demonstration.
+  // Lifecycle phase, from the election's AEC timetable (`electionPhase`), never the `current`
+  // toggle. Archived = polls closed → historical demonstration.
   phase = $derived(this.data ? electionPhase(election.meta) : "upcoming");
   isArchived = $derived(this.phase === "archived");
+  /** What the loaded dataset holds as a ballot: none, a provisional list, or the drawn ballot. */
+  ballot = $derived(this.dataset ? ballotOf(this.dataset.ballots) : "none");
+  /** The stage the card's wording describes: the phase with the dataset's ballot. */
+  electionStage = $derived(stageOfPhase(election.meta, this.phase, this.ballot));
+  /** Whether the party panels follow the official ballot-paper order. */
+  panelsBallotOrdered = $derived(this.ballot === "drawn" && this.electionStage !== "listed");
 
-  // Ballot-order gating: the plan builder opens for a live or an archived election, but stays closed
-  // for an `upcoming` one until its official candidate list and ballot order are final and verified.
+  // Ballot-order gating (`plansOpen`): the plan builder opens for a live or an archived election
+  // with electorates, but stays closed for an `upcoming` one until its official candidate list and
+  // ballot order are final and verified.
   // An archived election's builder is a clearly-labelled historical demonstration, never an
   // instruction for a live vote. The printing capability is the runtime kill-switch: global
   // `printing`, this election, or this electorate can each be suspended, and a tampered control
@@ -431,7 +439,7 @@ class CardFlow {
   plansEnabled = $derived(
     this.data && this.activeElectionId
       ? isPrintingAllowed(this.activeElectionId, slugify(this.data.card.electorate)) &&
-          this.phase !== "upcoming"
+          plansOpen(this.electionStage, this.ballot)
       : false,
   );
 
@@ -520,14 +528,14 @@ class CardFlow {
             CARD_COPY.houseCompare,
             CARD_COPY.houseCaption,
             this.houseParties,
-            true,
+            this.panelsBallotOrdered,
           ),
           nativePanel(
             CARD_COPY.senate,
             fill(CARD_COPY.senatePaper, { state }),
             CARD_COPY.senateCaption,
             this.senateParties,
-            true,
+            this.panelsBallotOrdered,
           ),
         ];
     const row = (id: string, candidate: string, party: string, order: readonly string[]) => ({
