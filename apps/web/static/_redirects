@@ -1,3 +1,14 @@
-# Cloudflare Pages redirects. Apex (how2vote.au) is canonical — consolidate www onto it so
-# canonical URLs, the sitemap and og:url all agree. HTTP→HTTPS is handled by Cloudflare + HSTS.
+# Cloudflare Pages redirects. Static rules come before dynamic ones.
+
+# Markdown twins are served beside their page as /x.md (scripts/build-markdown.mjs). Send the
+# guessed /x/index.md spelling there, one rule per twin route.
+/methodology/index.md /methodology.md 301
+
+# Apex (how2vote.au) is canonical — consolidate www onto it so canonical URLs, the sitemap and
+# og:url all agree. HTTP→HTTPS is handled by Cloudflare + HSTS.
 https://www.how2vote.au/* https://how2vote.au/:splat 301
+
+/:election/electorates/:electorate/index.md /:election/electorates/:electorate.md 301
+/:election/parties/:party/index.md /:election/parties/:party.md 301
+/:election/issues/:issue/index.md /:election/issues/:issue.md 301
+/:election/senate/:state/index.md /:election/senate/:state.md 301
