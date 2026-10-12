@@ -7,8 +7,14 @@
 #            APPLE_TEAM_ID
 #   Android: PLAY_SERVICE_ACCOUNT_JSON, ANDROID_KEYSTORE_PATH + passwords (read by build.gradle)
 #
-# Signing is cloud-managed (no certificate repo): xcodebuild -allowProvisioningUpdates
-# authenticates with the App Store Connect API key and creates/fetches profiles itself.
+# Signing is cloud-managed (no certificate repo). The archive is ad-hoc signed with no Apple
+# credentials, so it cannot create a certificate; the export step alone authenticates with the App
+# Store Connect API key (-allowProvisioningUpdates) and signs with Apple's cloud-managed
+# distribution certificate. A runner-local certificate would be lost with the runner and count
+# against Apple's per-team cap, so the build lane fails if any new certificate appears.
+
+require "open3"
+require "tmpdir"
 
 default_platform(:ios)
 
@@ -21,30 +27,177 @@ def asc_api_key
   )
 end
 
+IOS_PROJECT = "ios/App/App.xcodeproj"
+IOS_ENTITLEMENTS = "ios/App/App/App.entitlements"
+# Development certificates are never needed; a new distribution certificate means signing fell
+# back to a runner-local identity instead of Apple's cloud-managed one.
+GUARDED_CERT_TYPES = %w[DEVELOPMENT IOS_DEVELOPMENT DISTRIBUTION IOS_DISTRIBUTION].freeze
+# Provisioning rewrites these per signing environment, so only their presence is compared.
+ENVIRONMENT_ENTITLEMENTS = %w[aps-environment com.apple.developer.icloud-container-environment].freeze
+
+def mobile_root
+  File.expand_path("..", FastlaneCore::FastlaneFolder.path)
+end
+
+# Returns [stdout, stderr]; codesign --display writes signature details to stderr.
+def capture!(*cmd)
+  out, err, status = Open3.capture3(*cmd)
+  UI.user_error!("#{cmd.join(' ')} failed:\n#{err}") unless status.success?
+  [out, err]
+end
+
+def signature_details(path)
+  capture!("codesign", "--display", "--verbose=2", path).last
+end
+
+def signed_entitlements(path)
+  xml = capture!("codesign", "--display", "--entitlements", "-", "--xml", path).first
+  xml.include?("<plist") ? Plist.parse_xml(xml) || {} : {}
+end
+
+def expand_entitlement(value, team_id)
+  case value
+  when String then value.gsub(/\$\((?:TeamIdentifierPrefix|AppIdentifierPrefix)\)/, "#{team_id}.")
+  when Array then value.map { |item| expand_entitlement(item, team_id) }
+  when Hash then value.transform_values { |item| expand_entitlement(item, team_id) }
+  else value
+  end
+end
+
+def assert_entitlements_carried!(path, stage, team_id)
+  expected = expand_entitlement(Plist.parse_xml(File.join(mobile_root, IOS_ENTITLEMENTS)), team_id)
+  actual = signed_entitlements(path)
+  missing = expected.reject do |key, value|
+    ENVIRONMENT_ENTITLEMENTS.include?(key) ? actual.key?(key) : actual[key] == value
+  end
+  unless missing.empty?
+    UI.user_error!("#{stage}: entitlements missing or changed in the signature: #{missing.keys.join(', ')}")
+  end
+  UI.message("#{stage} signature carries entitlements: #{expected.keys.join(', ')}")
+end
+
+def assert_archive_ad_hoc!(archive_path, team_id)
+  app = Dir[File.join(archive_path, "Products/Applications/*.app")].first
+  UI.user_error!("No .app in #{archive_path}") unless app
+
+  bundles = [app] + Dir[File.join(app, "**/*.{framework,appex,dylib}")]
+  bundles.each do |bundle|
+    details = signature_details(bundle)
+    next if details.include?("Signature=adhoc") && !details.match?(/^Authority=/)
+
+    UI.user_error!("Archive step signed #{bundle.delete_prefix("#{app}/")} with a certificate; it must stay ad-hoc")
+  end
+  UI.user_error!("Archive embeds a provisioning profile") if File.exist?(File.join(app, "embedded.mobileprovision"))
+  UI.message("Archive is ad-hoc signed with no certificate authority (#{bundles.size} code objects)")
+  assert_entitlements_carried!(app, "Archive", team_id)
+end
+
+def assert_ipa_distribution_signed!(ipa_path, team_id)
+  Dir.mktmpdir do |dir|
+    capture!("ditto", "-x", "-k", ipa_path, dir)
+    app = Dir[File.join(dir, "Payload/*.app")].first
+    UI.user_error!("No .app in #{ipa_path}") unless app
+
+    capture!("codesign", "--verify", "--deep", "--strict", app)
+    details = signature_details(app)
+    authority = details[/^Authority=(.*)$/, 1].to_s
+    unless authority.match?(/\A(Apple|iPhone) Distribution/) && details.match?(/^TeamIdentifier=#{Regexp.escape(team_id)}$/)
+      UI.user_error!("Exported app is not distribution-signed for team #{team_id} (leaf authority: #{authority.empty? ? 'none' : authority})")
+    end
+    UI.user_error!("Exported app has no provisioning profile") unless File.exist?(File.join(app, "embedded.mobileprovision"))
+    UI.user_error!("Exported app is debuggable (get-task-allow)") if signed_entitlements(app)["get-task-allow"]
+    UI.message("Export leaf authority: #{authority}; team: #{team_id}")
+    assert_entitlements_carried!(app, "Export", team_id)
+  end
+end
+
+def certificate_ids_by_type
+  certs = Spaceship::ConnectAPI::Certificate.all(filter: { certificateType: GUARDED_CERT_TYPES.join(",") })
+  GUARDED_CERT_TYPES.to_h { |type| [type, certs.select { |cert| cert.certificate_type == type }.map(&:id)] }
+end
+
+# Logs the per-type counts; returns an error message if any certificate appeared, else nil.
+def minted_certificates_message(before, after)
+  counts = GUARDED_CERT_TYPES.map { |type| "#{type} #{before[type].size} -> #{after[type].size}" }
+  UI.message("Certificates before -> after: #{counts.join(', ')}")
+  minted = GUARDED_CERT_TYPES.flat_map { |type| (after[type] - before[type]).map { |id| "#{type} #{id}" } }
+  return nil if minted.empty?
+
+  "This build created certificate(s) #{minted.join(', ')}. Their private keys existed only on the " \
+    "runner: revoke them in Certificates, Identifiers & Profiles."
+end
+
+# Best effort after a failed build; never replaces the original error.
+def log_minted_certificates(before)
+  message = minted_certificates_message(before, certificate_ids_by_type)
+  UI.error(message) if message
+rescue StandardError => e
+  UI.error("Could not re-check certificates after the failure: #{e.message}")
+end
+
 platform :ios do
-  desc "Archive + export the signed ipa (cloud-managed signing)"
+  desc "Archive ad-hoc, then export the App Store ipa with cloud-managed distribution signing"
   lane :build do
-    build_app(
-      project: "ios/App/App.xcodeproj",
-      scheme: "App",
-      configuration: "Release",
-      output_directory: "builds",
-      output_name: "how2vote.ipa",
-      export_method: "app-store",
-      export_options: {
-        signingStyle: "automatic",
-        teamID: ENV.fetch("APPLE_TEAM_ID"),
-      },
-      xcargs: [
-        "-allowProvisioningUpdates",
-        "-authenticationKeyPath #{File.expand_path(ENV.fetch('ASC_KEY_PATH'))}",
-        "-authenticationKeyID #{ENV.fetch('ASC_KEY_ID')}",
-        "-authenticationKeyIssuerID #{ENV.fetch('ASC_ISSUER_ID')}",
-        "MARKETING_VERSION=#{ENV.fetch('APP_VERSION')}",
-        "CURRENT_PROJECT_VERSION=#{ENV.fetch('BUILD_NUMBER')}",
-        "DEVELOPMENT_TEAM=#{ENV.fetch('APPLE_TEAM_ID')}",
-      ].join(" "),
-    )
+    team_id = ENV.fetch("APPLE_TEAM_ID")
+    archive_path = File.join(mobile_root, "builds/how2vote.xcarchive")
+    asc_api_key # authorises the certificate checks below
+    certs_before = certificate_ids_by_type
+
+    begin
+      # No -allowProvisioningUpdates or API key here: the archive must not reach the developer
+      # portal. Ad-hoc signing still embeds App.entitlements, which the export carries into the
+      # distribution signature; an unsigned archive would lose them.
+      build_app(
+        project: IOS_PROJECT,
+        scheme: "App",
+        configuration: "Release",
+        archive_path: archive_path,
+        skip_package_ipa: true,
+        xcargs: [
+          "CODE_SIGN_STYLE=Manual",
+          "CODE_SIGN_IDENTITY=-",
+          "AD_HOC_CODE_SIGNING_ALLOWED=YES",
+          "PROVISIONING_PROFILE_REQUIRED=NO",
+          "PROVISIONING_PROFILE_SPECIFIER=",
+          "DEVELOPMENT_TEAM=#{team_id}",
+          "MARKETING_VERSION=#{ENV.fetch('APP_VERSION')}",
+          "CURRENT_PROJECT_VERSION=#{ENV.fetch('BUILD_NUMBER')}",
+        ].join(" "),
+      )
+      assert_archive_ad_hoc!(archive_path, team_id)
+
+      # fastlane 2.240 accepts only the legacy "app-store" method name; Xcode maps it to
+      # app-store-connect.
+      build_app(
+        project: IOS_PROJECT,
+        scheme: "App",
+        configuration: "Release",
+        skip_build_archive: true,
+        skip_profile_detection: true,
+        archive_path: archive_path,
+        output_directory: "builds",
+        output_name: "how2vote.ipa",
+        export_method: "app-store",
+        export_options: {
+          signingStyle: "automatic",
+          teamID: team_id,
+          manageAppVersionAndBuildNumber: false,
+        },
+        export_xcargs: [
+          "-allowProvisioningUpdates",
+          "-authenticationKeyPath #{File.expand_path(ENV.fetch('ASC_KEY_PATH')).shellescape}",
+          "-authenticationKeyID #{ENV.fetch('ASC_KEY_ID')}",
+          "-authenticationKeyIssuerID #{ENV.fetch('ASC_ISSUER_ID')}",
+        ].join(" "),
+      )
+      assert_ipa_distribution_signed!(File.join(mobile_root, "builds/how2vote.ipa"), team_id)
+    rescue StandardError
+      log_minted_certificates(certs_before)
+      raise
+    end
+
+    message = minted_certificates_message(certs_before, certificate_ids_by_type)
+    UI.user_error!(message) if message
   end
 
   desc "Build and upload to TestFlight (runs on every web release)"
