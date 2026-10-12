@@ -167,3 +167,26 @@ jobs:
       version: ${{ needs.check.outputs.version }}
       build: ${{ needs.check.outputs.build }}
       build-year: ${{ needs.check.outputs.build-year }}
+
+  # Shares the release run's issue ("iOS release vX.Y.Z failed"): a failure here notes the run on
+  # it, and a catch-up that submits the release or stands down for it closes it. A failure before
+  # a release is chosen goes to "iOS submission catch-up failed", which any run that gets through
+  # the check closes. A deferral, a retry recorded pending in a green job, or a run with nothing
+  # owed changes nothing else. Named "Report failures": supersede-store-runs.mjs ignores it while
+  # the run waits at the gate.
+  alert:
+    name: Report failures
+    needs: [find, check, submit]
+    if: ${{ !cancelled() && (contains(needs.*.result, 'failure') || needs.check.result == 'success') }}
+    permissions:
+      contents: read
+      issues: write
+    uses: ./.github/workflows/store-release-alert.yml
+    with:
+      name: iOS release
+      tag: ${{ needs.check.outputs.tag || inputs.tag }}
+      untagged-name: iOS submission catch-up
+      results: ${{ toJSON(needs) }}
+      terminal: submit
+      resolves: ${{ needs.submit.outputs.outcome == 'submit' || needs.submit.outputs.outcome == 'skip' }}
+      clear-untagged: ${{ needs.find.result == 'success' && needs.check.result == 'success' }}

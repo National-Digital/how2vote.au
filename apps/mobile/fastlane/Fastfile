@@ -227,16 +227,14 @@ platform :ios do
       skip_screenshots: false,
       overwrite_screenshots: true,
       submit_for_review: true,
-      # Apple's equivalent of a staged rollout, and the same reasoning as the Android `promote`
-      # lane: no OTA path, so a paused phased release is the only "undo". Mechanism differs —
-      # Apple runs a FIXED 7-day schedule (1/2/5/10/20/50/100%) that applies only to AUTOMATIC
-      # updates for existing users (new and manual downloads always get the latest), and there is
-      # no percentage to choose. Campaign-period data corrections set IOS_PHASED_RELEASE=false so
-      # the fix reaches auto-updaters immediately.
+      # No OTA path, so a paused phased release is the only "undo". Apple runs a FIXED 7-day
+      # schedule (1/2/5/10/20/50/100%) with no clicks, and it applies only to AUTOMATIC updates for
+      # existing users (new and manual downloads always get the latest). Campaign-period data
+      # corrections set IOS_PHASED_RELEASE=false so the fix reaches auto-updaters immediately.
       phased_release: ENV.fetch("IOS_PHASED_RELEASE", "true") == "true",
-      # Approved builds wait for a human to release — the App Store equivalent of Play's
-      # Managed publishing. A green submit job means "approved and waiting", not "live".
-      automatic_release: false,
+      # releaseType AFTER_APPROVAL: the version goes on sale as soon as App Review approves it, and
+      # a phased release starts its schedule at that moment.
+      automatic_release: true,
       run_precheck_before_submit: false,
       force: true,
       submission_information: {
@@ -301,14 +299,14 @@ platform :android do
 
   desc "Promote the internal build to production (behind the play-store environment gate)"
   lane :promote do
-    # Staged by default. Native has no OTA path — a bad build sits on devices until a NEW build
-    # clears review — so a halted staged rollout is the only "undo" available. The exception is a
-    # data correction inside the campaign period (writ issued → polls close): there, 90% of users
-    # left on wrong ballot data is the worse failure, so the release workflow passes PLAY_ROLLOUT=1.
+    # Full rollout by default: a fraction of 1 promotes as `completed`, with no user fraction. The
+    # release workflow passes PLAY_ROLLOUT=0.1 for a release marked `[staged-rollout]`; supply then
+    # sends it as `inProgress`, and the rollout is ramped or halted in Play Console.
     upload_to_play_store(
       track: "internal",
       track_promote_to: "production",
-      rollout: ENV.fetch("PLAY_ROLLOUT", "0.1"),
+      rollout: ENV.fetch("PLAY_ROLLOUT", "1"),
+      track_promote_release_status: "completed",
       version_code: ENV.fetch("BUILD_NUMBER"),
       skip_upload_aab: true,
       skip_upload_metadata: true,

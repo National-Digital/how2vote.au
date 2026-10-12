@@ -187,6 +187,27 @@ describe("parkedAtGate", () => {
     expect(parkedAtGate([{ status: "in_progress" }, { status: "waiting" }])).toBe(false);
     expect(parkedAtGate([])).toBe(false);
   });
+
+  it("ignores the alert job queued behind the gate, and nothing else", () => {
+    for (const status of ["queued", "pending"]) {
+      for (const name of [
+        "Report failures / Open, update or close the failure issue",
+        "Report failures",
+      ]) {
+        const alert = { status, name };
+        expect(parkedAtGate([{ status: "completed" }, { status: "waiting" }, alert]), name).toBe(
+          true,
+        );
+        expect(parkedAtGate([alert]), name).toBe(false);
+      }
+      expect(
+        parkedAtGate([{ status: "waiting" }, { status, name: "Publish the F-Droid APK" }]),
+      ).toBe(false);
+      expect(parkedAtGate([{ status: "waiting" }, { status, name: "Report failures later" }])).toBe(
+        false,
+      );
+    }
+  });
 });
 
 describe("latestState", () => {

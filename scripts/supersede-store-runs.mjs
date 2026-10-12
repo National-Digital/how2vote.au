@@ -69,13 +69,22 @@ export function runTag(title) {
 }
 
 /**
- * Whether a run is parked at a gate and nothing else: a job waiting, every other job completed.
- * @param {{ status: string }[]} jobs
+ * The failure-alert job each store workflow ends with (store-release-alert.yml, called as job
+ * "Report failures"). It runs after the gated job, so while the gate waits it is queued and has
+ * executed nothing.
+ */
+export const ALERT_JOB = "Report failures";
+const isAlert = (j) => j.name === ALERT_JOB || j.name?.startsWith(`${ALERT_JOB} / `);
+
+/**
+ * Whether a run is parked at a gate and nothing else: a job waiting, every other job completed
+ * (the alert job aside).
+ * @param {{ status: string, name?: string }[]} jobs
  */
 export function parkedAtGate(jobs) {
   return (
     jobs.some((j) => j.status === "waiting") &&
-    jobs.every((j) => j.status === "completed" || j.status === "waiting")
+    jobs.every((j) => j.status === "completed" || j.status === "waiting" || isAlert(j))
   );
 }
 

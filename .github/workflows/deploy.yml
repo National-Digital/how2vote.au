@@ -652,6 +652,25 @@ jobs:
           dispatch android-release.yml
           if [ -n "${APPLE_TEAM_ID:-}" ]; then dispatch ios-release.yml; fi
 
+  # Opens or updates a failure issue when tagging the release or dispatching the store workflows
+  # fails. Only the release job counts: a failed site deploy is not a store failure. It never closes
+  # the issue: a re-run exits green on "tag already exists" without dispatching anything, so a green
+  # release job does not prove the stores were dispatched. Close it by hand.
+  release-alert:
+    name: Report release failures
+    needs: [deploy, release]
+    if: ${{ !cancelled() && github.event_name == 'push' && github.ref == 'refs/heads/main' && needs.deploy.outputs.ready == 'true' && needs.deploy.outputs.version != '' }}
+    permissions:
+      contents: read
+      issues: write
+    uses: ./.github/workflows/store-release-alert.yml
+    with:
+      name: Store dispatch
+      tag: v${{ needs.deploy.outputs.version }}
+      results: ${{ format('{{"release":{0}}}', toJSON(needs.release)) }}
+      terminal: release
+      resolves: false
+
   cleanup:
     name: Tear down preview
     runs-on: ubuntu-latest

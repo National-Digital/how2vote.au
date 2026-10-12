@@ -85,11 +85,11 @@ jobs:
         with:
           node-version-file: .nvmrc
 
-      # Same marker and same policy as android-release.yml, so one decision in the release notes
-      # governs BOTH stores and they can't drift. Read at submit time rather than from the trigger
-      # payload (captured before the reviewer saw it) or a repo variable (sticky — a full rollout
-      # left switched on is the failure this gate exists to prevent). See "Rollout policy" in
-      # docs/store-distribution.md.
+      # `[full-rollout]` turns the phased release off; the same marker governs the Play rollout in
+      # android-release.yml. Read from the release notes at submit time rather than from the
+      # trigger payload (captured before the notes could be edited) or a repo variable (sticky).
+      # Only a marker in a pull request title or on a line of its own counts (see
+      # scripts/rollout-markers.mjs and "Rollout policy" in docs/store-distribution.md).
       - name: Resolve phased-release mode
         id: rollout
         env:
@@ -97,14 +97,8 @@ jobs:
           TAG: ${{ inputs.tag }}
         run: |
           set -euo pipefail
-          BODY="$(gh release view "$TAG" --json body --jq .body || echo "")"
-          if printf '%s' "$BODY" | grep -qiF '[full-rollout]'; then
-            echo "phased=false" >> "$GITHUB_OUTPUT"
-            echo "::warning::[full-rollout] marker present — phased release OFF (all auto-updaters at once)."
-          else
-            echo "phased=true" >> "$GITHUB_OUTPUT"
-            echo "Phased release: Apple's 7-day schedule. Pause in App Store Connect if needed."
-          fi
+          BODY="$(gh release view "$TAG" --json body --jq .body || echo "")" \
+            node .release-tools/scripts/rollout-markers.mjs ios
 
       - name: Read the release versions
         id: releases
