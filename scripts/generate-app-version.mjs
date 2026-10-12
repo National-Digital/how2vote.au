@@ -20,15 +20,17 @@
  * whose prebuild feeds it back into gradle — so the built APK always matches the declaration.
  * check-fdroid-ready.mjs guards the formula parity with resolve-store-version.
  *
- * APP_VERSION arrives from the deploy environment (deploy.yml → prebuild:assets, the same route
- * as the badge generator). A non-release build (PR preview `1.2.3-pr7`, local `0.0.0-dev`, unset)
- * emits an explicit null payload rather than nothing, so the URL never 404s and never advertises
- * a version that was not actually released; F-Droid's regexes simply find no match. Production
- * pushes always deploy a strict-semver APP_VERSION, so the apex always serves the latest release.
+ * STORE_APP_VERSION arrives from the deploy environment (deploy.yml → prebuild:assets, the same
+ * route as the badge generator). It is the newest release whose F-Droid APK is published
+ * (scripts/store-release-scope.mjs), not the web release being deployed: a release that skips the
+ * stores never gets an APK, and a release that ships gets one only when android-release's
+ * fdroid-publish succeeds, which then redeploys. Anything else (a PR preview, a local build,
+ * unset) emits an explicit null payload rather than nothing, so the URL never 404s; F-Droid's
+ * regexes simply find no match.
  *
  * Usage:
- *   APP_VERSION=2.1.0 node scripts/generate-app-version.mjs           # write the payload
- *   APP_VERSION=2.1.0 node scripts/generate-app-version.mjs --check   # print, write nothing
+ *   STORE_APP_VERSION=2.1.0 node scripts/generate-app-version.mjs           # write the payload
+ *   STORE_APP_VERSION=2.1.0 node scripts/generate-app-version.mjs --check   # print, write nothing
  */
 
 import { mkdirSync, writeFileSync } from "node:fs";
@@ -119,7 +121,7 @@ export function decodeVersionCode(code) {
 }
 
 /**
- * The endpoint payload for a given APP_VERSION. Null fields (never a missing file) for
+ * The endpoint payload for a given store version. Null fields (never a missing file) for
  * anything that is not a release version.
  * @param {string|undefined} appVersion
  */
@@ -146,7 +148,7 @@ function main() {
     return;
   }
   const check = process.argv.includes("--check");
-  const body = payload(process.env.APP_VERSION);
+  const body = payload(process.env.STORE_APP_VERSION);
   if (check) {
     console.info(`app-version: ${JSON.stringify(body)}`);
     return;
@@ -157,7 +159,7 @@ function main() {
   console.info(
     body.versionName
       ? `✓ app-version.json written (${body.versionName} / ${body.versionCode})`
-      : `✓ app-version.json written (null payload — APP_VERSION is not a release semver)`,
+      : `✓ app-version.json written (null payload — STORE_APP_VERSION is not a release semver)`,
   );
 }
 

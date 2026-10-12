@@ -1,6 +1,7 @@
 name: Android release
 
-# Store pipeline for the Android shell (apps/mobile). Every web release becomes an Android build:
+# Store pipeline for the Android shell (apps/mobile). Every release that ships the apps becomes an
+# Android build (see "Which releases ship the apps" in docs/store-distribution.md):
 #
 # workflow_dispatch      -> build the channel web bundle, build + sign the release aab with the
 #                           upload key, upload to the Play internal track, then — behind the
@@ -398,6 +399,8 @@ jobs:
     timeout-minutes: 15
     permissions:
       contents: read
+      statuses: write # record the published APK on the release commit
+      actions: write # redeploy, so app-version.json advertises the release
     steps:
       - uses: actions/download-artifact@634f93cb2916e3fdff6788551b99b062d0335ce0 # v5
         with:
@@ -461,6 +464,37 @@ jobs:
           echo "- url: $URL" >> "$GITHUB_STEP_SUMMARY"
           echo "- sha256: $LOCAL" >> "$GITHUB_STEP_SUMMARY"
           echo "- content-type: $CT" >> "$GITHUB_STEP_SUMMARY"
+
+      # app-version.json advertises only a release carrying this status (deploy.yml,
+      # scripts/store-release-scope.mjs), so F-Droid is never told about a version before its APK
+      # is served. Retried rather than left to a re-run: a re-run refuses to replace the APK above.
+      # If it still fails, set it by hand with the same call once the APK URL is verified.
+      - name: Record the published APK
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+          COMMIT: ${{ needs.build.outputs.commit }}
+          V: ${{ needs.build.outputs.app-version }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          set -euo pipefail
+          for i in 1 2 3 4 5; do
+            gh api -X POST "repos/$REPO/statuses/$COMMIT" -f state=success \
+              -f context="fdroid-apk/v$V" -f target_url="$RUN_URL" \
+              -f description="dist.how2vote.au serves how2vote-fdroid-$V.apk" >/dev/null && exit 0
+            sleep $((i * 5))
+          done
+          echo "::error::could not record the F-Droid APK for v$V on $COMMIT"
+          exit 1
+
+      # The scheduled deploy would catch up within six hours; this makes it prompt.
+      - name: Redeploy so app-version.json advertises the release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+        run: |
+          gh workflow run deploy.yml --repo "$REPO" --ref main \
+            || echo "::warning::could not dispatch deploy.yml — the scheduled deploy will advertise this release"
 
   promote:
     name: Promote to Play production

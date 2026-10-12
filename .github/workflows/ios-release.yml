@@ -1,6 +1,7 @@
 name: iOS release
 
-# Store pipeline for the iOS shell (apps/mobile). Every web release becomes an iOS build:
+# Store pipeline for the iOS shell (apps/mobile). Every release that ships the apps becomes an iOS
+# build (see "Which releases ship the apps" in docs/store-distribution.md):
 #
 # workflow_dispatch      -> build the channel web bundle, archive ad-hoc, export the ipa with
 #                           cloud-managed distribution signing (App Store Connect API key), upload

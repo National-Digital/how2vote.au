@@ -50,8 +50,8 @@ ballot in official ballot order — then you build your own voting plan. Nothing
 score and no preference is recommended: you author your own preference order.
 
 Built as a fully static, offline-capable PWA, and **packaged unchanged** as native iOS and Android
-shells — Capacitor wrappers around the exact same build, dataset included. Both shells are built on
-every release and published on the
+shells — Capacitor wrappers around the exact same build, dataset included. Both shells are built for
+every release that changes them and published on the
 [App Store](https://apps.apple.com/au/app/how2vote/id6801009321),
 [Google Play](https://play.google.com/store/apps/details?id=au.how2vote.app) and
 [F-Droid](https://f-droid.org/packages/au.how2vote.app/); see
