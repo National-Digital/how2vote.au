@@ -160,6 +160,12 @@ export const electionPhase = (meta: ElectionMeta, now?: Date): ElectionPhase => 
   }
 };
 
+/**
+ * Whether the election has been called: the AEC timetable is recorded. An `upcoming` election with
+ * a timetable is called but its candidates are not final; one without is not yet announced.
+ */
+export const isElectionAnnounced = (meta: ElectionMeta): boolean => meta.timetable !== undefined;
+
 /** Whether an election is a historical demonstration (it has been held). */
 export const isArchivedElection = (meta: ElectionMeta, now?: Date): boolean =>
   electionPhase(meta, now) === "archived";

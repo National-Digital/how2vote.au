@@ -19,6 +19,7 @@ final class DocumentConservationTests: XCTestCase {
         "accessibility": "Accessibility",
         "corrections": "Corrections",
         "glossary": "Glossary",
+        "how-to-decide": "How to decide",
         "methodology": "How it works",
         "privacy": "Privacy policy",
         "research": "Research methods",

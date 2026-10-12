@@ -333,6 +333,7 @@ test("content pages have no accessibility violations", async ({ page }) => {
     "/terms",
     "/accessibility",
     "/glossary",
+    "/how-to-decide",
   ]) {
     await page.goto(path);
     await scan(page);
@@ -464,6 +465,7 @@ test("content reflows at 320px (≈400% zoom) with no horizontal scroll", async 
     "/terms",
     "/accessibility",
     "/glossary",
+    "/how-to-decide",
     "/card?res=5f2a9c1e3b7d",
     // Data pages carry the breadcrumb trail — the one piece of pinned chrome whose height depends
     // on its content, and the longest crumbs in the app. Both a party record and an issue (whose

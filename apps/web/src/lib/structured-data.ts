@@ -199,9 +199,9 @@ export function breadcrumbGraph(items: { name: string; url: string }[]) {
 }
 
 /**
- * FAQPage graph from factual question/answer pairs. Used only for *data* facts (e.g. which parties
- * are recorded agreeing with a proposition), never for questions about the app — the answers are
- * the public voting record, so the markup carries no editorial or partisan signal.
+ * FAQPage graph from factual question/answer pairs: the data facts on each issue page (which parties
+ * are recorded agreeing with a proposition), and the questions /how-to-decide answers on the page.
+ * An answer states what the page shows and carries no editorial or partisan signal.
  */
 export function faqGraph(qas: { question: string; answer: string }[]) {
   return {

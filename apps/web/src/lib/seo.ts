@@ -117,6 +117,11 @@ export const pageMeta = {
     description:
       "Report an error in a candidate, party or issue page, and see How2Vote's correction log, response times and methodology version history.",
   },
+  "/how-to-decide": {
+    title: "How to decide your vote — How2Vote",
+    description:
+      "Compare what you care about with the parties' recorded votes in federal parliament. How2Vote does not rank parties or recommend who to put first.",
+  },
   "/glossary": {
     title: "Glossary — How2Vote",
     description:

@@ -5,6 +5,7 @@ import {
   electionPhase,
   electionStage,
   isArchivedElection,
+  isElectionAnnounced,
   isPollingDayNoticeWindow,
   writWindow,
   type ElectionMeta,
@@ -95,6 +96,16 @@ describe("electionPhase", () => {
     for (const e of scheduled) expect(isArchivedElection(e, now)).toBe(true);
     // A placeholder upcoming election is never archived — it has not been held.
     for (const e of placeholders) expect(isArchivedElection(e, now)).toBe(false);
+  });
+});
+
+describe("isElectionAnnounced", () => {
+  it("is true exactly when the AEC timetable is recorded", () => {
+    for (const e of scheduled) expect(isElectionAnnounced(e)).toBe(true);
+    for (const e of placeholders) expect(isElectionAnnounced(e)).toBe(false);
+    const { timetable, ...noTimetable } = election2025;
+    void timetable;
+    expect(isElectionAnnounced(noTimetable)).toBe(false);
   });
 });
 
