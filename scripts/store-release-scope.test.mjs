@@ -57,6 +57,7 @@ describe("isAppPath", () => {
       "docs/legal/required-checks.json",
       ".github/workflows/android-release.yml",
       ".github/workflows/ios-release.yml",
+      ".github/workflows/ios-submit.yml",
       ".github/actions/build-web-channel/action.yml",
       ".github/actions/resolve-store-version/action.yml",
       "scripts/generate-store-metadata.mjs",
@@ -139,6 +140,7 @@ describe("isAppPath", () => {
     const sources = [
       ".github/workflows/android-release.yml",
       ".github/workflows/ios-release.yml",
+      ".github/workflows/ios-submit.yml",
       ...readdirSync(join(ROOT, ".github/actions")).map((a) => `.github/actions/${a}/action.yml`),
       "apps/mobile/fastlane/Fastfile",
       "docs/fdroid/au.how2vote.app.yml",

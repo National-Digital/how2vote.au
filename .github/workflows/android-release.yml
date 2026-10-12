@@ -28,6 +28,8 @@ name: Android release
 # if any is missing: Android is a live store channel, so "no credentials" means a release did not
 # ship, and that must be red. A green run has to mean the bundle reached Play.
 
+run-name: Android release ${{ inputs.tag || github.ref_name }}${{ inputs.dry_run && ' (dry run)' || '' }}
+
 on:
   workflow_dispatch:
     inputs:
@@ -496,6 +498,33 @@ jobs:
           gh workflow run deploy.yml --repo "$REPO" --ref main \
             || echo "::warning::could not dispatch deploy.yml — the scheduled deploy will advertise this release"
 
+  # Cancels older runs of this workflow waiting at the play-store gate: approving one would promote
+  # a stale build. After the build, so a failed build leaves the older run approvable. A run with a
+  # job still executing (an F-Droid publish) is left alone; promote's track check covers it.
+  supersede:
+    name: Cancel older gated runs
+    needs: build
+    if: ${{ !inputs.dry_run }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      contents: read
+      actions: write # cancel the older runs
+    steps:
+      - name: Checkout the release tooling
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7
+        with:
+          path: .release-tools
+          sparse-checkout: scripts
+          filter: tree:0
+
+      - name: Cancel older runs waiting at the gate
+        env:
+          GH_TOKEN: ${{ github.token }}
+          WORKFLOW: android-release.yml
+          TAG: ${{ inputs.tag }}
+        run: node .release-tools/scripts/supersede-store-runs.mjs cancel-stale
+
   promote:
     name: Promote to Play production
     needs: build
@@ -514,6 +543,24 @@ jobs:
         with:
           ref: ${{ needs.build.outputs.commit }}
 
+      # Release tooling comes from the workflow's own commit on main, never from the tag.
+      - name: Checkout the release tooling
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7
+        with:
+          path: .release-tools
+          sparse-checkout: scripts
+          filter: tree:0
+
+      # Skips a build production already holds, or one older than a build on the internal or
+      # production track (a newer release reached Play), and names the staged rollout a promotion
+      # replaces. See scripts/play-promotion.mjs.
+      - name: Read the production track
+        id: track
+        env:
+          BUILD_NUMBER: ${{ needs.build.outputs.build-number }}
+          PLAY_SERVICE_ACCOUNT_JSON: ${{ secrets.PLAY_SERVICE_ACCOUNT_JSON }}
+        run: node .release-tools/scripts/play-promotion.mjs
+
       # Rollout size is a release-time human decision, so it is read from the release notes at
       # PROMOTE time rather than from the trigger payload (which was captured before the reviewer
       # saw it) or a repo variable (sticky — a full rollout left switched on is the failure mode
@@ -522,6 +569,7 @@ jobs:
       # "Rollout policy" in docs/store-distribution.md.
       - name: Resolve rollout fraction
         id: rollout
+        if: steps.track.outputs.promote == 'true'
         env:
           GH_TOKEN: ${{ github.token }}
           TAG: ${{ format('v{0}', needs.build.outputs.app-version) }}
@@ -537,6 +585,7 @@ jobs:
           fi
 
       - name: Set up Ruby / fastlane
+        if: steps.track.outputs.promote == 'true'
         uses: ruby/setup-ruby@95ef2b042f9d7a56d8268cba8559e2842e2ad01b # v1.321.0
         with:
           ruby-version: .ruby-version # single source: apps/mobile/.ruby-version
@@ -544,6 +593,7 @@ jobs:
           working-directory: apps/mobile
 
       - name: Promote internal build to production
+        if: steps.track.outputs.promote == 'true'
         working-directory: apps/mobile
         env:
           APP_VERSION: ${{ needs.build.outputs.app-version }}

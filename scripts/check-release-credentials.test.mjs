@@ -68,7 +68,7 @@ describe("verdict — committed workflows", () => {
   });
 
   it("fails when iOS submit moves to the build environment (mutation)", () => {
-    const ios = file("ios-release.yml");
+    const ios = file("ios-submit.yml");
     const mutated = ios.text.replace("environment: app-store", "environment: android-build");
     expect(mutated).not.toBe(ios.text);
     expect(verdict([{ path: ios.path, text: mutated }]).errors.join("\n")).toMatch(

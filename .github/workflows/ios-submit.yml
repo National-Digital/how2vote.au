@@ -1,0 +1,197 @@
+name: iOS submit
+
+# Submits one release's TestFlight build for App Store review. Called by ios-release.yml once the
+# build is in TestFlight, and by ios-submission-catch-up.yml for a release whose submission was
+# deferred. Called workflows are read from the caller's commit on main, so the release tooling here
+# never comes from the tag being shipped; only the Fastfile and the listing sources do.
+#
+# Behind the `app-store` environment's required reviewer, which holds the App Manager key. Before
+# `deliver` runs, the job runs scripts/app-store-submission.mjs, which cancels an older submission
+# still waiting for review, defers while an older version is in review or approved and unreleased,
+# stands down when App Store Connect already holds a newer version or a processed build of one, and
+# fails on a rejection (see "Submission deferred or blocked" in docs/store-distribution.md).
+# The outcome is recorded as the `app-store/<tag>` commit status on the release commit: failure for
+# what needs a person (a rejection, an unknown state, an API error that will recur such as a revoked
+# key, a missing build, a deliver failure); pending while deferred or after something that may pass
+# later (a cancellation that did not settle, a transient API error, a busy turn), which is what the
+# catch-up workflow retries.
+
+on:
+  workflow_call:
+    inputs:
+      tag:
+        description: Release tag (vX.Y.Z)
+        type: string
+        required: true
+      commit:
+        description: The release commit, verified to be on main by the caller
+        type: string
+        required: true
+      version:
+        description: Marketing version (the tag without the v)
+        type: string
+        required: true
+      build:
+        description: Build number to submit; empty takes the newest processed build of the version
+        type: string
+        default: ""
+      build-year:
+        description: Copyright year for the listing
+        type: string
+        required: true
+    outputs:
+      outcome:
+        description: submit, skip, defer or fail
+        value: ${{ jobs.submit.outputs.outcome }}
+
+permissions:
+  contents: read
+
+jobs:
+  submit:
+    name: Submit for App Store review
+    environment: app-store
+    # At most one approval request per release (a release run and a catch-up). Submissions of
+    # different releases are serialised after the gate by the wait-turn step instead: a group
+    # spanning all releases would also be held while a job is parked at the gate.
+    concurrency:
+      group: ios-submit-${{ inputs.tag }}
+      cancel-in-progress: false
+    runs-on: macos-15
+    # Up to 30 minutes waiting for another submission, 15 for an older submission's cancellation
+    # to settle, then deliver.
+    timeout-minutes: 75
+    permissions:
+      contents: read # gh release view (rollout marker)
+      statuses: write # the app-store/<tag> record
+      actions: read # wait-turn reads the other submit jobs
+    outputs:
+      outcome: ${{ steps.prepare.outputs.outcome }}
+    steps:
+      - name: Checkout the release
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7
+        with:
+          ref: ${{ inputs.commit }}
+
+      - name: Checkout the release tooling
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7
+        with:
+          path: .release-tools
+          sparse-checkout: scripts
+          fetch-depth: 0 # main's history and tags: which versions are releases
+          filter: tree:0
+
+      - uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e # v6
+        with:
+          node-version-file: .nvmrc
+
+      # Same marker and same policy as android-release.yml, so one decision in the release notes
+      # governs BOTH stores and they can't drift. Read at submit time rather than from the trigger
+      # payload (captured before the reviewer saw it) or a repo variable (sticky — a full rollout
+      # left switched on is the failure this gate exists to prevent). See "Rollout policy" in
+      # docs/store-distribution.md.
+      - name: Resolve phased-release mode
+        id: rollout
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ inputs.tag }}
+        run: |
+          set -euo pipefail
+          BODY="$(gh release view "$TAG" --json body --jq .body || echo "")"
+          if printf '%s' "$BODY" | grep -qiF '[full-rollout]'; then
+            echo "phased=false" >> "$GITHUB_OUTPUT"
+            echo "::warning::[full-rollout] marker present — phased release OFF (all auto-updaters at once)."
+          else
+            echo "phased=true" >> "$GITHUB_OUTPUT"
+            echo "Phased release: Apple's 7-day schedule. Pause in App Store Connect if needed."
+          fi
+
+      - name: Read the release versions
+        id: releases
+        run: node .release-tools/scripts/supersede-store-runs.mjs releases
+
+      # One release's prepare and deliver at a time: waits while another submit job that started
+      # earlier is still running. Jobs parked at the gate do not hold the turn.
+      - name: Wait for other App Store submissions
+        id: turn
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: node .release-tools/scripts/supersede-store-runs.mjs wait-turn
+
+      - name: Clear the way for the submission
+        id: prepare
+        if: steps.turn.outputs.turn == 'true'
+        env:
+          RELEASES: ${{ steps.releases.outputs.versions }}
+          APP_VERSION: ${{ inputs.version }}
+          BUILD_NUMBER: ${{ inputs.build }}
+          ASC_KEY_ID: ${{ secrets.ASC_KEY_ID }}
+          ASC_ISSUER_ID: ${{ secrets.ASC_ISSUER_ID }}
+          ASC_API_KEY_P8: ${{ secrets.ASC_API_KEY_P8 }}
+        run: node .release-tools/scripts/app-store-submission.mjs prepare
+
+      # Listing copy is generated from the operator + shared product-copy records so the s 321D
+      # authorisation and the entity are single-sourced (see scripts/generate-store-metadata.mjs).
+      - name: Generate store metadata
+        if: steps.prepare.outputs.outcome == 'submit'
+        env:
+          BUILD_YEAR: ${{ inputs.build-year }}
+        run: node scripts/generate-store-metadata.mjs
+
+      - name: Set up Ruby / fastlane
+        if: steps.prepare.outputs.outcome == 'submit'
+        uses: ruby/setup-ruby@95ef2b042f9d7a56d8268cba8559e2842e2ad01b # v1.321.0
+        with:
+          ruby-version: .ruby-version # single source: apps/mobile/.ruby-version
+          bundler-cache: true
+          working-directory: apps/mobile
+
+      - name: Submit build for review
+        if: steps.prepare.outputs.outcome == 'submit'
+        working-directory: apps/mobile
+        env:
+          APP_VERSION: ${{ inputs.version }}
+          BUILD_NUMBER: ${{ steps.prepare.outputs.build }}
+          ASC_KEY_ID: ${{ secrets.ASC_KEY_ID }}
+          ASC_ISSUER_ID: ${{ secrets.ASC_ISSUER_ID }}
+          ASC_API_KEY_P8: ${{ secrets.ASC_API_KEY_P8 }}
+          APPLE_TEAM_ID: ${{ vars.APPLE_TEAM_ID }}
+          IOS_PHASED_RELEASE: ${{ steps.rollout.outputs.phased }}
+        run: bundle exec fastlane ios submit_review
+
+      - name: Record the submission outcome
+        if: ${{ !cancelled() }}
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+          COMMIT: ${{ inputs.commit }}
+          TAG: ${{ inputs.tag }}
+          OUTCOME: ${{ steps.prepare.outputs.outcome }}
+          TURN: ${{ steps.turn.outputs.turn }}
+          REASON: ${{ steps.prepare.outputs.reason }}
+          JOB_STATUS: ${{ job.status }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          set -euo pipefail
+          # failure for what needs a person: a rejection, an unknown state, an API error that will
+          # recur, and a deliver failure (the catch-up dispatched with `tag` re-arms it). pending,
+          # which the catch-up retries, only for what may pass later.
+          if [ "$OUTCOME" = fail ]; then
+            STATE=failure DESC="$REASON"
+          elif [ "$OUTCOME" = defer ]; then
+            STATE=pending DESC="deferred: $REASON"
+          elif [ "$OUTCOME" = skip ]; then
+            STATE=success DESC="not submitted: $REASON"
+          elif [ "$OUTCOME" = submit ] && [ "$JOB_STATUS" = success ]; then
+            STATE=success DESC="submitted for review"
+          elif [ "$OUTCOME" = submit ]; then
+            STATE=failure DESC="deliver failed; after fixing, dispatch the catch-up with tag=$TAG"
+          elif [ "$TURN" = false ]; then
+            STATE=pending DESC="busy turn: another submission ran too long; the catch-up tries again"
+          else
+            STATE=pending DESC="not submitted (transient error before a decision); the catch-up tries again"
+          fi
+          gh api -X POST "repos/$REPO/statuses/$COMMIT" -f state="$STATE" \
+            -f context="app-store/$TAG" -f target_url="$RUN_URL" \
+            -f description="$(printf '%s' "$DESC" | cut -c1-140)" >/dev/null \
+            || echo "::warning::could not record app-store/$TAG ($STATE: $DESC)"
