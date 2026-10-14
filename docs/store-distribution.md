@@ -483,9 +483,32 @@ joined to a word is ignored, so they can be written about):
 The decision is recorded on the release tag, which `deploy.yml` creates **annotated** with a
 `Store-Release: ship` or `Store-Release: skip` trailer; a skipped release also says so in its
 release notes. The diff base is the newest reachable release tag not marked `skip` (lightweight
-tags predate the trailer and all shipped). On a ship decision, the release job refuses an existing
-tag that is not this commit's ship tag: a concurrent release that claimed the version would
-otherwise leave these app changes without a release, silently.
+tags predate the trailer and all shipped).
+
+Merges that land close together deploy concurrently, so the release job settles the version and
+the decision at tag time (`scripts/release-tag.mjs`). It waits, for up to 30 minutes, while the
+deploy of an earlier untagged merge is still running, so merges are tagged in merge order. It then
+reads the remote's tags, takes the next version and the decision from them, and pushes the tag; if
+a concurrent run took that version first, it starts again, at most five times. No tag is ever
+moved. A version name already used by a tag the job cannot build on (off `main`, or lightweight)
+fails the job until that tag is deleted or renamed.
+
+- A re-run keeps the annotated tag already on its commit. If that release was never published,
+  the re-run publishes it and dispatches the stores as the tag's trailer says; otherwise it does
+  nothing.
+- A commit that a later annotated release already contains gets no tag of its own, because that
+  release carries its changes. The job fails if none of those later releases shipped and this
+  commit's changes needed to.
+- A release whose tag finds a later ship release already tagged gets its GitHub release but no
+  store dispatch. The check runs after the tag push, so a later release tagged in the moment
+  after it is not seen. That can only happen when the wait was cut short (the time limit, or the
+  runs could not be read); the store workflows then stand the older release down (the
+  supersede jobs, and the gated jobs' check for a newer store build).
+- When the released version differs from the one the site was built with, the job waited for (or
+  could not read) an earlier deploy, or the release was out of order, it dispatches `deploy.yml`
+  on `main`. Scheduled and dispatched deploys share one concurrency group, and one that `main` has
+  moved past skips the Pages deploy, because the newer push run publishes the site. Such a skipped
+  redeploy does not advance `app-version.json`; the next deploy does.
 
 **`app-version.json` advertises only a version whose F-Droid APK is published.** When
 `fdroid-publish` has uploaded the APK and verified that `dist.how2vote.au` serves it, it sets a
@@ -694,7 +717,7 @@ cancelled or skipped closes nothing.
 | `android-release.yml` | Android release vX.Y.Z failed | build, fdroid-apk, fdroid-publish, supersede, promote | promote green, for this or a newer release |
 | `ios-release.yml` | iOS release vX.Y.Z failed | build, owe, supersede, submit (`ios-submit.yml`) | submit green with outcome submit, skip or defer, for this or a newer release (a deferral counts: the run itself worked; a busy turn that submitted nothing does not) |
 | `ios-submission-catch-up.yml` | the release's own "iOS release vX.Y.Z failed"; "iOS submission catch-up failed" before a release is chosen | find, check, submit | submit green with outcome submit or skip; the untagged issue by any run whose check is green |
-| `deploy.yml` (release job) | Store dispatch vX.Y.Z failed | release: tagging, the GitHub release, the store dispatches | **never automatically**: a re-run exits green on "tag already exists" without dispatching, so close it by hand once the store runs exist |
+| `deploy.yml` (release job) | Store dispatch vX.Y.Z failed; "Store dispatch for <commit> failed" when no tag was claimed | release: tagging, the GitHub release, the store dispatches | **never automatically**: a re-run whose GitHub release exists exits green without dispatching, so close it by hand once the store runs exist |
 | `play-permission.yml` | Play publish permission failed | probe | the next green probe |
 
 Nothing is reported for a dry run, a cancelled run or job (a stale run cancelled by a newer

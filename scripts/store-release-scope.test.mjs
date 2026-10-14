@@ -495,14 +495,24 @@ describe("deploy.yml", () => {
   const release = job(deploy, "release");
   const build = job(deploy, "deploy");
 
-  it("records the decision on an annotated tag in the form lastShipped reads", () => {
-    expect(release).toContain(`TRAILER="${TRAILER}: ship"`);
-    expect(release).toContain(`TRAILER="${TRAILER}: skip"`);
-    expect(release).toMatch(/tag -a "\$V" -m "\$V" -m "\$TRAILER"/);
+  it("decides and tags in the release job, against the tags at tag time", () => {
+    expect(release).toContain("node scripts/release-tag.mjs");
+    expect(release).toContain("fetch-depth: 0");
+    expect(release).toContain("merge_commit_sha == env.SHA");
+    expect(release).toMatch(/\n {6}pull-requests: read/);
+    expect(release).toContain("SHIP_APPS: ${{ steps.tag.outputs.ship }}");
+    expect(release).toContain("V: ${{ steps.tag.outputs.tag }}");
+    expect(release).not.toContain("needs.deploy.outputs.ship-apps");
+    expect(build).not.toMatch(/ship-apps|apps-base|apps-reason/);
   });
 
-  it("dispatches the stores only on a ship decision", () => {
-    expect(release).toContain("SHIP_APPS: ${{ needs.deploy.outputs.ship-apps }}");
+  it("releases and dispatches only a tag this run created, and the stores only on ship", () => {
+    expect(release).toContain('elif [ "$ACTION" != created ]; then');
+    // A re-run completes the release only when the earlier run never published it.
+    expect(release).toContain("grep -qi 'not found' view.err");
+    const lateTag = release.indexOf('if [ -n "$SHIPPED_BY" ]; then');
+    expect(lateTag).toBeGreaterThan(release.indexOf("gh release create"));
+    expect(release.indexOf("dispatch android-release.yml")).toBeGreaterThan(lateTag);
     expect(release).toMatch(
       /if \[ "\$\{SHIP_APPS:-\}" = "false" \]; then SHIP=false; else SHIP=true; fi/,
     );
@@ -514,17 +524,37 @@ describe("deploy.yml", () => {
     expect(release.indexOf("dispatch android-release.yml", skipExit)).toBeGreaterThan(skipExit);
   });
 
-  it("refuses an existing tag that is not this commit's ship tag", () => {
-    expect(release).toMatch(/check_existing \|\| exit 1/);
-    expect(release).toContain('[ "$commit" != "$GITHUB_SHA" ]');
+  it("redeploys main after any out-of-order release", () => {
+    const superseded = release.indexOf('if [ "$ACTION" = superseded ]; then');
+    expect(release.indexOf("redeploy", superseded)).toBeLessThan(
+      release.indexOf("exit 0", superseded),
+    );
+    expect(release).toContain(
+      'if [ -n "$SHIPPED_BY" ] || [ "$V" != "$DEPLOYED" ] || [ "$WAITED" = true ]; then redeploy; fi',
+    );
   });
 
-  it("decides in the build job, which can read the records, and builds the endpoint from it", () => {
+  it("publishes no redeploy that main has moved past", () => {
+    expect(build).toContain("git ls-remote origin refs/heads/main");
+    for (const step of ["Deploy to Cloudflare Pages", "Post-deploy live smoke"]) {
+      const at = build.indexOf(`name: ${step}`);
+      expect(build.slice(at, build.indexOf("\n        run:", at))).toContain(
+        "steps.current.outputs.stale != 'true'",
+      );
+    }
+  });
+
+  it("reports failures under the tag the release job settled on", () => {
+    const alert = job(deploy, "release-alert");
+    expect(alert).toContain("tag: ${{ needs.release.outputs.tag }}");
+    expect(alert).not.toContain("needs.deploy.outputs.version)");
+  });
+
+  it("builds the endpoint in the build job, which can read the records", () => {
     expect(build).toContain("node scripts/store-release-scope.mjs");
     expect(build).toContain("STORE_APP_VERSION: ${{ steps.stores.outputs.store-version }}");
     expect(build).toMatch(/\n {6}statuses: read/);
     expect(build).toMatch(/\n {6}actions: read/);
-    expect(build).toContain("merge_commit_sha == env.SHA");
   });
 });
 
