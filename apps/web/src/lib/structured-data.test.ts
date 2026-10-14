@@ -53,6 +53,11 @@ describe("siteGraph", () => {
     expect(org.logo).toBeUndefined();
   });
 
+  it("gives WebSite and WebApplication the canonical home URL", () => {
+    expect(node("WebSite").url).toBe("https://how2vote.au/");
+    expect(node("WebApplication").url).toBe("https://how2vote.au/");
+  });
+
   it("links WebSite and WebApplication to the Organization by @id (not re-declared)", () => {
     expect(node("WebSite").publisher).toEqual({ "@id": ORG_ID });
     expect(node("WebApplication").publisher).toEqual({ "@id": ORG_ID });
