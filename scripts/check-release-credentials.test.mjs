@@ -7,6 +7,7 @@ import {
   jobCondition,
   jobEnvironment,
   parseWorkflow,
+  passedSecrets,
   secretUses,
   verdict,
 } from "./check-release-credentials.mjs";
@@ -262,5 +263,107 @@ describe("verdict — bypass attempts", () => {
     expect(excludesPullRequests("contains('github.event_name != pull_request', x)")).toBe(false);
     expect(excludesPullRequests("x == 'github.event_name != \\'pull_request\\''")).toBe(false);
     expect(excludesPullRequests("")).toBe(false);
+  });
+});
+
+describe("verdict — reusable-workflow pass-through", () => {
+  const callee = (head) =>
+    `name: c\non:\n  workflow_call:\n    secrets:\n      ASC_KEY_ID:\n        required: false\njobs:\n  submit:\n${head}    steps:\n      - env:\n          K: \${{ secrets.ASC_KEY_ID }}\n`;
+  const caller = (secrets, extra = "") =>
+    wf(`  submit:\n    uses: ./.github/workflows/c.yml\n${extra}    secrets:\n${secrets}`);
+  const pass = "      ASC_KEY_ID: ${{ secrets.ASC_KEY_ID }}\n";
+  const run = (callerText, calleeText) =>
+    verdict([
+      { path: ".github/workflows/w.yml", text: callerText },
+      { path: ".github/workflows/c.yml", text: calleeText },
+    ]);
+
+  it("passes the committed release and catch-up callers of ios-submit.yml", () => {
+    const sub = file("ios-submit.yml");
+    for (const name of ["ios-release.yml", "ios-submission-catch-up.yml"]) {
+      const w = file(name);
+      expect(w.text).toMatch(/uses: \.\/\.github\/workflows\/ios-submit\.yml/);
+      expect(passedSecrets(w.text.split(/\n {2}submit:\n/)[1]).passed).toEqual([
+        "ASC_KEY_ID",
+        "ASC_ISSUER_ID",
+        "ASC_API_KEY_P8",
+      ]);
+      expect(verdict([w, sub])).toEqual({ ok: true, errors: [] });
+    }
+  });
+
+  it("fails a committed caller when ios-submit.yml is missing or loses its environment (mutation)", () => {
+    const release = file("ios-release.yml");
+    expect(verdict([release]).errors.join("\n")).toMatch(
+      /passes ASC_KEY_ID to \.\/\.github\/workflows\/ios-submit\.yml, not a workflow in this repository/,
+    );
+    const sub = file("ios-submit.yml");
+    const mutated = sub.text.replace("    environment: app-store\n", "");
+    expect(mutated).not.toBe(sub.text);
+    expect(verdict([release, { path: sub.path, text: mutated }]).errors.join("\n")).toMatch(
+      /passes ASC_KEY_ID to \.github\/workflows\/ios-submit\.yml job "submit" in no environment/,
+    );
+  });
+
+  it("accepts a named pass-through to a job in an allowed environment", () => {
+    expect(run(caller(pass), callee("    environment: app-store\n"))).toEqual({
+      ok: true,
+      errors: [],
+    });
+  });
+
+  it("fails a pass-through to a job with no or the wrong environment", () => {
+    expect(run(caller(pass), callee("")).errors.join("\n")).toMatch(
+      /passes ASC_KEY_ID to \.github\/workflows\/c\.yml job "submit" in no environment/,
+    );
+    expect(run(caller(pass), callee("    environment: play-store\n")).errors.join("\n")).toMatch(
+      /job "submit" in environment "play-store"/,
+    );
+  });
+
+  it("fails a pass-through that no called job reads, or to a workflow outside the repository", () => {
+    const unread = callee("    environment: app-store\n").replace(
+      "secrets.ASC_KEY_ID",
+      "secrets.X",
+    );
+    expect(run(caller(pass), unread).errors.join("\n")).toMatch(/which no job reads/);
+    const remote = wf(`  submit:\n    uses: o/r/.github/workflows/c.yml@v1\n    secrets:\n${pass}`);
+    expect(run(remote, callee("    environment: app-store\n")).errors.join("\n")).toMatch(
+      /not a workflow in this repository/,
+    );
+  });
+
+  it("fails a renamed, computed or flow-mapped pass-through", () => {
+    const ok = callee("    environment: app-store\n");
+    expect(run(caller("      OTHER: ${{ secrets.ASC_KEY_ID }}\n"), ok).errors.join("\n")).toMatch(
+      /secrets entry is not NAME/,
+    );
+    expect(
+      run(caller("      ASC_KEY_ID: ${{ secrets.ASC_KEY_ID || 'x' }}\n"), ok).errors.join("\n"),
+    ).toMatch(/secrets entry is not NAME/);
+    const flow = wf(
+      "  submit:\n    uses: ./.github/workflows/c.yml\n    secrets: { ASC_KEY_ID: ${{ secrets.ASC_KEY_ID }} }\n",
+    );
+    expect(run(flow, ok).errors.join("\n")).toMatch(/secrets is not a block mapping/);
+  });
+
+  it("still fails a credential passed as an input to a called workflow", () => {
+    const viaInput = caller(pass, "    with:\n      key: ${{ secrets.ASC_API_KEY_P8 }}\n");
+    expect(run(viaInput, callee("    environment: app-store\n")).errors.join("\n")).toMatch(
+      /job "submit" reads ASC_API_KEY_P8 in no environment/,
+    );
+  });
+
+  it("still fails secrets: inherit to an environment-gated called workflow", () => {
+    const inherit = wf("  submit:\n    uses: ./.github/workflows/c.yml\n    secrets: inherit\n");
+    expect(run(inherit, callee("    environment: app-store\n")).errors.join("\n")).toMatch(
+      /secrets: inherit/,
+    );
+  });
+
+  it("still fails a job without uses: that names the secret in a secrets: key", () => {
+    const plain = wf(`  submit:\n    runs-on: x\n    secrets:\n${pass}    steps: []\n`);
+    const r = run(plain, callee("    environment: app-store\n"));
+    expect(r.errors.join("\n")).toMatch(/job "submit" reads ASC_KEY_ID in no environment/);
   });
 });

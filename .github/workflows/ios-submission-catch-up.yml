@@ -167,6 +167,11 @@ jobs:
       version: ${{ needs.check.outputs.version }}
       build: ${{ needs.check.outputs.build }}
       build-year: ${{ needs.check.outputs.build-year }}
+    # Named, never inherited: a called workflow sees only the secrets its caller passes.
+    secrets:
+      ASC_KEY_ID: ${{ secrets.ASC_KEY_ID }}
+      ASC_ISSUER_ID: ${{ secrets.ASC_ISSUER_ID }}
+      ASC_API_KEY_P8: ${{ secrets.ASC_API_KEY_P8 }}
 
   # Shares the release run's issue ("iOS release vX.Y.Z failed"): a failure here notes the run on
   # it, and a catch-up that submits the release or stands down for it closes it. A failure before

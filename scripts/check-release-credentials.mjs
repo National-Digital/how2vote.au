@@ -10,6 +10,11 @@
  * would read the repository-level copy if one were ever re-added, from any branch. It asserts:
  *   - every registered credential is referenced only from jobs whose `environment:` is one of the
  *     environments listed for it in CREDENTIALS (names compared case-insensitively, as GitHub does);
+ *   - the one exception is a job that calls a local reusable workflow (`uses: ./.github/workflows/…`)
+ *     and passes a credential under its own name in a `secrets:` block (`X: ${{ secrets.X }}`):
+ *     allowed only when the called workflow reads X in at least one job, and every job there that
+ *     reads it declares an environment listed for X. GitHub gives such a job the environment's value
+ *     in place of the passed one, and a called workflow sees no secret its caller does not pass;
  *   - no registered credential is referenced outside a job (workflow-level `env:`);
  *   - the secrets context is only ever indexed by a literal name: `toJSON(secrets)`,
  *     `secrets[expr]` and `secrets: inherit` would hand over every secret the job can see;
@@ -45,7 +50,7 @@ export const CREDENTIALS = {
   R2_ACCOUNT_ID: ["fdroid-publish"],
   R2_ACCESS_KEY_ID: ["fdroid-publish"],
   R2_SECRET_ACCESS_KEY: ["fdroid-publish"],
-  // Developer key with cloud-signing access on ios-build; App Manager key on app-store.
+  // Admin key on ios-build (only Admin can cloud-sign); App Manager key on app-store.
   ASC_KEY_ID: ["ios-build", "app-store"],
   ASC_ISSUER_ID: ["ios-build", "app-store"],
   ASC_API_KEY_P8: ["ios-build", "app-store"],
@@ -293,6 +298,40 @@ export function secretUses(text) {
 }
 
 /**
+ * A reusable-workflow call's `secrets:` block. Each entry must be `NAME: ${{ secrets.NAME }}`, the
+ * caller's secret passed under its own name; anything else is a problem. `rest` is the job body
+ * without the block, so a secret named anywhere else in the job is still checked as a plain read.
+ *
+ * @param {string} body
+ * @returns {{ passed: string[], rest: string, problems: string[] }}
+ */
+export function passedSecrets(body) {
+  const lines = body.split("\n");
+  const passed = [];
+  const problems = [];
+  const rest = [];
+  for (let i = 0; i < lines.length; i++) {
+    const m = /^ {4}secrets:(.*)$/.exec(lines[i]);
+    if (!m) {
+      rest.push(lines[i]);
+      continue;
+    }
+    if (unquote(m[1]) !== "") problems.push(`secrets is not a block mapping: ${lines[i].trim()}`);
+    for (; i + 1 < lines.length && (isSkippable(lines[i + 1]) || indentOf(lines[i + 1]) > 4); i++) {
+      const line = lines[i + 1];
+      if (isSkippable(line)) continue;
+      const e =
+        /^ {6}([A-Za-z_][A-Za-z0-9_-]*)\s*:\s*\$\{\{\s*secrets\.([A-Za-z_][A-Za-z0-9_-]*)\s*\}\}\s*(#.*)?$/.exec(
+          line,
+        );
+      if (e && e[1].toUpperCase() === e[2].toUpperCase()) passed.push(e[1].toUpperCase());
+      else problems.push(`secrets entry is not NAME: \${{ secrets.NAME }}: ${line.trim()}`);
+    }
+  }
+  return { passed, rest: rest.join("\n"), problems };
+}
+
+/**
  * @param {{ path: string, text: string }[]} workflows
  * @returns {{ ok: boolean, errors: string[] }}
  */
@@ -325,7 +364,41 @@ export function verdict(workflows) {
     const onPullRequest = /\bpull_request(_target)?\b/.test(on);
     for (const job of jobs) {
       const env = jobEnvironment(job.body);
-      const uses = secretUses(job.body);
+      const call = /^ {4}uses:(.*)$/m.exec(job.body);
+      let body = job.body;
+      if (call) {
+        const where = `${wf.path}:${job.line}: job "${job.id}"`;
+        const pass = passedSecrets(job.body);
+        for (const p of pass.problems) push(`${where}: ${p} (fail-closed)`);
+        body = pass.rest;
+        const target = /^\.\/(\.github\/workflows\/[\w.-]+\.ya?ml)$/.exec(unquote(call[1]))?.[1];
+        const callee = target && workflows.find((w) => w?.path === target);
+        for (const name of pass.passed) {
+          if (!(name in CREDENTIALS)) continue;
+          seen++;
+          const allowed = CREDENTIALS[name];
+          if (!callee || typeof callee.text !== "string") {
+            push(
+              `${where} passes ${name} to ${unquote(call[1])}, not a workflow in this repository`,
+            );
+            continue;
+          }
+          const readers = parseWorkflow(callee.text).jobs.filter((j) =>
+            secretUses(j.body).names.has(name),
+          );
+          if (readers.length === 0)
+            push(`${where} passes ${name} to ${target}, which no job reads`);
+          for (const r of readers) {
+            const renv = jobEnvironment(r.body);
+            if (!allowed.includes(renv ?? "")) {
+              push(
+                `${where} passes ${name} to ${target} job "${r.id}" in ${renv ? `environment "${renv}"` : "no environment"} — allowed: ${allowed.join(", ")}`,
+              );
+            }
+          }
+        }
+      }
+      const uses = secretUses(body);
       for (const b of uses.bare) {
         push(`${wf.path}:${job.line}: job "${job.id}" uses secrets without a literal name: ${b}`);
       }

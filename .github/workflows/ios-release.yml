@@ -27,8 +27,8 @@ name: iOS release
 # every change goes through App Review, which is why this must be fully automated.
 #
 # Requires secrets ASC_KEY_ID, ASC_ISSUER_ID, ASC_API_KEY_P8 (base64 .p8) on the `ios-build`
-# environment (Developer key with cloud-managed certificate access: cloud signing + TestFlight)
-# and again on `app-store` (App Manager key: review submission), and variable APPLE_TEAM_ID. The build job is skipped while APPLE_TEAM_ID is
+# environment (Admin key: cloud signing + TestFlight) and again on `app-store` (App Manager key:
+# review submission), and variable APPLE_TEAM_ID. The build job is skipped while APPLE_TEAM_ID is
 # unset, and fails closed when it is set but a secret is missing.
 
 run-name: iOS release ${{ inputs.tag || github.ref_name }}${{ inputs.dry_run && ' (dry run)' || '' }}
@@ -64,9 +64,8 @@ jobs:
     env:
       DEVELOPER_DIR: /Applications/Xcode_26.3.app
     if: vars.APPLE_TEAM_ID != ''
-    # Developer-role App Store Connect key with access to cloud-managed distribution certificates:
-    # enough to sign and upload to TestFlight, not to submit for review. deployment: false keeps
-    # the branch policy and the secrets without recording a deployment for every build.
+    # Admin App Store Connect key: only Admin can cloud-sign. deployment: false keeps the branch
+    # policy and the secrets without recording a deployment for every build.
     environment:
       name: ios-build
       deployment: false
@@ -274,6 +273,11 @@ jobs:
       version: ${{ needs.build.outputs.app-version }}
       build: ${{ needs.build.outputs.build-number }}
       build-year: ${{ needs.build.outputs.build-year }}
+    # Named, never inherited: a called workflow sees only the secrets its caller passes.
+    secrets:
+      ASC_KEY_ID: ${{ secrets.ASC_KEY_ID }}
+      ASC_ISSUER_ID: ${{ secrets.ASC_ISSUER_ID }}
+      ASC_API_KEY_P8: ${{ secrets.ASC_API_KEY_P8 }}
 
   # Opens or updates the release's failure issue when a job fails or times out, and closes it when
   # a later run of the same or a newer release gets through its submit job. A deferred submission
