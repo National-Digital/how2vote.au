@@ -8,7 +8,7 @@ import { afterEach, describe, expect, it } from "vitest";
 import {
   claimTag,
   gitRepo,
-  inProgress,
+  busyCommits,
   MAX_ATTEMPTS,
   POLL_MS,
   standing,
@@ -48,14 +48,18 @@ describe("standing", () => {
   });
 });
 
-describe("inProgress", () => {
-  it("is true for any run that has not completed", () => {
-    expect(inProgress({ workflow_runs: [{ status: "in_progress" }] })).toBe(true);
-    expect(inProgress({ workflow_runs: [{ status: "completed" }, { status: "queued" }] })).toBe(
-      true,
-    );
-    expect(inProgress({ workflow_runs: [{ status: "completed" }] })).toBe(false);
-    expect(inProgress({})).toBe(false);
+describe("busyCommits", () => {
+  it("collects the commits of runs that have not completed", () => {
+    const listing = {
+      workflow_runs: [
+        { head_sha: C(1), status: "in_progress" },
+        { head_sha: C(2), status: "completed" },
+        { head_sha: C(3), status: "queued" },
+        { status: "queued" },
+      ],
+    };
+    expect([...busyCommits(listing)]).toEqual([C(1), C(3)]);
+    expect(busyCommits({}).size).toBe(0);
   });
 });
 
@@ -282,8 +286,70 @@ describe("against real repositories", () => {
     const b = merge("fix: two (#2)");
     git("tag", "v1.4.12", b);
     git("push", "-q", "origin", "v1.4.12");
-    expect(() => claimTag(runner(a), { sha: a })).toThrow(/deleted or renamed/);
+    expect(() => claimTag(runner(a), { sha: a })).toThrow(/delete or rename it/);
     expect(tags()["v1.4.12"].commit).toBe(b);
+  });
+
+  it("still dispatches a tag pushed after a later skip release", () => {
+    const { merge, runner } = setup();
+    const a = merge("fix: one (#1)");
+    const b = merge("feat: two (#2)", "docs/two.md");
+    const repo = runner(a);
+    let raced = false;
+    const racing = {
+      ...repo,
+      pushTag: (tag, message) => {
+        if (!raced) {
+          raced = true;
+          const later = claimTag(runner(b), { sha: b, prText: "feat: two\n\n[skip-apps]" });
+          expect(later).toMatchObject({ tag: "v1.5.0", ship: false });
+        }
+        return repo.pushTag(tag, message);
+      },
+    };
+    const result = claimTag(racing, { sha: a });
+    expect(result).toMatchObject({ action: "created", tag: "v1.4.12", ship: true });
+    expect(result.shippedBy).toBeUndefined();
+  });
+
+  it("names a later ship release when a re-run finds its own tag", () => {
+    const { merge, runner } = setup();
+    const a = merge("fix: one (#1)");
+    const b = merge("fix: two (#2)");
+    expect(claimTag(runner(a), { sha: a }).tag).toBe("v1.4.12");
+    expect(claimTag(runner(b), { sha: b }).tag).toBe("v1.4.13");
+    expect(claimTag(runner(a), { sha: a })).toEqual({
+      action: "existing",
+      tag: "v1.4.12",
+      ship: true,
+      shippedBy: "v1.4.13",
+    });
+    expect(claimTag(runner(b), { sha: b }).shippedBy).toBeUndefined();
+  });
+
+  it("refuses a lightweight tag on its own commit", () => {
+    const { git, merge, runner } = setup();
+    const a = merge("fix: one (#1)");
+    git("tag", "v1.4.12", a);
+    git("push", "-q", "origin", "v1.4.12");
+    expect(() => claimTag(runner(a), { sha: a })).toThrow(/lightweight tag/);
+  });
+
+  it("is superseded only from main, by the oldest release that contains it", () => {
+    const { git, merge, runner } = setup();
+    const a = merge("fix: one (#1)");
+    git("commit", "-q", "--allow-empty", "-m", "fix: off main");
+    git("tag", "-a", "v9.9.9", "-m", "v9.9.9", "-m", `${TRAILER}: ship`);
+    git("push", "-q", "origin", "v9.9.9");
+    git("reset", "-q", "--hard", a);
+    expect(claimTag(runner(a), { sha: a })).toMatchObject({ action: "created", tag: "v1.4.12" });
+
+    const b = merge("fix: two (#2)");
+    const c = merge("fix: three (#3)");
+    const d = merge("fix: four (#4)");
+    expect(claimTag(runner(c), { sha: c }).tag).toBe("v1.4.13");
+    expect(claimTag(runner(d), { sha: d }).tag).toBe("v1.4.14");
+    expect(claimTag(runner(b), { sha: b })).toEqual({ action: "superseded", tag: "v1.4.13" });
   });
 
   it("fails when a later skip release holds back this commit's app changes", () => {
@@ -349,44 +415,53 @@ describe("against real repositories", () => {
       };
     };
 
+    // The listing also carries this commit's own run, still in progress.
     it("waits while an untagged ancestor deploys, until that ancestor tags", async () => {
       const { merge, runner } = setup();
       const a = merge("fix: one (#1)");
       const b = merge("fix: two (#2)");
       let polls = 0;
-      const { io: opts, slept } = io(async (sha) => {
-        expect(sha).toBe(a);
-        if (++polls === 2) claimTag(runner(a), { sha: a });
-        return true;
+      const { io: opts, slept } = io(async () => {
+        if (++polls === 3) claimTag(runner(a), { sha: a });
+        return new Set(polls < 3 ? [a, b] : [b]);
       });
       expect(await waitForAncestors(runner(b), { sha: b, ...opts })).toBe(true);
+      expect(polls).toBe(3);
       expect(slept()).toBe(2 * POLL_MS);
       expect(claimTag(runner(b), { sha: b }).tag).toBe("v1.4.13");
     });
 
-    it("does not wait when no earlier deploy is running", async () => {
+    it("does not wait for its own run, or when no earlier deploy is running", async () => {
       const { merge, runner } = setup();
-      merge("fix: one (#1)");
+      const a = merge("fix: one (#1)");
       const b = merge("fix: two (#2)");
-      const { io: opts, slept } = io(async () => false);
+      const { io: opts, slept } = io(async () => new Set([b]));
       expect(await waitForAncestors(runner(b), { sha: b, ...opts })).toBe(false);
       expect(slept()).toBe(0);
+      const { io: older, slept: slept2 } = io(async () => new Set(["f".repeat(40)]));
+      expect(await waitForAncestors(runner(a), { sha: a, ...older })).toBe(false);
+      expect(slept2()).toBe(0);
     });
 
-    it("stops at the limit, and treats an unreadable run as finished", async () => {
+    it("stops at the limit, and treats unreadable runs as finished but waited", async () => {
       const { merge, runner } = setup();
-      merge("fix: one (#1)");
+      const a = merge("fix: one (#1)");
       const b = merge("fix: two (#2)");
-      const { io: forever, slept, log } = io(async () => true);
+      const { io: forever, slept, log } = io(async () => new Set([a, b]));
       const limitMs = 3 * POLL_MS;
       expect(await waitForAncestors(runner(b), { sha: b, ...forever, limitMs })).toBe(true);
       expect(slept()).toBe(limitMs);
       expect(log.at(-1)).toMatch(/stopped waiting/);
-      const { io: broken, log: log2 } = io(async () => {
+      const {
+        io: broken,
+        slept: slept2,
+        log: log2,
+      } = io(async () => {
         throw new Error("HTTP 502");
       });
       // Not knowing counts as having waited, so the release job redeploys main.
       expect(await waitForAncestors(runner(b), { sha: b, ...broken })).toBe(true);
+      expect(slept2()).toBe(0);
       expect(log2[0]).toMatch(/HTTP 502/);
     });
 

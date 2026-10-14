@@ -1,27 +1,14 @@
 #!/usr/bin/env node
 /**
- * @fileoverview Claims the release tag for a merge to main, in the deploy workflow's release job.
+ * @fileoverview Claims the release tag for a merge to main (deploy.yml, release job).
  *
- * Production push runs of deploy.yml run concurrently (each has its own concurrency group, so a
- * deploy is never dropped from the queue), and their build jobs resolve a version before any of
- * them has tagged. The version and the ship decision are therefore settled here, against the
- * remote's tags, immediately before tagging:
+ * Push runs of deploy.yml run concurrently, so the version and the ship decision are settled here
+ * against the remote's tags, after the deploys of earlier untagged merges finish. A lost push
+ * race retries with the next version; a tag is never moved or overwritten.
  *
- * 1. Wait, within WAIT_LIMIT_MS, while a deploy.yml push run for an untagged ancestor of this
- *    commit is still in progress. main is linear, so this tags merges in merge order.
- * 2. If a release tag already points at this commit (a re-run), keep it. If one points at a
- *    descendant, that release contains this commit and this run tags nothing.
- * 3. Otherwise take the next version from the tags reachable from this commit
- *    (scripts/next-version.mjs), decide whether it ships against the newest trusted non-skip tag
- *    (scripts/store-release-scope.mjs), create the annotated tag with its `Store-Release` trailer
- *    and push it. A push that loses to a concurrent run starts again from step 2, at most
- *    MAX_ATTEMPTS times. A tag is never moved or overwritten.
- *
- * Usage (deploy.yml): SHA=… REPO=… GH_TOKEN=… PR_TEXT_FILE=… [MARKER_LOOKUP=failed]
- *   node scripts/release-tag.mjs
+ * Usage: SHA=… REPO=… GH_TOKEN=… PR_TEXT_FILE=… [MARKER_LOOKUP=failed] node scripts/release-tag.mjs
  * Writes `action` (created|existing|superseded), `tag`, `ship`, `base`, `reason`, `waited` and
- * `shipped-by` to $GITHUB_OUTPUT. Exits non-zero when no tag can be claimed, or when this commit's app changes
- * would be left without a release.
+ * `shipped-by` to $GITHUB_OUTPUT.
  */
 import { execFileSync } from "node:child_process";
 import { appendFileSync, readFileSync } from "node:fs";
@@ -45,7 +32,7 @@ export const MAX_ATTEMPTS = 5;
 export const WAIT_LIMIT_MS = 30 * 60_000;
 export const POLL_MS = 20_000;
 /** At most this many untagged ancestors are checked for an in-progress deploy. */
-export const MAX_PENDING_LOOKUPS = 10;
+export const MAX_PENDING = 20;
 export const WORKFLOW = "deploy.yml";
 
 const BOT = [
@@ -82,11 +69,16 @@ export function standing(sha, containing) {
 const shipped = (record) => record.annotated && !isSkipped(record.message);
 
 /**
- * Whether a deploy.yml runs listing shows a run still in progress.
- * @param {{ workflow_runs?: { status?: string }[] }} listing
+ * The commits with a deploy.yml run still in progress, from a runs listing.
+ * @param {{ workflow_runs?: { head_sha?: string, status?: string }[] }} listing
+ * @returns {Set<string>}
  */
-export function inProgress(listing) {
-  return (listing?.workflow_runs ?? []).some((r) => r?.status !== "completed");
+export function busyCommits(listing) {
+  return new Set(
+    (listing?.workflow_runs ?? [])
+      .filter((r) => r?.status !== "completed" && r?.head_sha)
+      .map((r) => /** @type {string} */ (r.head_sha)),
+  );
 }
 
 /**
@@ -125,7 +117,7 @@ export function decideFor(repo, merged, { prText, lookupFailed }) {
  * Returns whether it waited, or could not tell: an ancestor's deploy may then have finished after
  * this commit's.
  * @param {Repo} repo
- * @param {{ sha: string, running: (sha: string) => Promise<boolean>,
+ * @param {{ sha: string, running: () => Promise<Set<string>>,
  *   sleep: (ms: number) => Promise<void>, now: () => number, log: (line: string) => void,
  *   limitMs?: number }} io
  */
@@ -137,18 +129,18 @@ export async function waitForAncestors(repo, { sha, running, sleep, now, log, li
     if (standing(sha, repo.records("contains")).state !== "untagged") return waited;
     const latest = latestTag(repo.records("merged").map((r) => r.tag));
     const pending = repo
-      .ancestorsSince(latest?.tag ?? null, MAX_PENDING_LOOKUPS + 1)
+      .ancestorsSince(latest?.tag ?? null, MAX_PENDING + 1)
       .filter((c) => c !== sha)
-      .slice(0, MAX_PENDING_LOOKUPS);
-    const busy = [];
-    for (const commit of pending) {
-      try {
-        if (await running(commit)) busy.push(commit);
-      } catch (error) {
-        log(`::warning::could not read the deploy runs for ${commit}: ${error.message}`);
-        waited = true;
-      }
+      .slice(0, MAX_PENDING);
+    let inFlight;
+    try {
+      inFlight = await running();
+    } catch (error) {
+      // Unknown counts as waited, so the release job redeploys main.
+      log(`::warning::could not read the deploy runs: ${error.message}`);
+      return true;
     }
+    const busy = pending.filter((c) => inFlight.has(c));
     if (busy.length === 0) return waited;
     if (now() >= deadline) {
       log(`::warning::stopped waiting for the deploys of ${busy.join(", ")}`);
@@ -167,15 +159,30 @@ export async function waitForAncestors(repo, { sha, running, sleep, now, log, li
  *   log?: (line: string) => void }} input
  * @returns {{ action: "created" | "existing" | "superseded", tag: string, ship?: boolean,
  *   base?: string | null, reason?: string, shippedBy?: string }} shippedBy names a later ship
- *   release that landed while this tag was pushed; this release then dispatches no store build
+ *   release already tagged; this release then dispatches no store build
  */
 export function claimTag(repo, { sha, prText = "", lookupFailed = false, log = () => {} }) {
   const markers = { prText, lookupFailed };
+  // A store build of a lower version must not follow a higher one that shipped.
+  const shippedLater = (containing) =>
+    containing.filter((r) => r.commit !== sha && shipped(r)).at(-1)?.tag;
   for (let attempt = 1; attempt <= MAX_ATTEMPTS; attempt++) {
     repo.fetchTags();
-    const where = standing(sha, repo.records("contains"));
+    const containing = repo.records("contains");
+    const where = standing(sha, containing);
     if (where.state === "tagged") {
-      return { action: "existing", tag: where.record.tag, ship: !isSkipped(where.record.message) };
+      const { tag, annotated, message } = where.record;
+      if (!annotated) {
+        throw new Error(
+          `${tag} on this commit is a lightweight tag, not a release tag this job made`,
+        );
+      }
+      return {
+        action: "existing",
+        tag,
+        ship: !isSkipped(message),
+        shippedBy: shippedLater(containing),
+      };
     }
     const merged = repo.records("merged");
     if (where.state === "superseded") {
@@ -201,17 +208,19 @@ export function claimTag(repo, { sha, prText = "", lookupFailed = false, log = (
     const clash = repo.records("all").find((r) => r.tag === tag);
     if (clash) {
       throw new Error(
-        `${tag} already exists at ${clash.commit}, which is not on main — no release can be ` +
-          `tagged until that tag is deleted or renamed`,
+        `${tag} already exists at ${clash.commit} and is not a release tag this job can build on ` +
+          `— delete or rename it`,
       );
     }
     const decision = decideFor(repo, merged, markers);
     if (repo.pushTag(tag, tagMessage(tag, decision.ship))) {
-      // A later merge may have tagged a higher version in the meantime; a store build of this
-      // lower version would then follow it.
       repo.fetchTags();
-      const later = repo.records("contains").filter((r) => r.commit !== sha && shipped(r));
-      return { action: "created", tag, ...decision, shippedBy: later.at(-1)?.tag };
+      return {
+        action: "created",
+        tag,
+        ...decision,
+        shippedBy: shippedLater(repo.records("contains")),
+      };
     }
     log(`${tag} was taken by a concurrent release (attempt ${attempt}/${MAX_ATTEMPTS})`);
   }
@@ -293,10 +302,10 @@ export function gitRepo({ cwd, env, sha }) {
 }
 
 /* c8 ignore start -- CLI and network plumbing, exercised in CI */
-async function runningDeploys(sha) {
+async function runningDeploys() {
   const res = await fetch(
     `https://api.github.com/repos/${process.env["REPO"]}/actions/workflows/${WORKFLOW}/runs` +
-      `?event=push&head_sha=${sha}&per_page=20`,
+      `?event=push&branch=main&per_page=100`,
     {
       headers: {
         Accept: "application/vnd.github+json",
@@ -307,7 +316,7 @@ async function runningDeploys(sha) {
     },
   );
   if (!res.ok) throw new Error(`HTTP ${res.status}`);
-  return inProgress(await res.json());
+  return busyCommits(await res.json());
 }
 
 async function main() {
