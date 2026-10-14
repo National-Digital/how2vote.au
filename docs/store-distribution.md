@@ -962,8 +962,13 @@ listing edits; the production account cannot be probed on a schedule, because `p
 reviewer would hold every run, and its grant is exercised by each promotion.
 `scripts/check-release-credentials.mjs` (the release-credential gate in `ci.yml`) fails a change that
 reads one of these credentials from a job outside its listed environment, uses the secrets context
-without a literal name (`toJSON(secrets)`, `secrets[expr]`, `secrets: inherit`), or puts a
-`main`-only environment in a job whose `if:` does not exclude pull requests.
+without a literal name (`toJSON(secrets)`, `secrets[expr]`, `secrets: inherit`), or reads a
+credential, passes one on or names a `main`-only environment in a job whose `if:` does not exclude
+untrusted triggers. Only `push`,
+`schedule`, `workflow_dispatch`, `workflow_call` and `release` count as trusted. In a workflow with
+any other trigger, the job's `if:` must pin `github.event_name` to a trusted one (or, when
+`pull_request` is the only other trigger, exclude it). `github.ref == 'refs/heads/main'` does not
+count, because it also holds under `pull_request_target`.
 
 A called workflow sees only the secrets its caller passes, so `ios-release.yml` and
 `ios-submission-catch-up.yml` pass `ASC_KEY_ID`, `ASC_ISSUER_ID` and `ASC_API_KEY_P8` to
@@ -971,7 +976,9 @@ A called workflow sees only the secrets its caller passes, so `ios-release.yml` 
 declares the `app-store` environment, and GitHub gives it that environment's value in place of the
 passed one. The gate allows such a pass-through only from a job whose `uses:` names a workflow in
 this repository, only under the secret's own name, and only when every job in the called workflow
-that reads the secret declares an environment listed for it. `secrets: inherit` stays refused,
+that reads the secret declares an environment listed for it. In a workflow with a trigger an
+untrusted pull request can start, the calling job's `if:` must also exclude untrusted triggers,
+as for any job that reads a credential. `secrets: inherit` stays refused,
 because it would also hand the F-Droid and R2 credentials to the called workflow.
 
 ### Owner migration checklist
@@ -1049,7 +1056,7 @@ Take them in order; the repository copies go last, after verification.
    `FDROID_KEY_ALIAS`, `FDROID_KEY_PASSWORD`, `R2_ACCOUNT_ID`, `R2_ACCESS_KEY_ID`,
    `R2_SECRET_ACCESS_KEY`, `ASC_KEY_ID`, `ASC_ISSUER_ID`, `ASC_API_KEY_P8`. Keep
    `CLOUDFLARE_API_TOKEN`, `CF_D1_API_TOKEN` and `TVFY_API_KEY`. If the former repository key is
-   not the one now in `ios-build`, revoke it in App Store Connect unless something outside CI uses
+   not the `ios-build` key, revoke it in App Store Connect unless something outside CI uses
    it.
 8. **Re-verify:** `gh secret list` shows only those three; `gh secret list --env <name>` shows each
    environment's set from step 4. Repeat the step 6 dry runs, then watch the next release: build

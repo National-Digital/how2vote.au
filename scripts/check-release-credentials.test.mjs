@@ -3,13 +3,14 @@ import { readdirSync, readFileSync } from "node:fs";
 import {
   CREDENTIALS,
   MAIN_ONLY,
-  excludesPullRequests,
+  excludesUntrustedEvents,
   jobCondition,
   jobEnvironment,
   parseWorkflow,
   passedSecrets,
   secretUses,
   verdict,
+  workflowTriggers,
 } from "./check-release-credentials.mjs";
 
 const dir = new URL("../.github/workflows/", import.meta.url);
@@ -85,7 +86,7 @@ describe("verdict — committed workflows", () => {
     );
     expect(mutated).not.toBe(deploy.text);
     expect(verdict([{ path: deploy.path, text: mutated }]).errors.join("\n")).toMatch(
-      /job "live-versions" uses main-only environment "android-build" but its if: does not exclude pull_request/,
+      /job "live-versions" uses main-only environment "android-build" but its if: does not exclude untrusted triggers \(pull_request\)/,
     );
   });
 });
@@ -254,15 +255,47 @@ describe("verdict — bypass attempts", () => {
     ).toBe(true);
   });
 
-  it("only accepts a pull-request exclusion that holds for the whole condition", () => {
-    expect(excludesPullRequests("github.event_name != 'pull_request'")).toBe(true);
-    expect(excludesPullRequests("${{ github.ref == 'refs/heads/main' && always() }}")).toBe(true);
-    expect(excludesPullRequests("github.event_name != 'pull_request' || true")).toBe(false);
-    expect(excludesPullRequests("(github.event_name != 'pull_request') || true")).toBe(false);
-    expect(excludesPullRequests("!(github.event_name != 'pull_request' && x)")).toBe(false);
-    expect(excludesPullRequests("contains('github.event_name != pull_request', x)")).toBe(false);
-    expect(excludesPullRequests("x == 'github.event_name != \\'pull_request\\''")).toBe(false);
-    expect(excludesPullRequests("")).toBe(false);
+  it("only accepts an exclusion that holds for the whole condition", () => {
+    const pr = new Set(["pull_request"]);
+    expect(excludesUntrustedEvents("github.event_name != 'pull_request'", pr)).toBe(true);
+    expect(excludesUntrustedEvents("${{ github.event_name == 'push' && always() }}", pr)).toBe(
+      true,
+    );
+    expect(excludesUntrustedEvents("github.ref == 'refs/heads/main'", pr)).toBe(false);
+    expect(excludesUntrustedEvents("github.event_name == 'pull_request'", pr)).toBe(false);
+    expect(excludesUntrustedEvents("github.event_name != 'pull_request' || true", pr)).toBe(false);
+    expect(excludesUntrustedEvents("(github.event_name != 'pull_request') || true", pr)).toBe(
+      false,
+    );
+    expect(excludesUntrustedEvents("!(github.event_name != 'pull_request' && x)", pr)).toBe(false);
+    expect(excludesUntrustedEvents("contains('github.event_name != pull_request', x)", pr)).toBe(
+      false,
+    );
+    expect(excludesUntrustedEvents("x == 'github.event_name != \\'pull_request\\''", pr)).toBe(
+      false,
+    );
+    expect(excludesUntrustedEvents("", pr)).toBe(false);
+    const prt = new Set(["pull_request", "pull_request_target"]);
+    expect(excludesUntrustedEvents("github.event_name != 'pull_request'", prt)).toBe(false);
+    expect(excludesUntrustedEvents("github.event_name == 'workflow_dispatch'", prt)).toBe(true);
+  });
+
+  it("reads trigger names from every on: layout and fails closed otherwise", () => {
+    const t = (on) => workflowTriggers(on) && [...workflowTriggers(on)];
+    expect(t("on: push")).toEqual(["push"]);
+    expect(t("on: [push, 'workflow_run']")).toEqual(["push", "workflow_run"]);
+    expect(t("on:\n  - issue_comment\n  - push")).toEqual(["issue_comment", "push"]);
+    expect(t("'on':\n  pull_request_target:\n    types: [opened]\n  schedule:")).toEqual([
+      "pull_request_target",
+      "schedule",
+    ]);
+    expect(t("on: { push: {} }")).toBe(null);
+    expect(t("on:\n   push:")).toBe(null);
+    expect(t("")).toBe(null);
+    expect(
+      verdict([{ path: "w.yml", text: `name: t\non: { push: {} }\njobs:\n  a:\n    steps: []\n` }])
+        .errors[0],
+    ).toMatch(/unrecognised on: block/);
   });
 });
 
@@ -354,18 +387,40 @@ describe("verdict — reusable-workflow pass-through", () => {
     );
   });
 
-  it("fails a pass-through from a pull_request workflow unless the caller skips PRs", () => {
+  it("fails a pass-through or read under an untrusted trigger unless the job pins a safe event", () => {
     const ok = callee("    environment: ios-build\n");
-    const on = "on:\n  pull_request_target:\n";
-    const job = (cond) =>
-      `name: t\n${on}jobs:\n  submit:\n${cond}    uses: ./.github/workflows/c.yml\n    secrets:\n${pass}`;
-    expect(run(job(""), ok).errors.join("\n")).toMatch(
-      /passes credentials in a pull_request workflow but its if: does not exclude pull_request/,
+    const job = (on, cond) =>
+      `name: t\non:\n  ${on}:\n  workflow_dispatch:\njobs:\n  submit:\n${cond}    uses: ./.github/workflows/c.yml\n    secrets:\n${pass}`;
+    for (const on of ["pull_request_target", "workflow_run", "issue_comment"]) {
+      for (const cond of [
+        "",
+        "    if: github.event_name != 'pull_request'\n",
+        "    if: github.ref == 'refs/heads/main'\n",
+      ]) {
+        expect(run(job(on, cond), ok).errors.join("\n")).toMatch(
+          new RegExp(
+            `passes credentials but its if: does not exclude untrusted triggers \\(${on}\\)`,
+          ),
+        );
+      }
+      expect(run(job(on, "    if: github.event_name == 'workflow_dispatch'\n"), ok)).toEqual({
+        ok: true,
+        errors: [],
+      });
+    }
+    const read = (on, cond) =>
+      wf(
+        `  a:\n${cond}    environment: play-share\n    steps:\n      - env:\n          K: \${{ secrets.PLAY_SHARE_KEYSTORE }}\n`,
+        `on:\n  ${on}:\n`,
+      );
+    expect(verdict([{ path: "w.yml", text: read("workflow_run", "") }]).errors.join("\n")).toMatch(
+      /job "a" reads PLAY_SHARE_KEYSTORE but its if: does not exclude untrusted triggers \(workflow_run\)/,
     );
-    expect(run(job("    if: github.event_name != 'pull_request'\n"), ok)).toEqual({
-      ok: true,
-      errors: [],
-    });
+    expect(
+      verdict([
+        { path: "w.yml", text: read("issue_comment", "    if: github.event_name == 'push'\n") },
+      ]),
+    ).toEqual({ ok: true, errors: [] });
   });
 
   it("still fails secrets: inherit to an environment-gated called workflow", () => {

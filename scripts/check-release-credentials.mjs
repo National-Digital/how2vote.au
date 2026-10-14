@@ -13,15 +13,18 @@
  *   - the one exception is a job that calls a local reusable workflow (`uses: ./.github/workflows/…`)
  *     and passes a credential under its own name in a `secrets:` block (`X: ${{ secrets.X }}`):
  *     allowed only when the called workflow reads X in at least one job, and every job there that
- *     reads it declares an environment listed for X, and the caller excludes pull requests as below.
+ *     reads it declares an environment listed for X, and the caller excludes untrusted triggers as
+ *     below.
  *     GitHub gives such a job the environment's value, when the environment holds X, in place of
  *     the passed one, and a called workflow sees no secret its caller does not pass;
  *   - no registered credential is referenced outside a job (workflow-level `env:`);
  *   - the secrets context is only ever indexed by a literal name: `toJSON(secrets)`,
  *     `secrets[expr]` and `secrets: inherit` would hand over every secret the job can see;
- *   - a job in a main-only environment, in a workflow that also runs on pull requests, has an `if:`
- *     that is a plain conjunction containing a pull-request exclusion (otherwise the environment
- *     refuses it on every PR);
+ *   - in a workflow with any trigger outside SAFE_TRIGGERS (pull_request, pull_request_target,
+ *     workflow_run, issue_comment, …), a job that reads a credential, passes one on, or names a
+ *     main-only environment has an `if:` that is a plain conjunction pinning the event to safe
+ *     triggers. `pull_request_target` runs with `github.ref` set to main, so only the event name
+ *     counts;
  *   - the jobs block parses as expected (fail-closed on unrecognised layout), and at least one
  *     registered credential is found.
  *
@@ -61,6 +64,15 @@ export const CREDENTIALS = {
   PLAY_SHARE_KEY_ALIAS: ["play-share"],
   PLAY_SHARE_KEY_PASSWORD: ["play-share"],
 };
+
+/** Triggers an untrusted pull request cannot start. */
+export const SAFE_TRIGGERS = new Set([
+  "push",
+  "schedule",
+  "workflow_dispatch",
+  "workflow_call",
+  "release",
+]);
 
 /** Environments whose deployment branch policy admits `main` only. */
 export const MAIN_ONLY = new Set([
@@ -235,22 +247,58 @@ function splitTopLevel(expr, op) {
 }
 
 /**
- * True when the condition is false for every pull_request event: a conjunction (no `||`
- * anywhere) with a top-level term `github.event_name != 'pull_request'` or
- * `github.ref == 'refs/heads/main'`.
+ * The workflow's trigger names from its `on:` block (scalar, flow list, block list or mapping), or
+ * null when the layout is not recognised.
+ *
+ * @param {string} on
+ * @returns {Set<string> | null}
+ */
+export function workflowTriggers(on) {
+  const lines = String(on)
+    .split("\n")
+    .filter((l) => !isSkippable(l));
+  const head = /^(["']?)(?:on|true)\1\s*:(.*)$/.exec(lines[0] ?? "");
+  if (!head) return null;
+  const value = unquote(head[2]);
+  const names = new Set();
+  if (value.startsWith("[")) {
+    if (!value.endsWith("]")) return null;
+    for (const n of value.slice(1, -1).split(",")) if (unquote(n)) names.add(unquote(n));
+  } else if (value !== "") {
+    names.add(value);
+  } else {
+    for (const line of lines.slice(1)) {
+      const indent = indentOf(line);
+      if (indent > 2) continue;
+      const m = /^ {2}(?:-\s+)?(["']?)([A-Za-z_]+)\1\s*(?::.*)?$/.exec(line);
+      if (indent !== 2 || !m) return null;
+      names.add(m[2]);
+    }
+  }
+  for (const n of names) if (!/^[A-Za-z_]+$/.test(n)) return null;
+  return names.size ? names : null;
+}
+
+/**
+ * True when the condition is false for every event in `untrusted`: a conjunction (no `||`
+ * anywhere) with a top-level term `github.event_name == '<safe trigger>'`, or
+ * `github.event_name != 'pull_request'` when pull_request is the only untrusted trigger.
+ * `github.ref == 'refs/heads/main'` does not count: it holds under pull_request_target.
  *
  * @param {string} condition
+ * @param {Set<string>} [untrusted]
  */
-export function excludesPullRequests(condition) {
+export function excludesUntrustedEvents(condition, untrusted = new Set(["pull_request"])) {
   let expr = condition.replace(/\s+/g, " ").trim();
   const wrapped = /^\$\{\{(.*)\}\}$/.exec(expr);
   if (wrapped) expr = wrapped[1].trim();
   if (expr === "" || expr.includes("||") || expr.includes("${{")) return false;
-  return splitTopLevel(expr, "&&").some(
-    (t) =>
-      /^github\.event_name\s*!=\s*(['"])pull_request\1$/i.test(t) ||
-      /^github\.ref\s*==\s*(['"])refs\/heads\/main\1$/i.test(t),
-  );
+  const onlyPullRequest = untrusted.size === 1 && untrusted.has("pull_request");
+  return splitTopLevel(expr, "&&").some((t) => {
+    const pin = /^github\.event_name\s*==\s*(['"])([A-Za-z_]+)\1$/i.exec(t);
+    if (pin) return SAFE_TRIGGERS.has(pin[2].toLowerCase());
+    return onlyPullRequest && /^github\.event_name\s*!=\s*(['"])pull_request\1$/i.test(t);
+  });
 }
 
 /**
@@ -362,7 +410,12 @@ export function verdict(workflows) {
         push(`${wf.path}: ${name} referenced outside a job — scope it to a job in its environment`);
       }
     }
-    const onPullRequest = /\bpull_request(_target)?\b/.test(on);
+    const triggers = workflowTriggers(on);
+    if (!triggers) push(`${wf.path}: unrecognised on: block (fail-closed)`);
+    const untrusted = new Set([...(triggers ?? ["unknown"])].filter((t) => !SAFE_TRIGGERS.has(t)));
+    const guarded = (job) =>
+      untrusted.size === 0 || excludesUntrustedEvents(jobCondition(job.body), untrusted);
+    const listed = [...untrusted].join(", ");
     for (const job of jobs) {
       const env = jobEnvironment(job.body);
       const call = /^ {4}uses:(.*)$/m.exec(job.body);
@@ -375,10 +428,9 @@ export function verdict(workflows) {
         const target = /^\.\/(\.github\/workflows\/[\w.-]+\.ya?ml)$/.exec(unquote(call[1]))?.[1];
         const callee = target && workflows.find((w) => w?.path === target);
         const credentials = pass.passed.filter((name) => name in CREDENTIALS);
-        // The called jobs' environments are main-only, so a pull_request run must not reach them.
-        if (credentials.length && onPullRequest && !excludesPullRequests(jobCondition(job.body))) {
+        if (credentials.length && !guarded(job)) {
           push(
-            `${where} passes credentials in a pull_request workflow but its if: does not exclude pull_request`,
+            `${where} passes credentials but its if: does not exclude untrusted triggers (${listed})`,
           );
         }
         for (const name of credentials) {
@@ -409,8 +461,13 @@ export function verdict(workflows) {
       for (const b of uses.bare) {
         push(`${wf.path}:${job.line}: job "${job.id}" uses secrets without a literal name: ${b}`);
       }
-      for (const name of uses.names) {
-        if (!(name in CREDENTIALS)) continue;
+      const reads = [...uses.names].filter((name) => name in CREDENTIALS);
+      if (reads.length && !guarded(job)) {
+        push(
+          `${wf.path}:${job.line}: job "${job.id}" reads ${reads.join(", ")} but its if: does not exclude untrusted triggers (${listed})`,
+        );
+      }
+      for (const name of reads) {
         seen++;
         const allowed = CREDENTIALS[name];
         if (!allowed.includes(env ?? "")) {
@@ -419,14 +476,9 @@ export function verdict(workflows) {
           );
         }
       }
-      if (
-        env &&
-        MAIN_ONLY.has(env) &&
-        onPullRequest &&
-        !excludesPullRequests(jobCondition(job.body))
-      ) {
+      if (env && MAIN_ONLY.has(env) && !guarded(job)) {
         push(
-          `${wf.path}:${job.line}: job "${job.id}" uses main-only environment "${env}" but its if: does not exclude pull_request`,
+          `${wf.path}:${job.line}: job "${job.id}" uses main-only environment "${env}" but its if: does not exclude untrusted triggers (${listed})`,
         );
       }
     }

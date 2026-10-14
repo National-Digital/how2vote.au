@@ -39,7 +39,7 @@ on:
         description: Copyright year for the listing
         type: string
         required: true
-    # Optional: the caller passes an empty value and the app-store environment supplies the real one.
+    # The caller passes the name; the app-store environment supplies the value (empty passes allowed).
     secrets:
       ASC_KEY_ID:
         required: false
