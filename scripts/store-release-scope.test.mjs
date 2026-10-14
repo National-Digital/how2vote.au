@@ -524,6 +524,26 @@ describe("deploy.yml", () => {
     expect(release.indexOf("dispatch android-release.yml", skipExit)).toBeGreaterThan(skipExit);
   });
 
+  it("redeploys main after any out-of-order release", () => {
+    const superseded = release.indexOf('if [ "$ACTION" = superseded ]; then');
+    expect(release.indexOf("redeploy", superseded)).toBeLessThan(
+      release.indexOf("exit 0", superseded),
+    );
+    expect(release).toContain(
+      'if [ -n "$SHIPPED_BY" ] || [ "$V" != "$DEPLOYED" ] || [ "$WAITED" = true ]; then redeploy; fi',
+    );
+  });
+
+  it("publishes no redeploy that main has moved past", () => {
+    expect(build).toContain("git ls-remote origin refs/heads/main");
+    for (const step of ["Deploy to Cloudflare Pages", "Post-deploy live smoke"]) {
+      const at = build.indexOf(`name: ${step}`);
+      expect(build.slice(at, build.indexOf("\n        run:", at))).toContain(
+        "steps.current.outputs.stale != 'true'",
+      );
+    }
+  });
+
   it("reports failures under the tag the release job settled on", () => {
     const alert = job(deploy, "release-alert");
     expect(alert).toContain("tag: ${{ needs.release.outputs.tag }}");

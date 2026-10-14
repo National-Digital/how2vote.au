@@ -491,19 +491,25 @@ the decision at tag time (`scripts/release-tag.mjs`). It waits, for up to 30 min
 deploy of an earlier untagged merge is still running, so merges are tagged in merge order. It then
 reads the remote's tags, takes the next version and the decision from them, and pushes the tag; if
 a concurrent run took that version first, it starts again, at most five times. No tag is ever
-moved, and a version already tagged off `main` fails the job until that tag is deleted or renamed.
+moved. A version name already used by a tag the job cannot build on (off `main`, or lightweight)
+fails the job until that tag is deleted or renamed.
 
-- A re-run keeps the tag already on its commit. If that release was never published, the re-run
-  publishes it and dispatches the stores as the tag's trailer says; otherwise it does nothing.
+- A re-run keeps the annotated tag already on its commit. If that release was never published,
+  the re-run publishes it and dispatches the stores as the tag's trailer says; otherwise it does
+  nothing.
 - A commit that a later annotated release already contains gets no tag of its own, because that
   release carries its changes. The job fails if none of those later releases shipped and this
   commit's changes needed to.
-- A tag pushed after a later release that ships gets its GitHub release but no store dispatch,
-  so a store never receives a lower version after a higher one.
-- When the released version differs from the one the site was built with, or the job waited for
-  (or could not read) an earlier deploy, it dispatches `deploy.yml` on `main` so the live site
-  carries the newest commit and its version. Scheduled and dispatched deploys share one
-  concurrency group, so a burst of these collapses into one pending redeploy.
+- A release whose tag finds a later ship release already tagged gets its GitHub release but no
+  store dispatch. The check runs after the tag push, so a later release tagged in the moment
+  after it is not seen. That can only happen when the wait was cut short (the time limit, or the
+  runs could not be read); the store workflows then stand the older release down (the
+  supersede jobs, and the gated jobs' check for a newer store build).
+- When the released version differs from the one the site was built with, the job waited for (or
+  could not read) an earlier deploy, or the release was out of order, it dispatches `deploy.yml`
+  on `main`. Scheduled and dispatched deploys share one concurrency group, and one that `main` has
+  moved past skips the Pages deploy, because the newer push run publishes the site. Such a skipped
+  redeploy does not advance `app-version.json`; the next deploy does.
 
 **`app-version.json` advertises only a version whose F-Droid APK is published.** When
 `fdroid-publish` has uploaded the APK and verified that `dist.how2vote.au` serves it, it sets a

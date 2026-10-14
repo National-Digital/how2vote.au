@@ -36,15 +36,12 @@ permissions:
 
 concurrency:
   # PR previews share one group per ref so a fresh push supersedes the in-flight
-  # preview (cancel-in-progress below). Production promotions (push / schedule /
-  # workflow_dispatch to main, and PR-close teardowns) get a UNIQUE group per run
-  # so they never share the single pending slot — and therefore never cancel one
-  # another. GitHub's concurrency queue keeps only ONE pending run per group, so a
-  # shared production group silently drops a superseded deploy when two merges to
-  # main land seconds apart. The release job orders concurrent promotions itself
-  # (scripts/release-tag.mjs). Scheduled and dispatched redeploys share one group:
-  # each builds main as it is when it starts, so the newest pending one replacing
-  # an older one loses nothing.
+  # preview (cancel-in-progress below). Pushes to main and PR-close teardowns get a
+  # UNIQUE group per run: GitHub keeps only ONE pending run per group, so a shared
+  # group would silently drop a deploy when two merges land seconds apart (the
+  # release job orders their tags, scripts/release-tag.mjs). Scheduled and
+  # dispatched redeploys share one group: each builds main as it is when it starts,
+  # so dropping an older pending one loses nothing.
   group: deploy-${{ (github.event_name == 'pull_request' && github.event.action != 'closed') && github.ref || (github.event_name == 'schedule' || github.event_name == 'workflow_dispatch') && format('{0}-redeploy', github.ref) || format('{0}-{1}', github.ref, github.run_id) }}
   cancel-in-progress: ${{ github.event_name == 'pull_request' && github.event.action != 'closed' }}
 
@@ -457,8 +454,21 @@ jobs:
             sed -i "s|REPLACE_WITH_KV_NAMESPACE_ID|${CF_KV_RESEARCH_NONCES_ID}|" apps/web/wrangler.toml
           fi
 
+      # A redeploy main has moved past would put older content over a newer push's deploy, which
+      # owns the site. Unreadable main deploys as before.
+      - name: Check the redeploy is still main
+        id: current
+        if: steps.secrets.outputs.ready == 'true' && (github.event_name == 'schedule' || github.event_name == 'workflow_dispatch')
+        run: |
+          HEAD_SHA="$(git ls-remote origin refs/heads/main 2>/dev/null)" || HEAD_SHA=""
+          HEAD_SHA="${HEAD_SHA%%[[:space:]]*}"
+          if [ -n "$HEAD_SHA" ] && [ "$HEAD_SHA" != "$GITHUB_SHA" ]; then
+            echo "stale=true" >> "$GITHUB_OUTPUT"
+            echo "::notice::main is at $HEAD_SHA, past $GITHUB_SHA; its own deploy publishes the site"
+          fi
+
       - name: Deploy to Cloudflare Pages
-        if: steps.secrets.outputs.ready == 'true'
+        if: steps.secrets.outputs.ready == 'true' && steps.current.outputs.stale != 'true'
         run: node scripts/deploy-cloudflare-pages.mjs
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
@@ -473,7 +483,7 @@ jobs:
         # (mirrors scripts/verify-aec-archive.mjs); FAILS on real drift when a target is present. Runs on
         # every non-preview promotion (push + schedule + dispatch), not just push, so a scheduled deploy
         # is smoke-verified too.
-        if: steps.secrets.outputs.ready == 'true' && github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
+        if: steps.secrets.outputs.ready == 'true' && steps.current.outputs.stale != 'true' && github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
         env:
           # The site's Cloudflare Pages URL (serves the production build), not the apex.
           SMOKE_URL: ${{ vars.SMOKE_URL }}
@@ -517,22 +527,14 @@ jobs:
               });
             }
 
-  # On a production deploy (push to main), tag the released version, cut a GitHub release with
-  # auto-generated notes, and dispatch the store release workflows when the release ships the apps.
-  # The tag is annotated with that decision (`Store-Release: ship|skip`), which is how later
-  # releases find the version the apps are at. A separate job from the build so the write-capable
-  # token never coexists with PR-authored build code or dependency install scripts; it runs only
-  # the repository's own scripts, with no dependencies installed.
-  #
-  # Promotions run concurrently (see the concurrency block above), so the version resolved by the
-  # deploy job can already be taken. scripts/release-tag.mjs waits for the deploys of earlier,
-  # untagged merges, then settles the version and the ship decision against the remote's tags and
-  # pushes the tag, retrying when a concurrent run takes the version first. A re-run keeps the tag
-  # already on this commit; a commit a later release already contains is not tagged again.
+  # On a push to main, tag the release (annotated `Store-Release: ship|skip`), cut a GitHub release
+  # and dispatch the store workflows when it ships. A separate job so the write-capable token never
+  # meets PR-authored build code or install scripts. The version is settled at tag time because
+  # concurrent pushes resolve theirs before any has tagged (scripts/release-tag.mjs).
   release:
     name: Tag, release & dispatch stores
     runs-on: ubuntu-latest
-    # Covers the wait for earlier merges' deploys (scripts/release-tag.mjs, WAIT_LIMIT_MS).
+    # Covers the wait for earlier merges' deploys (WAIT_LIMIT_MS).
     timeout-minutes: 40
     needs: deploy
     if: github.event_name == 'push' && github.ref == 'refs/heads/main' && needs.deploy.outputs.ready == 'true'
@@ -543,12 +545,11 @@ jobs:
     outputs:
       tag: ${{ steps.tag.outputs.tag }}
     steps:
-      # Default credential persistence is fine here: this job runs no build or dependency code,
-      # only git/gh and the repository's dependency-free scripts.
+      # Credentials persist for the tag push; this job runs no build or dependency code.
       - name: Checkout repository
         uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7
         with:
-          fetch-depth: 0 # the tags and history the version and the ship decision are read from
+          fetch-depth: 0 # the version and the ship decision are read from tags and history
 
       - name: Setup Node.js
         uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e # v6
@@ -566,9 +567,7 @@ jobs:
           # The pull request text goes through a file: a long body can exceed the env size limit.
           export PR_TEXT_FILE="$RUNNER_TEMP/pr-text"
           : > "$PR_TEXT_FILE"
-          # The markers are read from the pull request merged as this commit: the (#N) the squash
-          # subject ends with, else the commit's associated pull requests. Only a pull request
-          # whose merge commit is this one counts. Unreadable means the apps ship.
+          # Markers come from the pull request merged as this commit; unreadable means the apps ship.
           MERGED='select(.merged_at != null and .merge_commit_sha == env.SHA) | .title + "\n" + (.body // "")'
           PRS=""
           N="$(git log -1 --format=%s "$SHA" | sed -nE 's/.*\(#([0-9]+)\)$/\1/p')"
@@ -599,12 +598,19 @@ jobs:
           APPLE_TEAM_ID: ${{ vars.APPLE_TEAM_ID }}
           REPO: ${{ github.repository }}
         run: |
+          # The site was labelled before the tag was settled, and an earlier merge's deploy may have
+          # finished after this one; a redeploy of main corrects both.
+          redeploy() {
+            echo "::warning::deployed as $DEPLOYED, released as $V after concurrent merges; redeploying main"
+            gh workflow run deploy.yml --repo "$REPO" --ref main \
+              || echo "::warning::could not dispatch deploy.yml — the scheduled deploy will correct the site"
+          }
           if [ "$ACTION" = superseded ]; then
             echo "$V already contains this commit and releases its changes." | tee -a "$GITHUB_STEP_SUMMARY"
+            redeploy
             exit 0
           fi
-          # A re-run finds the tag on its commit. With the release published, the earlier run got as
-          # far as the dispatches; without it, nothing after the tag push happened, so carry on.
+          # A re-run with the release published got as far as the dispatches; otherwise carry on.
           if [ "$ACTION" = existing ]; then
             if gh release view "$V" --repo "$REPO" >/dev/null 2>view.err; then
               echo "Tag and release $V already exist — skipping."
@@ -619,14 +625,7 @@ jobs:
           fi
           # Only an explicit skip decision skips; anything else ships.
           if [ "${SHIP_APPS:-}" = "false" ]; then SHIP=false; else SHIP=true; fi
-          # The site was labelled before the tag was settled, and an earlier merge's deploy may have
-          # finished after this one. A redeploy of main corrects both; app-version.json does not
-          # depend on the label.
-          if [ -z "$SHIPPED_BY" ] && { [ "$V" != "$DEPLOYED" ] || [ "$WAITED" = true ]; }; then
-            echo "::warning::deployed as $DEPLOYED, released as $V after concurrent merges; redeploying main"
-            gh workflow run deploy.yml --repo "$REPO" --ref main \
-              || echo "::warning::could not dispatch deploy.yml — the scheduled deploy will correct the site"
-          fi
+          if [ -n "$SHIPPED_BY" ] || [ "$V" != "$DEPLOYED" ] || [ "$WAITED" = true ]; then redeploy; fi
           # A release created with GITHUB_TOKEN cannot trigger `release: published` workflows
           # (GitHub suppresses events from that token; workflow_dispatch and repository_dispatch
           # are the two documented exceptions), so the store pipelines are dispatched explicitly.
