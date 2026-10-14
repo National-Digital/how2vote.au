@@ -42,16 +42,19 @@ describe("standing", () => {
       record: { tag: "v1.4.12" },
     });
     expect(standing(C(1), [record("v1.4.12", C(2))]).state).toBe("superseded");
+    const handMade = { ...record("v1.4.12", C(2)), annotated: false, message: "" };
+    expect(standing(C(1), [handMade]).state).toBe("untagged");
     expect(standing(C(1), []).state).toBe("untagged");
   });
 });
 
 describe("inProgress", () => {
-  it("is true for any run of another attempt that has not completed", () => {
-    expect(inProgress({ workflow_runs: [{ id: 1, status: "in_progress" }] })).toBe(true);
-    expect(inProgress({ workflow_runs: [{ id: 1, status: "queued" }] }, 2)).toBe(true);
-    expect(inProgress({ workflow_runs: [{ id: 1, status: "completed" }] })).toBe(false);
-    expect(inProgress({ workflow_runs: [{ id: 7, status: "in_progress" }] }, "7")).toBe(false);
+  it("is true for any run that has not completed", () => {
+    expect(inProgress({ workflow_runs: [{ status: "in_progress" }] })).toBe(true);
+    expect(inProgress({ workflow_runs: [{ status: "completed" }, { status: "queued" }] })).toBe(
+      true,
+    );
+    expect(inProgress({ workflow_runs: [{ status: "completed" }] })).toBe(false);
     expect(inProgress({})).toBe(false);
   });
 });
@@ -79,7 +82,13 @@ describe("against real repositories", () => {
   function setup() {
     const root = mkdtempSync(join(tmpdir(), "release-tag-"));
     dirs.push(root);
-    const run = (cwd, ...args) => execFileSync("git", args, { cwd, env, encoding: "utf8" }).trim();
+    const run = (cwd, ...args) =>
+      execFileSync("git", args, {
+        cwd,
+        env,
+        encoding: "utf8",
+        stdio: ["ignore", "pipe", "ignore"],
+      }).trim();
     const origin = join(root, "origin.git");
     run(root, "init", "-q", "--bare", "-b", "main", origin);
     const work = join(root, "work");
@@ -209,7 +218,11 @@ describe("against real repositories", () => {
     const { merge, runner, tags } = setup();
     const a = merge("fix: one (#1)");
     expect(claimTag(runner(a), { sha: a }).action).toBe("created");
-    expect(claimTag(runner(a), { sha: a })).toEqual({ action: "existing", tag: "v1.4.12" });
+    expect(claimTag(runner(a), { sha: a })).toEqual({
+      action: "existing",
+      tag: "v1.4.12",
+      ship: true,
+    });
     expect(Object.keys(tags())).toEqual(["v1.4.12", "v1.4.11"]);
   });
 
@@ -220,6 +233,57 @@ describe("against real repositories", () => {
     expect(claimTag(runner(b), { sha: b })).toMatchObject({ tag: "v1.4.12", ship: true });
     expect(claimTag(runner(a), { sha: a })).toEqual({ action: "superseded", tag: "v1.4.12" });
     expect(Object.keys(tags())).toEqual(["v1.4.12", "v1.4.11"]);
+  });
+
+  it("dispatches no store build for a tag pushed after a later ship release", () => {
+    const { merge, runner, tags } = setup();
+    const a = merge("fix: one (#1)");
+    const b = merge("feat: two (#2)");
+    const repo = runner(a);
+    // A read v1.4.11 and chose v1.4.12; B tags v1.5.0 before A's push, which does not clash.
+    let raced = false;
+    const racing = {
+      ...repo,
+      pushTag: (tag, message) => {
+        if (!raced) {
+          raced = true;
+          expect(claimTag(runner(b), { sha: b }).tag).toBe("v1.5.0");
+        }
+        return repo.pushTag(tag, message);
+      },
+    };
+    expect(claimTag(racing, { sha: a })).toMatchObject({
+      action: "created",
+      tag: "v1.4.12",
+      shippedBy: "v1.5.0",
+    });
+    expect(tags()["v1.4.12"].commit).toBe(a);
+  });
+
+  it("treats a push reported as failed that landed as its own tag", () => {
+    const { merge, runner, tags } = setup();
+    const a = merge("fix: one (#1)");
+    const repo = runner(a);
+    // The tag reaches the remote but the client sees an error: here a second copy of the push.
+    const flaky = {
+      ...repo,
+      pushTag: (tag, message) => {
+        expect(runner(a).pushTag(tag, message)).toBe(true);
+        return repo.pushTag(tag, message);
+      },
+    };
+    expect(claimTag(flaky, { sha: a })).toMatchObject({ action: "created", tag: "v1.4.12" });
+    expect(tags()["v1.4.12"].commit).toBe(a);
+  });
+
+  it("is not superseded by a hand-made lightweight tag, and refuses its version", () => {
+    const { git, merge, runner, tags } = setup();
+    const a = merge("fix: one (#1)");
+    const b = merge("fix: two (#2)");
+    git("tag", "v1.4.12", b);
+    git("push", "-q", "origin", "v1.4.12");
+    expect(() => claimTag(runner(a), { sha: a })).toThrow(/deleted or renamed/);
+    expect(tags()["v1.4.12"].commit).toBe(b);
   });
 
   it("fails when a later skip release holds back this commit's app changes", () => {
@@ -321,8 +385,20 @@ describe("against real repositories", () => {
       const { io: broken, log: log2 } = io(async () => {
         throw new Error("HTTP 502");
       });
-      expect(await waitForAncestors(runner(b), { sha: b, ...broken })).toBe(false);
+      // Not knowing counts as having waited, so the release job redeploys main.
+      expect(await waitForAncestors(runner(b), { sha: b, ...broken })).toBe(true);
       expect(log2[0]).toMatch(/HTTP 502/);
+    });
+
+    it("returns at once when the commit is already tagged", async () => {
+      const { merge, runner } = setup();
+      const a = merge("fix: one (#1)");
+      const b = merge("fix: two (#2)");
+      claimTag(runner(b), { sha: b });
+      const { io: opts } = io(async () => {
+        throw new Error("no lookup expected");
+      });
+      expect(await waitForAncestors(runner(a), { sha: a, ...opts })).toBe(false);
     });
   });
 });

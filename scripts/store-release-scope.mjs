@@ -21,9 +21,10 @@
  * backticks, or joined to a word, is ignored so the markers can be written about.
  *
  * The decision is recorded on the release tag: scripts/release-tag.mjs takes it immediately before
- * tagging and creates the tag annotated, with a `Store-Release: ship|skip` trailer. The diff base is the newest trusted release tag not marked
- * `skip`. Lightweight tags are legacy releases and count as shipped and published, but only
- * those that predate the first annotated release tag (see trustedRecords).
+ * tagging and creates the tag annotated, with a `Store-Release: ship|skip` trailer. The diff base
+ * is the newest trusted release tag not marked `skip`. Lightweight tags are legacy releases and
+ * count as shipped and published, but only those that predate the first annotated release tag
+ * (see trustedRecords).
  *
  * https://how2vote.au/app-version.json advertises the newest trusted release tag whose F-Droid APK
  * is published: a legacy tag, or a ship tag whose commit carries a success `fdroid-apk/<tag>`
@@ -418,14 +419,13 @@ async function main() {
       isAncestor,
     );
     // A push decides in the release job (scripts/release-tag.mjs), against the tags at tag time.
-    const selected = selectBase(event, null);
-    if (event === "pull_request" && selected) {
+    if (event === "pull_request") {
       decision = decide({
-        paths: git("diff", "--name-only", "--no-renames", "-z", selected, "HEAD")
+        paths: git("diff", "--name-only", "--no-renames", "-z", "HEAD^1", "HEAD")
           .split("\0")
           .filter(Boolean),
         prText: textFile ? readFileSync(textFile, "utf8") : "",
-        history: git("log", "--format=%B", `${selected}..HEAD`),
+        history: git("log", "--format=%B", "HEAD^1..HEAD"),
       });
     }
   } catch (error) {

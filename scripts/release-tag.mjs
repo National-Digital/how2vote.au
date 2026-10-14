@@ -19,8 +19,8 @@
  *
  * Usage (deploy.yml): SHA=… REPO=… GH_TOKEN=… PR_TEXT_FILE=… [MARKER_LOOKUP=failed]
  *   node scripts/release-tag.mjs
- * Writes `action` (created|existing|superseded), `tag`, `ship`, `base`, `reason` and `waited` to
- * $GITHUB_OUTPUT. Exits non-zero when no tag can be claimed, or when this commit's app changes
+ * Writes `action` (created|existing|superseded), `tag`, `ship`, `base`, `reason`, `waited` and
+ * `shipped-by` to $GITHUB_OUTPUT. Exits non-zero when no tag can be claimed, or when this commit's app changes
  * would be left without a release.
  */
 import { execFileSync } from "node:child_process";
@@ -63,7 +63,8 @@ const MAIN = "refs/remotes/origin/main";
 export const tagMessage = (tag, ship) => `${tag}\n\n${TRAILER}: ${ship ? "ship" : "skip"}\n`;
 
 /**
- * Where a commit stands, from the release tags on it or on its descendants.
+ * Where a commit stands, from the release tags on it or on its descendants. Only an annotated
+ * tag, as this script creates, supersedes the commit; a lightweight one is hand-made.
  * @param {string} sha
  * @param {TagRecord[]} containing tags on main whose commit is `sha` or a descendant, newest first
  * @returns {{ state: "tagged", record: TagRecord } | { state: "superseded", records: TagRecord[] }
@@ -72,7 +73,8 @@ export const tagMessage = (tag, ship) => `${tag}\n\n${TRAILER}: ${ship ? "ship" 
 export function standing(sha, containing) {
   const own = containing.find((r) => r.commit === sha);
   if (own) return { state: "tagged", record: own };
-  if (containing.length > 0) return { state: "superseded", records: containing };
+  const later = containing.filter((r) => r.annotated);
+  if (later.length > 0) return { state: "superseded", records: later };
   return { state: "untagged" };
 }
 
@@ -81,13 +83,10 @@ const shipped = (record) => record.annotated && !isSkipped(record.message);
 
 /**
  * Whether a deploy.yml runs listing shows a run still in progress.
- * @param {{ workflow_runs?: { id?: number, status?: string }[] }} listing
- * @param {string | number} [ownRunId]
+ * @param {{ workflow_runs?: { status?: string }[] }} listing
  */
-export function inProgress(listing, ownRunId) {
-  return (listing?.workflow_runs ?? []).some(
-    (r) => r?.status !== "completed" && String(r?.id) !== String(ownRunId ?? ""),
-  );
+export function inProgress(listing) {
+  return (listing?.workflow_runs ?? []).some((r) => r?.status !== "completed");
 }
 
 /**
@@ -123,7 +122,8 @@ export function decideFor(repo, merged, { prText, lookupFailed }) {
 
 /**
  * Waits while a deploy of an untagged ancestor is still running, so that ancestor tags first.
- * Returns whether it waited: an ancestor's deploy may then have finished after this commit's.
+ * Returns whether it waited, or could not tell: an ancestor's deploy may then have finished after
+ * this commit's.
  * @param {Repo} repo
  * @param {{ sha: string, running: (sha: string) => Promise<boolean>,
  *   sleep: (ms: number) => Promise<void>, now: () => number, log: (line: string) => void,
@@ -146,6 +146,7 @@ export async function waitForAncestors(repo, { sha, running, sleep, now, log, li
         if (await running(commit)) busy.push(commit);
       } catch (error) {
         log(`::warning::could not read the deploy runs for ${commit}: ${error.message}`);
+        waited = true;
       }
     }
     if (busy.length === 0) return waited;
@@ -165,14 +166,17 @@ export async function waitForAncestors(repo, { sha, running, sleep, now, log, li
  * @param {{ sha: string, prText?: string, lookupFailed?: boolean,
  *   log?: (line: string) => void }} input
  * @returns {{ action: "created" | "existing" | "superseded", tag: string, ship?: boolean,
- *   base?: string | null, reason?: string }}
+ *   base?: string | null, reason?: string, shippedBy?: string }} shippedBy names a later ship
+ *   release that landed while this tag was pushed; this release then dispatches no store build
  */
 export function claimTag(repo, { sha, prText = "", lookupFailed = false, log = () => {} }) {
   const markers = { prText, lookupFailed };
   for (let attempt = 1; attempt <= MAX_ATTEMPTS; attempt++) {
     repo.fetchTags();
     const where = standing(sha, repo.records("contains"));
-    if (where.state === "tagged") return { action: "existing", tag: where.record.tag };
+    if (where.state === "tagged") {
+      return { action: "existing", tag: where.record.tag, ship: !isSkipped(where.record.message) };
+    }
     const merged = repo.records("merged");
     if (where.state === "superseded") {
       // The oldest descendant release is the one that carries this commit's changes.
@@ -196,11 +200,18 @@ export function claimTag(repo, { sha, prText = "", lookupFailed = false, log = (
     const tag = `v${next.join(".")}`;
     const clash = repo.records("all").find((r) => r.tag === tag);
     if (clash) {
-      throw new Error(`${tag} already exists at ${clash.commit}, which is not on this history`);
+      throw new Error(
+        `${tag} already exists at ${clash.commit}, which is not on main — no release can be ` +
+          `tagged until that tag is deleted or renamed`,
+      );
     }
     const decision = decideFor(repo, merged, markers);
     if (repo.pushTag(tag, tagMessage(tag, decision.ship))) {
-      return { action: "created", tag, ...decision };
+      // A later merge may have tagged a higher version in the meantime; a store build of this
+      // lower version would then follow it.
+      repo.fetchTags();
+      const later = repo.records("contains").filter((r) => r.commit !== sha && shipped(r));
+      return { action: "created", tag, ...decision, shippedBy: later.at(-1)?.tag };
     }
     log(`${tag} was taken by a concurrent release (attempt ${attempt}/${MAX_ATTEMPTS})`);
   }
@@ -292,10 +303,11 @@ async function runningDeploys(sha) {
         Authorization: `Bearer ${process.env["GH_TOKEN"]}`,
         "X-GitHub-Api-Version": "2022-11-28",
       },
+      signal: globalThis.AbortSignal.timeout(15_000),
     },
   );
   if (!res.ok) throw new Error(`HTTP ${res.status}`);
-  return inProgress(await res.json(), process.env["GITHUB_RUN_ID"]);
+  return inProgress(await res.json());
 }
 
 async function main() {
@@ -322,7 +334,8 @@ async function main() {
     appendFileSync(
       out,
       `action=${result.action}\ntag=${result.tag}\nship=${result.ship ?? ""}\n` +
-        `base=${result.base ?? ""}\nreason=${result.reason ?? ""}\nwaited=${waited}\n`,
+        `base=${result.base ?? ""}\nreason=${result.reason ?? ""}\nwaited=${waited}\n` +
+        `shipped-by=${result.shippedBy ?? ""}\n`,
     );
   }
   const text =

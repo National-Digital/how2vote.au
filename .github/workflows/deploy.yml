@@ -42,8 +42,10 @@ concurrency:
   # another. GitHub's concurrency queue keeps only ONE pending run per group, so a
   # shared production group silently drops a superseded deploy when two merges to
   # main land seconds apart. The release job orders concurrent promotions itself
-  # (scripts/release-tag.mjs).
-  group: deploy-${{ (github.event_name == 'pull_request' && github.event.action != 'closed') && github.ref || format('{0}-{1}', github.ref, github.run_id) }}
+  # (scripts/release-tag.mjs). Scheduled and dispatched redeploys share one group:
+  # each builds main as it is when it starts, so the newest pending one replacing
+  # an older one loses nothing.
+  group: deploy-${{ (github.event_name == 'pull_request' && github.event.action != 'closed') && github.ref || (github.event_name == 'schedule' || github.event_name == 'workflow_dispatch') && format('{0}-redeploy', github.ref) || format('{0}-{1}', github.ref, github.run_id) }}
   cancel-in-progress: ${{ github.event_name == 'pull_request' && github.event.action != 'closed' }}
 
 env:
@@ -181,7 +183,7 @@ jobs:
             echo "version=${NEXT}" >> "$GITHUB_OUTPUT"
             echo "Resolved version: ${NEXT}"
           else
-            # Only a push can tag and release (see the tag job's `if`), so only a push may deploy a
+            # Only a push can tag and release (see the release job's `if`), so only a push may deploy a
             # bumped version. A scheduled or dispatched redeploy re-publishes the version already
             # released: bumping here would deploy a version no tag will ever exist for.
             CURRENT=$(node scripts/next-version.mjs --print-current)
@@ -593,25 +595,34 @@ jobs:
           APPS_REASON: ${{ steps.tag.outputs.reason }}
           DEPLOYED: v${{ needs.deploy.outputs.version }}
           WAITED: ${{ steps.tag.outputs.waited }}
+          SHIPPED_BY: ${{ steps.tag.outputs.shipped-by }}
           APPLE_TEAM_ID: ${{ vars.APPLE_TEAM_ID }}
           REPO: ${{ github.repository }}
         run: |
-          if [ "$ACTION" = existing ]; then
-            echo "Tag $V already exists on this commit — skipping tag/release."
-            echo "If the store dispatches did not happen for $V, run: gh workflow run android-release.yml --repo $REPO --ref main -f tag=$V"
-            exit 0
-          fi
           if [ "$ACTION" = superseded ]; then
             echo "$V already contains this commit and releases its changes." | tee -a "$GITHUB_STEP_SUMMARY"
             exit 0
           fi
-          [ "$ACTION" = created ] || { echo "::error::unexpected tag outcome '$ACTION'"; exit 1; }
+          # A re-run finds the tag on its commit. With the release published, the earlier run got as
+          # far as the dispatches; without it, nothing after the tag push happened, so carry on.
+          if [ "$ACTION" = existing ]; then
+            if gh release view "$V" --repo "$REPO" >/dev/null 2>view.err; then
+              echo "Tag and release $V already exist — skipping."
+              echo "If the store dispatches did not happen for $V, run: gh workflow run android-release.yml --repo $REPO --ref main -f tag=$V (and ios-release.yml the same way)"
+              exit 0
+            fi
+            grep -qi 'not found' view.err || { cat view.err >&2; exit 1; }
+            echo "Tag $V exists without its release — completing the release."
+          elif [ "$ACTION" != created ]; then
+            echo "::error::unexpected tag outcome '$ACTION'"
+            exit 1
+          fi
           # Only an explicit skip decision skips; anything else ships.
           if [ "${SHIP_APPS:-}" = "false" ]; then SHIP=false; else SHIP=true; fi
           # The site was labelled before the tag was settled, and an earlier merge's deploy may have
           # finished after this one. A redeploy of main corrects both; app-version.json does not
           # depend on the label.
-          if [ "$V" != "$DEPLOYED" ] || [ "$WAITED" = true ]; then
+          if [ -z "$SHIPPED_BY" ] && { [ "$V" != "$DEPLOYED" ] || [ "$WAITED" = true ]; }; then
             echo "::warning::deployed as $DEPLOYED, released as $V after concurrent merges; redeploying main"
             gh workflow run deploy.yml --repo "$REPO" --ref main \
               || echo "::warning::could not dispatch deploy.yml — the scheduled deploy will correct the site"
@@ -632,7 +643,7 @@ jobs:
             echo "::error::could not dispatch $1 — run manually: gh workflow run $1 --repo $REPO --ref main -f tag=$V"
             return 1
           }
-          # This run pushed the tag, so it owns the release and the dispatches.
+          # The run that pushed the tag owns the release and the dispatches.
           RELEASE_ARGS=(--title "$V" --generate-notes)
           if [ "$SHIP" != true ]; then
             RELEASE_ARGS+=(--notes "Store release skipped (${APPS_REASON:-no app-affecting change}); the apps stay at ${APPS_BASE:-the last release that shipped}.")
@@ -644,6 +655,10 @@ jobs:
             fi
             echo "Release $V already exists — continuing to the dispatches."
           fi
+          if [ -n "$SHIPPED_BY" ]; then
+            echo "Store workflows not dispatched: $SHIPPED_BY, a later release that ships, was tagged first and carries these changes." | tee -a "$GITHUB_STEP_SUMMARY"
+            exit 0
+          fi
           if [ "$SHIP" != true ]; then
             echo "Store workflows not dispatched (${APPS_REASON:-no app-affecting change}); the apps stay at ${APPS_BASE:-the last release that shipped}. The next app-affecting merge ships these changes; to ship them sooner, merge a follow-up carrying [ship-apps]." | tee -a "$GITHUB_STEP_SUMMARY"
             exit 0
@@ -653,7 +668,7 @@ jobs:
 
   # Opens or updates a failure issue when tagging the release or dispatching the store workflows
   # fails. Only the release job counts: a failed site deploy is not a store failure. It never closes
-  # the issue: a re-run exits green on "tag already exists" without dispatching anything, so a green
+  # the issue: a re-run whose release exists exits green without dispatching anything, so a green
   # release job does not prove the stores were dispatched. Close it by hand.
   release-alert:
     name: Report release failures
@@ -665,7 +680,8 @@ jobs:
     uses: ./.github/workflows/store-release-alert.yml
     with:
       name: Store dispatch
-      tag: ${{ needs.release.outputs.tag || format('v{0}', needs.deploy.outputs.version) }}
+      tag: ${{ needs.release.outputs.tag }}
+      untagged-name: Store dispatch for ${{ github.sha }}
       results: ${{ format('{{"release":{0}}}', toJSON(needs.release)) }}
       terminal: release
       resolves: false

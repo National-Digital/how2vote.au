@@ -507,7 +507,12 @@ describe("deploy.yml", () => {
   });
 
   it("releases and dispatches only a tag this run created, and the stores only on ship", () => {
-    expect(release).toContain('[ "$ACTION" = created ] || {');
+    expect(release).toContain('elif [ "$ACTION" != created ]; then');
+    // A re-run completes the release only when the earlier run never published it.
+    expect(release).toContain("grep -qi 'not found' view.err");
+    const lateTag = release.indexOf('if [ -n "$SHIPPED_BY" ]; then');
+    expect(lateTag).toBeGreaterThan(release.indexOf("gh release create"));
+    expect(release.indexOf("dispatch android-release.yml")).toBeGreaterThan(lateTag);
     expect(release).toMatch(
       /if \[ "\$\{SHIP_APPS:-\}" = "false" \]; then SHIP=false; else SHIP=true; fi/,
     );
@@ -520,9 +525,9 @@ describe("deploy.yml", () => {
   });
 
   it("reports failures under the tag the release job settled on", () => {
-    expect(job(deploy, "release-alert")).toContain(
-      "tag: ${{ needs.release.outputs.tag || format('v{0}', needs.deploy.outputs.version) }}",
-    );
+    const alert = job(deploy, "release-alert");
+    expect(alert).toContain("tag: ${{ needs.release.outputs.tag }}");
+    expect(alert).not.toContain("needs.deploy.outputs.version)");
   });
 
   it("builds the endpoint in the build job, which can read the records", () => {
