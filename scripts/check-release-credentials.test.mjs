@@ -3,12 +3,14 @@ import { readdirSync, readFileSync } from "node:fs";
 import {
   CREDENTIALS,
   MAIN_ONLY,
-  excludesPullRequests,
+  excludesUntrustedEvents,
   jobCondition,
   jobEnvironment,
   parseWorkflow,
+  passedSecrets,
   secretUses,
   verdict,
+  workflowTriggers,
 } from "./check-release-credentials.mjs";
 
 const dir = new URL("../.github/workflows/", import.meta.url);
@@ -84,7 +86,7 @@ describe("verdict — committed workflows", () => {
     );
     expect(mutated).not.toBe(deploy.text);
     expect(verdict([{ path: deploy.path, text: mutated }]).errors.join("\n")).toMatch(
-      /job "live-versions" uses main-only environment "android-build" but its if: does not exclude pull_request/,
+      /job "live-versions" uses main-only environment "android-build" but its if: does not exclude untrusted triggers \(pull_request\)/,
     );
   });
 });
@@ -253,14 +255,184 @@ describe("verdict — bypass attempts", () => {
     ).toBe(true);
   });
 
-  it("only accepts a pull-request exclusion that holds for the whole condition", () => {
-    expect(excludesPullRequests("github.event_name != 'pull_request'")).toBe(true);
-    expect(excludesPullRequests("${{ github.ref == 'refs/heads/main' && always() }}")).toBe(true);
-    expect(excludesPullRequests("github.event_name != 'pull_request' || true")).toBe(false);
-    expect(excludesPullRequests("(github.event_name != 'pull_request') || true")).toBe(false);
-    expect(excludesPullRequests("!(github.event_name != 'pull_request' && x)")).toBe(false);
-    expect(excludesPullRequests("contains('github.event_name != pull_request', x)")).toBe(false);
-    expect(excludesPullRequests("x == 'github.event_name != \\'pull_request\\''")).toBe(false);
-    expect(excludesPullRequests("")).toBe(false);
+  it("only accepts an exclusion that holds for the whole condition", () => {
+    const pr = new Set(["pull_request"]);
+    expect(excludesUntrustedEvents("github.event_name != 'pull_request'", pr)).toBe(true);
+    expect(excludesUntrustedEvents("${{ github.event_name == 'push' && always() }}", pr)).toBe(
+      true,
+    );
+    expect(excludesUntrustedEvents("github.ref == 'refs/heads/main'", pr)).toBe(false);
+    expect(excludesUntrustedEvents("github.event_name == 'pull_request'", pr)).toBe(false);
+    expect(excludesUntrustedEvents("github.event_name != 'pull_request' || true", pr)).toBe(false);
+    expect(excludesUntrustedEvents("(github.event_name != 'pull_request') || true", pr)).toBe(
+      false,
+    );
+    expect(excludesUntrustedEvents("!(github.event_name != 'pull_request' && x)", pr)).toBe(false);
+    expect(excludesUntrustedEvents("contains('github.event_name != pull_request', x)", pr)).toBe(
+      false,
+    );
+    expect(excludesUntrustedEvents("x == 'github.event_name != \\'pull_request\\''", pr)).toBe(
+      false,
+    );
+    expect(excludesUntrustedEvents("", pr)).toBe(false);
+    const prt = new Set(["pull_request", "pull_request_target"]);
+    expect(excludesUntrustedEvents("github.event_name != 'pull_request'", prt)).toBe(false);
+    expect(excludesUntrustedEvents("github.event_name == 'workflow_dispatch'", prt)).toBe(true);
+  });
+
+  it("reads trigger names from every on: layout and fails closed otherwise", () => {
+    const t = (on) => workflowTriggers(on) && [...workflowTriggers(on)];
+    expect(t("on: push")).toEqual(["push"]);
+    expect(t("on: [push, 'workflow_run']")).toEqual(["push", "workflow_run"]);
+    expect(t("on:\n  - issue_comment\n  - push")).toEqual(["issue_comment", "push"]);
+    expect(t("'on':\n  pull_request_target:\n    types: [opened]\n  schedule:")).toEqual([
+      "pull_request_target",
+      "schedule",
+    ]);
+    expect(t("on: { push: {} }")).toBe(null);
+    expect(t("on:\n   push:")).toBe(null);
+    expect(t("")).toBe(null);
+    expect(
+      verdict([{ path: "w.yml", text: `name: t\non: { push: {} }\njobs:\n  a:\n    steps: []\n` }])
+        .errors[0],
+    ).toMatch(/unrecognised on: block/);
+  });
+});
+
+describe("verdict — reusable-workflow pass-through", () => {
+  const callee = (head) =>
+    `name: c\non:\n  workflow_call:\n    secrets:\n      ASC_KEY_ID:\n        required: false\njobs:\n  submit:\n${head}    steps:\n      - env:\n          K: \${{ secrets.ASC_KEY_ID }}\n`;
+  const caller = (secrets, extra = "") =>
+    wf(`  submit:\n    uses: ./.github/workflows/c.yml\n${extra}    secrets:\n${secrets}`);
+  const pass = "      ASC_KEY_ID: ${{ secrets.ASC_KEY_ID }}\n";
+  const run = (callerText, calleeText) =>
+    verdict([
+      { path: ".github/workflows/w.yml", text: callerText },
+      { path: ".github/workflows/c.yml", text: calleeText },
+    ]);
+
+  it("passes the committed release and catch-up callers of ios-submit.yml", () => {
+    const sub = file("ios-submit.yml");
+    for (const name of ["ios-release.yml", "ios-submission-catch-up.yml"]) {
+      const w = file(name);
+      expect(w.text).toMatch(/uses: \.\/\.github\/workflows\/ios-submit\.yml/);
+      expect(passedSecrets(w.text.split(/\n {2}submit:\n/)[1]).passed).toEqual([
+        "ASC_KEY_ID",
+        "ASC_ISSUER_ID",
+        "ASC_API_KEY_P8",
+      ]);
+      expect(verdict([w, sub])).toEqual({ ok: true, errors: [] });
+    }
+  });
+
+  it("fails a committed caller when ios-submit.yml is missing or loses its environment (mutation)", () => {
+    const release = file("ios-release.yml");
+    expect(verdict([release]).errors.join("\n")).toMatch(
+      /passes ASC_KEY_ID to \.\/\.github\/workflows\/ios-submit\.yml, not a workflow in this repository/,
+    );
+    const sub = file("ios-submit.yml");
+    const mutated = sub.text.replace("    environment: app-store\n", "");
+    expect(mutated).not.toBe(sub.text);
+    expect(verdict([release, { path: sub.path, text: mutated }]).errors.join("\n")).toMatch(
+      /passes ASC_KEY_ID to \.github\/workflows\/ios-submit\.yml job "submit" in no environment/,
+    );
+  });
+
+  it("accepts a named pass-through to a job in an allowed environment", () => {
+    expect(run(caller(pass), callee("    environment: app-store\n"))).toEqual({
+      ok: true,
+      errors: [],
+    });
+  });
+
+  it("fails a pass-through to a job with no or the wrong environment", () => {
+    expect(run(caller(pass), callee("")).errors.join("\n")).toMatch(
+      /passes ASC_KEY_ID to \.github\/workflows\/c\.yml job "submit" in no environment/,
+    );
+    expect(run(caller(pass), callee("    environment: play-store\n")).errors.join("\n")).toMatch(
+      /job "submit" in environment "play-store"/,
+    );
+  });
+
+  it("fails a pass-through that no called job reads, or to a workflow outside the repository", () => {
+    const unread = callee("    environment: app-store\n").replace(
+      "secrets.ASC_KEY_ID",
+      "secrets.X",
+    );
+    expect(run(caller(pass), unread).errors.join("\n")).toMatch(/which no job reads/);
+    const remote = wf(`  submit:\n    uses: o/r/.github/workflows/c.yml@v1\n    secrets:\n${pass}`);
+    expect(run(remote, callee("    environment: app-store\n")).errors.join("\n")).toMatch(
+      /not a workflow in this repository/,
+    );
+  });
+
+  it("fails a renamed, computed or flow-mapped pass-through", () => {
+    const ok = callee("    environment: app-store\n");
+    expect(run(caller("      OTHER: ${{ secrets.ASC_KEY_ID }}\n"), ok).errors.join("\n")).toMatch(
+      /secrets entry is not NAME/,
+    );
+    expect(
+      run(caller("      ASC_KEY_ID: ${{ secrets.ASC_KEY_ID || 'x' }}\n"), ok).errors.join("\n"),
+    ).toMatch(/secrets entry is not NAME/);
+    const flow = wf(
+      "  submit:\n    uses: ./.github/workflows/c.yml\n    secrets: { ASC_KEY_ID: ${{ secrets.ASC_KEY_ID }} }\n",
+    );
+    expect(run(flow, ok).errors.join("\n")).toMatch(/secrets is not a block mapping/);
+  });
+
+  it("still fails a credential passed as an input to a called workflow", () => {
+    const viaInput = caller(pass, "    with:\n      key: ${{ secrets.ASC_API_KEY_P8 }}\n");
+    expect(run(viaInput, callee("    environment: app-store\n")).errors.join("\n")).toMatch(
+      /job "submit" reads ASC_API_KEY_P8 in no environment/,
+    );
+  });
+
+  it("fails a pass-through or read under an untrusted trigger unless the job pins a safe event", () => {
+    const ok = callee("    environment: ios-build\n");
+    const job = (on, cond) =>
+      `name: t\non:\n  ${on}:\n  workflow_dispatch:\njobs:\n  submit:\n${cond}    uses: ./.github/workflows/c.yml\n    secrets:\n${pass}`;
+    for (const on of ["pull_request_target", "workflow_run", "issue_comment"]) {
+      for (const cond of [
+        "",
+        "    if: github.event_name != 'pull_request'\n",
+        "    if: github.ref == 'refs/heads/main'\n",
+      ]) {
+        expect(run(job(on, cond), ok).errors.join("\n")).toMatch(
+          new RegExp(
+            `passes credentials but its if: does not exclude untrusted triggers \\(${on}\\)`,
+          ),
+        );
+      }
+      expect(run(job(on, "    if: github.event_name == 'workflow_dispatch'\n"), ok)).toEqual({
+        ok: true,
+        errors: [],
+      });
+    }
+    const read = (on, cond) =>
+      wf(
+        `  a:\n${cond}    environment: play-share\n    steps:\n      - env:\n          K: \${{ secrets.PLAY_SHARE_KEYSTORE }}\n`,
+        `on:\n  ${on}:\n`,
+      );
+    expect(verdict([{ path: "w.yml", text: read("workflow_run", "") }]).errors.join("\n")).toMatch(
+      /job "a" reads PLAY_SHARE_KEYSTORE but its if: does not exclude untrusted triggers \(workflow_run\)/,
+    );
+    expect(
+      verdict([
+        { path: "w.yml", text: read("issue_comment", "    if: github.event_name == 'push'\n") },
+      ]),
+    ).toEqual({ ok: true, errors: [] });
+  });
+
+  it("still fails secrets: inherit to an environment-gated called workflow", () => {
+    const inherit = wf("  submit:\n    uses: ./.github/workflows/c.yml\n    secrets: inherit\n");
+    expect(run(inherit, callee("    environment: app-store\n")).errors.join("\n")).toMatch(
+      /secrets: inherit/,
+    );
+  });
+
+  it("still fails a job without uses: that names the secret in a secrets: key", () => {
+    const plain = wf(`  submit:\n    runs-on: x\n    secrets:\n${pass}    steps: []\n`);
+    const r = run(plain, callee("    environment: app-store\n"));
+    expect(r.errors.join("\n")).toMatch(/job "submit" reads ASC_KEY_ID in no environment/);
   });
 });

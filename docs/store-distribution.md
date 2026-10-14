@@ -380,10 +380,9 @@ was never submitted (a v1.4.x build left in TestFlight), the first scheduled cat
 `app-store` approval to submit it. To pre-empt that, withdraw that release with the command above
 before merging, or reject the approval request and then withdraw it.
 
-Whether the `ios-build` key, a Developer-role key, may read review submissions and versions is not
-verified. If it cannot, the check passes the decision to the gated job instead, so the approval
-request comes every three hours while a submission is owed; approving it early just defers again.
-The owner checklist below includes a dispatch that shows which case applies.
+The `ios-build` key is an Admin key, so it can read review submissions and versions. If a read
+fails, the check passes the decision to the gated job instead, so the approval request comes every
+three hours while a submission is owed; approving it early just defers again.
 
 Submissions are made for automatic release, so an approved version moves through Processing for
 Distribution to Ready for Distribution by itself, usually within hours, and the next catch-up
@@ -915,10 +914,9 @@ needs **Manage store presence**, because the internal lane uploads the listing, 
 listing text and images; with Managed publishing on, such a change is held until someone publishes
 it in Play Console, and that is the backstop. With Managed publishing off (see "Going live without a
 click"), listing changes publish with each release and the backstop is the `main`-only branch
-policy alone. On iOS the protection depends on the `ios-build` key
-being a **Developer**-role key, which can cloud-sign and upload to TestFlight but cannot submit for
-review; if it has to be an Admin key (see the checklist's fallback), the `app-store` reviewer no
-longer contains the submit capability and the iOS gate rests only on the workflow YAML coming from
+policy alone. On iOS the `ios-build` key is an **Admin** key, because App Store Connect lets only
+an Admin key cloud-sign. An Admin key can also submit for review, so the `app-store` reviewer
+guards only the workflow's own submit step, and the iOS gate rests on the workflow YAML coming from
 `main`. The secret **names** are the same in each
 environment, so a workflow reads `PLAY_SERVICE_ACCOUNT_JSON` whichever account it is given.
 
@@ -929,8 +927,8 @@ environment, so a workflow reads `PLAY_SERVICE_ACCOUNT_JSON` whichever account i
 | `PLAY_SERVICE_ACCOUNT_JSON` | android-release → promote | `play-store` | `main` + required reviewers | **production** service account: release to production |
 | `FDROID_KEYSTORE`, `FDROID_KEYSTORE_PASSWORD`, `FDROID_KEY_ALIAS`, `FDROID_KEY_PASSWORD` | android-release → fdroid-apk | `fdroid-signing` | `main` | F-Droid release keystore (PKCS12, **base64-encoded**; NOT the Play upload key). Key password = store password (PKCS12 permits only one). Locked forever |
 | `R2_ACCOUNT_ID`, `R2_ACCESS_KEY_ID`, `R2_SECRET_ACCESS_KEY` | android-release → fdroid-publish | `fdroid-publish` | `main` | R2 token scoped to the `how2vote-dist` bucket (**not** account-wide); the account id only forms the S3 endpoint |
-| `ASC_KEY_ID`, `ASC_ISSUER_ID`, `ASC_API_KEY_P8` | ios-release → build; ios-submission-catch-up → check (read-only) | `ios-build` | `main` | **Developer**-role App Store Connect key with **Access to Cloud Managed Distribution Certificates** (`.p8` **base64-encoded**): cloud-signed export, certificate guard, TestFlight upload; cannot submit for review |
-| `ASC_KEY_ID`, `ASC_ISSUER_ID`, `ASC_API_KEY_P8` | ios-submit → submit (called by ios-release and ios-submission-catch-up) | `app-store` | `main` + required reviewers | **App Manager** key: metadata + review submission; the only key in CI that can submit |
+| `ASC_KEY_ID`, `ASC_ISSUER_ID`, `ASC_API_KEY_P8` | ios-release → build; ios-submission-catch-up → check (read-only) | `ios-build` | `main` | **Admin** App Store Connect key (`.p8` **base64-encoded**): cloud-signed export, certificate guard, TestFlight upload. Team keys have no cloud-signing toggle, and only the Admin role can cloud-sign |
+| `ASC_KEY_ID`, `ASC_ISSUER_ID`, `ASC_API_KEY_P8` | ios-submit → submit (called by ios-release and ios-submission-catch-up) | `app-store` | `main` + required reviewers | **App Manager** key: metadata + review submission, behind the reviewer |
 | `PLAY_SHARE_SERVICE_ACCOUNT_JSON`, `PLAY_SHARE_KEYSTORE`, `PLAY_SHARE_KEYSTORE_PASSWORD`, `PLAY_SHARE_KEY_ALIAS`, `PLAY_SHARE_KEY_PASSWORD` | mobile-ci → android-share | `play-share` | none: dispatched from PR branches; required reviewers | internal-app-sharing account (no release rights) + throwaway keystore |
 | `CLOUDFLARE_API_TOKEN` | deploy → deploy, cleanup | repository | n/a | Pages deploy token; PR previews need it, so it cannot be limited to `main` |
 | `CF_D1_API_TOKEN` | deploy → deploy | repository | n/a | D1 migrations (non-PR runs) and `data:stats`, which also runs on same-repo PRs; its job builds PR previews |
@@ -964,8 +962,24 @@ listing edits; the production account cannot be probed on a schedule, because `p
 reviewer would hold every run, and its grant is exercised by each promotion.
 `scripts/check-release-credentials.mjs` (the release-credential gate in `ci.yml`) fails a change that
 reads one of these credentials from a job outside its listed environment, uses the secrets context
-without a literal name (`toJSON(secrets)`, `secrets[expr]`, `secrets: inherit`), or puts a
-`main`-only environment in a job whose `if:` does not exclude pull requests.
+without a literal name (`toJSON(secrets)`, `secrets[expr]`, `secrets: inherit`), or reads a
+credential, passes one on or names a `main`-only environment in a job whose `if:` does not exclude
+untrusted triggers. Only `push`,
+`schedule`, `workflow_dispatch`, `workflow_call` and `release` count as trusted. In a workflow with
+any other trigger, the job's `if:` must pin `github.event_name` to a trusted one (or, when
+`pull_request` is the only other trigger, exclude it). `github.ref == 'refs/heads/main'` does not
+count, because it also holds under `pull_request_target`.
+
+A called workflow sees only the secrets its caller passes, so `ios-release.yml` and
+`ios-submission-catch-up.yml` pass `ASC_KEY_ID`, `ASC_ISSUER_ID` and `ASC_API_KEY_P8` to
+`ios-submit.yml` by name. No repository copy exists, so the passed value is empty. The submit job
+declares the `app-store` environment, and GitHub gives it that environment's value in place of the
+passed one. The gate allows such a pass-through only from a job whose `uses:` names a workflow in
+this repository, only under the secret's own name, and only when every job in the called workflow
+that reads the secret declares an environment listed for it. In a workflow with a trigger an
+untrusted pull request can start, the calling job's `if:` must also exclude untrusted triggers,
+as for any job that reads a credential. `secrets: inherit` stays refused,
+because it would also hand the F-Droid and R2 credentials to the called workflow.
 
 ### Owner migration checklist
 
@@ -996,11 +1010,10 @@ Take them in order; the repository copies go last, after verification.
    version. If either fails, fix the grants first; the account that can release to production is
    the `play-store` account and must not be substituted here.
 2. **App Store Connect keys.** Users and Access → Integrations → App Store Connect API → Team Keys:
-   - a **Developer** key with **Access to Cloud Managed Distribution Certificates** enabled, for
-     `ios-build`;
+   - an **Admin** key, for `ios-build` (Team keys have no cloud-signing toggle, and only an Admin
+     key can cloud-sign);
    - an **App Manager** key, for `app-store`.
-   Download each `.p8` (offered once) and note its key id; the issuer id is shared. No Admin key is
-   used by CI.
+   Download each `.p8` (offered once) and note its key id; the issuer id is shared.
 3. **Environments.** Settings → Environments. `android-build`, `fdroid-signing`, `fdroid-publish`
    and `ios-build`: **Deployment branches and tags** → **Selected branches and tags** → branch rule
    `main` (not "Protected branches only", which admits every protected branch); no required
@@ -1016,7 +1029,7 @@ Take them in order; the repository copies go last, after verification.
    - `fdroid-signing`: `FDROID_KEYSTORE`, `FDROID_KEYSTORE_PASSWORD`, `FDROID_KEY_ALIAS`,
      `FDROID_KEY_PASSWORD` (the locked key; copy, never regenerate).
    - `fdroid-publish`: `R2_ACCOUNT_ID`, `R2_ACCESS_KEY_ID`, `R2_SECRET_ACCESS_KEY`.
-   - `ios-build`: `ASC_KEY_ID`, `ASC_ISSUER_ID`, `ASC_API_KEY_P8` = the **Developer** key
+   - `ios-build`: `ASC_KEY_ID`, `ASC_ISSUER_ID`, `ASC_API_KEY_P8` = the **Admin** key
      (`base64 -i AuthKey_<id>.p8`).
    - `play-store`: `PLAY_SERVICE_ACCOUNT_JSON` = the **production** account (the existing repository
      value).
@@ -1024,10 +1037,10 @@ Take them in order; the repository copies go last, after verification.
 5. Leave `play-share` as it is: reviewer, its five environment secrets, no branch policy.
 6. **Verify, while the repository copies still exist:**
    - `gh workflow run android-release.yml --ref main -f dry_run=true` goes green.
-   - `gh workflow run ios-release.yml --ref main -f dry_run=true` goes green under the Developer key:
+   - `gh workflow run ios-release.yml --ref main -f dry_run=true` goes green under the Admin key:
      the build lane's certificate guard (which lists certificates) and the cloud-signed export both
      pass.
-   - The next release's iOS build job uploads to TestFlight under the Developer key, and its
+   - The next release's iOS build job uploads to TestFlight under the Admin key, and its
      Android build job uploads to the internal track under the upload account.
    - The same dry-run dispatch from any other branch fails at the environment.
    - `gh workflow run play-permission.yml` goes green (it probes the upload account).
@@ -1037,17 +1050,14 @@ Take them in order; the repository copies go last, after verification.
      submission is owed will ask the `app-store` reviewer. It submits nothing unless a release is
      owed a submission, and then only after that reviewer approves.
    - The next `deploy.yml` run on `main` shows a green live-versions job and a populated Android badge.
-   **Fallback:** if the Developer key cannot list certificates or cannot export, put an Admin key in
-   `ios-build` instead. That key can also submit for review, so the `app-store` reviewer then
-   guards only the workflow's own submit step, and the iOS gate rests on the workflow YAML coming
-   from `main` alone.
 7. **Delete the repository-level copies** (Settings → Secrets and variables → Actions → Repository
    secrets): `ANDROID_UPLOAD_KEYSTORE`, `ANDROID_KEYSTORE_PASSWORD`, `ANDROID_KEY_ALIAS`,
    `ANDROID_KEY_PASSWORD`, `PLAY_SERVICE_ACCOUNT_JSON`, `FDROID_KEYSTORE`, `FDROID_KEYSTORE_PASSWORD`,
    `FDROID_KEY_ALIAS`, `FDROID_KEY_PASSWORD`, `R2_ACCOUNT_ID`, `R2_ACCESS_KEY_ID`,
    `R2_SECRET_ACCESS_KEY`, `ASC_KEY_ID`, `ASC_ISSUER_ID`, `ASC_API_KEY_P8`. Keep
-   `CLOUDFLARE_API_TOKEN`, `CF_D1_API_TOKEN` and `TVFY_API_KEY`. Once no environment holds the
-   former Admin key, revoke it in App Store Connect unless something outside CI uses it.
+   `CLOUDFLARE_API_TOKEN`, `CF_D1_API_TOKEN` and `TVFY_API_KEY`. If the former repository key is
+   not the `ios-build` key, revoke it in App Store Connect unless something outside CI uses
+   it.
 8. **Re-verify:** `gh secret list` shows only those three; `gh secret list --env <name>` shows each
    environment's set from step 4. Repeat the step 6 dry runs, then watch the next release: build
    uploads to the internal track and TestFlight, fdroid-apk and fdroid-publish go green, promote
@@ -1064,12 +1074,12 @@ can dispatch.
 
 **Apple** (organization enrollment, D-U-N-S):
 1. App Store Connect → create app `au.how2vote.app` (name: how2vote, primary locale en-AU).
-2. Users & Access → Integrations → generate two API keys: a **Developer** key with **Access to
-   Cloud Managed Distribution Certificates** for the build (the export step signs with cloud-managed
-   distribution certificates, and the build's certificate guard lists certificates), stored in the
+2. Users & Access → Integrations → generate two API keys: an **Admin** key for the build (the
+   export step signs with cloud-managed distribution certificates, which only an Admin key can do,
+   and the build's certificate guard lists certificates), stored in the
    `ios-build` environment; and an **App Manager** key for review submission, stored in the
    `app-store` environment. Record each key id + the issuer id; base64 each `.p8` into that
-   environment's `ASC_API_KEY_P8`. See the owner checklist for the Admin fallback.
+   environment's `ASC_API_KEY_P8`.
 3. Set the age rating questionnaire and the App Privacy declaration in the console. Declare the
    optional research contribution accurately: it is **opt-in**, **not linked to the user**, **not
    used for tracking**, and collected for **Analytics/Research** only (same posture as the web

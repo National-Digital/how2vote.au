@@ -39,6 +39,14 @@ on:
         description: Copyright year for the listing
         type: string
         required: true
+    # The caller passes the name; the app-store environment supplies the value (empty passes allowed).
+    secrets:
+      ASC_KEY_ID:
+        required: false
+      ASC_ISSUER_ID:
+        required: false
+      ASC_API_KEY_P8:
+        required: false
     outputs:
       outcome:
         description: submit, skip, defer or fail
