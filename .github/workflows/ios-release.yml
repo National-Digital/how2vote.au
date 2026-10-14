@@ -255,9 +255,9 @@ jobs:
 
   # Real (non-dry-run) dispatches only. A skipped or failed `build` skips this too (the `if`
   # deliberately does not use always()). ios-submit.yml holds the `app-store` environment: the
-  # required-reviewer gate (a human promotes every store submission) and the App Manager key, the
-  # only credential in CI that can submit for review. It never cancels a version in review: it
-  # defers instead, and ios-submission-catch-up.yml submits the build later.
+  # required-reviewer gate (a human promotes every store submission) and the App Manager key the
+  # submit step uses. It never cancels a version in review: it defers instead, and
+  # ios-submission-catch-up.yml submits the build later.
   submit:
     name: Submit for App Store review
     needs: [build, owe]

@@ -382,8 +382,7 @@ before merging, or reject the approval request and then withdraw it.
 
 The `ios-build` key is an Admin key, so it can read review submissions and versions. If a read
 fails, the check passes the decision to the gated job instead, so the approval request comes every
-three hours while a submission is owed; approving it early just defers again. The owner checklist
-below includes a dispatch that shows which case applies.
+three hours while a submission is owed; approving it early just defers again.
 
 Submissions are made for automatic release, so an approved version moves through Processing for
 Distribution to Ready for Distribution by itself, usually within hours, and the next catch-up
@@ -929,7 +928,7 @@ environment, so a workflow reads `PLAY_SERVICE_ACCOUNT_JSON` whichever account i
 | `FDROID_KEYSTORE`, `FDROID_KEYSTORE_PASSWORD`, `FDROID_KEY_ALIAS`, `FDROID_KEY_PASSWORD` | android-release → fdroid-apk | `fdroid-signing` | `main` | F-Droid release keystore (PKCS12, **base64-encoded**; NOT the Play upload key). Key password = store password (PKCS12 permits only one). Locked forever |
 | `R2_ACCOUNT_ID`, `R2_ACCESS_KEY_ID`, `R2_SECRET_ACCESS_KEY` | android-release → fdroid-publish | `fdroid-publish` | `main` | R2 token scoped to the `how2vote-dist` bucket (**not** account-wide); the account id only forms the S3 endpoint |
 | `ASC_KEY_ID`, `ASC_ISSUER_ID`, `ASC_API_KEY_P8` | ios-release → build; ios-submission-catch-up → check (read-only) | `ios-build` | `main` | **Admin** App Store Connect key (`.p8` **base64-encoded**): cloud-signed export, certificate guard, TestFlight upload. Team keys have no cloud-signing toggle, and only the Admin role can cloud-sign |
-| `ASC_KEY_ID`, `ASC_ISSUER_ID`, `ASC_API_KEY_P8` | ios-submit → submit (called by ios-release and ios-submission-catch-up) | `app-store` | `main` + required reviewers | **App Manager** key: metadata + review submission; the only key in CI that can submit |
+| `ASC_KEY_ID`, `ASC_ISSUER_ID`, `ASC_API_KEY_P8` | ios-submit → submit (called by ios-release and ios-submission-catch-up) | `app-store` | `main` + required reviewers | **App Manager** key: metadata + review submission, behind the reviewer |
 | `PLAY_SHARE_SERVICE_ACCOUNT_JSON`, `PLAY_SHARE_KEYSTORE`, `PLAY_SHARE_KEYSTORE_PASSWORD`, `PLAY_SHARE_KEY_ALIAS`, `PLAY_SHARE_KEY_PASSWORD` | mobile-ci → android-share | `play-share` | none: dispatched from PR branches; required reviewers | internal-app-sharing account (no release rights) + throwaway keystore |
 | `CLOUDFLARE_API_TOKEN` | deploy → deploy, cleanup | repository | n/a | Pages deploy token; PR previews need it, so it cannot be limited to `main` |
 | `CF_D1_API_TOKEN` | deploy → deploy | repository | n/a | D1 migrations (non-PR runs) and `data:stats`, which also runs on same-repo PRs; its job builds PR previews |

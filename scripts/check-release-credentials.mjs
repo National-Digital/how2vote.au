@@ -13,8 +13,9 @@
  *   - the one exception is a job that calls a local reusable workflow (`uses: ./.github/workflows/…`)
  *     and passes a credential under its own name in a `secrets:` block (`X: ${{ secrets.X }}`):
  *     allowed only when the called workflow reads X in at least one job, and every job there that
- *     reads it declares an environment listed for X. GitHub gives such a job the environment's value
- *     in place of the passed one, and a called workflow sees no secret its caller does not pass;
+ *     reads it declares an environment listed for X, and the caller excludes pull requests as below.
+ *     GitHub gives such a job the environment's value, when the environment holds X, in place of
+ *     the passed one, and a called workflow sees no secret its caller does not pass;
  *   - no registered credential is referenced outside a job (workflow-level `env:`);
  *   - the secrets context is only ever indexed by a literal name: `toJSON(secrets)`,
  *     `secrets[expr]` and `secrets: inherit` would hand over every secret the job can see;
@@ -373,8 +374,14 @@ export function verdict(workflows) {
         body = pass.rest;
         const target = /^\.\/(\.github\/workflows\/[\w.-]+\.ya?ml)$/.exec(unquote(call[1]))?.[1];
         const callee = target && workflows.find((w) => w?.path === target);
-        for (const name of pass.passed) {
-          if (!(name in CREDENTIALS)) continue;
+        const credentials = pass.passed.filter((name) => name in CREDENTIALS);
+        // The called jobs' environments are main-only, so a pull_request run must not reach them.
+        if (credentials.length && onPullRequest && !excludesPullRequests(jobCondition(job.body))) {
+          push(
+            `${where} passes credentials in a pull_request workflow but its if: does not exclude pull_request`,
+          );
+        }
+        for (const name of credentials) {
           seen++;
           const allowed = CREDENTIALS[name];
           if (!callee || typeof callee.text !== "string") {

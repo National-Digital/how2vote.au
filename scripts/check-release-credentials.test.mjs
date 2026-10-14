@@ -354,6 +354,20 @@ describe("verdict — reusable-workflow pass-through", () => {
     );
   });
 
+  it("fails a pass-through from a pull_request workflow unless the caller skips PRs", () => {
+    const ok = callee("    environment: ios-build\n");
+    const on = "on:\n  pull_request_target:\n";
+    const job = (cond) =>
+      `name: t\n${on}jobs:\n  submit:\n${cond}    uses: ./.github/workflows/c.yml\n    secrets:\n${pass}`;
+    expect(run(job(""), ok).errors.join("\n")).toMatch(
+      /passes credentials in a pull_request workflow but its if: does not exclude pull_request/,
+    );
+    expect(run(job("    if: github.event_name != 'pull_request'\n"), ok)).toEqual({
+      ok: true,
+      errors: [],
+    });
+  });
+
   it("still fails secrets: inherit to an environment-gated called workflow", () => {
     const inherit = wf("  submit:\n    uses: ./.github/workflows/c.yml\n    secrets: inherit\n");
     expect(run(inherit, callee("    environment: app-store\n")).errors.join("\n")).toMatch(
