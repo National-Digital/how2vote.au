@@ -484,9 +484,19 @@ joined to a word is ignored, so they can be written about):
 The decision is recorded on the release tag, which `deploy.yml` creates **annotated** with a
 `Store-Release: ship` or `Store-Release: skip` trailer; a skipped release also says so in its
 release notes. The diff base is the newest reachable release tag not marked `skip` (lightweight
-tags predate the trailer and all shipped). On a ship decision, the release job refuses an existing
-tag that is not this commit's ship tag: a concurrent release that claimed the version would
-otherwise leave these app changes without a release, silently.
+tags predate the trailer and all shipped).
+
+Merges that land close together deploy concurrently, so the release job settles the version and
+the decision at tag time (`scripts/release-tag.mjs`). It waits, for up to 30 minutes, while the
+deploy of an earlier untagged merge is still running, so merges are tagged in merge order. It then
+reads the remote's tags, takes the next version and the decision from them, and pushes the tag; if
+a concurrent run took that version first, it starts again, at most five times. A re-run keeps the
+tag already on its commit. A commit that a later release already contains gets no tag of its own,
+because that release carries its changes; the job fails if none of those later releases shipped
+and this commit's changes needed to. A version already tagged off `main` fails the job, and no tag
+is ever moved. When the released version differs from the one the site was built with, or the job
+waited for an earlier deploy, it dispatches `deploy.yml` on `main` so the live site carries the
+newest commit and its version.
 
 **`app-version.json` advertises only a version whose F-Droid APK is published.** When
 `fdroid-publish` has uploaded the APK and verified that `dist.how2vote.au` serves it, it sets a

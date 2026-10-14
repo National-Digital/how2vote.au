@@ -41,8 +41,8 @@ concurrency:
   # so they never share the single pending slot — and therefore never cancel one
   # another. GitHub's concurrency queue keeps only ONE pending run per group, so a
   # shared production group silently drops a superseded deploy when two merges to
-  # main land seconds apart. The tag/release step below is idempotent under the
-  # rare concurrent promotion this allows.
+  # main land seconds apart. The release job orders concurrent promotions itself
+  # (scripts/release-tag.mjs).
   group: deploy-${{ (github.event_name == 'pull_request' && github.event.action != 'closed') && github.ref || format('{0}-{1}', github.ref, github.run_id) }}
   cancel-in-progress: ${{ github.event_name == 'pull_request' && github.event.action != 'closed' }}
 
@@ -109,9 +109,6 @@ jobs:
     outputs:
       ready: ${{ steps.secrets.outputs.ready }}
       version: ${{ steps.target.outputs.version }}
-      ship-apps: ${{ steps.stores.outputs.ship }}
-      apps-base: ${{ steps.stores.outputs.base }}
-      apps-reason: ${{ steps.stores.outputs.reason }}
     # `!cancelled()` so a skipped live-versions (every pull_request run) does not cascade into
     # skipping the deploy itself, while a cancelled workflow still stops here.
     needs: live-versions
@@ -194,19 +191,17 @@ jobs:
             echo "Resolved version: ${CURRENT} (redeploy of the released version; next would be ${NEXT})"
           fi
 
-      # Whether this release ships the native apps (read by the release job below), and the
-      # newest release whose F-Droid APK is published, which the F-Droid endpoint advertises. On a
-      # pull request it only previews the decision in the job summary; on any other event an
-      # unreadable tag fails the deploy, and unreadable F-Droid records keep the served endpoint.
-      # See scripts/store-release-scope.mjs.
+      # The newest release whose F-Droid APK is published, which the F-Droid endpoint advertises.
+      # On a pull request it also previews the store decision in the job summary; a push decides in
+      # the release job, at tag time. On any event but pull_request an unreadable tag fails the
+      # deploy, and unreadable F-Droid records keep the served endpoint. See
+      # scripts/store-release-scope.mjs.
       - name: Decide the store release
         id: stores
         if: steps.secrets.outputs.ready == 'true'
         env:
           GH_TOKEN: ${{ github.token }}
           EVENT: ${{ github.event_name }}
-          REPO: ${{ github.repository }}
-          SHA: ${{ github.sha }}
         run: |
           set -euo pipefail
           # The pull request text goes through a file: a long body can exceed the env size limit.
@@ -214,24 +209,6 @@ jobs:
           : > "$PR_TEXT_FILE"
           if [ "$EVENT" = "pull_request" ]; then
             jq -r '.pull_request.title + "\n" + (.pull_request.body // "")' "$GITHUB_EVENT_PATH" > "$PR_TEXT_FILE"
-          elif [ "$EVENT" = "push" ]; then
-            # The markers are read from the pull request merged as this commit: the (#N) the squash
-            # subject ends with, else the commit's associated pull requests. Only a pull request
-            # whose merge commit is this one counts. Unreadable means the apps ship.
-            MERGED='select(.merged_at != null and .merge_commit_sha == env.SHA) | .title + "\n" + (.body // "")'
-            PRS=""
-            N="$(git log -1 --format=%s "$SHA" | sed -nE 's/.*\(#([0-9]+)\)$/\1/p')"
-            if [ -n "$N" ]; then
-              PRS="$(gh api "repos/$REPO/pulls/$N" --jq "$MERGED")" || PRS=""
-            fi
-            if [ -z "$PRS" ]; then
-              PRS="$(gh api "repos/$REPO/commits/$SHA/pulls" --jq ".[] | $MERGED")" || PRS=""
-            fi
-            if [ -n "$PRS" ]; then
-              printf '%s\n' "$PRS" > "$PR_TEXT_FILE"
-            else
-              export MARKER_LOOKUP=failed
-            fi
           fi
           node scripts/store-release-scope.mjs
 
@@ -539,43 +516,106 @@ jobs:
             }
 
   # On a production deploy (push to main), tag the released version, cut a GitHub release with
-  # auto-generated notes, and dispatch the store release workflows when the deploy job decided the
-  # release ships the apps. The tag is annotated with that decision (`Store-Release: ship|skip`),
-  # which is how later deploys find the version the apps are at. A separate job from the build
-  # so the write-capable token never coexists with PR-authored build code or dependency install
-  # scripts. Idempotent: skips cleanly if the version couldn't be resolved, if the tag already
-  # exists (a re-run), or if a CONCURRENT production deploy — which the per-run concurrency
-  # groups above allow — created the tag/release first. The remote is the source of truth, so we
-  # never fail the promotion on an "already exists" race.
+  # auto-generated notes, and dispatch the store release workflows when the release ships the apps.
+  # The tag is annotated with that decision (`Store-Release: ship|skip`), which is how later
+  # releases find the version the apps are at. A separate job from the build so the write-capable
+  # token never coexists with PR-authored build code or dependency install scripts; it runs only
+  # the repository's own scripts, with no dependencies installed.
+  #
+  # Promotions run concurrently (see the concurrency block above), so the version resolved by the
+  # deploy job can already be taken. scripts/release-tag.mjs waits for the deploys of earlier,
+  # untagged merges, then settles the version and the ship decision against the remote's tags and
+  # pushes the tag, retrying when a concurrent run takes the version first. A re-run keeps the tag
+  # already on this commit; a commit a later release already contains is not tagged again.
   release:
     name: Tag, release & dispatch stores
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    # Covers the wait for earlier merges' deploys (scripts/release-tag.mjs, WAIT_LIMIT_MS).
+    timeout-minutes: 40
     needs: deploy
     if: github.event_name == 'push' && github.ref == 'refs/heads/main' && needs.deploy.outputs.ready == 'true'
     permissions:
       contents: write # push the release tag + create the GitHub release
-      actions: write # dispatch the store release workflows
+      actions: write # dispatch the store release workflows and read the deploy runs
+      pull-requests: read # the merged pull request's markers
+    outputs:
+      tag: ${{ steps.tag.outputs.tag }}
     steps:
       # Default credential persistence is fine here: this job runs no build or dependency code,
-      # only git/gh against the repo itself.
+      # only git/gh and the repository's dependency-free scripts.
       - name: Checkout repository
         uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7
+        with:
+          fetch-depth: 0 # the tags and history the version and the ship decision are read from
 
-      - name: Tag, release & dispatch stores
+      - name: Setup Node.js
+        uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e # v6
+        with:
+          node-version-file: .nvmrc
+
+      - name: Claim the release tag
+        id: tag
         env:
           GH_TOKEN: ${{ github.token }}
-          VERSION: ${{ needs.deploy.outputs.version }}
-          SHIP_APPS: ${{ needs.deploy.outputs.ship-apps }}
-          APPS_BASE: ${{ needs.deploy.outputs.apps-base }}
-          APPS_REASON: ${{ needs.deploy.outputs.apps-reason }}
+          REPO: ${{ github.repository }}
+          SHA: ${{ github.sha }}
+        run: |
+          set -euo pipefail
+          # The pull request text goes through a file: a long body can exceed the env size limit.
+          export PR_TEXT_FILE="$RUNNER_TEMP/pr-text"
+          : > "$PR_TEXT_FILE"
+          # The markers are read from the pull request merged as this commit: the (#N) the squash
+          # subject ends with, else the commit's associated pull requests. Only a pull request
+          # whose merge commit is this one counts. Unreadable means the apps ship.
+          MERGED='select(.merged_at != null and .merge_commit_sha == env.SHA) | .title + "\n" + (.body // "")'
+          PRS=""
+          N="$(git log -1 --format=%s "$SHA" | sed -nE 's/.*\(#([0-9]+)\)$/\1/p')"
+          if [ -n "$N" ]; then
+            PRS="$(gh api "repos/$REPO/pulls/$N" --jq "$MERGED")" || PRS=""
+          fi
+          if [ -z "$PRS" ]; then
+            PRS="$(gh api "repos/$REPO/commits/$SHA/pulls" --jq ".[] | $MERGED")" || PRS=""
+          fi
+          if [ -n "$PRS" ]; then
+            printf '%s\n' "$PRS" > "$PR_TEXT_FILE"
+          else
+            export MARKER_LOOKUP=failed
+          fi
+          node scripts/release-tag.mjs
+
+      - name: Release & dispatch stores
+        env:
+          GH_TOKEN: ${{ github.token }}
+          ACTION: ${{ steps.tag.outputs.action }}
+          V: ${{ steps.tag.outputs.tag }}
+          SHIP_APPS: ${{ steps.tag.outputs.ship }}
+          APPS_BASE: ${{ steps.tag.outputs.base }}
+          APPS_REASON: ${{ steps.tag.outputs.reason }}
+          DEPLOYED: v${{ needs.deploy.outputs.version }}
+          WAITED: ${{ steps.tag.outputs.waited }}
           APPLE_TEAM_ID: ${{ vars.APPLE_TEAM_ID }}
           REPO: ${{ github.repository }}
         run: |
-          [ -z "$VERSION" ] && { echo "No version resolved — skipping."; exit 0; }
-          V="v${VERSION}"
+          if [ "$ACTION" = existing ]; then
+            echo "Tag $V already exists on this commit — skipping tag/release."
+            echo "If the store dispatches did not happen for $V, run: gh workflow run android-release.yml --repo $REPO --ref main -f tag=$V"
+            exit 0
+          fi
+          if [ "$ACTION" = superseded ]; then
+            echo "$V already contains this commit and releases its changes." | tee -a "$GITHUB_STEP_SUMMARY"
+            exit 0
+          fi
+          [ "$ACTION" = created ] || { echo "::error::unexpected tag outcome '$ACTION'"; exit 1; }
           # Only an explicit skip decision skips; anything else ships.
           if [ "${SHIP_APPS:-}" = "false" ]; then SHIP=false; else SHIP=true; fi
+          # The site was labelled before the tag was settled, and an earlier merge's deploy may have
+          # finished after this one. A redeploy of main corrects both; app-version.json does not
+          # depend on the label.
+          if [ "$V" != "$DEPLOYED" ] || [ "$WAITED" = true ]; then
+            echo "::warning::deployed as $DEPLOYED, released as $V after concurrent merges; redeploying main"
+            gh workflow run deploy.yml --repo "$REPO" --ref main \
+              || echo "::warning::could not dispatch deploy.yml — the scheduled deploy will correct the site"
+          fi
           # A release created with GITHUB_TOKEN cannot trigger `release: published` workflows
           # (GitHub suppresses events from that token; workflow_dispatch and repository_dispatch
           # are the two documented exceptions), so the store pipelines are dispatched explicitly.
@@ -592,65 +632,24 @@ jobs:
             echo "::error::could not dispatch $1 — run manually: gh workflow run $1 --repo $REPO --ref main -f tag=$V"
             return 1
           }
-          # On a ship decision an existing tag must be this commit's ship tag. Anything else means a
-          # concurrent release claimed the version, and this commit's app changes have no release.
-          check_existing() {
-            [ "$SHIP" = true ] || return 0
-            local commit kind message
-            commit="$(git rev-parse -q --verify "refs/tags/$V^{commit}")" \
-              || { echo "::error::cannot read the existing tag $V"; return 1; }
-            kind="$(git for-each-ref --format='%(objecttype)' "refs/tags/$V")"
-            message="$(git for-each-ref --format='%(contents)' "refs/tags/$V")"
-            if [ "$commit" != "$GITHUB_SHA" ] \
-              || { [ "$kind" = tag ] && ! printf '%s\n' "$message" | grep -qxF "Store-Release: ship"; }; then
-              echo "::error::$V already exists at $commit and is not this commit's ship tag — merge a follow-up carrying [ship-apps] so these app changes reach the stores"
-              return 1
-            fi
-          }
-          # Fetch the remote tag first — a concurrent promotion may already have published it, and
-          # rev-parse against the local checkout alone wouldn't see it.
-          git fetch --quiet origin "refs/tags/$V:refs/tags/$V" 2>/dev/null || true
-          if git rev-parse -q --verify "refs/tags/$V" >/dev/null 2>&1; then
-            check_existing || exit 1
-            echo "Tag $V already exists — skipping tag/release."
-            echo "If the store dispatches did not happen for $V, run: gh workflow run android-release.yml --repo $REPO --ref main -f tag=$V"
-            exit 0
-          fi
-          if [ "$SHIP" = true ]; then TRAILER="Store-Release: ship"; else TRAILER="Store-Release: skip"; fi
-          git -c user.name="github-actions[bot]" -c user.email="41898282+github-actions[bot]@users.noreply.github.com" \
-            tag -a "$V" -m "$V" -m "$TRAILER"
-          # A concurrent deploy can still win the push between our check and here; treat a rejected
-          # push (tag already on the remote) as success rather than failing the promotion.
-          if ! git push origin "$V" 2>push.err; then
-            if grep -qiE 'already exists|rejected|non-fast-forward|failed to push' push.err; then
-              git fetch --quiet origin "+refs/tags/$V:refs/tags/$V"
-              check_existing || exit 1
-              echo "Tag $V was pushed by a concurrent deploy — skipping release."
-              exit 0
-            fi
-            cat push.err >&2
-            exit 1
-          fi
-          # We won the tag push, so we own the release. Tolerate a pre-existing one in case a
-          # concurrent run cut it in the same window.
+          # This run pushed the tag, so it owns the release and the dispatches.
           RELEASE_ARGS=(--title "$V" --generate-notes)
           if [ "$SHIP" != true ]; then
             RELEASE_ARGS+=(--notes "Store release skipped (${APPS_REASON:-no app-affecting change}); the apps stay at ${APPS_BASE:-the last release that shipped}.")
           fi
           if ! gh release create "$V" "${RELEASE_ARGS[@]}" 2>release.err; then
-            if grep -qiE 'already exists|already_exists' release.err; then
-              echo "Release $V already exists — treating as success."
-              exit 0
+            if ! grep -qiE 'already exists|already_exists' release.err; then
+              cat release.err >&2
+              exit 1
             fi
-            cat release.err >&2
-            exit 1
+            echo "Release $V already exists — continuing to the dispatches."
           fi
           if [ "$SHIP" != true ]; then
             echo "Store workflows not dispatched (${APPS_REASON:-no app-affecting change}); the apps stay at ${APPS_BASE:-the last release that shipped}. The next app-affecting merge ships these changes; to ship them sooner, merge a follow-up carrying [ship-apps]." | tee -a "$GITHUB_STEP_SUMMARY"
             exit 0
           fi
-          dispatch android-release.yml
-          if [ -n "${APPLE_TEAM_ID:-}" ]; then dispatch ios-release.yml; fi
+          dispatch android-release.yml || exit 1
+          if [ -n "${APPLE_TEAM_ID:-}" ]; then dispatch ios-release.yml || exit 1; fi
 
   # Opens or updates a failure issue when tagging the release or dispatching the store workflows
   # fails. Only the release job counts: a failed site deploy is not a store failure. It never closes
@@ -666,7 +665,7 @@ jobs:
     uses: ./.github/workflows/store-release-alert.yml
     with:
       name: Store dispatch
-      tag: v${{ needs.deploy.outputs.version }}
+      tag: ${{ needs.release.outputs.tag || format('v{0}', needs.deploy.outputs.version) }}
       results: ${{ format('{{"release":{0}}}', toJSON(needs.release)) }}
       terminal: release
       resolves: false

@@ -495,14 +495,19 @@ describe("deploy.yml", () => {
   const release = job(deploy, "release");
   const build = job(deploy, "deploy");
 
-  it("records the decision on an annotated tag in the form lastShipped reads", () => {
-    expect(release).toContain(`TRAILER="${TRAILER}: ship"`);
-    expect(release).toContain(`TRAILER="${TRAILER}: skip"`);
-    expect(release).toMatch(/tag -a "\$V" -m "\$V" -m "\$TRAILER"/);
+  it("decides and tags in the release job, against the tags at tag time", () => {
+    expect(release).toContain("node scripts/release-tag.mjs");
+    expect(release).toContain("fetch-depth: 0");
+    expect(release).toContain("merge_commit_sha == env.SHA");
+    expect(release).toMatch(/\n {6}pull-requests: read/);
+    expect(release).toContain("SHIP_APPS: ${{ steps.tag.outputs.ship }}");
+    expect(release).toContain("V: ${{ steps.tag.outputs.tag }}");
+    expect(release).not.toContain("needs.deploy.outputs.ship-apps");
+    expect(build).not.toMatch(/ship-apps|apps-base|apps-reason/);
   });
 
-  it("dispatches the stores only on a ship decision", () => {
-    expect(release).toContain("SHIP_APPS: ${{ needs.deploy.outputs.ship-apps }}");
+  it("releases and dispatches only a tag this run created, and the stores only on ship", () => {
+    expect(release).toContain('[ "$ACTION" = created ] || {');
     expect(release).toMatch(
       /if \[ "\$\{SHIP_APPS:-\}" = "false" \]; then SHIP=false; else SHIP=true; fi/,
     );
@@ -514,17 +519,17 @@ describe("deploy.yml", () => {
     expect(release.indexOf("dispatch android-release.yml", skipExit)).toBeGreaterThan(skipExit);
   });
 
-  it("refuses an existing tag that is not this commit's ship tag", () => {
-    expect(release).toMatch(/check_existing \|\| exit 1/);
-    expect(release).toContain('[ "$commit" != "$GITHUB_SHA" ]');
+  it("reports failures under the tag the release job settled on", () => {
+    expect(job(deploy, "release-alert")).toContain(
+      "tag: ${{ needs.release.outputs.tag || format('v{0}', needs.deploy.outputs.version) }}",
+    );
   });
 
-  it("decides in the build job, which can read the records, and builds the endpoint from it", () => {
+  it("builds the endpoint in the build job, which can read the records", () => {
     expect(build).toContain("node scripts/store-release-scope.mjs");
     expect(build).toContain("STORE_APP_VERSION: ${{ steps.stores.outputs.store-version }}");
     expect(build).toMatch(/\n {6}statuses: read/);
     expect(build).toMatch(/\n {6}actions: read/);
-    expect(build).toContain("merge_commit_sha == env.SHA");
   });
 });
 

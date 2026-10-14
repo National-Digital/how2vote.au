@@ -20,8 +20,8 @@
  * ship with the next release that does. `[ship-apps]` wins when both are present. A marker inside
  * backticks, or joined to a word, is ignored so the markers can be written about.
  *
- * The decision is recorded on the release tag: deploy.yml creates it annotated, with a
- * `Store-Release: ship|skip` trailer. The diff base is the newest trusted release tag not marked
+ * The decision is recorded on the release tag: scripts/release-tag.mjs takes it immediately before
+ * tagging and creates the tag annotated, with a `Store-Release: ship|skip` trailer. The diff base is the newest trusted release tag not marked
  * `skip`. Lightweight tags are legacy releases and count as shipped and published, but only
  * those that predate the first annotated release tag (see trustedRecords).
  *
@@ -32,14 +32,12 @@
  * before. When the records cannot be read, the endpoint keeps the version it already serves.
  *
  * Usage (deploy.yml):
- *   EVENT=push PR_TEXT_FILE=… node scripts/store-release-scope.mjs
  *   EVENT=pull_request PR_TEXT_FILE=… node scripts/store-release-scope.mjs   # summary only
- *   EVENT=schedule node scripts/store-release-scope.mjs                      # store version only
+ *   EVENT=push node scripts/store-release-scope.mjs       # store version only (also schedule, …)
  *   node scripts/store-release-scope.mjs --classify < paths   # prints true if any path ships
- * Writes `ship`, `base`, `reason` and `store-version` to $GITHUB_OUTPUT and the decision to the
- * job summary. MARKER_LOOKUP=failed means the pull request text could not be read; the release
- * then ships. On any event but pull_request, a failure to read the git tags fails the step.
- * Reads statuses and workflow runs with GH_TOKEN.
+ * Writes `store-version` to $GITHUB_OUTPUT, and on a pull request previews the decision in the job
+ * summary. On any event but pull_request, a failure to read the git tags fails the step. Reads
+ * statuses and workflow runs with GH_TOKEN.
  */
 import { execFileSync } from "node:child_process";
 import { appendFileSync, readFileSync } from "node:fs";
@@ -372,15 +370,15 @@ async function hasVerifiedRecord(record) {
   return false;
 }
 
-function summarise({ event, decision, base, version }) {
+function summarise({ event, decision, version }) {
   const summary = [];
   if (decision) {
-    const heading = event === "pull_request" ? "Store release on merge" : "Store release";
-    summary.push(`### ${heading}: ${decision.ship ? "ship the apps" : "skip the apps"}`, "");
-    summary.push(`- reason: ${decision.reason}`);
     summary.push(
-      `- compared against: ${base === "HEAD^1" ? "the base branch" : base || "nothing"}`,
+      `### Store release on merge: ${decision.ship ? "ship the apps" : "skip the apps"}`,
+      "",
     );
+    summary.push(`- reason: ${decision.reason}`);
+    summary.push("- compared against: the base branch");
     if (decision.appPaths.length > 0) {
       summary.push("- app-affecting paths:");
       for (const p of decision.appPaths.slice(0, 100)) summary.push(`  - \`${p}\``);
@@ -388,17 +386,10 @@ function summarise({ event, decision, base, version }) {
         summary.push(`  - …and ${decision.appPaths.length - 100} more`);
       }
     }
-    if (event === "pull_request") {
-      summary.push(
-        `- on merge the base is the last release that shipped; \`${SHIP_MARKER}\` or ` +
-          `\`${SKIP_MARKER}\` in this pull request overrides the decision`,
-      );
-    } else if (!decision.ship) {
-      summary.push(
-        `- the next app-affecting merge ships these changes; to ship them sooner, merge a ` +
-          `follow-up carrying \`${SHIP_MARKER}\``,
-      );
-    }
+    summary.push(
+      `- on merge the base is the last release that shipped; \`${SHIP_MARKER}\` or ` +
+        `\`${SKIP_MARKER}\` in this pull request overrides the decision`,
+    );
   }
   if (event !== "pull_request") {
     summary.push(`- app-version.json advertises: ${version || "nothing (null payload)"}`);
@@ -414,33 +405,27 @@ async function main() {
   }
   const event = process.env["EVENT"] ?? "";
   const textFile = process.env["PR_TEXT_FILE"];
-  const lookupFailed = process.env["MARKER_LOOKUP"] === "failed";
 
   let decision = null;
-  let base = "";
   let version = "";
   /** @type {TagRecord[]} */
   let records;
   try {
-    const prText = textFile ? readFileSync(textFile, "utf8") : "";
     records = trustedRecords(
       parseTagRecords(
         git("for-each-ref", "--merged", "HEAD", `--format=${TAG_FORMAT}`, "refs/tags/v*"),
       ),
       isAncestor,
     );
-    const selected = selectBase(event, lastShipped(records));
-    if (selected !== undefined) {
-      base = selected ?? "";
+    // A push decides in the release job (scripts/release-tag.mjs), against the tags at tag time.
+    const selected = selectBase(event, null);
+    if (event === "pull_request" && selected) {
       decision = decide({
-        paths: selected
-          ? git("diff", "--name-only", "--no-renames", "-z", selected, "HEAD")
-              .split("\0")
-              .filter(Boolean)
-          : null,
-        prText,
-        history: selected ? git("log", "--format=%B", `${selected}..HEAD`) : "",
-        lookupFailed,
+        paths: git("diff", "--name-only", "--no-renames", "-z", selected, "HEAD")
+          .split("\0")
+          .filter(Boolean),
+        prText: textFile ? readFileSync(textFile, "utf8") : "",
+        history: git("log", "--format=%B", `${selected}..HEAD`),
       });
     }
   } catch (error) {
@@ -476,13 +461,9 @@ async function main() {
 
   const out = process.env["GITHUB_OUTPUT"];
   if (out) {
-    appendFileSync(
-      out,
-      `ship=${decision ? decision.ship : ""}\nbase=${base.startsWith("v") ? base : ""}\n` +
-        `reason=${decision?.reason ?? ""}\nstore-version=${version}\n`,
-    );
+    appendFileSync(out, `store-version=${version}\n`);
   }
-  const text = summarise({ event, decision, base, version });
+  const text = summarise({ event, decision, version });
   console.info(text);
   const file = process.env["GITHUB_STEP_SUMMARY"];
   if (file && text) appendFileSync(file, `${text}\n`);
