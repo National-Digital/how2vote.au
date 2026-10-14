@@ -64,11 +64,6 @@ const IDENTIFIER_SHAPES = [
     re: /(how2vote):[a-z]/gi,
   },
   {
-    label: "a tool or function name",
-    why: "the name is part of the published WebMCP tool contract",
-    re: /(how2vote)_[a-z]/gi,
-  },
-  {
     label: "an infrastructure name",
     why: "the Cloudflare worker and D1 database names are matched literally by wrangler",
     re: /(how2vote)-(?:au|research|nonces)\b/gi,

@@ -4,7 +4,7 @@ import { defineConfig } from "vitest/config";
 // Unit tests for pure app modules. The SvelteKit plugin is intentionally omitted — component and
 // full-flow behaviour is covered by the Playwright e2e suite (test:e2e), not here. The two SvelteKit
 // path aliases the tested modules rely on are re-declared so vitest can resolve them without the
-// plugin: `$lib` (app code) and `$data` (the committed datasets, used by content.server.ts / webmcp.ts).
+// plugin: `$lib` (app code) and `$data` (the committed datasets).
 export default defineConfig({
   resolve: {
     alias: {

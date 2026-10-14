@@ -22,7 +22,6 @@
   import { theme } from "$lib/theme.svelte";
   import { consent } from "$lib/privacy/consent.svelte";
   import { hasConfigurableConsent } from "$lib/privacy/registry";
-  import { registerWebmcpTools } from "$lib/webmcp";
 
   let { children } = $props();
 
@@ -121,9 +120,6 @@
     // are kept intact and dormant so a future consent-gated service is a one-line registry edit, not
     // a rebuild; hydrate() still reads any prior decision so it is honoured the moment that happens.
     consent.hydrate();
-    // Expose the read-only WebMCP tools to any browser AI agent. No-op where the API is absent, and
-    // it never loads a dataset until a tool is actually invoked, so it stays off the LCP path.
-    registerWebmcpTools();
 
     // Hydration marker. Every route is prerendered, so a control is visible and clickable before any
     // handler is attached — and a click in that window runs the element's native behaviour instead
