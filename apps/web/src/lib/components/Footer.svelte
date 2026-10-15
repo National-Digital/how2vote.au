@@ -13,7 +13,7 @@
   const credit = footerCredit(__BUILD_YEAR__);
 </script>
 
-<footer class="ui">
+<footer class="ui site-footer">
   <!-- Navigation first, then the electoral authorisation and copyright fine print below it. -->
   <p class="links">
     {#each links as link (link.href)}

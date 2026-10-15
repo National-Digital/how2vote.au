@@ -11,12 +11,14 @@ import {
   buildPartyHub,
   buildPartyPage,
   buildSenatePage,
+  bandSummary,
   contentPaths,
   datasetFor,
   electorateEntries,
   issueEntries,
   partyEntries,
   senateEntries,
+  stateSummary,
 } from "./content.server";
 
 const CONTENT_ROUTES = resolve(
@@ -133,6 +135,39 @@ describe("content.server page builders", () => {
         const answer = answerFor(needle);
         if (names.length === 0) expect(answer).toMatch(/^No party or independent/);
         else for (const n of names) expect(answer).toContain(n);
+      }
+    }
+  });
+
+  it("states each issue band's size out of everyone recorded, and its score", () => {
+    expect(bandSummary(18, 46, 5)).toBe(
+      "18 of the 46 parties and independents with a record on this proposition score 5 on the 1–5 scale.",
+    );
+    expect(bandSummary(1, 46, 2)).toBe(
+      "1 party or independent of the 46 with a record on this proposition scores 2 on the 1–5 scale.",
+    );
+    expect(bandSummary(1, 1, 3)).toBe(
+      "The 1 party or independent with a record on this proposition scores 3 on the 1–5 scale.",
+    );
+    for (const e of issueEntries()) {
+      const page = buildIssuePage(e.election, e.issue)!;
+      const total = page.bands.reduce((n, b) => n + b.parties.length, 0);
+      for (const b of page.bands) {
+        expect(b.summary).toBe(bandSummary(b.parties.length, total, b.position));
+      }
+    }
+  });
+
+  it("states each electorate hub group's electorate count", () => {
+    expect(stateSummary("Tasmania", 5, 2025)).toBe(
+      "Tasmania has 5 federal electorates at the 2025 election.",
+    );
+    expect(stateSummary("Somewhere", 1, 2025)).toBe(
+      "Somewhere has 1 federal electorate at the 2025 election.",
+    );
+    for (const meta of ELECTIONS) {
+      for (const s of buildElectorateHub(meta.id)?.states ?? []) {
+        expect(s.summary).toBe(stateSummary(s.name, s.electorates.length, meta.year));
       }
     }
   });

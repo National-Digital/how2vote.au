@@ -1,3 +1,4 @@
+import { readFileSync } from "node:fs";
 import { expect, test, type Page } from "@playwright/test";
 import { currentQuestionCount, seedEligibility, waitForServiceWorker } from "./flow-helpers";
 
@@ -263,6 +264,24 @@ test("election toggle switches the question set (2022 → 36 questions)", async 
   await page.getByRole("button", { name: /This is my electorate/ }).click();
   await expect(page).toHaveURL(/\/quiz/);
   await expect(page.locator("span.label")).toHaveText("Question 1 of 36");
+});
+
+test("an election's data pages are dated by its data version", async ({ page }) => {
+  for (const election of ["2025", "next"]) {
+    const { dataVersion } = JSON.parse(
+      readFileSync(
+        new URL(`../../../data/dist/${election}/manifest.json`, import.meta.url),
+        "utf8",
+      ),
+    ) as { dataVersion: string };
+    await page.goto(`/${election}/parties/australian-labor-party`);
+    await expect(page.locator('meta[property="article:modified_time"]')).toHaveAttribute(
+      "content",
+      dataVersion,
+    );
+  }
+  await page.goto("/2025");
+  await expect(page.locator('meta[property="article:modified_time"]')).toHaveCount(0);
 });
 
 test("a per-election landing carries its own social preview and canonical", async ({ page }) => {

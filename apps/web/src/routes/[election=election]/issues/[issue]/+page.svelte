@@ -30,6 +30,7 @@
 
   {#each active as band (band.position)}
     <h2>{band.stance}</h2>
+    <p>{band.summary}</p>
     <ul class="cols">
       {#each band.parties as p (p.href)}
         <li><a href={p.href}>{p.name}</a></li>

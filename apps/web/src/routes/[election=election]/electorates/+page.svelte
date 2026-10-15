@@ -32,6 +32,7 @@
   {:else}
     {#each data.states as s (s.code)}
       <h2>{s.name}</h2>
+      <p>{s.summary}</p>
       <ul class="cols">
         {#each s.electorates as e (e.href)}
           <li><a href={e.href}>{e.name}</a></li>

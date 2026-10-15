@@ -25,7 +25,7 @@
     {#each data.candidates as c (c.position)}
       <li>
         <span class="lead">{c.candidate}</span>
-        <span class="meta">
+        <span class="detail">
           {#if c.partyHref}<a href={c.partyHref}>{c.party}</a>{:else}{c.party || "Independent"}{/if}
         </span>
       </li>

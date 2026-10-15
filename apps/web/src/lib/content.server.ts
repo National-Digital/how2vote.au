@@ -161,26 +161,36 @@ export type ElectorateHub = {
     code: string;
     name: string;
     senateHref: string;
+    /** How many House electorates the state has at this election. */
+    summary: string;
     electorates: { name: string; href: string }[];
   }[];
 };
+
+export function stateSummary(name: string, count: number, year: number): string {
+  return `${name} has ${count} federal electorate${count === 1 ? "" : "s"} at the ${year} election.`;
+}
 
 export function buildElectorateHub(electionId: string): ElectorateHub | null {
   const meta = electionById(electionId);
   const ds = DATASETS[electionId];
   if (!meta || !ds) return null;
-  const states = ballotStates(ds).map((s) => ({
-    code: s.code,
-    name: s.name,
-    senateHref: `/${electionId}/senate/${stateSlug(s.code)}`,
-    electorates: ds.ballots.electorates
+  const states = ballotStates(ds).map((s) => {
+    const electorates = ds.ballots.electorates
       .filter((e) => e.state.toUpperCase() === s.code)
       .sort((a, b) => a.electorate.localeCompare(b.electorate))
       .map((e) => ({
         name: e.electorate,
         href: `/${electionId}/electorates/${slugify(e.electorate)}`,
-      })),
-  }));
+      }));
+    return {
+      code: s.code,
+      name: s.name,
+      senateHref: `/${electionId}/senate/${stateSlug(s.code)}`,
+      summary: stateSummary(s.name, electorates.length, meta.year),
+      electorates,
+    };
+  });
   const count = ds.ballots.electorates.length;
   return {
     seo: {
@@ -348,10 +358,25 @@ export type IssuePage = {
   divisionFirst?: string;
   divisionLast?: string;
   /** Parties grouped by their recorded stance, strongest agreement first. */
-  bands: { position: number; stance: string; parties: { name: string; href: string }[] }[];
+  bands: {
+    position: number;
+    stance: string;
+    /** How many of the recorded parties and independents share this score. */
+    summary: string;
+    parties: { name: string; href: string }[];
+  }[];
   /** Factual Q&A pairs (which parties agree/disagree, on what basis) for FAQPage structured data. */
   faqs: { question: string; answer: string }[];
 };
+
+/** One factual sentence per stance group: its size, out of everyone recorded, and its score. */
+export function bandSummary(count: number, total: number, position: number): string {
+  const scale = `on this proposition ${count === 1 ? "scores" : "score"} ${position} on the 1–5 scale.`;
+  if (count !== 1)
+    return `${count} of the ${total} parties and independents with a record ${scale}`;
+  if (total === 1) return `The 1 party or independent with a record ${scale}`;
+  return `1 party or independent of the ${total} with a record ${scale}`;
+}
 
 export function buildIssuePage(electionId: string, slug: string): IssuePage | null {
   const meta = electionById(electionId);
@@ -367,7 +392,7 @@ export function buildIssuePage(electionId: string, slug: string): IssuePage | nu
     return p && href ? { name: p.displayName, href } : null;
   };
 
-  const bands = [5, 4, 3, 2, 1].map((position) => {
+  const grouped = [5, 4, 3, 2, 1].map((position) => {
     const parties = Object.entries(q.positions)
       .filter(([, pos]) => pos === (position as Position))
       .map(([key]) => named(key))
@@ -375,6 +400,11 @@ export function buildIssuePage(electionId: string, slug: string): IssuePage | nu
       .sort((a, b) => a.name.localeCompare(b.name));
     return { position, stance: STANCE[position]!, parties };
   });
+  const total = grouped.reduce((n, b) => n + b.parties.length, 0);
+  const bands = grouped.map((b) => ({
+    ...b,
+    summary: bandSummary(b.parties.length, total, b.position),
+  }));
 
   // Factual FAQ built straight from the bands — every party in each direction is listed (no
   // cherry-picking), so the Q&A carries the public record and no editorial signal.
