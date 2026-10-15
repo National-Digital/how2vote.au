@@ -1,6 +1,7 @@
 import { ELECTIONS } from "@how2vote/data-schema";
 import { openDataCatalogue, publishedElections } from "$lib/open-data.server";
-import { SITE_URL, indexableRoutes, pageMeta, type PageMeta } from "$lib/seo";
+import { postcodeElections } from "$lib/postcodes.server";
+import { SITE_URL, indexableRoutes, pageMeta, resolveMeta, type PageMeta } from "$lib/seo";
 
 // Prerendered to a static /llms.txt at build time (fully static site, see +layout.ts). The "## Pages"
 // list is generated from the same indexableRoutes source that drives the sitemap, so the two can
@@ -38,7 +39,7 @@ text at ${SITE_URL}/llms-full.txt.
 
 ${ELECTIONS.map(
   (e) =>
-    `- ${e.label}: [candidates by electorate](${SITE_URL}/${e.id}/electorates), [where parties stand](${SITE_URL}/${e.id}/issues), [party voting records](${SITE_URL}/${e.id}/parties)`,
+    `- ${e.label}: [candidates by electorate](${SITE_URL}/${e.id}/electorates), [where parties stand](${SITE_URL}/${e.id}/issues), [party voting records](${SITE_URL}/${e.id}/parties)${postcodeElections().includes(e.id) && resolveMeta(`/${e.id}/postcodes`).index !== false ? `, [electorates by postcode](${SITE_URL}/${e.id}/postcodes)` : ""}`,
 ).join("\n")}`;
 
 /** The static JSON files, one line per election, each file with its licence. */

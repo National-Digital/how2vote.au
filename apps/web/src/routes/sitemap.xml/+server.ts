@@ -1,11 +1,12 @@
-import { SITE_URL, indexableRoutes } from "$lib/seo";
+import { SITE_URL, indexableRoutes, resolveMeta } from "$lib/seo";
 import { contentPaths } from "$lib/content.server";
+import { postcodePaths } from "$lib/postcodes.server";
 
 // Prerendered to a static sitemap.xml at build time (fully static site, see +layout.ts).
 export const prerender = true;
 
 // Static content routes (from seo.ts) plus every data-derived page (election landings, the
-// electorate/Senate/issue/party hubs and their details) enumerated from the datasets. The transient
+// electorate/Senate/issue/party/postcode hubs and their details) enumerated from the datasets. The transient
 // app-flow routes (ballot/quiz/review/survey/card) are index:false and excluded there.
 const staticRoutes = indexableRoutes;
 
@@ -17,7 +18,11 @@ const priorityFor = (path: string): string => {
 };
 
 export function GET() {
-  const paths = [...staticRoutes, ...contentPaths()];
+  const paths = [
+    ...staticRoutes,
+    ...contentPaths(),
+    ...postcodePaths().filter((p) => resolveMeta(p).index !== false),
+  ];
   const urls = paths
     .map(
       (path) =>

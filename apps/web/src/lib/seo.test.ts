@@ -2,7 +2,7 @@ import { readdirSync } from "node:fs";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
-import { ELECTIONS } from "@how2vote/data-schema";
+import { CURRENT_ELECTION_ID, ELECTIONS } from "@how2vote/data-schema";
 import {
   SITE_URL,
   OG_IMAGE,
@@ -116,6 +116,16 @@ describe("resolveMeta", () => {
 
   it("falls back to the site default for unknown routes", () => {
     expect(resolveMeta("/does-not-exist")).toBe(DEFAULT_META);
+  });
+
+  it("indexes only the current election's postcode pages", () => {
+    for (const { id } of ELECTIONS) {
+      const indexed = id === CURRENT_ELECTION_ID;
+      for (const path of [`/${id}/postcodes`, `/${id}/postcodes/3000`]) {
+        expect(resolveMeta(path).index !== false, path).toBe(indexed);
+      }
+    }
+    expect(resolveMeta("/2025/electorates").index).not.toBe(false);
   });
 });
 

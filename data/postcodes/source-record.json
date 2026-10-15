@@ -1,0 +1,132 @@
+{
+  "schemaVersion": 1,
+  "rightsClass": "abs-asgs-cc-by",
+  "recordedAt": "2026-10-12",
+  "cedEdition": "CED 2025",
+  "boundaryElection": "2025",
+  "output": "data/postcodes/postcode-electorates.json",
+  "builder": "scripts/build-postcode-electorates.mjs",
+  "licenceEvidence": "data/postcodes/abs-licence-capture-2026-10-12.md",
+  "status": "attested",
+  "reviewer": "cameron-young",
+  "reviewedAt": "2026-10-12",
+  "citations": [
+    {
+      "title": "ASGS Geographic Correspondences (2021) Edition 3",
+      "url": "https://data.gov.au/data/dataset/asgs-edition-3-2021-correspondences"
+    },
+    {
+      "title": "ASGS Edition 3 allocation files",
+      "url": "https://www.abs.gov.au/statistics/standards/australian-statistical-geography-standard-asgs-edition-3/jul2021-jun2026/access-and-downloads/allocation-files"
+    },
+    {
+      "title": "Census of Population and Housing: Mesh Block Counts, 2021",
+      "url": "https://www.abs.gov.au/census/guide-census-data/mesh-block-counts/latest-release"
+    }
+  ],
+  "elections": [
+    {
+      "electionId": "2025",
+      "states": "all",
+      "note": "CED 2025 is the ABS approximation of the federal divisions in force at the 2025 federal election, including the Northern Territory redistribution determined on 4 March 2025."
+    },
+    {
+      "electionId": "next",
+      "excludeStates": ["SA", "TAS", "ACT"],
+      "checkedAt": "2026-10-12",
+      "boundaryChanges": [
+        {
+          "state": "SA",
+          "determinedAt": "2026-10-08",
+          "url": "https://www.aec.gov.au/redistributions/2025/sa/"
+        },
+        {
+          "state": "TAS",
+          "determinedAt": "2026-10-08",
+          "url": "https://www.aec.gov.au/redistributions/2024/tas/"
+        },
+        {
+          "state": "ACT",
+          "determinedAt": "2026-10-08",
+          "url": "https://www.aec.gov.au/redistributions/2025/act/"
+        }
+      ],
+      "note": "No redistribution has been determined since the 2025 election in NSW, Victoria, Queensland, WA or the NT (AEC redistributions page, checked 2026-10-12), so CED 2025 matches the boundaries for the next election there. South Australia, Tasmania and the ACT were redistributed on 2026-10-08 and no ABS correspondence for the new divisions exists yet, so any postcode that falls in a division of those states is not published for the next election."
+    }
+  ],
+  "sources": [
+    {
+      "id": "postcode-ced-2024",
+      "title": "ABS correspondence: Postcode 2024 to Commonwealth Electoral Division 2024",
+      "publisher": "Australian Bureau of Statistics",
+      "url": "https://data.gov.au/data/dataset/2c79581f-600e-4560-80a8-98adb1922dfc/resource/33d822ba-138e-47ae-a15f-460279c3acc3/download/asgs2021correspondences.zip",
+      "catalogue": "https://data.gov.au/data/dataset/asgs-edition-3-2021-correspondences",
+      "container": {
+        "fileName": "asgs2021correspondences.zip",
+        "sha256": "efec148e6b5c0baeb046536e555b8fed4c4a8b18737f075d4f167a2943a27107"
+      },
+      "fileName": "CG_POSTCODE_2024_CED_2024.xlsx",
+      "sha256": "68243fb5144f28434975427db1e17b8133b05180049fcac02b82df79aa6f383e",
+      "retrievedAt": "2026-10-12T04:02:00Z",
+      "rawRetained": false,
+      "note": "Member of the ASGS Edition 3 (2021) correspondences archive published by the ABS on data.gov.au (catalogue licence CC BY 4.0). Population-weighted: each row gives the share of a postcode's population in a division, with BMOS_NULL_FLAG 1 marking a share below the ABS minimum output size."
+    },
+    {
+      "id": "ced-2024-ced-2025",
+      "title": "ABS correspondence: Commonwealth Electoral Division 2024 to 2025",
+      "publisher": "Australian Bureau of Statistics",
+      "url": "https://www.abs.gov.au/statistics/standards/australian-statistical-geography-standard-asgs/edition-3-july-2021-june-2026/access-and-downloads/correspondences/CG_CED_2024_CED_2025.csv",
+      "fileName": "CG_CED_2024_CED_2025.csv",
+      "sha256": "1d4b75269caa6bee87a7895784145cf14aa83d5b40b205f01155bfa3f63fbcf4",
+      "retrievedAt": "2026-10-12T04:09:00Z",
+      "rawRetained": false,
+      "note": "Every division maps to itself with ratio 1 except Lingiari, which donates part of its population to Solomon (the 2025 Northern Territory redistribution). Byte-identical to the copy in the data.gov.au archive."
+    },
+    {
+      "id": "mb-ced-2024",
+      "title": "ABS allocation file: Mesh Block 2021 to CED 2024",
+      "publisher": "Australian Bureau of Statistics",
+      "url": "https://www.abs.gov.au/statistics/standards/australian-statistical-geography-standard-asgs/edition-3-july-2021-june-2026/access-and-downloads/allocation-files/CED_2024_AUST.xlsx",
+      "fileName": "CED_2024_AUST.xlsx",
+      "sha256": "1358d0f2b5200a3dc5257d43e785764c965f6625533cf62869a61917288766ba",
+      "retrievedAt": "2026-10-12T04:04:00Z",
+      "rawRetained": false,
+      "note": "Used only to find the mesh blocks whose division changed between CED 2024 and CED 2025 (93 mesh blocks, all in postcodes 0830 and 0832)."
+    },
+    {
+      "id": "mb-ced-2025",
+      "title": "ABS allocation file: Mesh Block 2021 to CED 2025",
+      "publisher": "Australian Bureau of Statistics",
+      "url": "https://www.abs.gov.au/statistics/standards/australian-statistical-geography-standard-asgs/edition-3-july-2021-june-2026/access-and-downloads/allocation-files/CED_2025_AUST.xlsx",
+      "fileName": "CED_2025_AUST.xlsx",
+      "sha256": "e7c3e63b57c9f3fa3977fb0a3c999175a6a8bab59596f56c30d188527beac070",
+      "retrievedAt": "2026-10-12T04:04:00Z",
+      "rawRetained": false,
+      "note": "Gives the CED 2025 membership of the postcodes containing a changed mesh block."
+    },
+    {
+      "id": "mb-poa-2021",
+      "title": "ABS allocation file: Mesh Block 2021 to Postal Area 2021",
+      "publisher": "Australian Bureau of Statistics",
+      "url": "https://www.abs.gov.au/statistics/standards/australian-statistical-geography-standard-asgs/edition-3-july-2021-june-2026/access-and-downloads/allocation-files/POA_2021_AUST.xlsx",
+      "fileName": "POA_2021_AUST.xlsx",
+      "sha256": "e1b82115e4cb46691924f6aa996f928d3771596e1d015acc17efdd807bb12c2e",
+      "retrievedAt": "2026-10-12T04:04:00Z",
+      "rawRetained": false,
+      "note": "Places each changed mesh block in its postal area, the ABS approximation of a postcode."
+    },
+    {
+      "id": "mb-persons-2021",
+      "title": "ABS Census of Population and Housing: Mesh Block Counts, 2021",
+      "publisher": "Australian Bureau of Statistics",
+      "url": "https://www.abs.gov.au/census/guide-census-data/mesh-block-counts/2021/Mesh%20Block%20Counts%2C%202021.xlsx",
+      "catalogue": "https://www.abs.gov.au/census/guide-census-data/mesh-block-counts/latest-release",
+      "fileName": "Mesh Block Counts, 2021.xlsx",
+      "sha256": "1ab520c2ff0e07ca88729258c30ee9f7a7133df113a81bac94812582f3b540a3",
+      "retrievedAt": "2026-10-12T05:43:00Z",
+      "rawRetained": false,
+      "note": "Usual-resident persons per 2021 Mesh Block, used to weight the CED 2025 membership of the postcodes containing a changed mesh block."
+    }
+  ],
+  "method": "Each postcode lists every CED 2025 division it falls in. A division holding a share below the ABS minimum output size (BMOS_NULL_FLAG 1, a share below 0.01) is listed separately as one a small part may fall in. Population shares are not published. For postcodes 0830 and 0832, which contain mesh blocks moved by the 2025 Northern Territory redistribution, each division's share is the Census 2021 persons in the postal area's mesh blocks allocated to it in CED 2025, over the postal area's total; a share of 0.01 or more lists the division, a smaller non-zero share lists it as a small part, and an unpopulated share is left out. No AEC boundary geometry is used. Reproduce with: node scripts/build-postcode-electorates.mjs <folder holding the six files> --check (the correspondence xlsx is extracted from the archive)."
+}

@@ -29,3 +29,8 @@ url:     https://www.aec.gov.au/Electorates/gis/
 [3] The Australian Electoral Commission has not evaluated the Data as altered and incorporated within how2vote.au, and therefore gives no warranty regarding its accuracy, completeness, currency or suitability for any particular purpose.
 
 [4] You may use how2vote.au to load, display, print and reproduce views obtained from the Data, retaining this notice, for your personal use, or use within your organisation only.
+
+## ABS postcode correspondence attribution (postcodeLicence.ts — postcode pages)
+licence:     Creative Commons Attribution 4.0 International
+url:         https://creativecommons.org/licenses/by/4.0/
+attribution: Postcode correspondence data © Commonwealth of Australia (Australian Bureau of Statistics), CC BY 4.0
