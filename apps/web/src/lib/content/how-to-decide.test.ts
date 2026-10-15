@@ -1,35 +1,23 @@
-import { ELECTIONS } from "@how2vote/data-schema";
 import { describe, expect, it } from "vitest";
+import { STAGES, type Stage } from "../election-stage";
 import { faqGraph } from "../structured-data";
-import { compareLead, decideFaqs, decideStage, type DecideStage } from "./how-to-decide";
+import { compareLead, decideFaqs } from "./how-to-decide";
 
-const held = ELECTIONS.find((e) => e.id === "2025")!;
-const { timetable, ...unannounced } = held;
-void timetable;
-const at = (iso: string) => new Date(iso);
-
-const STAGES: DecideStage[] = ["unannounced", "called", "ballot", "held"];
-const faqsFor = (stage: DecideStage) =>
-  decideFaqs({ label: "Test Federal Election", propositions: 40, stage });
-const text = (stage: DecideStage) =>
-  [...faqsFor(stage).map((f) => f.answer), compareLead(stage)].join(" ");
-
-describe("decideStage", () => {
-  it("is unannounced with no timetable", () => {
-    expect(decideStage(unannounced, true, at("2025-04-30T00:00:00+10:00"))).toBe("unannounced");
-  });
-  it("is called once the timetable exists, before nominations are declared", () => {
-    expect(decideStage(held, true, at("2025-04-01T00:00:00+10:00"))).toBe("called");
-    expect(decideStage(held, false, at("2025-04-01T00:00:00+10:00"))).toBe("called");
-  });
-  it("has a ballot while live, once candidates are loaded", () => {
-    expect(decideStage(held, false, at("2025-04-30T00:00:00+10:00"))).toBe("ballot");
-    expect(decideStage(held, true, at("2025-04-30T00:00:00+10:00"))).toBe("called");
-  });
-  it("is held once the polls have closed", () => {
-    expect(decideStage(held, false, at("2025-05-20T00:00:00+10:00"))).toBe("held");
-  });
-});
+/** Whether a stage has electorates, where the stage alone decides it. */
+const LOADED: Record<Stage, boolean> = {
+  unannounced: false,
+  called: false,
+  listed: true,
+  declared: false,
+  ballot: true,
+  held: true,
+};
+const faqsFor = (stage: Stage, electorateLess = !LOADED[stage]) =>
+  decideFaqs({ label: "Test Federal Election", propositions: 40, stage, electorateLess });
+const text = (stage: Stage, electorateLess = !LOADED[stage]) =>
+  [...faqsFor(stage, electorateLess).map((f) => f.answer), compareLead(stage, electorateLess)].join(
+    " ",
+  );
 
 describe("decideFaqs and compareLead", () => {
   it("report the election and its proposition count at every stage", () => {
@@ -44,7 +32,7 @@ describe("decideFaqs and compareLead", () => {
     expect(text("unannounced")).toContain(
       "The next federal election hasn't been announced, so there are no candidates or ballot yet",
     );
-    for (const stage of ["called", "ballot", "held"] as const) {
+    for (const stage of STAGES.filter((s) => s !== "unannounced")) {
       expect(text(stage)).not.toContain("announced");
     }
     expect(text("called")).toContain(
@@ -52,27 +40,54 @@ describe("decideFaqs and compareLead", () => {
     );
   });
 
+  it("say How2Vote hasn't listed the candidates once they are declared", () => {
+    expect(text("declared")).toContain(
+      "The AEC has declared the candidates for this election, but How2Vote hasn't listed them yet, and the propositions may change until it does.",
+    );
+    expect(text("declared")).not.toContain("aren't final");
+  });
+
+  it("point a listed election to its candidates so far, with no plan until verified", () => {
+    expect(text("listed")).toContain(
+      "How2Vote doesn't have the AEC's declared candidates for this election yet: your answers are compared with the parties' recorded votes, as evidence only; the candidates listed so far are on each electorate's page. The voting plan opens once How2Vote has the AEC's declared ballot order and it is verified.",
+    );
+    // The card shows party panels only: nothing is said to sit beside candidates.
+    expect(text("listed")).not.toMatch(/beside the candidates/);
+    expect(compareLead("listed", false)).not.toContain("candidates");
+    expect(text("listed")).toContain("the propositions may change");
+  });
+
   it("promise no ballot or plan before there is a ballot", () => {
-    for (const stage of ["unannounced", "called"] as const) {
+    for (const stage of ["unannounced", "called", "declared"] as const) {
       expect(text(stage)).not.toMatch(/ballot order|voting plan|blank ballot|your ballot/);
-      expect(compareLead(stage)).toContain("in the current Parliament");
+      expect(compareLead(stage, true)).toContain("in the current Parliament");
     }
   });
 
-  it("describe ballot order and an 18+ plan only while the ballot is live", () => {
+  it("describe official ballot order and an 18+ plan only while the ballot is live", () => {
     expect(text("ballot")).toContain(
       "If you are 18 or over, you can then build your own voting plan",
     );
-    expect(compareLead("ballot")).toContain("beside the candidates on your ballot");
-    for (const stage of ["unannounced", "called", "held"] as const) {
+    expect(compareLead("ballot", false)).toContain("beside the candidates on your ballot");
+    for (const stage of ["unannounced", "called", "listed", "declared", "held"] as const) {
       expect(text(stage)).not.toContain("build your own voting plan");
+    }
+    for (const stage of ["unannounced", "called", "listed", "declared"] as const) {
+      expect(text(stage)).not.toContain("official ballot order");
     }
   });
 
   it("call a held election's plan a historical demonstration", () => {
     expect(text("held")).toContain("This election has already been held");
     expect(text("held")).toContain("A plan built for it is a historical demonstration");
-    expect(compareLead("held")).toContain("as a historical comparison");
+    expect(compareLead("held", false)).toContain("as a historical comparison");
+  });
+
+  it("give a held election without electorates no ballot or plan", () => {
+    expect(text("held", true)).toContain(
+      "This election has already been held and How2Vote holds no ballot for it: your answers are compared with the parties' recorded votes, as a historical comparison and evidence only.",
+    );
+    expect(text("held", true)).not.toMatch(/official ballot order|plan built|Choose an electorate/);
   });
 
   it("answer in plain text, which the JSON-LD carries unchanged", () => {

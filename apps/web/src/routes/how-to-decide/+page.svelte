@@ -23,7 +23,7 @@
 
   <h2>Compare your views</h2>
   <p>
-    {compareLead(data.stage)}
+    {compareLead(data.stage, data.electorateLess)}
     When you review your answers, you can mark a strongly agree or strongly disagree answer as extremely
     important. <a href="/start">Start the questions</a>.
   </p>

@@ -24,6 +24,7 @@
   import TermsGate from "$lib/components/TermsGate.svelte";
   import { cardFlow as flow, rowId, TVFY_POLICY } from "$lib/card-flow.svelte";
   import { CARD_COPY } from "$lib/card-copy";
+  import { cardPlanNote } from "$lib/stage-copy";
   import { stateName } from "$lib/data";
   import { election } from "$lib/election.svelte";
   import { printAuth } from "$lib/print-auth.svelte";
@@ -200,7 +201,7 @@
 
   <!-- Persistent historical-use warning. Shown on both stages and, deliberately, on the
        printed worksheet — an archived election's plan is a demonstration, never a live instruction. -->
-  {#if flow.isArchived}
+  {#if flow.isArchived && flow.ballot === "drawn"}
     <div class="archive-banner ui" role="note">
       <CardArchiveBanner label={election.meta.label} year={election.meta.year} />
     </div>
@@ -214,7 +215,9 @@
   {/if}
 
   {#if flow.stage === "compare"}
-    <p class="hint ui pad-x"><CardHint electorateLess={flow.electorateLess} /></p>
+    <p class="hint ui pad-x">
+      <CardHint stage={flow.electionStage} electorateLess={flow.electorateLess} />
+    </p>
     <!-- Candidate-level predictive-claim limit, shown next to the scores, not only in the
          Terms — a party record is not evidence of a candidate's own views or future votes. Single-
          sourced from $lib/candidate-alignment so the visible copy, the per-row wording and the
@@ -254,7 +257,11 @@
                ballot order shown here, with no selection against it, reads as a ranking; the ballot
                (with blank preference boxes) belongs in the build stage, where the voter authors it.
                Each row carries its partyKey and suspended flag from the flow (`houseParties`). -->
-          <PartyAlignmentPanel parties={flow.houseParties} caption={CARD_COPY.houseCaption} />
+          <PartyAlignmentPanel
+            parties={flow.houseParties}
+            caption={CARD_COPY.houseCaption}
+            ballotOrdered={flow.panelsBallotOrdered}
+          />
         </div>
 
         <div class="chamber">
@@ -270,7 +277,11 @@
                so the party panel is the whole surface; above/below-the-line ballot order belongs in
                the build stage, where the voter numbers it themselves. Each row carries its partyKey
                and suspended flag from the flow (`senateParties`). -->
-          <PartyAlignmentPanel parties={flow.senateParties} caption={CARD_COPY.senateCaption} />
+          <PartyAlignmentPanel
+            parties={flow.senateParties}
+            caption={CARD_COPY.senateCaption}
+            ballotOrdered={flow.panelsBallotOrdered}
+          />
         </div>
       {/if}
     </section>
@@ -296,7 +307,9 @@
             {flow.isArchived ? CARD_COPY.buildDemonstration : CARD_COPY.build}
           </button>
         {:else}
-          <p class="gated ui">{CARD_COPY.plansClosed}</p>
+          <p class="gated ui">
+            {cardPlanNote(flow.electionStage, flow.ballot) ?? CARD_COPY.plansClosed}
+          </p>
         {/if}
         {#if !data.shared}
           <!-- Sharing is only offered on your OWN comparison. A shared card is already someone

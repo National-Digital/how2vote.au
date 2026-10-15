@@ -42,6 +42,7 @@ import {
 } from "node:fs";
 import { dirname, join, relative, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
+import { ballotStates } from "./ballot-states.mjs";
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const OPERATOR_REL = "apps/web/src/lib/operator.json";
@@ -119,6 +120,59 @@ export function authorisationLine(operator) {
 }
 
 /**
+ * An election's stage, by the rule of `stageFor` in apps/web/src/lib/election-stage.ts, over its
+ * record in data/dist/elections.json and its dataset's ballot (scripts/ballot-states.mjs): `held`
+ * once the polls have closed; with candidates, `ballot` for a drawn ballot from the declaration of
+ * nominations and `listed` otherwise; without them, `declared` from the declaration, `called` with
+ * an AEC timetable and `unannounced` without one.
+ *
+ * @param {{timetable?: {declarationOfNominations: string, pollsCloseAt: string}}} election
+ * @param {"none" | "provisional" | "drawn"} ballot - what the election's dataset holds
+ * @param {Date} now
+ * @returns {"unannounced" | "called" | "listed" | "declared" | "ballot" | "held"}
+ */
+export function electionStageOf(election, ballot, now) {
+  const t = election.timetable;
+  const n = now.getTime();
+  if (t && n >= Date.parse(t.pollsCloseAt)) return "held";
+  const declared = t !== undefined && n >= Date.parse(t.declarationOfNominations);
+  if (ballot !== "none") return declared && ballot === "drawn" ? "ballot" : "listed";
+  if (declared) return "declared";
+  return t ? "called" : "unannounced";
+}
+
+/**
+ * The instant the reviewer notes are worded for, so a committed check never depends on the wall
+ * clock: `SOURCE_DATE_EPOCH` (seconds) when set, otherwise the newest `dataVersion` in
+ * data/dist/elections.json, which changes only with a data commit.
+ *
+ * @param {{dataVersion?: string}[]} elections
+ * @param {Record<string, string | undefined>} env
+ * @returns {Date}
+ */
+export function stageInstant(elections, env) {
+  const epoch = Number(env.SOURCE_DATE_EPOCH);
+  if (env.SOURCE_DATE_EPOCH && Number.isFinite(epoch)) return new Date(epoch * 1000);
+  const versions = elections
+    .map((e) => Date.parse(`${e.dataVersion}T00:00:00+10:00`))
+    .filter((t) => Number.isFinite(t));
+  if (versions.length === 0) throw new Error("no dataVersion in data/dist/elections.json");
+  return new Date(Math.max(...versions));
+}
+
+const NO_DATA =
+  "the electorate and voting-plan steps have no data to show and are unavailable there by design.";
+
+/** Why the voting-plan step is closed on the current election, by its stage. */
+const PLAN_CLOSED_BECAUSE = {
+  unannounced: `That election has not been called, so the AEC has published no ballot for it — ${NO_DATA}`,
+  called: `Candidates for that election aren't final yet, so the AEC has published no ballot for it — ${NO_DATA}`,
+  listed:
+    "How2Vote doesn't have the AEC's declared candidates and ballot order for that election yet, so its candidates are shown as listed so far and the voting-plan step is unavailable there by design.",
+  declared: `How2Vote hasn't loaded the declared candidates for that election yet, so the app has no ballot for it — ${NO_DATA}`,
+};
+
+/**
  * The reviewer's route to the full flow, when the default election has no ballot yet.
  *
  * The app opens on the current election. Before an election is called the AEC has published no
@@ -128,20 +182,31 @@ export function authorisationLine(operator) {
  * the impression App Store guideline 4.2 was raised on. Naming the election that does have a ballot
  * costs one paragraph.
  *
- * Derived rather than written, so it retires itself: once the current election is called it carries
- * its own ballot, `provisionalStage` is no longer "pending", and the paragraph stops being emitted.
+ * Derived rather than written, so it retires itself: it is emitted only while the current
+ * election's plan builder is closed (before the declaration of nominations, or without
+ * electorates), and its reason is worded for the stage {@link electionStageOf} reads, so it
+ * describes the election as the web does.
  *
- * @param {{id: string, label: string, shortLabel: string, current?: boolean, provisionalStage?: string}[]} elections
+ * @param {{id: string, label: string, shortLabel: string, current?: boolean, timetable?: {declarationOfNominations: string, pollsCloseAt: string}}[]} elections
+ * @param {Record<string, "none" | "provisional" | "drawn">} ballots - each election's ballot
+ * @param {Date} now - from {@link stageInstant}
  * @returns {string} the paragraph, with a trailing blank line, or "" when the default is complete
  */
-export function reviewerRoute(elections) {
+export function reviewerRoute(elections, ballots, now) {
+  const ballotOf = (e) => ballots[e.id] ?? "none";
+  const stageOf = (e) => electionStageOf(e, ballotOf(e), now);
+  // The web's `plansOpen`: a declared, drawn ballot, or a held election's drawn ballot.
+  const plansOpen = (e) =>
+    stageOf(e) === "ballot" || (stageOf(e) === "held" && ballotOf(e) === "drawn");
   const current = elections.find((e) => e.current);
-  if (current?.provisionalStage !== "pending") return "";
-  // Newest-first, and an election without a provisional stage is one with a real AEC ballot.
-  const withBallot = elections.find((e) => e.id !== current.id && !e.provisionalStage);
+  if (!current) return "";
+  const why = PLAN_CLOSED_BECAUSE[stageOf(current)];
+  if (!why) return "";
+  // Newest-first.
+  const withBallot = elections.find((e) => e.id !== current.id && plansOpen(e));
   if (!withBallot) return "";
   return `How to see the full app (please read first):
-- The app opens on "${current.label}", a provisional comparison against the current Parliament. That election has not been called, so the AEC has published no ballot for it — the electorate and voting-plan steps have no data to show and are unavailable there by design.
+- The app opens on "${current.label}", a provisional comparison against the current Parliament. ${why}
 - To exercise the complete flow, tap "${withBallot.shortLabel}" in the election selector at the top of the first screen. That gives the full path: answer the questions, choose your electorate, order the candidates on the real ballot, and produce a printable voting plan.
 
 `;
@@ -152,7 +217,7 @@ export function reviewerRoute(elections) {
  * Locale directories are added by the writer. Content is deliberately identical across stores
  * wherever both accept it, so the listings can never drift apart.
  */
-export function buildMetadata(operator, copy, elections = []) {
+export function buildMetadata(operator, copy, elections = [], ballots = {}, now = new Date(0)) {
   const authorisation = authorisationLine(operator);
   const c = copy.claims;
   // Absolute URLs only: the stores auto-link a fully-qualified URL and render anything else as
@@ -189,7 +254,7 @@ ${authorisation}`;
 
   const reviewNotes = `How2Vote is a non-partisan voter-information tool for Australian federal elections, operated by ${operator.tradingName} (${operator.legalName}).
 
-${reviewerRoute(elections)}Key points for review:
+${reviewerRoute(elections, ballots, now)}Key points for review:
 - All comparison content derives from public parliamentary voting records (Hansard, via theyvoteforyou.org.au). The compilation method is public and deterministic: ${copy.repoUrl}
 - The app recommends no party and no preference order; results are shown in official ballot order and users author their own voting plan.
 - The dataset ships in the binary and the app works offline. There is no account and no login. The only data that leaves the device is the optional, opt-in aggregate research contribution and whatever the user types into the contact/feedback form.
@@ -393,7 +458,13 @@ function main() {
   const operator = JSON.parse(readFileSync(join(ROOT, OPERATOR_REL), "utf8"));
   const copy = JSON.parse(readFileSync(join(ROOT, COPY_REL), "utf8"));
   const elections = JSON.parse(readFileSync(join(ROOT, ELECTIONS_REL), "utf8"));
-  const files = buildMetadata(operator, copy, elections);
+  const files = buildMetadata(
+    operator,
+    copy,
+    elections,
+    ballotStates(join(ROOT, "data/dist")),
+    stageInstant(elections, process.env),
+  );
   const issues = validateMetadata(files, operator, copy);
   if (issues.length > 0) {
     console.error("✗ store metadata invalid:");

@@ -55,6 +55,7 @@ const SEMVER = /^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)$/;
  * imports. store-release-scope.test.mjs derives this set from those files and fails on drift.
  */
 export const APP_SCRIPTS = new Set([
+  "scripts/ballot-states.mjs",
   "scripts/build-native-documents.mjs",
   "scripts/check-native-answer-scale.mjs",
   "scripts/check-play-permission.mjs",

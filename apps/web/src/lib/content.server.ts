@@ -24,7 +24,9 @@ import {
 } from "@how2vote/data-schema";
 import { slugify } from "@how2vote/engine";
 import { STATES, stateName } from "./data";
+import { ballotOf, stageFor } from "./election-stage";
 import { SITE_URL, SITE_NAME } from "./seo";
+import { electorateHubCopy } from "./stage-copy";
 
 /** A glob key like "…/data/dist/2025/dataset.json" (relative or absolute) → the election id "2025". */
 const idFromGlobKey = (path: string): string => path.replace(/.*\/dist\//, "").split("/")[0]!;
@@ -157,6 +159,12 @@ export type ElectorateHub = {
   seo: Seo;
   label: string;
   year: number;
+  /** The page's introduction, for the election's stage. */
+  intro: string;
+  /** Whether the page says the candidates will be listed once the AEC declares nominations. */
+  awaitsNominations: boolean;
+  /** The link text after each state's name: its Senate ballot, or its Senate candidates so far. */
+  senateLink: string;
   states: {
     code: string;
     name: string;
@@ -192,15 +200,22 @@ export function buildElectorateHub(electionId: string): ElectorateHub | null {
     };
   });
   const count = ds.ballots.electorates.length;
+  // Fixed at build time, so the hydrated page reads as it was prerendered.
+  const copy = electorateHubCopy(stageFor(meta, ballotOf(ds.ballots)), {
+    count,
+    label: meta.label,
+    year: meta.year,
+  });
   return {
     seo: {
       title: `Electorates & candidates — ${meta.shortLabel} — How2Vote`,
-      description: clampDesc(
-        `Every candidate standing in all ${count} federal House electorates at the ${meta.label}, by state, plus each state's Senate ballot.`,
-      ),
+      description: clampDesc(copy.description),
     },
     label: meta.label,
     year: meta.year,
+    intro: copy.intro,
+    awaitsNominations: copy.awaitsNominations,
+    senateLink: copy.senateLink,
     states,
   };
 }
@@ -219,6 +234,8 @@ export type ElectoratePage = {
   label: string;
   hubHref: string;
   senateHref: string;
+  /** The candidates are a provisional list in a neutral order, not the drawn ballot (ADR 0013). */
+  provisional: boolean;
   candidates: Candidate[];
 };
 
@@ -257,6 +274,7 @@ export function buildElectoratePage(electionId: string, slug: string): Electorat
     label: meta.label,
     hubHref: `/${electionId}/electorates`,
     senateHref: `/${electionId}/senate/${stateSlug(electorate.state)}`,
+    provisional: ballotOf(ds.ballots) === "provisional",
     candidates,
   };
 }

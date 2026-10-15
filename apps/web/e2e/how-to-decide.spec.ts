@@ -1,15 +1,9 @@
 import { readFileSync } from "node:fs";
 import { expect, test } from "@playwright/test";
 import { electionById } from "@how2vote/data-schema";
-import {
-  compareLead,
-  decideFaqs,
-  decideStage,
-  type DecideStage,
-} from "../src/lib/content/how-to-decide";
+import { compareLead, decideFaqs } from "../src/lib/content/how-to-decide";
+import { STAGES, ballotOf, stageFor } from "../src/lib/election-stage";
 import { seedEligibility } from "./flow-helpers";
-
-const STAGES: DecideStage[] = ["unannounced", "called", "ballot", "held"];
 
 type Faq = {
   "@type": string;
@@ -66,25 +60,27 @@ test("the proposition count is the current election's", async ({ page }) => {
 
 test("the page reads for the current election's stage", async ({ page }) => {
   const meta = electionById(current.id)!;
-  const { counts } = JSON.parse(
-    readFileSync(
-      new URL(`../../../data/dist/${current.id}/manifest.json`, import.meta.url),
-      "utf8",
-    ),
-  ) as { counts: Record<string, number> };
+  const { ballots } = JSON.parse(
+    readFileSync(new URL(`../../../data/dist/${current.id}/dataset.json`, import.meta.url), "utf8"),
+  ) as { ballots: { ballotStatus?: string; electorates: unknown[] } };
   // The build fixed the stage when it prerendered the page; the build ran moments ago.
-  const stage = decideStage(meta, (counts["electorates"] ?? 0) === 0);
+  const ballot = ballotOf(ballots);
+  const electorateLess = ballot === "none";
+  const stage = stageFor(meta, ballot);
+  const lead = compareLead(stage, electorateLess);
   await page.goto("/how-to-decide");
   const article = page.locator("article");
-  await expect(article).toContainText(compareLead(stage));
-  for (const other of STAGES.filter((s) => compareLead(s) !== compareLead(stage))) {
-    await expect(article).not.toContainText(compareLead(other));
+  await expect(article).toContainText(lead);
+  const others = STAGES.flatMap((s) => [compareLead(s, true), compareLead(s, false)]);
+  for (const other of new Set(others.filter((l) => l !== lead))) {
+    await expect(article).not.toContainText(other);
   }
   const shown = (await article.textContent())!.replace(/\s+/g, " ");
   for (const { answer } of decideFaqs({
     label: current.label,
     propositions: 0,
     stage,
+    electorateLess,
   }).slice(2)) {
     expect(shown).toContain(answer);
   }

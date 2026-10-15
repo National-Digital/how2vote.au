@@ -1,12 +1,14 @@
 <script lang="ts">
   /**
-   * A stage-dependent part of the landing — its lede or its steps — which differ between an
-   * upcoming, a live and an archived election. `Landing.svelte` renders it for the election's stage
-   * now; `/states/landing` renders every stage for every election, so the build holds each one and
-   * the iOS app can show the one its engine reports (ADR 0019 D4b).
+   * A stage-dependent part of the landing — its lede or its steps — worded for the election's stage
+   * (`$lib/election-stage`). `Landing.svelte` renders it for the election's phase now;
+   * `/states/landing` renders every phase for every election, so the build holds each one and the
+   * iOS app can show the one its engine reports (ADR 0019 D4b).
    */
   import { electionById, electionPhase, type ElectionPhase } from "@how2vote/data-schema";
+  import { ballotFor } from "$lib/ballots";
   import { manifestFor } from "$lib/manifest";
+  import { landingCopy } from "$lib/stage-copy";
 
   let {
     electionId,
@@ -15,48 +17,25 @@
   }: { electionId: string; part: "lede" | "steps"; phase?: ElectionPhase } = $props();
 
   const meta = $derived(electionById(electionId)!);
-  const count = $derived(manifestFor(electionId).counts["questions"] ?? 0);
-  // The election's stage from the single AEC-timetable classifier the card uses, so the landing and
-  // the card cannot disagree about liveness. An upcoming election is a PROVISIONAL comparison against
-  // the current Parliament's record, with no ballot yet.
-  const stage = $derived(phase ?? electionPhase(meta));
-  const isPast = $derived(stage === "archived");
-  const isUpcoming = $derived(stage === "upcoming");
-  const electorateLess = $derived((manifestFor(electionId).counts["electorates"] ?? 0) === 0);
-
-  // The step rail adapts to the flow: an electorate-less provisional quiz has no ballot step.
-  const steps = $derived(
-    electorateLess
-      ? [
-          { n: "1 · Answer", d: `${count} questions, ~5 min` },
-          { n: "2 · Compare", d: "See how you compare" },
-        ]
-      : [
-          { n: "1 · Ballot", d: "Find your electorate" },
-          { n: "2 · Answer", d: `${count} questions, ~5 min` },
-          { n: "3 · Compare", d: isPast ? "Review the record" : "See how you compare" },
-        ],
+  // The phase from the single AEC-timetable classifier the card uses, so the landing and the card
+  // cannot disagree about liveness; the section is keyed by it for the iOS app.
+  const shown = $derived(phase ?? electionPhase(meta));
+  const copy = $derived(
+    landingCopy({
+      meta,
+      phase: shown,
+      ballot: ballotFor(electionId),
+      count: manifestFor(electionId).counts["questions"] ?? 0,
+    }),
   );
+  const lede = $derived(copy.lede);
+  const steps = $derived(copy.steps);
 </script>
 
-<div class="stage" id="{part}-{electionId}-{stage}">
+<div class="stage" id="{part}-{electionId}-{shown}">
   {#if part === "lede"}
     <p class="lede">
-      {#if isUpcoming}
-        Answer {count} real questions the current Parliament has voted on and see how your views compare
-        with the parties' recorded votes.{" "}<span class="past"
-          >The next federal election hasn't been announced yet, so this is a provisional comparison
-          against the current Parliament — the questions may change, and there are no candidates or
-          printable how-to-vote plan yet.</span
-        >
-      {:else}
-        Answer {count} real questions parliament has voted on and see how your views compare with the
-        parties' recorded votes, for your {meta.year} ballot — House and Senate.{#if isPast}{" "}<span
-            class="past"
-            >This election has already been held — what follows is a historical comparison, scored
-            on the record as it stood then.</span
-          >{/if}
-      {/if}
+      {lede.lead}{#if lede.note}{" "}<span class="past">{lede.note}</span>{/if}
     </p>
   {:else}
     <ol class="steps ui">

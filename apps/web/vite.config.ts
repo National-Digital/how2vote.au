@@ -1,6 +1,7 @@
 import { sveltekit } from "@sveltejs/kit/vite";
 import { fileURLToPath } from "node:url";
 import { defineConfig } from "vitest/config";
+import { ballotStates } from "../../scripts/ballot-states.mjs";
 
 export default defineConfig({
   plugins: [sveltekit()],
@@ -24,6 +25,11 @@ export default defineConfig({
   // time and always show the current year.
   define: {
     __BUILD_YEAR__: JSON.stringify(new Date().getFullYear()),
+    // Each election's ballot (none / provisional / drawn), read from its committed dataset, so the
+    // landing can word its stage without loading the dataset.
+    __BALLOTS__: JSON.stringify(
+      ballotStates(fileURLToPath(new URL("../../data/dist", import.meta.url))),
+    ),
   },
   server: {
     // Allow importing the committed dataset from the repo-root data/ directory.
