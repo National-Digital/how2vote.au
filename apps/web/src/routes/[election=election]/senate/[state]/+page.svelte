@@ -1,8 +1,12 @@
 <script lang="ts">
   import { page } from "$app/state";
+  import { electionById } from "@how2vote/data-schema";
   import DataPage from "$lib/components/DataPage.svelte";
   import Meta from "$lib/components/Meta.svelte";
+  import StructuredData from "$lib/components/StructuredData.svelte";
   import { electionHome } from "$lib/nav";
+  import { SITE_URL, canonicalPath } from "$lib/seo";
+  import { ballotPageGraph, ballotPlace, senateBallotList } from "$lib/structured-data";
   import type { PageData } from "./$types";
 
   let { data }: { data: PageData } = $props();
@@ -12,13 +16,24 @@
     { label: "Electorates", href: data.hubHref },
     { label: `${data.stateName} Senate` },
   ]);
+  const title = $derived(`${data.stateName} Senate candidates — ${data.label}`);
+  const ballot = $derived(
+    ballotPageGraph({
+      name: title,
+      url: SITE_URL + canonicalPath(page.url.pathname),
+      election: electionById(page.params.election!)!,
+      place: ballotPlace(data.stateName),
+      list: senateBallotList(data.groups),
+    }),
+  );
 </script>
 
 <Meta title={data.seo.title} description={data.seo.description} type="article" />
+<StructuredData node={ballot} />
 
 <DataPage
   {crumbs}
-  title="{data.stateName} Senate candidates — {data.label}"
+  {title}
   intro="The full Senate ballot for {data.stateName} at the {data.year} federal election, by group, as printed on the paper."
 >
   {#each data.groups as g (g.group)}

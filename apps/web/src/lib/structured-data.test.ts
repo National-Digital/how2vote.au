@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { ELECTIONS } from "@how2vote/data-schema";
+import { ELECTIONS, electionById } from "@how2vote/data-schema";
 import { ORG } from "./org";
 import { SITE_URL } from "./seo";
 import { STORE_LINKS } from "./store-links";
@@ -16,7 +16,14 @@ import {
   breadcrumbGraph,
   faqGraph,
   serializeJsonLd,
+  electionEventGraph,
+  electionEventNode,
+  ballotPageGraph,
+  ballotPlace,
+  houseBallotList,
+  senateBallotList,
 } from "./structured-data";
+import { buildElectoratePage, buildSenatePage } from "./content.server";
 
 /** Pull a typed node out of the sitewide `@graph` by its `@type`. */
 function node(type: string): Record<string, unknown> {
@@ -182,6 +189,155 @@ describe("faqGraph", () => {
     expect(q["@type"]).toBe("Question");
     expect(q.name).toBe("Who agrees?");
     expect(q.acceptedAnswer).toEqual({ "@type": "Answer", text: "Party A." });
+  });
+});
+
+describe("electionEventGraph", () => {
+  it("describes a held election as a scheduled Event in Australia on its polling day", () => {
+    const g = electionEventGraph(electionById("2025")!)!;
+    expect(g).toEqual({
+      "@context": "https://schema.org",
+      "@type": "Event",
+      "@id": "https://how2vote.au/2025#election",
+      name: "2025 Federal Election",
+      url: "https://how2vote.au/2025",
+      startDate: "2025-05-03",
+      endDate: "2025-05-03",
+      eventStatus: "https://schema.org/EventScheduled",
+      location: {
+        "@type": "Place",
+        name: "Australia",
+        address: { "@type": "PostalAddress", addressCountry: "AU" },
+      },
+      organizer: {
+        "@type": "Organization",
+        name: "Australian Electoral Commission",
+        url: "https://www.aec.gov.au/",
+      },
+    });
+  });
+
+  it("states nothing for an election with no polling day yet", () => {
+    for (const e of ELECTIONS.filter((m) => !m.date)) {
+      expect(electionEventGraph(e)).toBeNull();
+      expect(electionEventNode(e)).toBeNull();
+    }
+  });
+});
+
+type Json = Record<string, unknown>;
+const items = (list: Json): Json[] => list.itemListElement as Json[];
+const person = (li: Json): Json => li.item as Json;
+const one = (candidate: string, party: string, position = 1) => ({ position, candidate, party });
+
+describe("ballotPageGraph", () => {
+  const election = electionById("2025")!;
+  const page = buildElectoratePage("2025", "bean")!;
+  const graph = ballotPageGraph({
+    name: "Bean candidates — 2025 Federal Election",
+    url: "https://how2vote.au/2025/electorates/bean",
+    election,
+    place: ballotPlace(page.stateName, page.electorate),
+    list: houseBallotList(page.candidates),
+  }) as Json;
+  const list = graph.mainEntity as Json;
+
+  it("is a CollectionPage about the election, covering the electorate, whose main entity is the ballot", () => {
+    expect(graph["@type"]).toBe("CollectionPage");
+    expect(graph.url).toBe("https://how2vote.au/2025/electorates/bean");
+    expect((graph.about as Json)["@id"]).toBe("https://how2vote.au/2025#election");
+    expect(graph.spatialCoverage).toEqual({
+      "@type": "AdministrativeArea",
+      name: "Bean",
+      containedInPlace: {
+        "@type": "AdministrativeArea",
+        name: "Australian Capital Territory",
+        containedInPlace: { "@type": "Country", name: "Australia" },
+      },
+    });
+    expect(list["@type"]).toBe("ItemList");
+    expect(list.spatialCoverage).toBeUndefined();
+    expect(list.about).toBeUndefined();
+  });
+
+  it("lists every House candidate as a Person at their printed ballot position", () => {
+    expect(list.numberOfItems).toBe(page.candidates.length);
+    expect(items(list).map((li) => [li.position, person(li).name])).toEqual(
+      page.candidates.map((c) => [c.position, c.candidate]),
+    );
+    for (const li of items(list)) expect(person(li)["@type"]).toBe("Person");
+  });
+
+  it("carries only the printed name and party label, never other personal data", () => {
+    for (const li of items(list)) {
+      expect(
+        Object.keys(person(li)).every((k) => ["@type", "name", "affiliation"].includes(k)),
+      ).toBe(true);
+    }
+  });
+
+  it("asserts no list order, since ballot order is drawn by lot", () => {
+    expect(list.itemListOrder).toBeUndefined();
+  });
+});
+
+describe("candidate party label", () => {
+  const people = (candidates: ReturnType<typeof one>[]) =>
+    items(houseBallotList(candidates) as Json).map(person);
+
+  it("is the printed label as affiliation, not membership", () => {
+    const [p] = people([one("A, One", "FUSION | Planet Rescue | Climate Change")]);
+    expect(p!.affiliation).toEqual({
+      "@type": "Organization",
+      name: "FUSION | Planet Rescue | Climate Change",
+    });
+    expect(p!.memberOf).toBeUndefined();
+  });
+
+  it("is omitted when blank, Independent, or the candidate's own name", () => {
+    const ps = people([
+      one("B, Two", "Independent"),
+      one("C, Three", ""),
+      one("POCOCK, David", "David Pocock"),
+    ]);
+    for (const p of ps) expect(p.affiliation).toBeUndefined();
+  });
+
+  it("keeps a party named after its leader", () => {
+    const [p] = people([one("LAMBIE, Jacqui", "Jacqui Lambie Network")]);
+    expect(p!.affiliation).toEqual({ "@type": "Organization", name: "Jacqui Lambie Network" });
+  });
+
+  it("drops the dangling separator a mononym leaves in the printed name", () => {
+    expect(people([one("MERVIN JOSHUA, ", "Family First")])[0]!.name).toBe("MERVIN JOSHUA");
+  });
+});
+
+describe("senateBallotList", () => {
+  it.each([
+    ["2025", "tas"],
+    ["2019", "nsw"],
+  ])("nests %s %s candidates in their printed groups at their within-group positions", (id, st) => {
+    const senate = buildSenatePage(id, st)!;
+    const groups = items(senateBallotList(senate.groups) as Json);
+    expect(groups.map((g) => g.position)).toEqual(senate.groups.map((_, i) => i + 1));
+    expect(groups.map((g) => (g.item as Json).name)).toEqual(
+      senate.groups.map((g) => (g.group === "UG" ? "Ungrouped" : `Group ${g.group}`)),
+    );
+    senate.groups.forEach((g, i) => {
+      const inner = items(groups[i]!.item as Json);
+      expect(inner.map((li) => [li.position, person(li).name])).toEqual(
+        g.candidates.map((c) => [c.position, c.candidate.trim().replace(/,$/, "")]),
+      );
+    });
+  });
+
+  it("covers multi-letter groups and the ungrouped column", () => {
+    const names = items(senateBallotList(buildSenatePage("2019", "nsw")!.groups) as Json).map(
+      (g) => (g.item as Json).name,
+    );
+    expect(names).toContain("Group AA");
+    expect(names.at(-1)).toBe("Ungrouped");
   });
 });
 
