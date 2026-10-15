@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "lastReviewDate": "2026-07-29",
+  "lastReviewDate": "2026-10-12",
   "reviewer": "cameron-young — Australian lawyer (National Digital)",
   "approvalRef": "compliance-review-2026-07-27",
   "legislationCompilation": "Commonwealth Electoral Act 1918 (Cth), current compilation as at 2026-07-15",
@@ -355,6 +355,13 @@
       "disposition": "no-review-required",
       "reviewer": "cameron-young",
       "affectedControls": ["control-5", "control-12", "control-20", "control-22"]
+    },
+    {
+      "date": "2026-10-12",
+      "change": "A new content page, /how-to-decide, answers how to decide your vote: compare what you care about with the parties' recorded votes in federal parliament. It states the current election's proposition count from its dataset, names They Vote For You as the source, links to the questions, Where parties stand and How it works, and states that How2Vote does not recommend a candidate or party and does not rank parties or recommend a preference order, and that a party's position describes its members' recorded votes, not any individual candidate's personal views. Its wording follows the current election's stage, fixed when the page is built: with no AEC timetable it says the election hasn't been announced and there are no candidates or ballot yet; with a timetable but before the declaration of nominations it says candidates aren't final and there is no ballot yet; while the ballot is live it describes official ballot order and a voting plan for people 18 and over; once the election has been held it calls the comparison historical and a plan a historical demonstration that cannot be used to vote. Whether an election has been announced is read by a new helper, isElectionAnnounced, beside electionPhase in packages/data-schema/src/elections.ts; electionPhase and electionStage are unchanged. Its four questions and answers render on the page and as FAQPage JSON-LD from one list (apps/web/src/lib/content/how-to-decide.ts). Register edits: the DISC-NO-RECOMMENDATION disclaimer in docs/legal/required-checks.json names that file and quotes its two no-recommendation statements; the control-6 candidate/party distinction test note in docs/legal/control-register.json now covers faqGraph on /how-to-decide as well as the issue pages; docs/claims-register.md lists the page, its metadata and its JSON-LD. docs/legal/absolute-claims.json gains a banned term for any 'who to vote for' framing. The page is linked from the footer, the sitemap and llms.txt, and on iOS is drawn natively from its prerendered HTML. No existing page wording is changed, and no legal position, obligation, permitted use, or collection, use, disclosure, retention or overseas-processing practice is altered; no consent or Terms version is affected; no legal review was sought.",
+      "disposition": "reviewed",
+      "reviewer": "cameron-young",
+      "affectedControls": ["control-4", "control-5", "control-6"]
     }
   ],
   "nextMandatoryReviewDate": "2027-07-15",

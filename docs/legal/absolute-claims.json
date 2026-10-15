@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "description": "Enforceable absolute-claims register. bannedTerms: categorical / quasi-legal wording banned from public copy — an absolute 'non-partisan' self-label, 'anonymous', 'unlinkable', an absolute legal-compliance claim, 'no personal information', 'cannot recognise/track', 'IP addresses are never collected' — each with the softer wording to prefer. permittedClaims: the narrow exceptions, each a specific claim at a specific location allowed by a CURRENT control-register evidence record, carrying the qualification that makes it defensible (permitted_qualification + mustContain), the unqualified wording it may never regress to (prohibited_absolute_wording), an evidence_owner and a review_date/expiry_date. Enforced fail-closed by scripts/check-absolute-claims.mjs (Legal CI group). See docs/claims-register.md for the wider claim↔substantiation map.",
+  "description": "Enforceable absolute-claims register. bannedTerms: categorical / quasi-legal wording banned from public copy — an absolute 'non-partisan' self-label, 'anonymous', 'unlinkable', an absolute legal-compliance claim, 'no personal information', 'cannot recognise/track', 'IP addresses are never collected', a 'who to vote for' framing — each with the softer wording to prefer. permittedClaims: the narrow exceptions, each a specific claim at a specific location allowed by a CURRENT control-register evidence record, carrying the qualification that makes it defensible (permitted_qualification + mustContain), the unqualified wording it may never regress to (prohibited_absolute_wording), an evidence_owner and a review_date/expiry_date. Enforced fail-closed by scripts/check-absolute-claims.mjs (Legal CI group). See docs/claims-register.md for the wider claim↔substantiation map.",
   "bannedTerms": [
     {
       "id": "non-partisan",
@@ -43,6 +43,12 @@
       "label": "an absolute 'IP address is never collected' claim",
       "pattern": "\\b(?:never|no|not|don'?t|do not)\\b[^.]{0,45}\\bIP address",
       "prefer": "no IP address is stored in the research database"
+    },
+    {
+      "id": "who-to-vote-for",
+      "label": "a 'who to vote for' framing",
+      "pattern": "\\bwho (?:to|you should|should you) vote for\\b",
+      "prefer": "compare your views with the parties' recorded votes / who you put first is your decision"
     }
   ],
   "permittedClaims": [

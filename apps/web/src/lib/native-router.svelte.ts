@@ -48,6 +48,7 @@ export const NATIVE_DOCUMENTS = [
   "accessibility",
   "corrections",
   "glossary",
+  "how-to-decide",
   "methodology",
   "privacy",
   "research",

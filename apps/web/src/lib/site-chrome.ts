@@ -20,6 +20,7 @@ export type CreditPart = { text: string; href?: string };
 export function footerLinks(savedCount: number): FooterLink[] {
   const e = CURRENT_ELECTION_ID;
   const links: FooterLink[] = [
+    { label: "How to decide", href: "/how-to-decide" },
     { label: "How it works", href: "/methodology" },
     { label: "Glossary", href: "/glossary" },
     { label: "Where parties stand", href: `/${e}/issues` },
