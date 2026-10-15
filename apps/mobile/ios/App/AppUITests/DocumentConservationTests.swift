@@ -56,10 +56,7 @@ final class DocumentConservationTests: XCTestCase {
 
         let app = XCUIApplication()
         app.launch()
-        XCTAssertTrue(
-            app.buttons[Self.footerLabels["privacy"]!].waitForExistence(timeout: 30),
-            "the native landing never appeared"
-        )
+        XCTAssertTrue(landingAppeared(in: app), "the native landing never appeared")
 
         for (name, label) in Self.footerLabels.sorted(by: { $0.key < $1.key }) {
             let parts = name.split(separator: "/").map(String.init)
@@ -87,7 +84,7 @@ final class DocumentConservationTests: XCTestCase {
     func testDataPagesShowThePagesText() throws {
         let app = XCUIApplication()
         app.launch()
-        XCTAssertTrue(app.buttons["Party records"].waitForExistence(timeout: 30), "the native landing never appeared")
+        XCTAssertTrue(landingAppeared(in: app), "the native landing never appeared")
 
         // A party, from the parties index.
         try openAndCompare("next/parties", from: "Party records", in: app)
@@ -116,7 +113,7 @@ final class DocumentConservationTests: XCTestCase {
     func testAboutReadsForThePastElectionSelected() throws {
         let app = XCUIApplication()
         app.launch()
-        XCTAssertTrue(app.buttons["Candidates"].waitForExistence(timeout: 30), "the native landing never appeared")
+        XCTAssertTrue(landingAppeared(in: app), "the native landing never appeared")
         addTeardownBlock { [self] in XCTAssertNoThrow(try chooseTheCurrentElection(in: app)) }
         try openAndCompare("next/electorates", from: "Candidates", in: app)
         let election = try XCTUnwrap(
@@ -247,22 +244,38 @@ final class DocumentConservationTests: XCTestCase {
         let link = try XCTUnwrap(firstLink(under: prefix, in: try json(name)), "\(name) links to nothing under \(prefix)")
         let target = String(link.href.dropFirst())
         let page = try projected(target)
-        let element = app.links[link.label].firstMatch.exists ? app.links[link.label].firstMatch : app.buttons[link.label].firstMatch
-        tapUntilShown(element, in: app)
+        XCTAssertTrue(tapUntilShown(linkOrButton(link.label, in: app), in: app), "\(name): the link \"\(link.label)\" could not be reached")
         guard let shown = shownDocument(startingWith: page.spoken, in: app) else {
             return XCTFail("\(target): not drawn natively, or \"\(link.label)\" could not be followed")
         }
         compare(target, expected: page.spoken, shown: shown)
     }
 
-    /// Scrolls until an element is on screen, then taps it.
-    private func tapUntilShown(_ element: XCUIElement, in app: XCUIApplication) {
+    /// Scrolls until an element is on screen, then taps it; false if it never came into reach.
+    @discardableResult
+    private func tapUntilShown(_ element: XCUIElement, in app: XCUIApplication) -> Bool {
         var swipes = 0
         while !(element.exists && element.isHittable), swipes < 60 {
             app.swipeUp()
             swipes += 1
         }
-        if element.exists, element.isHittable { element.tap() }
+        guard element.exists, element.isHittable else { return false }
+        element.tap()
+        return true
+    }
+
+    /// An in-page link, which SwiftUI exposes as a link or a button depending on how it is drawn.
+    private func linkOrButton(_ label: String, in app: XCUIApplication) -> XCUIElement {
+        app.descendants(matching: .any)
+            .matching(NSPredicate(format: "label == %@ AND (elementType == %lu OR elementType == %lu)",
+                                  label, XCUIElement.ElementType.link.rawValue, XCUIElement.ElementType.button.rawValue))
+            .firstMatch
+    }
+
+    /// The landing, recognised by its document: footer links stay out of the accessibility tree
+    /// until scrolled near, so waiting on one can time out on a landing that is already drawn.
+    private func landingAppeared(in app: XCUIApplication) -> Bool {
+        app.otherElements["native-document"].waitForExistence(timeout: 30)
     }
 
     /// The landing a first-time visitor opens on: the current election's prerendered landing, which
@@ -690,10 +703,10 @@ final class DocumentConservationTests: XCTestCase {
     private func checkTheTermsOpenOverTheGate(in app: XCUIApplication, wording: [String: Any]) throws {
         let link = try XCTUnwrap(firstLink(under: "/terms", in: wording), "survey: the Terms acceptance links no Terms")
         let terms = try projected("terms")
-        let element = app.links[link.label].firstMatch.exists ? app.links[link.label].firstMatch : app.buttons[link.label].firstMatch
+        let element = linkOrButton(link.label, in: app)
         // Read by its text: the link's internal address is its identifier, which VoiceOver never reads.
         XCTAssertEqual(element.label, link.label, "survey: the Terms link is not read by its text")
-        tapUntilShown(element, in: app)
+        XCTAssertTrue(tapUntilShown(element, in: app), "survey: the Terms link could not be reached")
         guard let shown = shownDocument(startingWith: terms.spoken, in: app) else {
             return XCTFail("survey: the Terms did not open over the gate")
         }
@@ -758,7 +771,7 @@ final class DocumentConservationTests: XCTestCase {
         let app = XCUIApplication()
         app.launch()
         let privacy = try XCTUnwrap(Self.footerLabels["privacy"])
-        XCTAssertTrue(app.buttons[privacy].waitForExistence(timeout: 30), "clear data: the native landing never appeared")
+        XCTAssertTrue(landingAppeared(in: app), "clear data: the native landing never appeared")
         XCTAssertTrue(open(privacy, in: app), "clear data: the privacy policy could not be reached")
 
         tapUntilShown(app.buttons[clear], in: app)
@@ -782,7 +795,7 @@ final class DocumentConservationTests: XCTestCase {
         app.launch()
         // The footer names the page as the page titles itself.
         let contact = intro.title
-        XCTAssertTrue(app.buttons[contact].waitForExistence(timeout: 30), "contact: the native landing never appeared")
+        XCTAssertTrue(landingAppeared(in: app), "contact: the native landing never appeared")
         XCTAssertTrue(open(contact, in: app), "contact: the footer link \"\(contact)\" could not be reached")
         guard let shown = shownDocument(startingWith: intro.spoken, in: app) else {
             return XCTFail("states/contact: not drawn natively")
@@ -811,8 +824,8 @@ final class DocumentConservationTests: XCTestCase {
         // The web answers well inside the time the app waits for an answer. The simulator keeps a
         // covered WebView running whatever the presentation, so `check-native-router` holds the
         // presentation that keeps it running on a device.
-        tapUntilShown(send, in: app)
-        XCTAssertTrue(send.isHittable, "contact: the send button could not be reached")
+        // Checked by the tap itself: once sent, the button reads as sending and no longer matches.
+        XCTAssertTrue(tapUntilShown(send, in: app), "contact: the send button could not be reached")
         let failed = app.staticTexts.matching(NSPredicate(format: "label == %@", try piece("error"))).firstMatch
         XCTAssertTrue(failed.waitForExistence(timeout: 40), "contact: the web never answered the send")
         XCTAssertTrue(app.buttons[try piece("send")].isEnabled, "contact: the form stayed sending after the web answered")
@@ -843,7 +856,7 @@ final class DocumentConservationTests: XCTestCase {
 
         let app = XCUIApplication()
         app.launch()
-        XCTAssertTrue(app.buttons[top].waitForExistence(timeout: 30), "insights: the native landing never appeared")
+        XCTAssertTrue(landingAppeared(in: app), "insights: the native landing never appeared")
         XCTAssertTrue(open(top, in: app), "insights: the footer link \"\(top)\" could not be reached")
 
         XCTAssertTrue(app.staticTexts[title].waitForExistence(timeout: 20), "insights: not drawn natively, or its title is not the page's")
@@ -875,13 +888,14 @@ final class DocumentConservationTests: XCTestCase {
         let how = try piece("how", ["action": action])
         let privacy = try XCTUnwrap(Self.footerLabels["privacy"])
         let link = try XCTUnwrap(firstLink(under: "/saved", in: try json("privacy")), "the privacy policy does not link the saved cards")
+        let policy = try projected("privacy")
 
         let app = XCUIApplication()
         app.launch()
-        XCTAssertTrue(app.buttons[privacy].waitForExistence(timeout: 30), "saved: the native landing never appeared")
+        XCTAssertTrue(landingAppeared(in: app), "saved: the native landing never appeared")
         XCTAssertTrue(open(privacy, in: app), "saved: the privacy policy could not be reached")
-        let element = app.links[link.label].firstMatch.exists ? app.links[link.label].firstMatch : app.buttons[link.label].firstMatch
-        tapUntilShown(element, in: app)
+        XCTAssertNotNil(shownDocument(startingWith: policy.spoken, in: app), "saved: the privacy policy was not drawn natively")
+        XCTAssertTrue(tapUntilShown(linkOrButton(link.label, in: app), in: app), "saved: the link \"\(link.label)\" could not be reached")
 
         XCTAssertTrue(app.staticTexts[try piece("none")].waitForExistence(timeout: 20), "saved: not drawn natively, or its empty state is not the page's")
         XCTAssertEqual(app.buttons["top-back"].label, try piece("back"), "saved: the back button is not the page's")

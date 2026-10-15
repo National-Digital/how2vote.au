@@ -781,8 +781,8 @@ jobs:
 
           PID=$(xcrun simctl launch "$DEVICE" "$BUNDLE_ID" | awk -F': ' '{print $2}')
           echo "launched pid $PID"
-          # Simulator apps are host processes, so the host can watch this one directly. Long enough
-          # for the web assets to load and the bridge to come up; a crash on launch is immediate.
+          # Simulator apps are host processes, so the host can watch this one directly. A crash on
+          # launch is immediate; the web's start is waited for below.
           sleep 15
 
           if ! ps -p "$PID" > /dev/null 2>&1; then
@@ -797,9 +797,16 @@ jobs:
           # Queried after the fact rather than streamed alongside. A stream has to be attached before
           # the app writes anything, and losing that race produces an empty capture — which reads
           # exactly like an app that logged nothing, and cost a full round trip to tell apart. The
-          # log store already holds the entries; asking it afterwards cannot race.
-          xcrun simctl spawn "$DEVICE" log show --last 3m --style compact \
-            --predicate 'eventMessage CONTAINS "How2Vote:"' > "$LOG" 2>&1 || true
+          # log store already holds the entries; asking it afterwards cannot race. Asked again until
+          # the last marker arrives, because a slow runner can take well past 15s to start the web.
+          deadline=$((SECONDS + 90))
+          while :; do
+            xcrun simctl spawn "$DEVICE" log show --last 3m --style compact \
+              --predicate 'eventMessage CONTAINS "How2Vote:"' > "$LOG" 2>&1 || true
+            grep -qF "How2Vote: presenting landing" "$LOG" && break
+            [ "$SECONDS" -ge "$deadline" ] && break
+            sleep 5
+          done
 
           # Everything above proves the app RUNS. None of it proves the native core was reached, and
           # the two came apart once already: every static guard passed while the plugin was never
