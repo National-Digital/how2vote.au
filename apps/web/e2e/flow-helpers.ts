@@ -39,6 +39,23 @@ export async function waitForHydration(page: Page): Promise<void> {
 }
 
 /**
+ * Wait until the service worker has installed (its precache is complete) and finished activating,
+ * so it handles the next navigation. The worker does not claim open clients: the current page stays
+ * uncontrolled until it navigates or reloads.
+ */
+export async function waitForServiceWorker(page: Page): Promise<void> {
+  await page.evaluate(async () => {
+    const { active } = await navigator.serviceWorker.ready;
+    if (!active || active.state === "activated") return;
+    await new Promise<void>((resolve) => {
+      active.addEventListener("statechange", () => {
+        if (active.state === "activated") resolve();
+      });
+    });
+  });
+}
+
+/**
  * Stub our `/api/challenge` issuer (a Pages Function, absent from the static e2e preview) with a
  * REAL, signed, deliberately low-cost ALTCHA challenge minted in the test process. The bundled
  * in-page solver then genuinely solves it — exercising the true "fetch a challenge → solve
