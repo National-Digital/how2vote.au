@@ -21,14 +21,14 @@ import { existsSync, mkdirSync, readFileSync, readdirSync, statSync, writeFileSy
 import { dirname, join, relative, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { webScale } from "./check-native-answer-scale.mjs";
+import { DocumentError, parseHtml } from "./prerendered-html.mjs";
+
+export { DocumentError, parseHtml };
 
 export const IR_VERSION = 4;
 
 /** Where the contract between the web build and the native skeleton is recorded. */
 export const CONTRACT = "apps/mobile/ios/native-contract.json";
-
-const VOID = new Set(["br", "hr", "img", "input", "wbr"]);
-const ENTITIES = { amp: "&", lt: "<", gt: ">", quot: '"', apos: "'", nbsp: "\u00a0" };
 
 /** Paragraph and section classes that carry meaning, and the role each becomes. */
 export const BLOCK_ROLES = {
@@ -198,62 +198,6 @@ const PRESENTATIONAL = new Set([
   "spaced",
   "links",
 ]);
-
-export class DocumentError extends Error {}
-
-/** Parses Svelte's prerendered markup strictly: anything malformed is an error, not a guess. */
-export function parseHtml(html) {
-  const source = html.replace(/<!--[\s\S]*?-->/g, "");
-  const root = { tag: "#root", attrs: {}, children: [] };
-  const stack = [root];
-  const tagRe =
-    /<(\/?)([a-zA-Z][a-zA-Z0-9-]*)((?:\s+[^\s"'>/=]+(?:\s*=\s*(?:"[^"]*"|'[^']*'))?)*)\s*(\/?)>/g;
-  let last = 0;
-  for (const m of source.matchAll(tagRe)) {
-    if (m.index > last) pushText(stack.at(-1), source.slice(last, m.index));
-    last = m.index + m[0].length;
-    const [, closing, rawTag, rawAttrs] = m;
-    const tag = rawTag.toLowerCase();
-    if (tag === "script" || tag === "style") throw new DocumentError(`<${tag}> inside a document`);
-    if (closing) {
-      const open = stack.pop();
-      if (open.tag !== tag) throw new DocumentError(`</${tag}> closes <${open.tag}>`);
-      continue;
-    }
-    const el = { tag, attrs: parseAttrs(rawAttrs), children: [] };
-    stack.at(-1).children.push(el);
-    if (!VOID.has(tag) && !m[4]) stack.push(el);
-  }
-  if (last < source.length) pushText(stack.at(-1), source.slice(last));
-  if (stack.length !== 1) throw new DocumentError(`<${stack.at(-1).tag}> is never closed`);
-  return root;
-}
-
-function parseAttrs(raw) {
-  const attrs = {};
-  for (const m of raw.matchAll(/([^\s"'>/=]+)(?:\s*=\s*(?:"([^"]*)"|'([^']*)'))?/g)) {
-    attrs[m[1].toLowerCase()] = decode(m[2] ?? m[3] ?? "");
-  }
-  return attrs;
-}
-
-function pushText(parent, raw) {
-  if (/[<>]/.test(raw)) throw new DocumentError(`unparsed markup: ${raw.trim().slice(0, 40)}`);
-  parent.children.push({ text: decode(raw) });
-}
-
-function decode(s) {
-  return s.replace(/&(#x[0-9a-f]+|#[0-9]+|[a-z]+);/gi, (_, e) => {
-    if (e[0] === "#") {
-      return String.fromCodePoint(
-        e[1].toLowerCase() === "x" ? parseInt(e.slice(2), 16) : +e.slice(1),
-      );
-    }
-    const ch = ENTITIES[e.toLowerCase()];
-    if (ch === undefined) throw new DocumentError(`unknown entity &${e};`);
-    return ch;
-  });
-}
 
 const classes = (el) =>
   (el.attrs?.class ?? "").split(/\s+/).filter((c) => c && !c.startsWith("svelte-"));

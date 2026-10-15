@@ -21,6 +21,12 @@
   # train-ai=y permits model training (public, factual, AGPL/ODbL content — "AI allowed by decision").
   Content-Usage: search=y, train-ai=y
 
+# Markdown twins of the content pages (scripts/build-markdown.mjs). Cache-Control is left at the
+# Pages default, the same as the HTML pages they mirror.
+/*.md
+  Content-Type: text/markdown; charset=utf-8
+  Link: <https://how2vote.au/:splat>; rel="canonical"
+
 /fonts/*
   Cache-Control: public, max-age=31536000, immutable
 

@@ -6,6 +6,7 @@
    * canonical, robots and social tags always follow the resolved route.
    */
   import { page } from "$app/state";
+  import { env } from "$env/dynamic/public";
   import {
     SITE_URL,
     SITE_NAME,
@@ -17,6 +18,8 @@
     resolveMeta,
   } from "$lib/seo";
   import { manifestFor } from "$lib/manifest";
+  import { isNativeShell } from "$lib/channel";
+  import { markdownTwinHref } from "$lib/markdown-twin";
 
   let {
     title,
@@ -37,6 +40,9 @@
   const img = $derived(image ?? OG_IMAGE);
   const canonical = $derived(SITE_URL + path);
   const indexable = $derived(meta.index !== false);
+  // Twins are published by indexable web builds only; app bundles and previews carry none.
+  const twinsPublished = !isNativeShell && env.PUBLIC_NOINDEX !== "1";
+  const twin = $derived(twinsPublished && indexable ? markdownTwinHref(page.route.id, path) : null);
   // Data pages are dated by their election's data version: the date their voting record is current to.
   const election = $derived(page.params.election);
   const modified = $derived(
@@ -49,6 +55,7 @@
   <meta name="description" content={d} />
   <link rel="canonical" href={canonical} />
   {#if !indexable}<meta name="robots" content="noindex, follow" />{/if}
+  {#if twin}<link rel="alternate" type="text/markdown" href={twin} />{/if}
 
   <meta property="og:type" content={type} />
   <meta property="og:site_name" content={SITE_NAME} />

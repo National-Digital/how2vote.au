@@ -62,6 +62,7 @@ export const APP_SCRIPTS = new Set([
   "scripts/generate-app-version.mjs",
   "scripts/generate-store-metadata.mjs",
   "scripts/play-auth.mjs",
+  "scripts/prerendered-html.mjs",
 ]);
 
 /** App-affecting paths inside otherwise denied trees. */
