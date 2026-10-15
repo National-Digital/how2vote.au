@@ -175,7 +175,7 @@ describe("twinAttribution", () => {
   const CANDIDATES =
     "Candidate and electorate data © Commonwealth of Australia (Australian Electoral Commission). Licence: [Creative Commons Attribution 4.0 International](https://creativecommons.org/licenses/by/4.0/).";
   const PARTY_NAMES =
-    "Party names © Commonwealth of Australia (Australian Electoral Commission). Licence: [Creative Commons Attribution 4.0 International](https://creativecommons.org/licenses/by/4.0/).";
+    "Registered party names © Commonwealth of Australia (Australian Electoral Commission).";
 
   it("credits AEC candidate data on electorate and Senate twins", () => {
     expect(twinAttribution(register, "/2025/electorates/adelaide")).toEqual([
@@ -198,7 +198,9 @@ describe("twinAttribution", () => {
     const edited = structuredClone(register);
     const aec = edited.rightsClasses.find((r: { id: string }) => r.id === "aec-candidate-data");
     aec.copyright = "© Changed";
-    expect(twinAttribution(edited, "/2025/parties/liberal")[1]).toMatch(/^Party names © Changed\./);
+    expect(twinAttribution(edited, "/2025/parties/liberal")[1]).toEqual(
+      "Registered party names © Changed.",
+    );
   });
 
   it("refuses a page with no defined attribution, or a register without the class", () => {

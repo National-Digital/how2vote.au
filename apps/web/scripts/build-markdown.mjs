@@ -369,7 +369,8 @@ export function twinAttribution(register, path) {
     return [voteData, licenceLine(aec.attribution, aec)];
   }
   if (section === "parties" || section === "issues") {
-    return [voteData, licenceLine(`Party names ${aec.copyright}`, aec)];
+    // Registered party names are credited as facts, with no licence, as in /data/ positions.json.
+    return [voteData, `${escapeText(`Registered party names ${aec.copyright}`)}.`];
   }
   throw new MarkdownError(`${path}: no attribution is defined for this page`);
 }
