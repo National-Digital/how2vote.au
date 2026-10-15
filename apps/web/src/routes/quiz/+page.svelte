@@ -17,6 +17,7 @@
   import { nativeRoute } from "$lib/native-router.svelte";
   import { QUIZ_COPY, SPOKEN_ANSWERS } from "$lib/quiz-copy";
   import { around, fill } from "$lib/template";
+  import { quizDescription } from "$lib/seo";
 
   // The load failure, on either side of its retry link.
   const failed = around(QUIZ_COPY.failed);
@@ -131,6 +132,7 @@
   title={total > 0
     ? `${fill(QUIZ_COPY.position, { n: index + 1, total })} — How2Vote`
     : "Quiz — How2Vote"}
+  description={total > 0 ? quizDescription(total) : undefined}
 />
 <svelte:window {onkeydown} />
 

@@ -30,7 +30,7 @@
       }
     ]
   },
-  "howItWorks": "Answer 50 propositions parliament has actually voted on. The app shows how closely each party's recorded parliamentary votes match your positions — against the candidates on your ballot, in official ballot order. Then build your own voting plan: nothing is ranked for you and no preference is recommended. You author your own preference order.",
+  "howItWorks": "Answer propositions that parliament has actually voted on. The app shows how closely each party's recorded parliamentary votes match your positions — against the candidates on your ballot, in official ballot order. Then build your own voting plan: nothing is ranked for you and no preference is recommended. You author your own preference order.",
   "claims": {
     "offline": {
       "heading": "WORKS FULLY OFFLINE",

@@ -81,7 +81,7 @@ CI guard is `scripts/check-absolute-claims.mjs` (Legal group).
 
 | Symbol | Claim(s) | Substantiation |
 |---|---|---|
-| `pageMeta["/"]` | Title "How do your views compare with the parties? — How2Vote"; desc "Answer 50 questions parliament has actually voted on and see how your views compare with the parties' recorded votes, for your House and Senate ballot." (C2, C3 framing). | `/methodology`. Note the question-count "50" is copy in the description; keep aligned with the shipped manifest. |
+| `pageMeta["/"]` | Title "How do your views compare with the parties? — How2Vote"; desc "Answer real questions the current Parliament has voted on and see how your views compare with the parties, scored on their recorded votes — not their promises." (C2, C3 framing). | `/methodology`. Count-free by design. |
 | `pageMeta["/about"]` | "independent voting-record comparison tool that scores parties on their real parliamentary voting record, not their promises." (C1, C2). | `/about`, `/methodology`. |
 | `pageMeta["/methodology"]` | "every party is scored on its recorded parliamentary votes, then compared question by question with your answers." (C2). | `/methodology`. |
 | `pageMeta["/privacy"]` | Data-handling summary (C6–C13). | `/privacy`. |
@@ -115,7 +115,7 @@ CI guard is `scripts/check-absolute-claims.mjs` (Legal group).
 |---|---|---|
 | `components/Landing.svelte`, `components/LandingIntro.svelte`, `components/LandingActions.svelte` | See (a) — trust list (`Landing.svelte`), lede, `isPast` note and steps ("Ballot / Answer / Compare") (`LandingIntro.svelte`), CTA "See how my views compare" (`LandingActions.svelte`) (C1, C2, C5, C9, C13). | `/methodology`, `/privacy`, `/about`. |
 | `/ballot` (meta + page) | "Choose your state and federal electorate … your House and Senate ballot paper." | `seo.ts` `pageMeta["/ballot"]`; `/methodology` step 1. |
-| `/quiz`, `/review` (meta + pages) | "Answer 50 real questions that parliament has voted on … ~5 min" (C2); "Check and change your answers before How2Vote builds your personal voting comparison." | `seo.ts`; `/methodology`. |
+| `/quiz`, `/review` (meta + pages) | "Answer {n} real questions that parliament has voted on … ~5 min", {n} = the active question count of the election being answered (`quizDescription`; prerendered with the current election's, `CURRENT_QUESTION_COUNT`), omitted when unknown (C2); "Check and change your answers before How2Vote builds your personal voting comparison." | `seo.ts`; `/methodology`. |
 | `/survey` (meta + page) | "An optional research invitation before you build your voting plan … Contributing is your choice and never changes your result." (C10). | `seo.ts` `pageMeta["/survey"]`; `/privacy` §5. |
 | `/card` (meta + page) | "See how your answers align with each candidate's party record in official ballot order, then build your own voting plan" (C3, C4). Export/authorisation note (user authors the order). | `seo.ts`; `/methodology`; `org.ts` (`AUTHORISATION` rationale), ADR 0006. |
 
@@ -138,9 +138,12 @@ CI guard is `scripts/check-absolute-claims.mjs` (Legal group).
 
 ## Known copy-consistency watch-points
 
-- **Question count "50"** appears literally in several `seo.ts` descriptions (`/`, `/quiz`)
-  while the Landing lede and steps read it from the manifest (`count`). If the shipped
-  question count changes, update the `seo.ts` copy too.
+- **Question counts** differ by election (for example 2025: 50, 2022: 36), so copy never
+  states one literally. Election-specific copy (the Landing lede and steps, the `/quiz`
+  description, the `/offline` checklist) takes it from the election's data; election-independent
+  copy (`pageMeta["/"]`, the store listings' `howItWorks`) is count-free.
+  `question-count.test.ts` fails if a literal count returns, or if a manifest's
+  `counts.questions` differs from its dataset's active questions.
 - **`SITE_DESCRIPTION` (c) vs `llms.txt` `INTRO` (f)** are two hand-authored copies of the
   same non-partisan one-liner. Change both together.
 - **OG sublines (d)** are standalone claims baked into images; they are not generated from

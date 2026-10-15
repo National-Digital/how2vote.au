@@ -1,5 +1,16 @@
+import { readFileSync } from "node:fs";
 import type { Page } from "@playwright/test";
 import { createChallenge } from "altcha-lib";
+
+const readDist = (path: string): unknown =>
+  JSON.parse(readFileSync(new URL(`../../../data/dist/${path}`, import.meta.url), "utf8"));
+
+/** The current election's question count, from its committed manifest. */
+export const currentQuestionCount: number = (() => {
+  const elections = readDist("elections.json") as { id: string; current: boolean }[];
+  const id = elections.find((e) => e.current)!.id;
+  return (readDist(`${id}/manifest.json`) as { counts: { questions: number } }).counts.questions;
+})();
 
 /**
  * Pre-seed the age-first eligibility acknowledgement (docs/adr/0011) so a spec that is NOT

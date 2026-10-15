@@ -1,5 +1,5 @@
 import { expect, test } from "@playwright/test";
-import { waitForServiceWorker } from "./flow-helpers";
+import { currentQuestionCount, waitForServiceWorker } from "./flow-helpers";
 
 test("the offline page reports the whole card flow as available once cached", async ({ page }) => {
   // First load registers the service worker; once it has precached and activated, reload so the
@@ -14,7 +14,7 @@ test("the offline page reports the whole card flow as available once cached", as
 
   // Every flow step should now be saved on the device — the dataset is bundled, so a cached flow
   // means a fully-working offline card.
-  await expect(page.getByText("The 50 questions")).toBeVisible();
+  await expect(page.getByText(`The ${currentQuestionCount} questions`)).toBeVisible();
   await expect(page.getByText("Not saved yet")).toHaveCount(0);
   await expect(page.getByText("Saved", { exact: true }).first()).toBeVisible();
 });
@@ -38,4 +38,16 @@ test("an offline navigation to an uncached page falls back to the branded offlin
   await expect(page.getByRole("link", { name: "Build my comparison" })).toBeVisible();
 
   await context.setOffline(false);
+});
+
+test("the offline checklist counts the questions of the saved election", async ({ page }) => {
+  await page.addInitScript(() => {
+    try {
+      localStorage.setItem("how2vote:election:v1", "2025");
+    } catch {
+      // Storage blocked: nothing to restore.
+    }
+  });
+  await page.goto("/offline");
+  await expect(page.getByText("The 50 questions")).toBeVisible();
 });

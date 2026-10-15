@@ -3,6 +3,7 @@
   import { isNativeShell } from "$lib/channel";
   import Logo from "$lib/components/Logo.svelte";
   import Meta from "$lib/components/Meta.svelte";
+  import { election } from "$lib/election.svelte";
   import { quiz } from "$lib/quiz.svelte";
   import {
     readOfflineCapability,
@@ -12,13 +13,19 @@
 
   // The steps we report on, in flow order. Each maps to a precached route; the dataset that powers
   // scoring is bundled into the app itself, so if these pages are cached, the card fully works.
-  const CHECKS: OfflineCheck[] = [
+  // The question count is read from the selected election's bundled manifest, never fetched.
+  const questionCount = $derived(election.manifest.counts["questions"] ?? 0);
+  const checks = $derived<OfflineCheck[]>([
     { path: "/", label: "The How2Vote app" },
     { path: "/ballot", label: "Choosing your electorate" },
-    { path: "/quiz", label: "The 50 questions" },
+    {
+      path: "/quiz",
+      label: questionCount > 0 ? `The ${questionCount} questions` : "The questions",
+    },
     { path: "/review", label: "Reviewing your answers" },
     { path: "/card", label: "Your card & shared links" },
-  ];
+  ]);
+  const labels = $derived(new Map(checks.map((c) => [c.path, c.label])));
 
   let online = $state(true);
   let cap = $state<OfflineCapability | null>(null);
@@ -36,7 +43,7 @@
   });
 
   async function refresh(): Promise<void> {
-    cap = await readOfflineCapability(CHECKS);
+    cap = await readOfflineCapability(checks);
   }
 
   // Reactive so it updates the moment the quiz store hydrates (layout onMount) or the visitor
@@ -101,7 +108,7 @@
         {#each cap.items as item (item.path)}
           <li class:on={item.available}>
             <span class="mark" aria-hidden="true">{item.available ? "✓" : "–"}</span>
-            <span class="what">{item.label}</span>
+            <span class="what">{labels.get(item.path) ?? item.label}</span>
             <span class="state">{item.available ? "Saved" : "Not saved yet"}</span>
           </li>
         {/each}
