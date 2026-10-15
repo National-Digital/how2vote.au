@@ -4,7 +4,7 @@
   Generated from data/rights/rights-classes.json by scripts/generate-license-data.mjs
   To change any fact below, edit the register
   and run `pnpm rights:generate`; CI fails if this file drifts from the register.
-  Notice version: 2026.1. Register last updated: 2026-07-17.
+  Notice version: 2026.1. Register last updated: 2026-10-12.
 
   This licence governs the *data* in this repository, NOT the application source code (which
   is AGPL-3.0 — see LICENSE). Each data domain carries its own rights class; the domains are
@@ -22,6 +22,11 @@
   OpenAustralia Foundation has rights in it. The only vote-data source is the They Vote For You
   API v1. No OpenAustralia.org API data (member, senator or electoral-division lists, CC BY-SA
   2.5) is used anywhere in this project. No external web archive is used as a data source.
+  National Digital's contributions in the published vote-position files (the adaptation of the
+  proposition wording and the computed party positions) are additionally licensed under the Open
+  Data Commons Database Contents License v1.0 (DbCL-1.0,
+  https://opendatacommons.org/licenses/dbcl/1-0/), to the extent National Digital has rights in
+  them.
 
   AEC federal electoral boundary geometry
   ---------------------------------------

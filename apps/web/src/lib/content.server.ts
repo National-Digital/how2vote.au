@@ -81,7 +81,7 @@ export type Seo = { title: string; description: string };
 
 /** Parties (and independents) with at least one recorded position this election — the ones a
  * voting-record page can actually be built for. Offices never appear. */
-function scoredParties(ds: Dataset): Party[] {
+export function scoredParties(ds: Dataset): Party[] {
   const scored = new Set<string>();
   for (const q of activeQuestions(ds.questions)) {
     for (const [key, pos] of Object.entries(q.positions)) {
@@ -105,7 +105,7 @@ function partyHrefs(electionId: string, ds: Dataset): Map<PartyKey, string> {
 }
 
 /** States that actually appear on this election's ballot, in ballot-paper order. */
-function ballotStates(ds: Dataset): { code: string; name: string }[] {
+export function ballotStates(ds: Dataset): { code: string; name: string }[] {
   const present = new Set(ds.ballots.electorates.map((e) => e.state.toUpperCase()));
   return STATES.filter((s) => present.has(s.code));
 }
@@ -609,8 +609,12 @@ export const contentPaths = (): string[] => [
  * datasets. Nothing here is hand-written — it is the dataset rendered as plain text, so an answer
  * engine can cite the primary facts directly. Non-partisan by construction: recorded positions on
  * the 1–5 scale, no match score or ranking.
+ *
+ * `dataFiles` lists the static JSON files published for an election, printed under its heading.
  */
-export function fullCorpus(): string {
+export function fullCorpus(
+  dataFiles: (electionId: string) => { kind: string; url: string; licence: string }[] = () => [],
+): string {
   const out: string[] = [
     `# ${SITE_NAME} — full data export`,
     `Generated from the committed dataset (${SITE_URL}). Every position below is a party's or independent's recorded parliamentary voting record, sourced from They Vote For You and placed on a 1–5 scale (strongly disagree … strongly agree). It is the record, not a prediction or endorsement; How2Vote does not recommend a candidate or party. Candidate lists are as declared by the Australian Electoral Commission.`,
@@ -619,6 +623,10 @@ export function fullCorpus(): string {
   for (const meta of ELECTIONS) {
     const ds = DATASETS[meta.id]!;
     out.push(`\n## ${meta.label} — data vintage ${ds.questions.dataVersion}`);
+    const files = dataFiles(meta.id);
+    if (files.length > 0) {
+      out.push(`\nData files: ${files.map((f) => `${f.kind} ${f.url} (${f.licence})`).join("; ")}`);
+    }
 
     const active = activeQuestions(ds.questions);
     out.push(`\n### Propositions (${active.length})`);

@@ -22,8 +22,11 @@ import {
   ballotPlace,
   houseBallotList,
   senateBallotList,
+  openDataDatasetGraph,
+  OPEN_DATA_DATASET_ID,
 } from "./structured-data";
 import { buildElectoratePage, buildSenatePage } from "./content.server";
+import { openDataCatalogue } from "./open-data.server";
 
 /** Pull a typed node out of the sitewide `@graph` by its `@type`. */
 function node(type: string): Record<string, unknown> {
@@ -139,6 +142,59 @@ describe("insightsDatasetGraph", () => {
       expect(d["@type"]).toBe("DataDownload");
       expect(d.contentUrl.startsWith(SITE_URL + "/stats/")).toBe(true);
     }
+  });
+});
+
+describe("openDataDatasetGraph", () => {
+  const files = openDataCatalogue();
+  const ds = openDataDatasetGraph(files);
+  const dist = ds.distribution;
+
+  it("is a Dataset with a stable @id, credited to the Organization", () => {
+    expect(ds["@type"]).toBe("Dataset");
+    expect(ds["@id"]).toBe(OPEN_DATA_DATASET_ID);
+    expect(ds.creator).toEqual({ "@id": ORG_ID });
+    expect(ds["@id"]).not.toBe(INSIGHTS_DATASET_ID);
+  });
+
+  it("asserts no single licence over files from differently licensed sources", () => {
+    expect((ds as Record<string, unknown>).license).toBeUndefined();
+  });
+
+  it("offers one DataDownload per published file, each with its own licence and credit", () => {
+    expect(dist.map((d) => d.contentUrl)).toEqual(files.map((f) => f.url));
+    for (const d of dist) {
+      expect(d["@type"]).toBe("DataDownload");
+      expect(d.encodingFormat).toBe("application/json");
+      expect(d.contentUrl.startsWith(`${SITE_URL}/data/`)).toBe(true);
+      if (d.contentUrl.endsWith("/candidates.json")) {
+        expect(d.license).toBe("https://creativecommons.org/licenses/by/4.0/");
+        expect(d.creditText).toBe(
+          "Candidate and electorate data © Commonwealth of Australia (Australian Electoral Commission)",
+        );
+      } else {
+        expect(d.license).toBe("https://opendatacommons.org/licenses/odbl/1-0/");
+        expect(d.creditText).toBe(
+          d.contentUrl.endsWith("/positions.json")
+            ? "Vote data © They Vote For You (OpenAustralia Foundation), ODbL; Registered party names © Commonwealth of Australia (Australian Electoral Commission)"
+            : "Vote data © They Vote For You (OpenAustralia Foundation), ODbL",
+        );
+      }
+    }
+  });
+
+  it("covers the years of the elections actually published", () => {
+    const years = files.map((f) => f.year);
+    expect(ds.temporalCoverage).toBe(`${Math.min(...years)}/${Math.max(...years)}`);
+    expect(ds.temporalCoverage).toBe("2019/2025");
+  });
+
+  it("does not list the survey aggregates", () => {
+    expect(dist.some((d) => d.contentUrl.includes("/stats/"))).toBe(false);
+  });
+
+  it("points at the OpenAPI description", () => {
+    expect(ds.subjectOf.url).toBe(`${SITE_URL}/data/openapi.json`);
   });
 });
 

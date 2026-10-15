@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "updated": "2026-07-17",
+  "updated": "2026-10-12",
   "noticeVersion": "2026.1",
   "notes": "Machine-readable rights register. Single source of truth for the licence, copyright, attribution and redistribution terms of every upstream data source, and the mapping from each committed data domain to its rights class. LICENSE-DATA.md is generated from this file and drift-gated (scripts/generate-license-data.mjs --check). This register holds only non-confidential rights metadata — no contracts and no personal data. Per-source content hashes and reviewer sign-off live in the per-source provenance records, not here, so this register stays stable across data refreshes.",
   "rightsClasses": [
@@ -22,7 +22,7 @@
       "shareAlike": true,
       "attributionRequired": true,
       "licenceStatus": "current",
-      "notes": "Derivative Database of They Vote For You, made available under the ODbL to the extent the OpenAustralia Foundation has rights in it. The only vote-data source is the They Vote For You API v1. No OpenAustralia.org API data (member, senator or electoral-division lists, CC BY-SA 2.5) is used anywhere in this project. No external web archive is used as a data source."
+      "notes": "Derivative Database of They Vote For You, made available under the ODbL to the extent the OpenAustralia Foundation has rights in it. The only vote-data source is the They Vote For You API v1. No OpenAustralia.org API data (member, senator or electoral-division lists, CC BY-SA 2.5) is used anywhere in this project. No external web archive is used as a data source. National Digital's contributions in the published vote-position files (the adaptation of the proposition wording and the computed party positions) are additionally licensed under the Open Data Commons Database Contents License v1.0 (DbCL-1.0, https://opendatacommons.org/licenses/dbcl/1-0/), to the extent National Digital has rights in them."
     },
     {
       "id": "aec-boundary-spatial",
@@ -94,14 +94,20 @@
       "description": "Per-party parliamentary voting positions and derived question data",
       "rightsClass": "tvfy-odbl",
       "sources": ["data/source/*/questions.json", "data/source/*/parties.json", "data/snapshots/tvfy/**"],
-      "outputs": ["data/dist/*/dataset.json (questions, parties)"]
+      "outputs": [
+        "data/dist/*/dataset.json (questions, parties)",
+        "how2vote.au/data/*/propositions.json and how2vote.au/data/*/positions.json (apps/web/src/lib/open-data.server.ts)"
+      ]
     },
     {
       "id": "candidate-ballots",
       "description": "Candidate ballot order, nominations and electorate lists",
       "rightsClass": "aec-candidate-data",
       "sources": ["data/source/*/ballots.json"],
-      "outputs": ["data/dist/*/dataset.json (ballots)"]
+      "outputs": [
+        "data/dist/*/dataset.json (ballots)",
+        "how2vote.au/data/*/candidates.json (apps/web/src/lib/open-data.server.ts)"
+      ]
     },
     {
       "id": "boundary-geometry",

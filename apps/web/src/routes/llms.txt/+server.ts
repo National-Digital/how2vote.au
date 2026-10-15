@@ -1,4 +1,5 @@
 import { ELECTIONS } from "@how2vote/data-schema";
+import { openDataCatalogue, publishedElections } from "$lib/open-data.server";
 import { SITE_URL, indexableRoutes, pageMeta, type PageMeta } from "$lib/seo";
 
 // Prerendered to a static /llms.txt at build time (fully static site, see +layout.ts). The "## Pages"
@@ -40,6 +41,28 @@ ${ELECTIONS.map(
     `- ${e.label}: [candidates by electorate](${SITE_URL}/${e.id}/electorates), [where parties stand](${SITE_URL}/${e.id}/issues), [party voting records](${SITE_URL}/${e.id}/parties)`,
 ).join("\n")}`;
 
+/** The static JSON files, one line per election, each file with its licence. */
+const dataFiles = (): string => {
+  const catalogue = openDataCatalogue();
+  return `## Data files
+
+The same data as static JSON, described by ${SITE_URL}/data/openapi.json and listed at
+${SITE_URL}/data/index.json. Each file carries the licence, attribution and source of the data
+it holds and states what How2Vote changed. National Digital's contributions (the adapted
+proposition wording and the computed positions) are also licensed under the DbCL; registered party
+names in positions files are credited to the Australian Electoral Commission as their source.
+
+${publishedElections()
+  .map(
+    (e) =>
+      `- ${e.label}: ${catalogue
+        .filter((f) => f.election === e.id)
+        .map((f) => `[${f.kind}](${f.url}) (${f.license.id})`)
+        .join(", ")}`,
+  )
+  .join("\n")}`;
+};
+
 /** Link text for a page: the registered title with the redundant " — How2Vote" suffix trimmed. */
 const labelFor = (path: string, meta: PageMeta): string =>
   path === "/" ? "Home" : meta.title.replace(/\s*[—-]\s*How2Vote\s*$/i, "");
@@ -53,7 +76,7 @@ export function GET() {
     })
     .join("\n");
 
-  const body = `${INTRO}\n\n## Pages\n\n${pages}\n\n${RECORDS}\n\n${DATA}\n`;
+  const body = `${INTRO}\n\n## Pages\n\n${pages}\n\n${RECORDS}\n\n${dataFiles()}\n\n${DATA}\n`;
 
   return new Response(body, {
     headers: {

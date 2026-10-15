@@ -741,7 +741,7 @@
           "owner": "data-eng",
           "status": "passing",
           "enforcedBy": "scripts/check-rights-domain.mjs",
-          "note": "Machine-readable rights register (data/rights/rights-classes.json): every data domain declares a defined rights class (no record without one), no rights contamination (only the OpenAustralia Foundation source may be ODbL; AEC candidate/boundary domains excluded from the ODbL export set), and LICENSE-DATA.md is generated from the register and drift-gated (scripts/generate-license-data.mjs --check). Physical per-rights-class file separation and the AEC spatial licence determination are follow-ups."
+          "note": "Machine-readable rights register (data/rights/rights-classes.json): every data domain declares a defined rights class (no record without one), no rights contamination (only the OpenAustralia Foundation source may be ODbL; AEC candidate/boundary domains excluded from the ODbL export set), and LICENSE-DATA.md is generated from the register and drift-gated (scripts/generate-license-data.mjs --check). The public /data/ files are separated per rights class: vote-positions in propositions.json and positions.json (ODbL), candidate-ballots in candidates.json (CC BY 4.0); the registered party names carried in positions.json are credited to the AEC as their source under attributions, as facts with no licence stated for them in the ODbL file, and National Digital's contributions (the adapted wording and computed positions) are additionally licensed under the DbCL, as recorded in the register's tvfy-odbl notes (apps/web/src/lib/open-data.server.ts, open-data.server.test.ts). The AEC spatial licence determination is recorded under control-15 (EV-AEC-SPATIAL-LICENCE)."
         }
       ],
       "evidence": [
