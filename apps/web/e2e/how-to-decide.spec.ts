@@ -63,7 +63,7 @@ test("the page reads for the current election's stage", async ({ page }) => {
   const { ballots } = JSON.parse(
     readFileSync(new URL(`../../../data/dist/${current.id}/dataset.json`, import.meta.url), "utf8"),
   ) as { ballots: { ballotStatus?: string; electorates: unknown[] } };
-  // The build fixed the stage when it prerendered the page; the build ran moments ago.
+  // The page reads the stage when it loads, as the test does.
   const ballot = ballotOf(ballots);
   const electorateLess = ballot === "none";
   const stage = stageFor(meta, ballot);

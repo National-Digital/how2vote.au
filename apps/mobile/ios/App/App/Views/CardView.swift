@@ -204,7 +204,7 @@ private struct CardComparison: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 16) {
-            ProjectedBlocks(layout: wording.layout(.hint(parliament: ready.electorateLess)), onLink: open)
+            ProjectedBlocks(layout: wording.layout(.hint(stage: ready.electionStage, parliament: ready.electorateLess)), onLink: open)
                 .font(.subheadline)
             Text(wording.text(.qualifier))
                 .font(.footnote)

@@ -1,6 +1,7 @@
 [
   {
     "status": "ready",
+    "electionStage": "held",
     "stageLabel": "Your comparison",
     "heading": "Bean",
     "stateSuffix": " · Australian Capital Territory",
@@ -88,6 +89,7 @@
   },
   {
     "status": "ready",
+    "electionStage": "held",
     "stageLabel": "Historical demonstration plan",
     "heading": "Bean",
     "stateSuffix": " · Australian Capital Territory",

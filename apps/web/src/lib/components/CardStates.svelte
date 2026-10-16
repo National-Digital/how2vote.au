@@ -28,9 +28,7 @@
   import { TERMS_GATE_COPY } from "$lib/terms-gate-copy";
   import { TERMS_ACCEPTANCE_LABEL, TERMS_GATE_LABEL } from "$lib/terms/terms";
   import { parts } from "$lib/template";
-  import { ELECTION_IDS, electionById } from "@how2vote/data-schema";
-  import { ballotFor } from "$lib/ballots";
-  import { assertNoListedElection, parliamentHintStage } from "$lib/election-stage";
+  import { STAGES } from "$lib/election-stage";
 
   /** A sample for each value a piece names, so a projected piece still reads as a sentence. */
   const SAMPLES: Record<string, string> = {
@@ -68,14 +66,6 @@
     ["dialog-close", DOC_DIALOG_COPY.close],
   ];
 
-  const built = ELECTION_IDS.map((id) => ({
-    id,
-    meta: electionById(id)!,
-    ballot: ballotFor(id),
-  }));
-  const parliamentStage = parliamentHintStage(built);
-  assertNoListedElection(built);
-
   const sample = {
     label: "2025 federal election",
     year: 2025,
@@ -99,12 +89,13 @@
     <p><CardArchiveBanner label={sample.label} year={sample.year} marked /></p>
   </section>
   <section class="template" id="card-correction"><p><CardCorrectionNotice /></p></section>
-  <section class="template" id="card-hint-ballot">
-    <p><CardHint stage="ballot" electorateLess={false} /></p>
-  </section>
-  <section class="template" id="card-hint-parliament">
-    <p><CardHint stage={parliamentStage} electorateLess /></p>
-  </section>
+  {#each STAGES as stage (stage)}
+    {#each [false, true] as electorateLess (electorateLess)}
+      <section class="template" id="card-hint-{stage}-{electorateLess ? 'parliament' : 'ballot'}">
+        <p><CardHint {stage} {electorateLess} /></p>
+      </section>
+    {/each}
+  {/each}
   {#each [false, true] as archived (archived)}
     {#each [0, 1, 2] as withdrawn (withdrawn)}
       <section

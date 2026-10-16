@@ -1,41 +1,20 @@
 <script lang="ts">
   import { page } from "$app/state";
-  import DataPage from "$lib/components/DataPage.svelte";
-  import ElectionToggle from "$lib/components/ElectionToggle.svelte";
+  import { electionById } from "@how2vote/data-schema";
+  import ElectorateHubPage from "$lib/components/ElectorateHubPage.svelte";
   import Meta from "$lib/components/Meta.svelte";
-  import { electionHome } from "$lib/nav";
+  import { ballotFor } from "$lib/ballots";
+  import { stageFor } from "$lib/election-stage";
+  import { now } from "$lib/now.svelte";
   import type { PageData } from "./$types";
 
   let { data }: { data: PageData } = $props();
-  const home = $derived(electionHome(page.params.election!));
-  const crumbs = $derived([home, { label: "Electorates" }]);
-  const noBallot = $derived(data.states.length === 0);
+  const election = $derived(page.params.election!);
+  // The stage now, so a page built before the stage changed still reads for the stage it is in.
+  now.start();
+  const stage = $derived(stageFor(electionById(election)!, ballotFor(election), now.current));
 </script>
 
 <Meta title={data.seo.title} description={data.seo.description} type="article" />
 
-<DataPage {crumbs} title="Electorates & candidates — {data.label}" intro={data.intro}>
-  <div class="switch"><ElectionToggle active={page.params.election!} section="electorates" /></div>
-
-  {#if data.postcodesHref}
-    <p><a href={data.postcodesHref}>Find your electorate by postcode →</a></p>
-  {/if}
-
-  {#if data.awaitsNominations}
-    <p class="note">
-      Once the AEC declares nominations, every candidate will be listed here in ballot-paper order.
-      For now, you can <a href="/">compare your views with the parties' voting records</a>.
-    </p>
-  {:else if !noBallot}
-    {#each data.states as s (s.code)}
-      <h2>{s.name}</h2>
-      <p>{s.summary}</p>
-      <ul class="cols">
-        {#each s.electorates as e (e.href)}
-          <li><a href={e.href}>{e.name}</a></li>
-        {/each}
-      </ul>
-      <p><a href={s.senateHref}>{s.name} {data.senateLink} →</a></p>
-    {/each}
-  {/if}
-</DataPage>
+<ElectorateHubPage {data} {election} {stage} />
