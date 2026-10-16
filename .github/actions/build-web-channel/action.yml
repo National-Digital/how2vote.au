@@ -45,6 +45,16 @@ runs:
         PUBLIC_DIST_CHANNEL: ${{ inputs.channel }}
         PUBLIC_APPLE_APP_ID: ${{ inputs.apple-app-id }}
       run: pnpm --filter @how2vote/web build:app
+    # The static data files are published on the web alone; an app bundle that carries them fails.
+    - name: Check the app bundle carries no static data files
+      shell: bash
+      env:
+        CHANNEL: ${{ inputs.channel }}
+      run: |
+        if [ -e apps/web/build/data ]; then
+          echo "::error::apps/web/build/data is in the $CHANNEL app bundle"
+          exit 1
+        fi
     # The native iOS core evaluates the shared engine in JavaScriptCore (ADR 0018 D2). The bundle
     # ships inside the web output so `cap sync` carries it into the app's `public` folder alongside
     # the build that produced it — the two can then never fall out of step. iOS only: no other

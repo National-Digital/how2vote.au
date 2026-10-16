@@ -49,8 +49,3 @@ test("candidates.json lists an electorate's candidates in the order its page sho
     );
   }
 });
-
-test("the app channels do not ship the data files", async ({ request }) => {
-  test.skip(isWeb, "app channels only");
-  expect((await request.get("/data/index.json")).ok()).toBe(false);
-});
