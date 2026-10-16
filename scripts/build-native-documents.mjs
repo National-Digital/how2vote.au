@@ -1087,6 +1087,7 @@ export function nativeDocumentRoutes(router) {
     ...listIn(router, "ELECTION_DOCUMENTS"),
     ...listIn(router, "AGE_GATE_DOCUMENTS"),
     ...listIn(router, "STATE_DOCUMENTS"),
+    ...listIn(router, "STAGED_DOCUMENTS"),
   ];
 }
 
@@ -1109,6 +1110,16 @@ export function stateDocuments(router) {
 /** The age gate's two states, which are checked with no declaration made. */
 export function ageGateDocuments(router) {
   return listIn(router, "AGE_GATE_DOCUMENTS");
+}
+
+/** The data sections whose index follows the election's stage, as the router names them. */
+export function stagedSections(router) {
+  return listIn(router, "STAGED_SECTIONS");
+}
+
+/** The documents whose text follows the current election's stage, as the router names them. */
+export function stagedDocuments(router) {
+  return listIn(router, "STAGED_DOCUMENTS");
 }
 
 /** The documents whose text reports the selected election, as the router names them. */
@@ -1186,6 +1197,22 @@ function main() {
   for (const name of pastElectionDocuments(electionDocuments(router), past)) {
     routes.push({ route: `/${name}`, file: join(build, `${name}.html`) });
   }
+  // Each staged document, and each staged section's index, as the build rendered it for every stage.
+  const staged = [
+    ...stagedDocuments(router).map((name) => ({ page: `/${name}`, dir: `states/${name}` })),
+    ...stagedSections(router).flatMap((section) =>
+      elections.map((e) => ({ page: `/${e}/${section}`, dir: `states/${section}/${e}` })),
+    ),
+  ];
+  for (const { page, dir: under } of staged) {
+    const name = page.slice(1);
+    const dir = join(build, under);
+    const files = existsSync(dir) ? htmlFiles(dir) : [];
+    if (files.length === 0) throw new Error(`native documents: no stage of ${name} was rendered`);
+    for (const file of files) {
+      routes.push({ route: `/${relative(build, file).replace(/\.html$/, "")}`, file });
+    }
+  }
   for (const name of landingPages(elections, (page) => existsSync(join(build, page)))) {
     routes.push({ route: `/${name}`, file: join(build, `${name}.html`) });
   }
@@ -1203,10 +1230,12 @@ function main() {
   }
 
   const failures = [];
+  const digests = new Map();
   let written = 0;
   for (const { route, file } of routes) {
     try {
       const doc = projectDocument(readFileSync(file, "utf8"), route);
+      digests.set(route, doc.digest);
       if (route === "/states/quiz") {
         const answers = readFileSync(join(root, "apps/web/src/lib/answers.ts"), "utf8");
         const errors = answerScaleErrors(doc, answers);
@@ -1219,6 +1248,14 @@ function main() {
     } catch (e) {
       if (!(e instanceof DocumentError)) throw e;
       failures.push({ route, message: e.message });
+    }
+  }
+
+  // A staged page reads as the stage it was built at, so one of its stages must read as it does.
+  for (const { page, dir } of staged) {
+    const stages = [...digests].filter(([route]) => route.startsWith(`/${dir}/`));
+    if (!stages.some(([, digest]) => digest === digests.get(page))) {
+      failures.push({ route: page, message: "the page reads as none of its stages" });
     }
   }
 

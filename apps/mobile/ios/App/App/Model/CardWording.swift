@@ -44,7 +44,8 @@ struct CardWording {
     /// The paragraphs that carry emphasis or links, by the section the page renders each in, with the
     /// values each marks.
     enum Paragraph: CaseIterable, Hashable {
-        case archive, correction, hint(parliament: Bool), vintage(archived: Bool, withdrawn: Withdrawn)
+        case archive, correction, hint(stage: CardData.ElectionStage, parliament: Bool)
+        case vintage(archived: Bool, withdrawn: Withdrawn)
         case advocacy(parliament: Bool), shareWarning, saveNote(saved: Bool), whyNote
         case panelLabel(ballotOrdered: Bool), termsIntro, ack(archived: Bool), foot(archived: Bool)
 
@@ -52,9 +53,11 @@ struct CardWording {
 
         static var allCases: [Paragraph] {
             [.archive, .correction, .shareWarning, .whyNote, .termsIntro]
-                + [false, true].flatMap { flag in
-                    [.hint(parliament: flag), .advocacy(parliament: flag), .saveNote(saved: flag),
-                     .panelLabel(ballotOrdered: flag), .ack(archived: flag), .foot(archived: flag)]
+                + [false, true].flatMap { flag -> [Paragraph] in
+                    let hints = CardData.ElectionStage.allCases.map { Paragraph.hint(stage: $0, parliament: flag) }
+                    return hints
+                        + [.advocacy(parliament: flag), .saveNote(saved: flag),
+                           .panelLabel(ballotOrdered: flag), .ack(archived: flag), .foot(archived: flag)]
                         + Withdrawn.allCases.map { .vintage(archived: flag, withdrawn: $0) }
                 }
         }
@@ -63,7 +66,7 @@ struct CardWording {
             switch self {
             case .archive: return "card-archive"
             case .correction: return "card-correction"
-            case let .hint(parliament): return parliament ? "card-hint-parliament" : "card-hint-ballot"
+            case let .hint(stage, parliament): return "card-hint-\(stage.rawValue)-\(parliament ? "parliament" : "ballot")"
             case let .vintage(archived, withdrawn):
                 return "card-vintage-\(archived ? "archived" : "live")-\(withdrawn.rawValue)"
             case let .advocacy(parliament): return parliament ? "card-advocacy-parliament" : "card-advocacy-ballot"
@@ -158,6 +161,7 @@ enum CardData: Decodable, Equatable {
 
     struct Ready: Decodable, Equatable {
         let stage: Stage
+        let electionStage: ElectionStage
         let stageLabel: String
         let heading: String
         let stateSuffix: String
@@ -184,6 +188,9 @@ enum CardData: Decodable, Equatable {
     }
 
     enum Stage: String, Decodable { case compare, build }
+
+    /// The election's stage as the web reads it now (`$lib/election-stage`), which picks the hint.
+    enum ElectionStage: String, Decodable, CaseIterable { case unannounced, called, listed, declared, ballot, held }
 
     struct Terms: Decodable, Equatable {
         let shown: Bool

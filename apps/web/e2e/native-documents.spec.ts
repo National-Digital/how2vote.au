@@ -8,7 +8,11 @@ import {
   landingPages,
   nativeDataSections,
   nativeDocumentRoutes,
+  stagedDocuments,
+  stagedSections,
 } from "../../../scripts/build-native-documents.mjs";
+import { electionById } from "@how2vote/data-schema";
+import { ballotOf, stageFor } from "../src/lib/election-stage";
 import { seedEligibility, waitForHydration } from "./flow-helpers";
 
 /**
@@ -148,6 +152,54 @@ test.describe("native documents", () => {
       const paths = dataPages(election);
       expect(paths.length).toBeGreaterThan(0);
       expect(await unstable(browser, paths)).toEqual([]);
+    });
+  }
+
+  // A staged page is drawn from its build-time page for the stage now, so the page the WebView
+  // hydrates must read exactly as that file does.
+  const current = registry.find((e) => e.current)!.id;
+  const staged = [
+    ...stagedDocuments(router).map((name: string) => ({
+      path: `/${name}`,
+      election: current,
+      states: `states/${name}`,
+    })),
+    ...stagedSections(router).flatMap((section: string) =>
+      registry.map(({ id }) => ({
+        path: `/${id}/${section}`,
+        election: id,
+        states: `states/${section}/${id}`,
+      })),
+    ),
+  ];
+  for (const { path, election, states } of staged) {
+    test(`${path} hydrates to the text of ${states} at the stage now`, async ({
+      browser,
+      page,
+    }) => {
+      test.skip(
+        process.env["PUBLIC_DIST_CHANNEL"] !== "ios",
+        "the build-time pages ship in the iOS build alone",
+      );
+      const { ballots } = JSON.parse(
+        readFileSync(
+          new URL(`../../../data/dist/${election}/dataset.json`, import.meta.url),
+          "utf8",
+        ),
+      ) as { ballots: { ballotStatus?: string; electorates: unknown[] } };
+      const stage = stageFor(electionById(election)!, ballotOf(ballots));
+      const prerendered = await browser.newContext({ javaScriptEnabled: false });
+      const still = await prerendered.newPage();
+      await still.goto(`/${states}/${stage}.html`);
+      const before = await articleText(still);
+      await prerendered.close();
+      expect(before.length).toBeGreaterThan(100);
+
+      await seedEligibility(page);
+      await page.goto(path);
+      await waitForHydration(page);
+      await page.waitForLoadState("networkidle");
+      expect(await articleText(page)).toBe(before);
     });
   }
 

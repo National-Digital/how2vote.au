@@ -7,6 +7,8 @@ import {
   assertConserved,
   documentText,
   electionDocuments,
+  stagedDocuments,
+  stagedSections,
   nativeDataSections,
   nativeDocumentRoutes,
   parseMain,
@@ -531,6 +533,28 @@ describe("nativeDocumentRoutes", () => {
     expect(() =>
       nativeDocumentRoutes('export const NATIVE_DOCUMENTS = ["terms"] as const;'),
     ).toThrow("declares no ELECTION_DOCUMENTS");
+  });
+});
+
+describe("stagedDocuments", () => {
+  it("reads the router's staged documents, which it offers by the stage now", () => {
+    const router = readFileSync(
+      new URL("../apps/web/src/lib/native-router.svelte.ts", import.meta.url),
+      "utf8",
+    );
+    expect(stagedDocuments(router)).toEqual(["how-to-decide"]);
+    expect(nativeDocumentRoutes(router)).toContain("how-to-decide");
+    expect(router).toContain("return `states${path}/${stageFor(");
+  });
+
+  it("reads the router's staged sections, whose index it offers by the stage now", () => {
+    const router = readFileSync(
+      new URL("../apps/web/src/lib/native-router.svelte.ts", import.meta.url),
+      "utf8",
+    );
+    expect(stagedSections(router)).toEqual(["electorates"]);
+    expect(nativeDataSections(router)).toContain("electorates");
+    expect(router).toContain("return `states/${section}/${election}/${stageFor(");
   });
 });
 

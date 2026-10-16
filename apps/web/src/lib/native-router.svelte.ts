@@ -18,7 +18,9 @@ import { afterNavigate, goto } from "$app/navigation";
 import { onDestroy, onMount } from "svelte";
 import { ageGate } from "$lib/age.svelte";
 import { nativeRouterPlugin, storeListingUrl } from "$lib/channel";
-import { CURRENT_ELECTION_ID, ELECTIONS, ELECTION_IDS } from "@how2vote/data-schema";
+import { CURRENT_ELECTION_ID, ELECTIONS, ELECTION_IDS, electionById } from "@how2vote/data-schema";
+import { ballotFor } from "$lib/ballots";
+import { stageFor } from "$lib/election-stage";
 import { STATES } from "$lib/data";
 import { isMapAvailable } from "$lib/governance";
 import { backupToNative, restoreFromNative } from "$lib/native-storage";
@@ -48,12 +50,18 @@ export const NATIVE_DOCUMENTS = [
   "accessibility",
   "corrections",
   "glossary",
-  "how-to-decide",
   "methodology",
   "privacy",
   "research",
   "terms",
 ] as const;
+
+/**
+ * Documents whose text follows the current election's stage. Each is prerendered for every stage at
+ * `states/<name>/<stage>`; the native core draws the one for the stage now, so a build made before
+ * the stage changed still reads as the web does.
+ */
+export const STAGED_DOCUMENTS = ["how-to-decide"] as const;
 
 /**
  * The routes the native core can serve, by path.
@@ -76,6 +84,7 @@ const NATIVE_ROUTES = new Set([
   // between them. Without these the toggle would drop out of the native surface mid-tap.
   ...ELECTION_IDS.map((id) => `/${id}`),
   ...NATIVE_DOCUMENTS.map((name) => `/${name}`),
+  ...STAGED_DOCUMENTS.map((name) => `/${name}`),
 ]);
 
 /**
@@ -126,11 +135,22 @@ export function landingDocument(electionId: string): string {
  */
 export const NATIVE_DATA_SECTIONS = ["issues", "parties", "electorates", "senate"] as const;
 
+/**
+ * Data sections whose index follows the election's stage. Each election's index is prerendered for
+ * every stage at `states/<section>/<election>/<stage>`; the native core draws the one for the stage
+ * now.
+ */
+export const STAGED_SECTIONS = ["electorates"] as const;
+
 const DOCUMENT_PATHS = new Set<string>(NATIVE_DOCUMENTS.map((name) => `/${name}`));
 
 /** The projected page a path names, or null when it is not one the native core draws. */
 function documentName(path: string, electionId: string): string | null {
   if (DOCUMENT_PATHS.has(path)) return path.slice(1);
+  if ((STAGED_DOCUMENTS as readonly string[]).includes(path.slice(1))) {
+    const meta = electionById(CURRENT_ELECTION_ID)!;
+    return `states${path}/${stageFor(meta, ballotFor(CURRENT_ELECTION_ID))}`;
+  }
   // A declared adult is sent on by the page itself; drawing the question first would flash it.
   if (path === "/start" && !ageGate.confirmed) return ageGate.minor ? "states/start" : "start";
   // The current election by the store, once it holds the visitor's choice; before then — a direct
@@ -146,7 +166,11 @@ function documentName(path: string, electionId: string): string | null {
     (NATIVE_DATA_SECTIONS as readonly string[]).includes(section ?? "") &&
     rest.length <= 1 &&
     rest.every((segment) => /^[a-z0-9-]+$/.test(segment));
-  return isData ? path.slice(1) : null;
+  if (!isData) return null;
+  if (rest.length === 0 && (STAGED_SECTIONS as readonly string[]).includes(section!)) {
+    return `states/${section}/${election}/${stageFor(electionById(election!)!, ballotFor(election!))}`;
+  }
+  return path.slice(1);
 }
 
 /**

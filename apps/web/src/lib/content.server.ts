@@ -24,7 +24,7 @@ import {
 } from "@how2vote/data-schema";
 import { slugify } from "@how2vote/engine";
 import { STATES, stateName } from "./data";
-import { ballotOf, stageFor } from "./election-stage";
+import { ballotOf, stageFor, type Stage } from "./election-stage";
 import { SITE_URL, SITE_NAME } from "./seo";
 import { electorateHubCopy } from "./stage-copy";
 
@@ -159,6 +159,8 @@ export type ElectorateHub = {
   seo: Seo;
   label: string;
   year: number;
+  /** How many House electorates the election has. */
+  count: number;
   /** The page's introduction, for the election's stage. */
   intro: string;
   /** Whether the page says the candidates will be listed once the AEC declares nominations. */
@@ -179,7 +181,8 @@ export function stateSummary(name: string, count: number, year: number): string 
   return `${name} has ${count} federal electorate${count === 1 ? "" : "s"} at the ${year} election.`;
 }
 
-export function buildElectorateHub(electionId: string): ElectorateHub | null {
+/** The electorate list for an election, worded for `stage` (by default, its stage at build). */
+export function buildElectorateHub(electionId: string, stage?: Stage): ElectorateHub | null {
   const meta = electionById(electionId);
   const ds = DATASETS[electionId];
   if (!meta || !ds) return null;
@@ -200,8 +203,7 @@ export function buildElectorateHub(electionId: string): ElectorateHub | null {
     };
   });
   const count = ds.ballots.electorates.length;
-  // Fixed at build time, so the hydrated page reads as it was prerendered.
-  const copy = electorateHubCopy(stageFor(meta, ballotOf(ds.ballots)), {
+  const copy = electorateHubCopy(stage ?? stageFor(meta, ballotOf(ds.ballots)), {
     count,
     label: meta.label,
     year: meta.year,
@@ -213,6 +215,7 @@ export function buildElectorateHub(electionId: string): ElectorateHub | null {
     },
     label: meta.label,
     year: meta.year,
+    count,
     intro: copy.intro,
     awaitsNominations: copy.awaitsNominations,
     senateLink: copy.senateLink,

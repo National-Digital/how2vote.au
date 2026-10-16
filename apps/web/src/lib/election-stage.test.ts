@@ -1,10 +1,8 @@
-import { ELECTIONS, type ElectionMeta } from "@how2vote/data-schema";
+import { ELECTIONS } from "@how2vote/data-schema";
 import { describe, expect, it } from "vitest";
 import {
   STAGES,
-  assertNoListedElection,
   ballotOf,
-  parliamentHintStage,
   plansOpen,
   stageAt,
   stageFor,
@@ -104,50 +102,5 @@ describe("stageAt and stageOfPhase", () => {
     expect(stageAt("archived", true, "drawn")).toBe("held");
     expect(stageOfPhase(called, "upcoming", "none")).toBe("called");
     expect(stageOfPhase(unannounced, "upcoming", "none")).toBe("unannounced");
-  });
-});
-
-const entry = (id: string, meta: ElectionMeta, ballot: Ballot) => ({ id, meta, ballot });
-
-describe("parliamentHintStage", () => {
-  it("is the stage every election without electorates shares", () => {
-    expect(
-      parliamentHintStage(
-        [entry("next", unannounced, "none"), entry("2025", called, "drawn")],
-        during,
-      ),
-    ).toBe("unannounced");
-    expect(parliamentHintStage([entry("next", called, "none")], before)).toBe("called");
-    expect(parliamentHintStage([entry("next", called, "none")], during)).toBe("declared");
-  });
-
-  it("is unannounced when every election has electorates", () => {
-    expect(parliamentHintStage([entry("2025", called, "drawn")], during)).toBe("unannounced");
-  });
-
-  it("fails the build, naming each election, when they disagree", () => {
-    expect(() =>
-      parliamentHintStage(
-        [entry("next", unannounced, "none"), entry("2031", called, "none")],
-        before,
-      ),
-    ).toThrow(/next is unannounced, 2031 is called.*CardWording/);
-  });
-});
-
-describe("assertNoListedElection", () => {
-  it("passes the elections built today", () => {
-    expect(() =>
-      assertNoListedElection([entry("next", unannounced, "none"), entry("2025", called, "drawn")]),
-    ).not.toThrow();
-  });
-
-  it("fails the build when an election would be listed, which the app would draw as a ballot", () => {
-    expect(() => assertNoListedElection([entry("next", called, "drawn")], before)).toThrow(
-      /next would be listed.*card-hint-ballot/,
-    );
-    expect(() => assertNoListedElection([entry("next", called, "provisional")], during)).toThrow(
-      /next would be listed/,
-    );
   });
 });

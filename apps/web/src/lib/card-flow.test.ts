@@ -13,6 +13,7 @@ const row = (name: string, figure: string | null) => ({
 
 const ready = {
   status: "ready" as const,
+  electionStage: "held" as const,
   stageLabel: "Your comparison",
   heading: "Bean",
   stateSuffix: " · Australian Capital Territory",

@@ -46,7 +46,7 @@ import {
 } from "$lib/governance";
 import { NATIONAL_BALLOT, isElectorateLess, loadData, stateName, type Data } from "$lib/data";
 import { election } from "$lib/election.svelte";
-import { ballotOf, plansOpen, stageOfPhase } from "$lib/election-stage";
+import { ballotOf, plansOpen, stageOfPhase, type Stage } from "$lib/election-stage";
 import { moveDown, moveUp, planStatus, prefOf, setRank, type PlanStatus } from "$lib/plan";
 import { printAuth } from "$lib/print-auth.svelte";
 import { quiz } from "$lib/quiz.svelte";
@@ -113,6 +113,8 @@ export type NativeCard =
   | {
       status: "ready";
       stage: "compare" | "build";
+      /** The election's stage now, which picks the hint the app draws. */
+      electionStage: Stage;
       stageLabel: string;
       heading: string;
       /** What follows the heading, as the page sets it smaller: the state, for a ballot. */
@@ -549,6 +551,7 @@ class CardFlow {
     return {
       status: "ready",
       stage: this.stage,
+      electionStage: this.electionStage,
       stageLabel: this.stageLabel,
       heading: this.electorateLess ? CARD_COPY.parliament : card.electorate,
       stateSuffix: this.electorateLess ? "" : ` · ${state}`,
