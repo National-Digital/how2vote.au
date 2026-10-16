@@ -6,13 +6,20 @@
  * serve them, so they stay out of the app bundles.
  */
 import { rmSync } from "node:fs";
+import { join } from "node:path";
 import { fileURLToPath } from "node:url";
 
-const channel = process.env.PUBLIC_DIST_CHANNEL;
+/**
+ * @param {string} build  the web build directory
+ * @param {string | undefined} channel  PUBLIC_DIST_CHANNEL
+ */
+export function stripWebOnly(build, channel) {
+  if (channel && channel !== "web") rmSync(join(build, "data"), { recursive: true, force: true });
+}
 
-if (channel && channel !== "web") {
-  rmSync(fileURLToPath(new URL("../build/data", import.meta.url)), {
-    recursive: true,
-    force: true,
-  });
+if (process.argv[1] && fileURLToPath(import.meta.url) === process.argv[1]) {
+  stripWebOnly(
+    fileURLToPath(new URL("../build", import.meta.url)),
+    process.env.PUBLIC_DIST_CHANNEL,
+  );
 }
