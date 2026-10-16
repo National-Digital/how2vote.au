@@ -137,7 +137,7 @@ export const NATIVE_DATA_SECTIONS = ["issues", "parties", "electorates", "senate
 
 /**
  * Data sections whose index follows the election's stage. Each election's index is prerendered for
- * every stage at `states/<section>/<election>/<stage>`; the native core draws the one for the stage
+ * every stage at `states/<section>/<election>-<stage>`; the native core draws the one for the stage
  * now.
  */
 export const STAGED_SECTIONS = ["electorates"] as const;
@@ -168,7 +168,7 @@ function documentName(path: string, electionId: string): string | null {
     rest.every((segment) => /^[a-z0-9-]+$/.test(segment));
   if (!isData) return null;
   if (rest.length === 0 && (STAGED_SECTIONS as readonly string[]).includes(section!)) {
-    return `states/${section}/${election}/${stageFor(electionById(election!)!, ballotFor(election!))}`;
+    return `states/${section}/${election}-${stageFor(electionById(election!)!, ballotFor(election!))}`;
   }
   return path.slice(1);
 }

@@ -1197,17 +1197,27 @@ function main() {
   for (const name of pastElectionDocuments(electionDocuments(router), past)) {
     routes.push({ route: `/${name}`, file: join(build, `${name}.html`) });
   }
-  // Each staged document, and each staged section's index, as the build rendered it for every stage.
+  // Staged pages, each rendered for every stage at `<dir>/<prefix><stage>.html`.
   const staged = [
-    ...stagedDocuments(router).map((name) => ({ page: `/${name}`, dir: `states/${name}` })),
+    ...stagedDocuments(router).map((name) => ({
+      page: `/${name}`,
+      dir: `states/${name}`,
+      prefix: "",
+    })),
     ...stagedSections(router).flatMap((section) =>
-      elections.map((e) => ({ page: `/${e}/${section}`, dir: `states/${section}/${e}` })),
+      elections.map((e) => ({
+        page: `/${e}/${section}`,
+        dir: `states/${section}`,
+        prefix: `${e}-`,
+      })),
     ),
   ];
-  for (const { page, dir: under } of staged) {
+  for (const { page, dir: under, prefix } of staged) {
     const name = page.slice(1);
     const dir = join(build, under);
-    const files = existsSync(dir) ? htmlFiles(dir) : [];
+    const files = (existsSync(dir) ? readdirSync(dir) : [])
+      .filter((f) => f.startsWith(prefix) && f.endsWith(".html"))
+      .map((f) => join(dir, f));
     if (files.length === 0) throw new Error(`native documents: no stage of ${name} was rendered`);
     for (const file of files) {
       routes.push({ route: `/${relative(build, file).replace(/\.html$/, "")}`, file });
@@ -1230,6 +1240,12 @@ function main() {
   }
 
   const failures = [];
+  // NativeDocument.isDocumentName in the app reads names of at most three segments.
+  for (const { route } of routes) {
+    if (route.split("/").length > 4) {
+      failures.push({ route, message: "the app cannot load a name of more than three segments" });
+    }
+  }
   const digests = new Map();
   let written = 0;
   for (const { route, file } of routes) {
@@ -1252,8 +1268,8 @@ function main() {
   }
 
   // A staged page reads as the stage it was built at, so one of its stages must read as it does.
-  for (const { page, dir } of staged) {
-    const stages = [...digests].filter(([route]) => route.startsWith(`/${dir}/`));
+  for (const { page, dir, prefix } of staged) {
+    const stages = [...digests].filter(([route]) => route.startsWith(`/${dir}/${prefix}`));
     if (!stages.some(([, digest]) => digest === digests.get(page))) {
       failures.push({ route: page, message: "the page reads as none of its stages" });
     }

@@ -162,18 +162,18 @@ test.describe("native documents", () => {
     ...stagedDocuments(router).map((name: string) => ({
       path: `/${name}`,
       election: current,
-      states: `states/${name}`,
+      states: `states/${name}/`,
     })),
     ...stagedSections(router).flatMap((section: string) =>
       registry.map(({ id }) => ({
         path: `/${id}/${section}`,
         election: id,
-        states: `states/${section}/${id}`,
+        states: `states/${section}/${id}-`,
       })),
     ),
   ];
   for (const { path, election, states } of staged) {
-    test(`${path} hydrates to the text of ${states} at the stage now`, async ({
+    test(`${path} hydrates to the text of ${states}<stage> at the stage now`, async ({
       browser,
       page,
     }) => {
@@ -190,7 +190,7 @@ test.describe("native documents", () => {
       const stage = stageFor(electionById(election)!, ballotOf(ballots));
       const prerendered = await browser.newContext({ javaScriptEnabled: false });
       const still = await prerendered.newPage();
-      await still.goto(`/${states}/${stage}.html`);
+      await still.goto(`/${states}${stage}.html`);
       const before = await articleText(still);
       await prerendered.close();
       expect(before.length).toBeGreaterThan(100);

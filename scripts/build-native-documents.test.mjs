@@ -554,7 +554,7 @@ describe("stagedDocuments", () => {
     );
     expect(stagedSections(router)).toEqual(["electorates"]);
     expect(nativeDataSections(router)).toContain("electorates");
-    expect(router).toContain("return `states/${section}/${election}/${stageFor(");
+    expect(router).toContain("return `states/${section}/${election}-${stageFor(");
   });
 });
 
