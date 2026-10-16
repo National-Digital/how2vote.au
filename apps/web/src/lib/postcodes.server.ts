@@ -173,6 +173,10 @@ export function appliesTo(electionId: string, subject = "these postcodes"): stri
   return `the ${meta.current ? "next" : meta.year} federal election, using the electorate boundaries of the ${boundary} election, which were unchanged for ${subject}${checked}`;
 }
 
+/** When the boundaries an election's postcode pages state were last checked. */
+export const postcodesCheckedAt = (electionId: string): string =>
+  scopeFor(electionId)?.checkedAt ?? record.recordedAt;
+
 export function buildPostcodePage(electionId: string, postcode: string): PostcodePage | null {
   const meta = electionById(electionId);
   if (!meta || !postcodesFor(electionId).includes(postcode)) return null;

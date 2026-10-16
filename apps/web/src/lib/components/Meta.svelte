@@ -17,7 +17,7 @@
     canonicalPath,
     resolveMeta,
   } from "$lib/seo";
-  import { manifestFor } from "$lib/manifest";
+  import { dataPageModified } from "$lib/page-date";
   import { isNativeShell } from "$lib/channel";
   import { markdownTwinHref } from "$lib/markdown-twin";
 
@@ -26,11 +26,14 @@
     description,
     image,
     type = "website",
+    asAt,
   }: {
     title?: string;
     description?: string;
     image?: string;
     type?: "website" | "article";
+    /** For a data page, the date another source it shows was read (`dataPageModified`). */
+    asAt?: string;
   } = $props();
 
   const path = $derived(canonicalPath(page.url.pathname));
@@ -43,10 +46,10 @@
   // Twins are published by indexable web builds only; app bundles and previews carry none.
   const twinsPublished = !isNativeShell && env.PUBLIC_NOINDEX !== "1";
   const twin = $derived(twinsPublished && indexable ? markdownTwinHref(page.route.id, path) : null);
-  // Data pages are dated by their election's data version: the date their voting record is current to.
   const election = $derived(page.params.election);
+  const section = $derived(path.split("/")[2] ?? "");
   const modified = $derived(
-    type === "article" && election ? manifestFor(election).dataVersion : null,
+    type === "article" && election ? dataPageModified(election, section, asAt) : null,
   );
 </script>
 

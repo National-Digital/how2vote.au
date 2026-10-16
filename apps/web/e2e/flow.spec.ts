@@ -266,7 +266,9 @@ test("election toggle switches the question set (2022 → 36 questions)", async 
   await expect(page.locator("span.label")).toHaveText("Question 1 of 36");
 });
 
-test("an election's data pages are dated by its data version", async ({ page }) => {
+test("an election's data pages are dated by its data version, or a later source they show", async ({
+  page,
+}) => {
   for (const election of ["2025", "next"]) {
     const { dataVersion } = JSON.parse(
       readFileSync(
@@ -280,6 +282,20 @@ test("an election's data pages are dated by its data version", async ({ page }) 
       dataVersion,
     );
   }
+  // A ballot page shows candidates the AEC declared after 2025's voting record was current.
+  for (const path of ["/2025/electorates/bean", "/2025/senate/act", "/2025/electorates"]) {
+    await page.goto(path);
+    await expect(page.locator('meta[property="article:modified_time"]')).toHaveAttribute(
+      "content",
+      "2025-04-11",
+    );
+  }
+  // A postcode page shows boundaries checked after the next election's voting record was current.
+  await page.goto("/next/postcodes/2000");
+  await expect(page.locator('meta[property="article:modified_time"]')).toHaveAttribute(
+    "content",
+    "2026-10-12",
+  );
   await page.goto("/2025");
   await expect(page.locator('meta[property="article:modified_time"]')).toHaveCount(0);
 });
