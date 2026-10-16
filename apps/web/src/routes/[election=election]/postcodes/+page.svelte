@@ -12,7 +12,12 @@
   const crumbs = $derived([home, { label: "Postcodes" }]);
 </script>
 
-<Meta title={data.seo.title} description={data.seo.description} type="article" />
+<Meta
+  title={data.seo.title}
+  description={data.seo.description}
+  type="article"
+  asAt={data.checkedAt}
+/>
 
 <DataPage
   {crumbs}

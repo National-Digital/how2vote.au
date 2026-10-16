@@ -17,7 +17,12 @@
   const linked = $derived([...data.electorates, ...data.partly].filter((e) => e.href));
 </script>
 
-<Meta title={data.seo.title} description={data.seo.description} type="article" />
+<Meta
+  title={data.seo.title}
+  description={data.seo.description}
+  type="article"
+  asAt={data.checkedAt}
+/>
 
 <DataPage {crumbs} title="Postcode {data.postcode} — {data.label}" intro={data.intro}>
   {#if data.checkAddress}
