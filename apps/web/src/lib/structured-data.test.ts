@@ -258,7 +258,7 @@ describe("electionEventGraph", () => {
       "@id": "https://how2vote.au/2025#election",
       name: "2025 Federal Election",
       description:
-        "Australian federal election for the House of Representatives and the Senate, with polling day on 2025-05-03.",
+        "The 2025 Federal Election is the Australian federal election for the House of Representatives and the Senate, with polling day on 3 May 2025.",
       url: "https://how2vote.au/2025",
       image: "https://how2vote.au/og-2025.png",
       startDate: "2025-05-03",

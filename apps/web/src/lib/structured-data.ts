@@ -158,7 +158,7 @@ export type OpenDataDownload = {
 /**
  * Dataset describing the static /data/ files: propositions, recorded party positions and candidate
  * ballots per election. The files come from sources under different licences, so the Dataset lists
- * each licence that applies to one of its files, and each DataDownload states its own with its credit.
+ * each file's database licence, and each DataDownload states its own with its credit.
  */
 export function openDataDatasetGraph(files: OpenDataDownload[]) {
   return {
@@ -273,6 +273,14 @@ export function faqGraph(qas: { question: string; answer: string }[]) {
 
 const AUSTRALIA = { "@type": "Country", name: "Australia" } as const;
 
+const longDate = (iso: string): string =>
+  new Date(`${iso}T00:00:00Z`).toLocaleDateString("en-AU", {
+    day: "numeric",
+    month: "long",
+    year: "numeric",
+    timeZone: "UTC",
+  });
+
 /** Stable `@id` for an election's Event node, independent of which election is current. */
 export const electionEventId = (electionId: string): string => `${SITE_URL}/${electionId}#election`;
 
@@ -289,7 +297,7 @@ export function electionEventNode(meta: ElectionMeta) {
     "@type": "Event",
     "@id": electionEventId(meta.id),
     name: meta.label,
-    description: `Australian federal election for the House of Representatives and the Senate, with polling day on ${meta.date}.`,
+    description: `The ${meta.label} is the Australian federal election for the House of Representatives and the Senate, with polling day on ${longDate(meta.date)}.`,
     ...(meta.current ? {} : { url: `${SITE_URL}/${meta.id}` }),
     image: ogImageFor(meta.id),
     startDate: meta.date,
