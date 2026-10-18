@@ -20,7 +20,7 @@
  */
 import { ELECTIONS, type ElectionMeta } from "@how2vote/data-schema";
 import { ORG } from "./org";
-import { SITE_URL, SITE_NAME } from "./seo";
+import { SITE_URL, SITE_NAME, ogImageFor } from "./seo";
 import { STORE_LINKS } from "./store-links";
 
 /** Stable node identifiers, referenced by `@id` from other nodes and across pages. */
@@ -98,9 +98,8 @@ function electionYearRange(): string {
 
 /**
  * Dataset describing the published survey aggregates served under /stats. One DataDownload per
- * election plus the index; `creator` references the Organization by `@id`. No `license` is asserted
- * — the aggregates carry none (the ODbL in LICENSE-DATA governs the vote dataset, not these), and a
- * fabricated one would be worse than none.
+ * election plus the index; `creator` references the Organization by `@id`. The aggregates carry no
+ * open-data licence, so `license` is the terms of use, which reserve them to the publisher.
  */
 export function insightsDatasetGraph() {
   return {
@@ -111,6 +110,7 @@ export function insightsDatasetGraph() {
     description:
       "De-identified, aggregate results from the optional survey people answer after building a voting comparison, published with k-anonymity suppression. Descriptive only — an opt-in, non-probability sample, not a representative poll.",
     url: `${SITE_URL}/insights`,
+    license: `${SITE_URL}/terms`,
     creator: { "@id": ORG_ID },
     isAccessibleForFree: true,
     inLanguage: "en-AU",
@@ -157,8 +157,8 @@ export type OpenDataDownload = {
 
 /**
  * Dataset describing the static /data/ files: propositions, recorded party positions and candidate
- * ballots per election. The files come from sources under different licences, so the licence and
- * credit are stated on each DataDownload rather than once for the Dataset.
+ * ballots per election. The files come from sources under different licences, so the Dataset lists
+ * each file's database licence, and each DataDownload states its own with its credit.
  */
 export function openDataDatasetGraph(files: OpenDataDownload[]) {
   return {
@@ -169,6 +169,7 @@ export function openDataDatasetGraph(files: OpenDataDownload[]) {
     description:
       "Static JSON files of the parliamentary propositions, each party's recorded position on them, and the House and Senate candidates in ballot-paper order, for each Australian federal election How2Vote covers.",
     url: `${SITE_URL}/methodology`,
+    license: [...new Set(files.map((f) => f.license.url))],
     creator: { "@id": ORG_ID },
     isAccessibleForFree: true,
     inLanguage: "en-AU",
@@ -272,6 +273,14 @@ export function faqGraph(qas: { question: string; answer: string }[]) {
 
 const AUSTRALIA = { "@type": "Country", name: "Australia" } as const;
 
+const longDate = (iso: string): string =>
+  new Date(`${iso}T00:00:00Z`).toLocaleDateString("en-AU", {
+    day: "numeric",
+    month: "long",
+    year: "numeric",
+    timeZone: "UTC",
+  });
+
 /** Stable `@id` for an election's Event node, independent of which election is current. */
 export const electionEventId = (electionId: string): string => `${SITE_URL}/${electionId}#election`;
 
@@ -279,7 +288,8 @@ export const electionEventId = (electionId: string): string => `${SITE_URL}/${el
  * Event node for a federal election, from its registry entry. Null until a polling day is recorded:
  * an unannounced election has no date or status to state. `EventScheduled` is the schema.org status
  * for an event that is (or was) held as planned. `url` is the election's own landing path, which is
- * only served while the election is not current.
+ * only served while the election is not current. No `offers` or `performer` is stated: an election
+ * is not ticketed and has no performer.
  */
 export function electionEventNode(meta: ElectionMeta) {
   if (!meta.date) return null;
@@ -287,7 +297,9 @@ export function electionEventNode(meta: ElectionMeta) {
     "@type": "Event",
     "@id": electionEventId(meta.id),
     name: meta.label,
+    description: `The ${meta.label} is the Australian federal election for the House of Representatives and the Senate, with polling day on ${longDate(meta.date)}.`,
     ...(meta.current ? {} : { url: `${SITE_URL}/${meta.id}` }),
+    image: ogImageFor(meta.id),
     startDate: meta.date,
     endDate: meta.date,
     eventStatus: "https://schema.org/EventScheduled",
