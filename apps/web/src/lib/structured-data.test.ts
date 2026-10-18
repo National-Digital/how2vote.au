@@ -120,9 +120,9 @@ describe("insightsDatasetGraph", () => {
     expect(ds.creator).toEqual({ "@id": ORG_ID });
   });
 
-  it("does not assert a licence it does not have", () => {
+  it("points its licence at the terms of use, never an open-data licence", () => {
     // The ODbL in LICENSE-DATA covers the vote dataset, not these survey aggregates.
-    expect((ds as Record<string, unknown>).license).toBeUndefined();
+    expect(ds.license).toBe(`${SITE_URL}/terms`);
   });
 
   it("covers the full election year range", () => {
@@ -157,8 +157,9 @@ describe("openDataDatasetGraph", () => {
     expect(ds["@id"]).not.toBe(INSIGHTS_DATASET_ID);
   });
 
-  it("asserts no single licence over files from differently licensed sources", () => {
-    expect((ds as Record<string, unknown>).license).toBeUndefined();
+  it("lists exactly the licences its files carry, never one over all of them", () => {
+    expect([...ds.license].sort()).toEqual([...new Set(files.map((f) => f.license.url))].sort());
+    expect(ds.license.length).toBeGreaterThan(1);
   });
 
   it("offers one DataDownload per published file, each with its own licence and credit", () => {
@@ -256,7 +257,10 @@ describe("electionEventGraph", () => {
       "@type": "Event",
       "@id": "https://how2vote.au/2025#election",
       name: "2025 Federal Election",
+      description:
+        "Australian federal election for the House of Representatives and the Senate, with polling day on 2025-05-03.",
       url: "https://how2vote.au/2025",
+      image: "https://how2vote.au/og-2025.png",
       startDate: "2025-05-03",
       endDate: "2025-05-03",
       eventStatus: "https://schema.org/EventScheduled",
