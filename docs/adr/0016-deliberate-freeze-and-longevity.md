@@ -47,9 +47,9 @@ the posture explicitly and adds the one thing a frozen project most often lacks:
    vulnerability fixes flow, they are **never auto-merged** (an unattended "security" merge is itself
    the npm-worm delivery vector), and they pass CodeQL + dependency-review like any change. Majors
    that would break the pinned toolchain (TypeScript 7, `@types/node` ahead of the runtime, and the
-   build-chain majors listed below) stay held. Renovate raises the fixes, from
-   [`.github/renovate.json5`](../../.github/renovate.json5) run by
-   [`renovate.yml`](../../.github/workflows/renovate.yml) as an organisation GitHub App. It covers
+   build-chain majors listed below) stay held. The organisation's hosted Renovate app raises the
+   fixes from [`.github/renovate.json5`](../../.github/renovate.json5), as soon as GitHub's advisories
+   or the OSV database name them. It covers
    npm, GitHub Actions, Bundler, Gradle and SwiftPM. Renovate raises an existing
    `pnpm-workspace.yaml` override but never adds one, so a fix for a transitive dependency with no
    override is still written by hand. Dependabot alerts stay on as an input; Dependabot security

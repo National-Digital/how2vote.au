@@ -3,6 +3,8 @@
   // Security-only posture (ADR-0016): vulnerability fixes only, reviewed by a human, never auto-merged.
   extends: ["security:only-security-updates", ":semanticCommits", ":gitSignOff"],
   enabledManagers: ["npm", "github-actions", "bundler", "gradle", "gradle-wrapper", "swift"],
+  // Read OSV advisories as well as GitHub's alerts.
+  osvVulnerabilityAlerts: true,
   dependencyDashboard: false,
   automerge: false,
   labels: ["dependencies"],

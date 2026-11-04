@@ -127,10 +127,8 @@ allowlist, if you want to constrain which actions may be introduced at all.
 Advanced Security). Both are guarded on repository visibility: they **skip green while private and
 switch themselves on when the repo goes public** — no edit needed. Also turn on **Settings → Code
 security**: Dependency graph, Dependabot alerts (Renovate reads them), and secret scanning + push protection.
-Leave **Dependabot security updates** off; [`renovate.yml`](../.github/workflows/renovate.yml) raises
-the fixes. It needs a GitHub App with contents, pull requests, issues, workflows and commit statuses
-(read/write) plus Dependabot alerts (read), installed on this repo only, with the variables
-`RENOVATE_CLIENT_ID` and `RENOVATE_GIT_AUTHOR` and the secret `RENOVATE_PRIVATE_KEY`.
+Leave **Dependabot security updates** off. The fixes come from the [Renovate app](https://github.com/apps/renovate),
+installed on this repository and configured by [`.github/renovate.json5`](../.github/renovate.json5).
 
 ---
 
