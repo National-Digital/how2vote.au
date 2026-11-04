@@ -1,0 +1,16 @@
+{
+  $schema: "https://docs.renovatebot.com/renovate-schema.json",
+  // Security-only posture (ADR-0016): vulnerability fixes only, reviewed by a human, never auto-merged.
+  extends: ["security:only-security-updates", ":semanticCommits", ":gitSignOff"],
+  enabledManagers: ["npm", "github-actions", "bundler", "gradle", "gradle-wrapper", "swift"],
+  dependencyDashboard: false,
+  automerge: false,
+  labels: ["dependencies"],
+  packageRules: [
+    // Majors ADR-0016 holds; a fix that needs one is a re-review decision.
+    { matchPackageNames: ["typescript"], allowedVersions: "<7" },
+    { matchPackageNames: ["@types/node"], allowedVersions: "<25" },
+    { matchPackageNames: ["vite"], allowedVersions: "<8" },
+    { matchPackageNames: ["@sveltejs/kit"], allowedVersions: "<3" },
+  ],
+}

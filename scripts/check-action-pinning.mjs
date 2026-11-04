@@ -6,8 +6,8 @@
  * (`@v4`, `@main`) is a supply-chain hole — the owner (or anyone who compromises them) can move the
  * tag to malicious code that then runs with this repository's token. Pinning to a full commit SHA
  * makes the reference immutable: the code that ran when the pin was reviewed is the only code that
- * can ever run under it. Dependabot still proposes SHA bumps, so pinning does not freeze updates —
- * it just routes every update through review. This matters most for a PUBLIC repo, where forks and
+ * can ever run under it. Renovate still proposes SHA bumps for security fixes, so pinning does not
+ * freeze updates — it just routes every update through review. This matters most for a PUBLIC repo, where forks and
  * drive-by PRs run these same workflows (see docs/self-hosting.md).
  *
  * Rules, per `uses:` reference:
