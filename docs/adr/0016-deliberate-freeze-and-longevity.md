@@ -43,14 +43,20 @@ the posture explicitly and adds the one thing a frozen project most often lacks:
    and an explicitly pinned Cloudflare `compatibility_date` are the reproducibility guarantee. A rebuild
    years later must reproduce byte-for-byte. None of these is a floating range.
 
-2. **Dependencies are security-only and human-approved.** Dependabot routine version updates are
-   **off**; only security updates flow, they are **never auto-merged** (an unattended "security" merge
-   is itself the npm-worm delivery vector), and they pass CodeQL + dependency-review like any change.
-   Majors that would break the pinned toolchain (TypeScript 7, `@types/node` ahead of the runtime)
-   stay held. See [`.github/dependabot.yml`](../../.github/dependabot.yml). Repo-level Dependabot
-   security updates must be enabled once in repository settings for this to take effect — a
-   maintainer-once step, in the same class as the branch-protection toggles tracked in
-   [`docs/legal/required-checks.json`](../legal/required-checks.json).
+2. **Dependencies are security-only and human-approved.** Routine version updates are **off**; only
+   vulnerability fixes flow, they are **never auto-merged** (an unattended "security" merge is itself
+   the npm-worm delivery vector), and they pass CodeQL + dependency-review like any change. Majors
+   that would break the pinned toolchain (TypeScript 7, `@types/node` ahead of the runtime, and the
+   build-chain majors listed below) stay held. The organisation's hosted Renovate app raises the
+   fixes from [`.github/renovate.json5`](../../.github/renovate.json5), as soon as GitHub's advisories
+   or the OSV database name them. It covers
+   npm, GitHub Actions, Bundler, Gradle and SwiftPM. Renovate raises an existing
+   `pnpm-workspace.yaml` override but never adds one, so a fix for a transitive dependency with no
+   override is still written by hand. Dependabot alerts stay on as an input; Dependabot security
+   updates are turned off so the two do not raise duplicate PRs.
+
+   *Amended 2026-11-05:* Renovate replaced Dependabot, which covered only npm and GitHub Actions and
+   proposed majors (SvelteKit 3) where a held line or an override was the fix.
 
 3. **Agent-facing surfaces.** The durable agent-facing surfaces are
    `robots.txt`, schema.org structured data (incl. `Dataset`), and `llms.txt`/`llms-full.txt`.
@@ -78,7 +84,7 @@ the posture explicitly and adds the one thing a frozen project most often lacks:
 
 - A vulnerability disclosed against a pinned dependency will surface in the vuln gate and go unpatched
   until a security update is offered or the re-review lands. This is an accepted, bounded trade-off:
-  bounded by the security-only Dependabot channel and by the dated re-review, and preferred over
+  bounded by the security-only Renovate channel and by the dated re-review, and preferred over
   floating ranges that would reopen the supply-chain-worm surface.
 - CI stays green on a truly untouched tree (frozen-lockfile installs are deterministic); the vuln gate
   may go red if a CVE lands mid-freeze — that redness is the signal for the re-review, not something to

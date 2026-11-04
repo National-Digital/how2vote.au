@@ -113,8 +113,8 @@ Every `uses:` in [`.github/workflows/`](../.github/workflows) is pinned to a ful
 SHA (with a `# vX` comment for readability), never a mutable tag or branch. A moved tag is a
 supply-chain hole: it would run new, unreviewed code with this repo's token. **CI enforces this** — the
 *Action-pinning gate* step in `ci.yml` runs [`scripts/check-action-pinning.mjs`](../scripts/check-action-pinning.mjs)
-and fails the build on any unpinned reference, so it can't regress. Dependabot still proposes SHA
-bumps, so updates keep flowing — they just go through review.
+and fails the build on any unpinned reference, so it can't regress. Renovate still proposes SHA
+bumps for actions with a security fix, and they go through review.
 
 Optional extra hardening: **Settings → Actions → General → "Actions permissions"** can be narrowed to
 *"Allow \<owner\>, and select non-\<owner\>, actions and reusable workflows"* with an explicit
@@ -126,7 +126,9 @@ allowlist, if you want to constrain which actions may be introduced at all.
 [`dependency-review.yml`](../.github/workflows/dependency-review.yml) require a public repo (or GitHub
 Advanced Security). Both are guarded on repository visibility: they **skip green while private and
 switch themselves on when the repo goes public** — no edit needed. Also turn on **Settings → Code
-security**: Dependency graph, Dependabot alerts, and secret scanning + push protection.
+security**: Dependency graph, Dependabot alerts (Renovate reads them), and secret scanning + push protection.
+Leave **Dependabot security updates** off. The fixes come from the [Renovate app](https://github.com/apps/renovate),
+installed on this repository and configured by [`.github/renovate.json5`](../.github/renovate.json5).
 
 ---
 
@@ -198,5 +200,5 @@ test with no Cloudflare account at all.
 | Branch protection on `main` | Branches | PR + Code Owners + required checks + no force-push |
 | Required status checks | Branches | `required-checks.json` + core `ci.yml` jobs |
 | Action SHA-pinning | *(enforced in CI)* | `scripts/check-action-pinning.mjs` |
-| Code scanning / dependency review | *(auto on public)* | plus Dependabot + secret-scanning |
+| Code scanning / dependency review | *(auto on public)* | plus Renovate + secret-scanning |
 | Cloudflare secrets & variables | Actions → Secrets and variables | see [README](../README.md#self-hosting) |

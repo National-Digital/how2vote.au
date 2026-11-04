@@ -110,7 +110,7 @@
       "title": "Static code scanning and dependency review",
       "category": "supply-chain",
       "status": "partial",
-      "publicStatement": "The codebase is configured for automated static security analysis (CodeQL) and pull-request dependency review that blocks a new dependency carrying a known high or critical vulnerability. These GitHub features require a public repository, so their workflows are visibility-gated and self-activate the moment the repository is made public.",
+      "publicStatement": "The codebase is configured for automated static security analysis (CodeQL) and pull-request dependency review that blocks a new dependency carrying a known high or critical vulnerability. These GitHub features require a public repository, so their workflows are visibility-gated and self-activate the moment the repository is made public. Renovate raises security updates as soon as GitHub's advisories or the OSV database name them; a maintainer reviews each one and none is merged automatically.",
       "enforcedBy": ["scripts/check-security-config.mjs"],
       "evidence": {
         "id": "EV-CODE-SCANNING",
