@@ -31,7 +31,7 @@
     "@cucumber/gherkin": "^41.0.0",
     "@cucumber/messages": "^34.1.0",
     "@playwright/test": "^1.61.1",
-    "@sveltejs/adapter-static": "^3.0.10",
+    "@sveltejs/adapter-static": "^3.0.11",
     "@sveltejs/kit": "^2.70.2",
     "@sveltejs/vite-plugin-svelte": "^6.2.4",
     "fast-check": "^4.9.0",
